@@ -153,6 +153,14 @@ private fun QuranHome() {
     }
 }
 
+/** The mushaf opened over another page (the verse of the day), loaded first if needed. */
+@Composable
+fun QuranOverlay(surah: Int, ayah: Int, back: () -> Unit) {
+    val ctx = LocalContext.current
+    LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
+    if (Quran.ready) QuranReader(surah, ayah, back) else Loading()
+}
+
 @Composable
 private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -604,31 +612,38 @@ private fun Favorites() {
     }
 }
 
-/** "Verse of the day" and "hadith of the day", for the prayer screen. */
+/** "Verse of the day" and "hadith of the day", for the prayer screen. Both are fixed for the whole day. */
 @Composable
 fun DailyWords() {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     val ayah = if (Quran.ready) Quran.ofTheDay() else null
-    val hadith = remember { runCatching { Hadith.ofTheDay(ctx) }.getOrNull() }
-    var explained by remember { mutableStateOf<Sharh.Brief?>(null) }
-    LaunchedEffect(Unit) { explained = withContext(Dispatchers.IO) { runCatching { HadithSearch.sharhIndex(ctx); HadithSearch.ofTheDay(ctx) }.getOrNull() } }
-    if (ayah != null) Panel(Modifier.clickable { Nav.openQuran(ayah.s, ayah.a) }) {
+    // Decided once (explained hadith when its index is on the phone, else one of the Forty), so the card never changes under the finger.
+    val daily by androidx.compose.runtime.produceState<Pair<Sharh.Brief?, Pair<Hadith.Info, Hadith.Item>?>?>(null) {
+        value = withContext(Dispatchers.IO) {
+            val e = runCatching { HadithSearch.sharhIndex(ctx); HadithSearch.ofTheDay(ctx) }.getOrNull()
+            e to (if (e == null) runCatching { Hadith.ofTheDay(ctx) }.getOrNull() else null)
+        }
+    }
+    if (ayah != null) Panel(Modifier.clickable { Nav.overlayQuran = ayah.s to ayah.a }) {
         Sub("آية اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
         Text(ayah.text, color = P.ink, fontSize = 20.sp, fontFamily = Fonts.quran, lineHeight = 36.sp, modifier = Modifier.padding(top = 4.dp))
-        Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)}", size = 12.sp)
+        Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)} · اضغط لقراءتها في سياقها", size = 12.sp)
     }
-    explained?.let { e ->
-        Panel(Modifier.clickable { Nav.sharh = e.id; Nav.tab = "library" }) {
+    val d = daily ?: return
+    d.first?.let { e ->
+        Panel(Modifier.clickable { Nav.overlaySharh = e.id }) {
             Sub("حديث اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
             Text(e.title, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = 28.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 4.dp))
             Text("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
         }
         return
     }
-    if (hadith != null) Panel(Modifier.clickable { Nav.openHadith(hadith.first.id, hadith.second.number.toIntOrNull() ?: 0) }) {
-        Sub("حديث اليوم · ${hadith.first.title}", color = P.gold)
-        Text(hadith.second.text, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = 26.sp, fontFamily = Fonts.naskh, maxLines = 6, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+    d.second?.let { (info, item) ->
+        Panel(Modifier.clickable { Nav.overlayHadith = info.id to item.number }) {
+            Sub("حديث اليوم · ${info.title}", color = P.gold)
+            Text(item.text, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = 26.sp, fontFamily = Fonts.naskh, maxLines = 6, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+        }
     }
 }
 

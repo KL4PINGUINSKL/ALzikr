@@ -160,8 +160,23 @@ private fun Root() {
                     }
                 }
                 if (look.nav == NavStyle.DOCK) Box(Modifier.align(Alignment.BottomCenter)) { Dock() }
+                Overlays()
             }
             if (settings) SettingsSheet { settings = false }
+        }
+    }
+}
+
+/** Pages opened over the current tab; back closes them and you are where you were. */
+@Composable
+private fun Overlays() {
+    val sharh = Nav.overlaySharh; val hadith = Nav.overlayHadith; val quran = Nav.overlayQuran
+    if (sharh == null && hadith == null && quran == null) return
+    Box(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
+        when {
+            sharh != null -> SharhOpen(sharh) { Nav.overlaySharh = null }
+            hadith != null -> HadithReader(hadith.first, 0, back = { Nav.overlayHadith = null }, focus = hadith.second)
+            quran != null -> QuranOverlay(quran.first, quran.second) { Nav.overlayQuran = null }
         }
     }
 }

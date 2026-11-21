@@ -21,6 +21,10 @@ object Nav {
     var story by mutableStateOf<Int?>(null)
     /** Open the hadith search, searching this right away. */
     var hadithQuery by mutableStateOf<String?>(null)
+    /** Pages opened on top of the current tab (back returns to it): an explained hadith, a book hadith, a verse. */
+    var overlaySharh by mutableStateOf<String?>(null)
+    var overlayHadith by mutableStateOf<Pair<String, String>?>(null)
+    var overlayQuran by mutableStateOf<Pair<Int, Int>?>(null)
 
     fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }
