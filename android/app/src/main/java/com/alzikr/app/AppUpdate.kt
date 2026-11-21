@@ -33,15 +33,25 @@ import java.net.URL
 object AppUpdate {
     private const val APP = "ALzikr"
     private const val TAG = "AppUpdate"
-    private const val CHECK_EVERY_MS = 60 * 60_000L        // GitHub allows 60 anonymous requests per hour
+    private const val CHECK_EVERY_MS = 20 * 60_000L        // GitHub allows 60 anonymous requests per hour
     private const val LATER_MS = 24 * 60 * 60_000L
     private val main = Handler(Looper.getMainLooper())
     @Volatile private var busy = false
 
     private data class Release(val version: String, val url: String, val size: Long, val notes: String)
 
-    /** Call from the main activity's onCreate. Quiet when offline, up to date, or checked recently. */
+    /** Call from the main activity's onResume. Quiet when offline, up to date, or checked recently. */
     fun check(activity: Activity) = doCheck(activity, force = false)
+
+    /** Called on the main thread when a newer version becomes known (to show a banner). */
+    var onFound: (() -> Unit)? = null
+
+    /** The newer version known from the last check, or null (also after updating). */
+    fun available(context: Context): String? {
+        val v = context.getSharedPreferences("app_update", Context.MODE_PRIVATE).getString("latest_version", null) ?: return null
+        val cur = installedVersion(context) ?: return null
+        return v.takeIf { compare(it, cur) > 0 }
+    }
 
     /** "Check for updates" in Settings › About: always asks GitHub, and says when there is nothing new. */
     fun checkNow(activity: Activity) {
@@ -58,7 +68,8 @@ object AppUpdate {
         Thread {
             try {
                 val latest = latest() ?: run { say("تعذّر الوصول إلى GitHub الآن"); return@Thread }
-                prefs.edit().putLong("checked_at", now).apply()
+                prefs.edit().putLong("checked_at", now).putString("latest_version", latest.version).apply()
+                main.post { onFound?.invoke() }
                 val current = installedVersion(activity) ?: return@Thread
                 if (compare(latest.version, current) <= 0) { say("لديك أحدث إصدار ($current)"); return@Thread }
                 if (!force && prefs.getString("later_version", null) == latest.version && now - prefs.getLong("later_at", 0) < LATER_MS) return@Thread
@@ -76,8 +87,20 @@ object AppUpdate {
         info.versionName
     } catch (_: Exception) { null }
 
+    /** The newest release of this app across every page of ALapps releases. */
     private fun latest(): Release? {
-        val c = URL("https://api.github.com/repos/KL4PINGUINSKL/ALapps/releases?per_page=100").openConnection() as HttpURLConnection
+        var best: Release? = null
+        for (page in 1..10) {
+            val (found, count) = latestOn(page) ?: return best
+            if (found != null && (best == null || compare(found.version, best.version) > 0)) best = found
+            if (count < 100) break
+        }
+        return best
+    }
+
+    /** One page: the best release on it and how many releases the page held; null on a network error. */
+    private fun latestOn(page: Int): Pair<Release?, Int>? {
+        val c = URL("https://api.github.com/repos/KL4PINGUINSKL/ALapps/releases?per_page=100&page=$page").openConnection() as HttpURLConnection
         c.connectTimeout = 10_000; c.readTimeout = 15_000
         c.setRequestProperty("Accept", "application/vnd.github+json"); c.setRequestProperty("User-Agent", APP)
         try {
@@ -96,7 +119,7 @@ object AppUpdate {
                         best = Release(v, a.optString("browser_download_url"), a.optLong("size"), r.optString("body").trim().take(600))
                 }
             }
-            return best
+            return best to list.length()
         } finally { c.disconnect() }
     }
 

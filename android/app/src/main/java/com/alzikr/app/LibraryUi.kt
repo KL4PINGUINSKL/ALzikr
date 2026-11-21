@@ -358,42 +358,37 @@ internal fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
     val entry = Tafsir.get(ctx, sel, a.s, a.a)
     var pickReciter by remember { mutableStateOf(false) }
     if (pickReciter) ReciterDialog { pickReciter = false }
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, containerColor = P.surface) {
+    // Opens fully, so the tafsir is in view right away.
+    val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, sheetState = sheetState, containerColor = P.surface) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
-            Text(ref, color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-            Text(a.text, color = P.ink, fontSize = 22.sp, fontFamily = Fonts.quran, lineHeight = 40.sp, modifier = Modifier.padding(vertical = 6.dp))
-            Sub("صفحة ${a.page} · الجزء ${a.juz}${if (a.sajda) " · موضع سجدة" else ""}", size = 12.sp)
-            Text("ماذا تريد أن تفعل؟", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tile("▶", "هذه الآية فقط", Modifier.weight(1f), on = true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); close() }
-                Tile("⏩", "من هنا: " + Recitation.rangeText(), Modifier.weight(1f), on = true) { Recitation.play(ctx, a.s, a.a); close() }
-                Tile(if (Quran.marked(a.s, a.a)) "★" else "☆", if (Quran.marked(a.s, a.a)) "إزالة العلامة" else "ضع علامة", Modifier.weight(1f)) { Quran.toggleMark(a.s, a.a) }
-                Tile("📍", "وصلت هنا", Modifier.weight(1f)) {
+            Text(ref + " · صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)}" + if (a.sajda) " · موضع سجدة" else "", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(a.text, color = P.ink, fontSize = 22.sp, fontFamily = Fonts.quran, lineHeight = 40.sp, modifier = Modifier.padding(vertical = 4.dp))
+            // The actions in one short line.
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Choice("▶ هذه الآية", true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); close() }
+                Choice("⏩ من هنا: " + Recitation.rangeText(), false) { Recitation.play(ctx, a.s, a.a); close() }
+                Choice(if (Quran.marked(a.s, a.a)) "★ مُعلَّمة" else "☆ علامة", Quran.marked(a.s, a.a)) { Quran.toggleMark(a.s, a.a) }
+                Choice("📍 وصلت هنا", false) {
                     Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString()
                     Toast.makeText(ctx, "سُجّلت في ختمتك: الصفحة ${a.page}", Toast.LENGTH_SHORT).show()
                 }
-            }
-            ReciterLine(Modifier.padding(top = 8.dp)) { pickReciter = true }
-            Text("مدى «من هنا»:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-            RangeChoice()
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tile("⧉", "نسخ", Modifier.weight(1f)) { copy(ctx, "${a.text}\n[$ref]") }
-                Tile("↗", "مشاركة", Modifier.weight(1f)) { share(ctx, "${a.text}\n[$ref]") }
-                Tile("🔁", "حفظها (تكرار ×5)", Modifier.weight(1f)) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); close() }
+                Choice("⧉ نسخ", false) { copy(ctx, "${a.text}\n[$ref]") }
+                Choice("↗ مشاركة", false) { share(ctx, "${a.text}\n[$ref]") }
+                Choice("🔁 حفظها ×5", false) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); close() }
             }
 
-            Box(Modifier.fillMaxWidth().padding(vertical = 16.dp).height(1.dp).background(P.line))
-            Title("تفسير الآية")
-            Text("اختر التفسير:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // The tafsir, right under the verse.
+            Row(Modifier.fillMaxWidth().padding(top = 12.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("📖 التفسير:", color = P.muted, fontSize = 13.sp)
                 Tafsir.books.forEach { b -> Choice(b.name, sel == b.id) { Tafsir.selected = b.id } }
             }
-            Column(Modifier.fillMaxWidth().padding(top = 10.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
+            Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
                 Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 when {
                     entry != null && entry.text.isNotBlank() -> {
                         if (entry.to > entry.from) Sub("يشمل الآيات ${Quran.digits(entry.from)}–${Quran.digits(entry.to)}", size = 12.sp)
-                        Text(entry.text, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (26 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
+                        Text(entry.text, color = P.ink, fontSize = (16 * Data.textScale).sp, lineHeight = (28 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
                     }
                     loading -> Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(18.dp), color = P.accent, strokeWidth = 2.dp)
@@ -405,6 +400,12 @@ internal fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
                     else -> Sub("لا يوجد في هذا الكتاب تفسير خاص بهذه الآية.", Modifier.padding(top = 8.dp))
                 }
             }
+
+            // Listening settings, last.
+            Text("الاستماع", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
+            ReciterLine { pickReciter = true }
+            Text("مدى «من هنا»:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
+            RangeChoice()
         }
     }
 }

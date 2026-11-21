@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         intent?.getStringExtra("tab")?.let(::openTab)
         openPlace(intent)
-        AppUpdate.check(this)
+        AppUpdate.onFound = { Store.bump() }
         // Installed before methods followed the country: look the country up once.
         if (Store.hasLocation && Store.country.isEmpty() && !Store.methodChosen) Alerts.resolvePlace(this, Store.lat, Store.lng)
         if (Build.VERSION.SDK_INT >= 33 && !Alerts.canPost(this)) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
@@ -111,6 +111,7 @@ class MainActivity : ComponentActivity() {
         Alerts.reschedule(this)
         Alerts.focusNotification(this)
         TasbihWidget.update(this)
+        AppUpdate.check(this)
     }
 }
 

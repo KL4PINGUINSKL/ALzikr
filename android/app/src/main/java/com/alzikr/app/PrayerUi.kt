@@ -103,6 +103,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
     val times = Store.times()
     val view = when (Data.prayerView) { 1 -> 1; 2 -> 2; 3 -> 3; 4 -> 4; else -> when (L.prayers) { PrayerLayout.CARDS -> 1; PrayerLayout.LIST -> 2; PrayerLayout.TIMELINE -> 4 } }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        UpdateBanner()
         Hint("prayer2", "🕌", "اضغط على أي وقت لخيارات الحساب والموقع والتعديل. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
         val hijri = Data.hijri()
         if (hijri.month == 9) Panel(color = P.gold.copy(alpha = .16f), pad = 12.dp) {

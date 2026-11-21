@@ -173,6 +173,19 @@ fun Hint(id: String, icon: String, text: String, modifier: Modifier = Modifier) 
     }
 }
 
+/** «⬆ يتوفر تحديث» while a newer version is known, until the app is updated. */
+@Composable
+fun UpdateBanner() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val ver = androidx.compose.runtime.remember(v) { AppUpdate.available(ctx) } ?: return
+    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.accent).clickable { (ctx as? android.app.Activity)?.let { AppUpdate.checkNow(it) } }
+        .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("⬆", color = P.onAccent, fontSize = 18.sp)
+        Text("يتوفر تحديث ALzikr $ver · اضغط للتحديث", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 10.dp))
+    }
+}
+
 /** A big labelled action: icon on top, a clear word under it. */
 @Composable
 fun Tile(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean = false, onClick: () -> Unit) {

@@ -69,11 +69,12 @@ fun MoreScreen(openSettings: () -> Unit) {
     var page by remember { mutableStateOf<String?>(null) }
     Nav.morePage?.let { page = it; Nav.morePage = null }
     page?.let { p ->
-        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
+        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
-                "calendar" -> CalendarPage()
+                "calendar" -> CalendarPage { page = "months" }
+                "months" -> MonthsPage()
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
                 "zakat" -> ZakatPage()
@@ -88,11 +89,13 @@ fun MoreScreen(openSettings: () -> Unit) {
     }
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        UpdateBanner()
         Hint("more", "☰", "هنا القبلة والتقويم وأسماء الله الحسنى والثيمات والنسخ الاحتياطي. الإعدادات في آخر القائمة.")
-        Panel(color = P.card) {
+        Panel(Modifier.clickable { page = "months" }, color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             nextOccasion()?.let { (o, d) -> Sub("${o.name} ${if (d == 0L) "اليوم" else "بعد $d يومًا"}", color = P.gold) }
+            Sub("لماذا سُمّي ${h.monthName} بهذا الاسم؟ اضغط هنا ›", size = 12.sp, color = P.accent)
         }
         val activity = LocalContext.current as? android.app.Activity
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -104,6 +107,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
             Triple("month", "📅  مواقيت الشهر", "جدول الصلوات لكل أيام الشهر"),
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
+            Triple("months", "🗓  أسماء الشهور ومعانيها", "لماذا سُمّيت الشهور الهجرية والميلادية بأسمائها"),
             Triple("names", "✨  أسماء الله الحسنى", "التسعة والتسعون اسمًا"),
             Triple("qada", "🕌  قضاء الصلوات", "عدّ ما فاتك وما قضيت"),
             Triple("hsearch", "🔍  البحث عن حديث", "في الأحاديث المشروحة وكل كتب الحديث"),
@@ -254,7 +258,7 @@ private fun MonthTable() {
 // ------------------------------------------------------------------------------- calendar
 
 @Composable
-private fun CalendarPage() {
+private fun CalendarPage(openMonths: () -> Unit) {
     val h = Data.hijri()
     val ar = Locale("ar")
     val list = Content.occasions.mapNotNull { o -> Data.nextDate(o.month, o.day)?.let { o to it } }.sortedBy { it.second }
@@ -268,6 +272,7 @@ private fun CalendarPage() {
                 Sub("يُحسب التاريخ بتقويم أم القرى. إن اختلف عن رؤية بلدك فعدّله من الإعدادات.", size = 11.sp)
             }
         }
+        item { Tile("🗓", "أسماء الشهور الهجرية والميلادية ومعانيها", Modifier.fillMaxWidth(), onClick = openMonths) }
         items(list) { (o, date) ->
             val days = ChronoUnit.DAYS.between(LocalDate.now(), date)
             Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
