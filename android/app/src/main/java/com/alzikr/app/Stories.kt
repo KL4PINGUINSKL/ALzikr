@@ -126,6 +126,18 @@ private fun StoryReader(st: QStory, back: () -> Unit) {
     LaunchedEffect(withTafsir) {
         if (withTafsir && !Tafsir.has(ctx, "muyassar", st.s)) { loading = true; withContext(Dispatchers.IO) { Tafsir.fetch(ctx, "muyassar", st.s) }; loading = false }
     }
+    var readMode by rememberSaveable { mutableStateOf(false) }
+    if (readMode && Quran.ready) {
+        val blocks = ArrayList<RBlock>()
+        blocks += RBlock(RKind.NOTE, st.intro)
+        blocks += RBlock(RKind.SMALL, "سورة ${Quran.surahs[st.s - 1].name} · الآيات ${st.from}–${st.to}")
+        (st.from..st.to).mapNotNull { Quran.at(st.s, it) }.forEach { a ->
+            blocks += RBlock(RKind.QURAN, a.text + " ﴿${Quran.digits(a.a)}﴾")
+            if (withTafsir) Tafsir.get(ctx, "muyassar", a.s, a.a)?.takeIf { it.from == a.a && it.text.isNotBlank() }?.let { blocks += RBlock(RKind.NOTE, it.text) }
+        }
+        TextReading(st.title, "story:${st.s}:${st.from}", blocks) { readMode = false }
+        return
+    }
     Subpage(st.title, back) {
         if (!Quran.ready) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Sub("…") }; return@Subpage }
         val verses = (st.from..st.to).mapNotNull { Quran.at(st.s, it) }
@@ -152,7 +164,8 @@ private fun StoryReader(st: QStory, back: () -> Unit) {
                 if (Recitation.now == null) Tile("▶", "استمع للقصة", Modifier.weight(1f)) { Recitation.play(ctx, st.s, st.from, stopAfter = st.to) }
                 else Tile("⏹", "إيقاف التلاوة", Modifier.weight(1f), on = true) { Recitation.stop() }
                 Tile("📖", if (withTafsir) "إخفاء التفسير" else "إظهار التفسير", Modifier.weight(1f), on = withTafsir) { withTafsir = !withTafsir }
-                Tile("↗", "افتح في المصحف", Modifier.weight(1f)) { Nav.openQuran(st.s, st.from) }
+                Tile("📜", "وضع القراءة", Modifier.weight(1f)) { readMode = true }
+                Tile("↗", "في المصحف", Modifier.weight(1f)) { Nav.openQuran(st.s, st.from) }
             }
         }
     }

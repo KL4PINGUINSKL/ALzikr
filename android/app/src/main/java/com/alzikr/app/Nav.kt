@@ -25,6 +25,8 @@ object Nav {
     var overlaySharh by mutableStateOf<String?>(null)
     var overlayHadith by mutableStateOf<Pair<String, String>?>(null)
     var overlayQuran by mutableStateOf<Pair<Int, Int>?>(null)
+    /** The mushaf in reading mode (surah, verse), full screen over everything. */
+    var reading by mutableStateOf<Pair<Int, Int>?>(null)
 
     fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }

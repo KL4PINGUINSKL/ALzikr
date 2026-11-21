@@ -110,6 +110,13 @@ private fun QuranHome() {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         item { Hint("quran", "📖", "اضغط «متابعة القراءة» لتكمل من حيث توقفت، أو اختر سورة أو جزءًا، أو ابحث بكلمة من آية.") }
         item {
+            val (ls, la) = Quran.last ?: (1 to 1)
+            Panel(Modifier.clickable { Nav.reading = ls to la }, color = P.accent.copy(alpha = .10f)) {
+                Text("📜 وضع القراءة", color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
+                Sub("صفحات كاملة بلون ورق مريح وخط كبير، دون أزرار تشغلك، وتتابع من حيث توقفت. ورد اليوم: ${Quran.digits(Reading.todayPages())} من ${Quran.digits(Reading.goal)} صفحات · الختمة ${Quran.digits(Reading.far * 100 / 604)}٪", size = 12.sp)
+            }
+        }
+        item {
             Quran.last?.let { (s, a) ->
                 Panel(Modifier.clickable { Nav.openQuran(s, a) }, color = P.card) {
                     Sub("متابعة القراءة")
@@ -253,6 +260,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                     Tile("▶", "استماع", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
                     Tile("📖", if (study) "إخفاء التفسير" else "التفسير", Modifier.weight(1f), on = study) { study = !study }
                     Tile("🧠", if (hifz) "إنهاء الحفظ" else "وضع الحفظ", Modifier.weight(1f), on = hifz) { hifz = !hifz }
+                    Tile("📜", "القراءة", Modifier.weight(1f)) { visibleAyah().let { Nav.reading = it.s to it.a } }
                     Tile("Aa", "الخط", Modifier.weight(1f)) { sheet = "font" }
                 }
                 }
@@ -331,7 +339,7 @@ internal fun ReciterDialog(close: () -> Unit) {
 /** Tapping a verse: the verse, six clear actions, then its tafsir in its own section. */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
+internal fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
@@ -512,6 +520,20 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
     var sharhId by rememberSaveable(bookId) { mutableStateOf<String?>(null) }
     sharhId?.let { id -> SharhOpen(id) { sharhId = null }; return }
     val b = book
+    var readMode by rememberSaveable(bookId) { mutableStateOf(false) }
+    if (readMode && b != null) {
+        val (blocks, at) = remember(b) {
+            val out = ArrayList<RBlock>(); val heads = HashMap<String, Int>()
+            val many = b.chapters.size > 1
+            b.items.groupBy { it.chapter }.forEach { (ch, hs) ->
+                if (many) { heads[ch] = out.size; out += RBlock(RKind.HEAD, b.chapters[ch] ?: ch) }
+                hs.forEach { h -> out += RBlock(RKind.SMALL, "حديث ${h.number}"); out += RBlock(RKind.BODY, h.text) }
+            }
+            out to heads
+        }
+        TextReading(Hadith.info(bookId)?.title ?: "", "hadith:$bookId", blocks, chapter?.let { at[it] } ?: -1) { readMode = false }
+        return
+    }
     // Opened on one hadith: go to its chapter.
     LaunchedEffect(b, focus) { if (b != null && focus != null && b.chapters.size > 1) b.items.firstOrNull { it.number == focus }?.let { chapter = it.chapter } }
     Subpage(Hadith.info(bookId)?.title ?: "", { if (chapter != null && query.isEmpty()) chapter = null else back() }) {
@@ -531,6 +553,7 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
         LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { Hint("hadithreader", "🔍", "اختر بابًا لتقرأ أحاديثه، أو ابحث في الكتاب كله. اضغط ☆ لحفظ حديث في «المفضلة».") }
             item { OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في الكتاب") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
+            if (query.isEmpty()) item { Tile("📜", if (chapter != null) "اقرأ في وضع القراءة من هذا الباب" else "اقرأ الكتاب في وضع القراءة", Modifier.fillMaxWidth()) { readMode = true } }
             if (shown == null) {
                 items(b.chapters.entries.toList()) { (id, name) ->
                     val count = b.items.count { it.chapter == id }

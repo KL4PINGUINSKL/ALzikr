@@ -51,6 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -173,6 +175,20 @@ private fun SharhPage(id: String, back: () -> Unit) {
     var h by remember(id) { mutableStateOf<Sharh.Hadith?>(null) }
     var failed by remember(id) { mutableStateOf(false) }
     LaunchedEffect(id) { h = withContext(Dispatchers.IO) { Sharh.hadith(ctx, id) }; failed = h == null }
+    var readMode by remember(id) { mutableStateOf(false) }
+    h?.takeIf { readMode }?.let { x ->
+        val blocks = ArrayList<RBlock>()
+        blocks += RBlock(RKind.HEAD, "الحديث")
+        blocks += RBlock(RKind.BODY, x.text)
+        listOf(x.grade.takeIf { it.isNotBlank() }?.let { "الدرجة: $it" }, x.attribution.takeIf { it.isNotBlank() }).filterNotNull().joinToString(" · ").takeIf { it.isNotBlank() }?.let { blocks += RBlock(RKind.SMALL, it) }
+        blocks += RBlock(RKind.HEAD, "الشرح")
+        x.explanation.split('\n').map { it.trim() }.filter { it.isNotEmpty() }.forEach { blocks += RBlock(RKind.BODY, it) }
+        if (x.hints.isNotEmpty()) { blocks += RBlock(RKind.HEAD, "من فوائد الحديث"); x.hints.forEach { blocks += RBlock(RKind.BODY, "• $it") } }
+        x.words.filter { it.first.isNotBlank() }.takeIf { it.isNotEmpty() }?.let { w -> blocks += RBlock(RKind.HEAD, "معاني الكلمات"); w.forEach { (a, m) -> blocks += RBlock(RKind.BODY, "$a: $m") } }
+        if (x.reference.isNotBlank()) { blocks += RBlock(RKind.HEAD, "المراجع"); blocks += RBlock(RKind.SMALL, x.reference) }
+        TextReading("شرح الحديث", "sharh:$id", blocks, 0) { readMode = false }
+        return
+    }
     Subpage("شرح الحديث", back) {
         val x = h
         if (x == null) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { if (failed) Sub("تعذّر التحميل، تحقق من الإنترنت.") else CircularProgressIndicator(color = P.accent) }; return@Subpage }
@@ -187,6 +203,7 @@ private fun SharhPage(id: String, back: () -> Unit) {
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tile(if (Sharh.isFavorite(x.id)) "★" else "☆", if (Sharh.isFavorite(x.id)) "في المفضلة" else "أضف للمفضلة", Modifier.weight(1f)) { Sharh.toggleFavorite(x.id) }
+                Tile("📜", "القراءة", Modifier.weight(1f)) { readMode = true }
                 Tile("⧉", "نسخ", Modifier.weight(1f)) { copyText(ctx, full) }
                 Tile("↗", "مشاركة", Modifier.weight(1f)) { shareText(ctx, full) }
             }
@@ -326,11 +343,14 @@ private fun PdfReader(id: String, title: String, back: () -> Unit) {
     val state = rememberLazyListState(initialFirstVisibleItemIndex = Books.lastPage(id))
     val scope = rememberCoroutineScope()
     LaunchedEffect(id) { snapshotFlow { state.firstVisibleItemIndex }.collect { Books.setLastPage(id, it) } }
+    var readMode by rememberSaveable(id) { mutableStateOf(false) }
+    if (readMode && renderer != null) { PdfReading(renderer, id, title) { readMode = false }; return }
     Subpage(title, back) {
         if (renderer == null) { Sub("تعذّر فتح الملف. احذفه ونزّله من جديد.", Modifier.padding(16.dp)); return@Subpage }
         val count = renderer.pageCount
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Choice("📜 وضع القراءة", false) { readMode = true }
                 Sub("صفحة ${state.firstVisibleItemIndex + 1} من $count", Modifier.weight(1f), size = 13.sp)
                 Choice("انتقل إلى…", false) { goTo = true }
                 Choice("−", false) { zoom = (zoom - .25f).coerceAtLeast(1f) }
@@ -359,7 +379,7 @@ private fun PdfReader(id: String, title: String, back: () -> Unit) {
 private val renderLock = Any()
 
 @Composable
-private fun PdfPage(renderer: PdfRenderer, index: Int, widthPx: Int, modifier: Modifier) {
+private fun PdfPage(renderer: PdfRenderer, index: Int, widthPx: Int, modifier: Modifier, filter: androidx.compose.ui.graphics.ColorFilter? = null, paper: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White) {
     var bitmap by remember(index, widthPx) { mutableStateOf<Bitmap?>(null) }
     var ratio by remember(index) { mutableStateOf(1.414f) }
     LaunchedEffect(index, widthPx) {
@@ -378,8 +398,8 @@ private fun PdfPage(renderer: PdfRenderer, index: Int, widthPx: Int, modifier: M
             }
         }
     }
-    Box(modifier.aspectRatio(1f / ratio).background(androidx.compose.ui.graphics.Color.White), contentAlignment = Alignment.Center) {
-        bitmap?.let { Image(it.asImageBitmap(), "صفحة ${index + 1}", Modifier.fillMaxSize(), contentScale = ContentScale.FillWidth) } ?: CircularProgressIndicator(Modifier.size(24.dp), color = P.accent)
+    Box(modifier.aspectRatio(1f / ratio).background(paper), contentAlignment = Alignment.Center) {
+        bitmap?.let { Image(it.asImageBitmap(), "صفحة ${index + 1}", Modifier.fillMaxSize(), contentScale = ContentScale.FillWidth, colorFilter = filter) } ?: CircularProgressIndicator(Modifier.size(24.dp), color = P.accent)
     }
 }
 
@@ -430,5 +450,35 @@ fun SciencesHome(openBooks: (String, String) -> Unit, openAll: () -> Unit) {
             }
         }
         item { Sub("الكتب من دار الإسلام (IslamHouse.com) لأهل السنة والجماعة.", Modifier.padding(6.dp), size = 11.sp) }
+    }
+}
+
+/** A PDF book in reading mode: full screen, the paper's tint (or night inversion), auto-scroll, resume. */
+@Composable
+private fun PdfReading(renderer: PdfRenderer, id: String, title: String, back: () -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val scope = rememberCoroutineScope()
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = Books.lastPage(id))
+    LaunchedEffect(id) { snapshotFlow { state.firstVisibleItemIndex }.collect { Books.setLastPage(id, it) } }
+    val count = renderer.pageCount
+    var goTo by remember { mutableStateOf(false) }
+    val paper = Reading.paper
+    val bg = androidx.compose.ui.graphics.Color(paper.bg)
+    ReadingShell(title, "صفحة ${state.firstVisibleItemIndex + 1} من $count", back, progress = (state.firstVisibleItemIndex + 1f) / count, scroll = state, textual = false,
+        tiles = { Tile("📑", "انتقل إلى", Modifier.weight(1f)) { goTo = true } }) { toggle ->
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
+            LazyColumn(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures(onTap = { toggle() }) }, state = state,
+                contentPadding = PaddingValues(vertical = 30.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                items(count) { i -> PdfPage(renderer, i, widthPx, Modifier.fillMaxWidth(), paper.pdfFilter(), bg) }
+            }
+        }
+    }
+    if (goTo) {
+        var text by remember { mutableStateOf("") }
+        AlertDialog(onDismissRequest = { goTo = false }, containerColor = P.surface, title = { Text("انتقل إلى صفحة", color = P.ink) },
+            text = { OutlinedTextField(text, { text = it.filter(Char::isDigit).take(5) }, singleLine = true, placeholder = { Text("1 – $count") }) },
+            confirmButton = { TextButton({ text.toIntOrNull()?.let { n -> scope.launch { state.scrollToItem((n - 1).coerceIn(0, count - 1)) } }; goTo = false }) { Text("انتقل") } },
+            dismissButton = { TextButton({ goTo = false }) { Text("إلغاء") } })
     }
 }

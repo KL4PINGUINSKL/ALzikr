@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
     /** "quran" = "2:255" opens the mushaf there; "hadith" = "bukhari:1" opens a book (shortcuts and links). */
     private fun openPlace(i: Intent?) {
         if (i?.getBooleanExtra("darktasbih", false) == true) TasbihDarkActivity.open(this)
+        i?.getStringExtra("read")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.reading = it[0] to it[1] }
         i?.getStringExtra("hsearch")?.let { Nav.hadithQuery = it; Nav.tab = "library" }
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
@@ -170,6 +171,7 @@ private fun Root() {
 /** Pages opened over the current tab; back closes them and you are where you were. */
 @Composable
 private fun Overlays() {
+    Nav.reading?.let { (s, a) -> QuranReading(s, a) { Nav.reading = null }; return }
     val sharh = Nav.overlaySharh; val hadith = Nav.overlayHadith; val quran = Nav.overlayQuran
     if (sharh == null && hadith == null && quran == null) return
     Box(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
