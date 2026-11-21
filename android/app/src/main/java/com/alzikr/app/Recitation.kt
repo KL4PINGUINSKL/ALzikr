@@ -1,0 +1,189 @@
+package com.alzikr.app
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.media.MediaPlayer
+import android.os.Build
+import android.os.IBinder
+import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+/**
+ * Verse-by-verse recitation streamed from everyayah.com. Each verse can repeat (for memorizing),
+ * the basmala is read before each surah, and reading can go on into the next surah. A small
+ * foreground service keeps it playing with the screen off and shows pause / stop.
+ */
+object Recitation {
+    data class Reciter(val folder: String, val name: String)
+    val reciters = listOf(
+        Reciter("Alafasy_128kbps", "مشاري العفاسي"),
+        Reciter("Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد (مرتل)"),
+        Reciter("Husary_128kbps", "محمود خليل الحصري"),
+        Reciter("Husary_Muallim_128kbps", "الحصري (المعلّم، للتحفيظ)"),
+        Reciter("Minshawy_Murattal_128kbps", "محمد صديق المنشاوي (مرتل)"),
+        Reciter("MaherAlMuaiqly128kbps", "ماهر المعيقلي"),
+        Reciter("Abdurrahmaan_As-Sudais_192kbps", "عبد الرحمن السديس"),
+        Reciter("Saood_ash-Shuraym_128kbps", "سعود الشريم"),
+        Reciter("Ghamadi_40kbps", "سعد الغامدي"),
+        Reciter("Yasser_Ad-Dussary_128kbps", "ياسر الدوسري"),
+        Reciter("Nasser_Alqatami_128kbps", "ناصر القطامي"),
+        Reciter("Abu_Bakr_Ash-Shaatree_128kbps", "أبو بكر الشاطري"),
+        Reciter("Hudhaify_128kbps", "علي الحذيفي"),
+    )
+
+    var reciter: String
+        get() = Store.prefs.getString("reciter", reciters.first().folder) ?: reciters.first().folder
+        set(v) { Store.prefs.edit().putString("reciter", v).apply(); Store.bump() }
+    var repeat: Int
+        get() = Store.prefs.getInt("recite_repeat", 1)
+        set(v) { Store.prefs.edit().putInt("recite_repeat", v).apply(); Store.bump() }
+    var continueNext: Boolean
+        get() = Store.prefs.getBoolean("recite_continue", true)
+        set(v) { Store.prefs.edit().putBoolean("recite_continue", v).apply(); Store.bump() }
+    fun reciterName() = reciters.firstOrNull { it.folder == reciter }?.name ?: ""
+
+    /** The verse being read (surah, ayah), or null when stopped. */
+    var now by mutableStateOf<Pair<Int, Int>?>(null)
+        private set
+    var paused by mutableStateOf(false)
+        private set
+    var loading by mutableStateOf(false)
+        private set
+
+    private var player: MediaPlayer? = null
+    private var played = 0
+    private var basmalaFirst = false
+    private lateinit var app: Context
+    private var focus: AudioFocusRequest? = null
+
+    private fun url(s: Int, a: Int) = "https://everyayah.com/data/$reciter/%03d%03d.mp3".format(s, a)
+
+    fun play(c: Context, s: Int, a: Int) {
+        app = c.applicationContext
+        Quran.load(app)
+        played = 0
+        basmalaFirst = a == 1 && s != 1 && s != 9
+        now = s to a; paused = false
+        if (!requestFocus()) { Toast.makeText(app, "الصوت مشغول الآن (مكالمة؟)", Toast.LENGTH_SHORT).show(); now = null; return }
+        runCatching { app.startForegroundService(Intent(app, RecitationService::class.java)) }
+        load()
+    }
+
+    private fun load() {
+        val (s, a) = now ?: return
+        player?.release()
+        loading = true
+        player = MediaPlayer().apply {
+            setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+            setDataSource(if (basmalaFirst) url(1, 1) else url(s, a))
+            setOnPreparedListener { loading = false; if (!paused) it.start() }
+            setOnCompletionListener { advance() }
+            setOnErrorListener { _, _, _ ->
+                loading = false
+                Toast.makeText(app, "تعذّر تشغيل التلاوة، تحقق من الإنترنت", Toast.LENGTH_LONG).show()
+                stop(); true
+            }
+            prepareAsync()
+        }
+        RecitationService.refresh(app)
+    }
+
+    private fun advance() {
+        val (s, a) = now ?: return
+        if (basmalaFirst) { basmalaFirst = false; load(); return }
+        played++
+        if (played < repeat) { player?.seekTo(0); player?.start(); return }
+        played = 0
+        val count = Quran.surahs.getOrNull(s - 1)?.count ?: 0
+        when {
+            a < count -> now = s to a + 1
+            continueNext && s < 114 -> { now = s + 1 to 1; basmalaFirst = s + 1 != 9 }
+            else -> { stop(); return }
+        }
+        load()
+    }
+
+    fun pause() { player?.takeIf { it.isPlaying }?.pause(); paused = true; RecitationService.refresh(app) }
+    fun resume() { if (now == null) return; paused = false; if (!loading) player?.start(); RecitationService.refresh(app) }
+    fun stop() {
+        player?.release(); player = null
+        now = null; paused = false; loading = false
+        focus?.let { f -> app.getSystemService(AudioManager::class.java).abandonAudioFocusRequest(f) }; focus = null
+        if (::app.isInitialized) app.stopService(Intent(app, RecitationService::class.java))
+    }
+
+    /** Pause for calls and other audio; carry on when it ends. */
+    private fun requestFocus(): Boolean {
+        val am = app.getSystemService(AudioManager::class.java)
+        val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+            .setOnAudioFocusChangeListener { change ->
+                when (change) {
+                    AudioManager.AUDIOFOCUS_LOSS -> pause()
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> { player?.takeIf { it.isPlaying }?.pause() }
+                    AudioManager.AUDIOFOCUS_GAIN -> if (!paused && now != null) player?.start()
+                }
+            }.build()
+        focus = req
+        return am.requestAudioFocus(req) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+    }
+}
+
+/** Keeps the recitation alive in the background, with pause / stop in the notification. */
+class RecitationService : Service() {
+    override fun onBind(i: Intent?): IBinder? = null
+
+    override fun onStartCommand(i: Intent?, flags: Int, id: Int): Int {
+        when (i?.action) {
+            PAUSE -> Recitation.pause()
+            RESUME -> Recitation.resume()
+            STOP -> { Recitation.stop(); return START_NOT_STICKY }
+        }
+        val n = build(this)
+        if (Build.VERSION.SDK_INT >= 29) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK) else startForeground(ID, n)
+        if (Recitation.now == null) stopSelf()
+        return START_NOT_STICKY
+    }
+
+    companion object {
+        private const val ID = 21
+        private const val CH = "recitation"
+        const val PAUSE = "com.alzikr.app.RECITE_PAUSE"
+        const val RESUME = "com.alzikr.app.RECITE_RESUME"
+        const val STOP = "com.alzikr.app.RECITE_STOP"
+
+        private fun action(c: Context, a: String, code: Int) = PendingIntent.getService(c, code, Intent(c, RecitationService::class.java).setAction(a), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+        fun build(c: Context): Notification {
+            val nm = c.getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(NotificationChannel(CH, "تلاوة القرآن", NotificationManager.IMPORTANCE_LOW).apply { setShowBadge(false) })
+            val (s, a) = Recitation.now ?: (1 to 1)
+            val name = Quran.surahs.getOrNull(s - 1)?.name ?: ""
+            val open = PendingIntent.getActivity(c, 30, Intent(c, MainActivity::class.java).putExtra("quran", "$s:$a").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            return Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
+                .setContentTitle("سورة $name · الآية ${Quran.digits(a)}")
+                .setContentText(Recitation.reciterName() + if (Recitation.repeat > 1) " · تكرار ×${Recitation.repeat}" else "")
+                .setContentIntent(open).setOngoing(true).setShowWhen(false).setColor(0xFF1F7A5A.toInt())
+                .addAction(Notification.Action.Builder(null, if (Recitation.paused) "متابعة" else "إيقاف مؤقت", action(c, if (Recitation.paused) RESUME else PAUSE, 31)).build())
+                .addAction(Notification.Action.Builder(null, "إنهاء", action(c, STOP, 32)).build())
+                .setStyle(Notification.MediaStyle().setShowActionsInCompactView(0, 1))
+                .build()
+        }
+
+        fun refresh(c: Context) {
+            if (Recitation.now == null) return
+            if (Alerts.canPost(c)) c.getSystemService(NotificationManager::class.java).notify(ID, build(c))
+        }
+    }
+}

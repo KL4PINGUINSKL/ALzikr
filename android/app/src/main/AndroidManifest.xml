@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -29,6 +31,11 @@
         <receiver android:name=".AlertReceiver" android:exported="false" />
         <receiver android:name=".FocusReceiver" android:exported="false" />
         <receiver android:name=".AppUpdateReceiver" android:exported="false" />
+        <service android:name=".RecitationService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
+        <receiver android:name=".TasbihWidget" android:exported="false" android:label="السبحة">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_tasbih" />
+        </receiver>
         <receiver android:name=".PrayerWidget" android:exported="false" android:label="الصلاة القادمة">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_prayer" />

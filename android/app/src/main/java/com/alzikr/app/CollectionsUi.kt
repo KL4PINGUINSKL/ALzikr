@@ -157,7 +157,7 @@ private fun TasbihScreen() {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(33, 99, 100, 1000).forEach { n -> Choice("$n", set == n) { Data.tasbihSet = n } } }
         Box(Modifier.size(270.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.card)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                val n = Data.tasbihTap()
+                val n = Data.tasbihTap(); TasbihWidget.update(ctx)
                 runCatching { vibrator?.vibrate(if (n % set == 0) VibrationEffect.createWaveform(longArrayOf(0, 70, 90, 70), -1) else VibrationEffect.createOneShot(14, 100)) }
             }, contentAlignment = Alignment.Center) {
             Counter(count % set, set, false, "الدورة ${count / set + 1} · المجموع $count", 250.dp)

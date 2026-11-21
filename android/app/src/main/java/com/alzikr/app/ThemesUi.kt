@@ -17,9 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,5 +87,37 @@ fun ModeChoice() {
     if (look.day == null || look.night == null) { Sub("هذا الثيم ${if (look.day == null) "ليلي" else "نهاري"} دائمًا.", size = 12.sp); return }
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf(0 to "حسب الهاتف", 1 to "نهاري", 2 to "ليلي").forEach { (n, l) -> Choice(l, Data.theme == n) { Data.theme = n } }
+    }
+}
+
+/** The current theme's seven colors, and a free one from the color wheel. */
+@Composable
+fun ColorChoice() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val look = Looks.byId(Data.look)
+    val dark = isSystemInDarkTheme()
+    val chosen = Data.lookColor(look.id)
+    val base = look.basePal(dark, Data.theme)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Sub("ألوان «${look.name}»", size = 13.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Tints.list.forEachIndexed { i, t ->
+                val c = Tints.accentFor(i, 0f, base.dark) ?: base.accent
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { Data.setLookColor(look.id, i) }) {
+                    Box(Modifier.size(34.dp).clip(look.shape(10.dp)).background(c).border(if (chosen == i) 3.dp else 1.dp, if (chosen == i) P.ink else P.line, look.shape(10.dp)),
+                        contentAlignment = Alignment.Center) { if (chosen == i) Text("✓", color = if (c.luminance() > .5f) androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold) }
+                    Text(t.name, color = P.muted, fontSize = 9.sp)
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Choice("لون حر", chosen == Tints.CUSTOM) { Data.setLookColor(look.id, Tints.CUSTOM) }
+            if (chosen == Tints.CUSTOM) {
+                var hue by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(Data.lookHue(look.id)) }
+                androidx.compose.material3.Slider(hue, { hue = it }, valueRange = 0f..359f, onValueChangeFinished = { Data.setLookColor(look.id, Tints.CUSTOM, hue) },
+                    modifier = Modifier.weight(1f).padding(start = 10.dp),
+                    colors = androidx.compose.material3.SliderDefaults.colors(thumbColor = androidx.compose.ui.graphics.Color.hsv(hue, .7f, .6f), activeTrackColor = androidx.compose.ui.graphics.Color.hsv(hue, .7f, .6f)))
+            }
+        }
     }
 }

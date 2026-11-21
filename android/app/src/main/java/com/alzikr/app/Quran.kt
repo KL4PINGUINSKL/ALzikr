@@ -1,13 +1,9 @@
 package com.alzikr.app
 
 import android.content.Context
-import android.util.JsonReader
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 import java.time.LocalDate
 
 /**
@@ -90,60 +86,4 @@ object Quran {
     var fontSize: Int
         get() = Store.prefs.getInt("q_size", 26)
         set(v) { Store.prefs.edit().putInt("q_size", v.coerceIn(18, 44)).apply(); Store.bump() }
-
-    // ----------------------------------------------------------------- tafsir (downloaded)
-
-    data class Tafsir(val id: String, val name: String, val edition: String)
-    val tafasir = listOf(Tafsir("jalalayn", "تفسير الجلالين", "ara-jalaladdinalmah"))
-    private val cache = HashMap<String, Map<Int, String>>()
-    var downloading by mutableStateOf<String?>(null)
-    var progress by mutableStateOf(0f)
-
-    private fun file(c: Context, id: String) = File(c.filesDir, "tafsir_$id.txt")
-    fun hasTafsir(c: Context, id: String) = file(c, id).exists()
-
-    fun tafsir(c: Context, id: String, s: Int, a: Int): String? {
-        val map = cache.getOrPut(id) {
-            val f = file(c, id); if (!f.exists()) return null
-            val m = HashMap<Int, String>(6300)
-            f.forEachLine { l -> val p = l.split('\t', limit = 3); if (p.size == 3) m[p[0].toInt() * 1000 + p[1].toInt()] = p[2] }
-            m
-        }
-        return map[s * 1000 + a]
-    }
-
-    /** Downloads a tafsir from quran-api (jsDelivr) and keeps only what the app needs. Blocking: call off the main thread. */
-    fun downloadTafsir(c: Context, t: Tafsir): Boolean {
-        downloading = t.id; progress = 0f
-        val tmp = File(c.filesDir, "tafsir_${t.id}.part")
-        return try {
-            val conn = URL("https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/${t.edition}.min.json").openConnection() as HttpURLConnection
-            conn.connectTimeout = 15_000; conn.readTimeout = 60_000
-            if (conn.responseCode != 200) return false
-            var n = 0
-            tmp.bufferedWriter().use { out ->
-                JsonReader(conn.inputStream.bufferedReader()).use { r ->
-                    r.beginObject()
-                    while (r.hasNext()) {
-                        if (r.nextName() != "quran") { r.skipValue(); continue }
-                        r.beginArray()
-                        while (r.hasNext()) {
-                            var s = 0; var a = 0; var text = ""
-                            r.beginObject()
-                            while (r.hasNext()) when (r.nextName()) { "chapter" -> s = r.nextInt(); "verse" -> a = r.nextInt(); "text" -> text = r.nextString(); else -> r.skipValue() }
-                            r.endObject()
-                            out.write("$s\t$a\t${text.replace('\n', ' ').replace('\t', ' ')}\n")
-                            if (++n % 200 == 0) progress = n / 6236f
-                        }
-                        r.endArray()
-                    }
-                    r.endObject()
-                }
-            }
-            conn.disconnect()
-            n > 6000 && tmp.renameTo(file(c, t.id))
-        } catch (e: Exception) {
-            android.util.Log.w("ALzikr", "tafsir download", e); false
-        } finally { tmp.delete(); downloading = null; cache.remove(t.id) }
-    }
 }

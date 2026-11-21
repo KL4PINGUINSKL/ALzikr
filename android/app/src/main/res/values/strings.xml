@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_desc">الصلاة القادمة وأوقات اليوم</string>
+    <string name="widget_tasbih_desc">سبحة: اضغط للتسبيح من الشاشة الرئيسية</string>
 </resources>

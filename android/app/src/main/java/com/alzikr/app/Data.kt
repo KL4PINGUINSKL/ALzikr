@@ -17,6 +17,11 @@ object Data {
 
     // ----------------------------------------------------------------- look
 
+    /** Each theme keeps its own color: 0 its original, 1–6 the presets, 7 a free hue. */
+    fun lookColor(id: String) = sp.getInt("look_color_$id", 0)
+    fun lookHue(id: String) = sp.getFloat("look_hue_$id", 160f)
+    fun setLookColor(id: String, index: Int, hue: Float = lookHue(id)) = edit { putInt("look_color_$id", index).putFloat("look_hue_$id", hue) }
+
     /** The chosen theme (see [Looks]). */
     var look: String
         get() = sp.getString("look", "emerald") ?: "emerald"

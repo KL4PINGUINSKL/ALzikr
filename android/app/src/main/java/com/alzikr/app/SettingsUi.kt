@@ -175,6 +175,7 @@ fun SettingsSheet(close: () -> Unit) {
                 Title("الثيم والمظهر")
                 Sub("الثيم يغيّر الألوان والأشكال والخطوط وترتيب الصفحات والأيقونات وشكل العدّاد.", Modifier.padding(bottom = 8.dp), size = 12.sp)
                 ModeChoice()
+                Box(Modifier.padding(top = 10.dp)) { ColorChoice() }
                 Box(Modifier.padding(top = 10.dp)) { ThemeGallery() }
                 Sub("حجم خط الأذكار", Modifier.padding(top = 10.dp, bottom = 6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

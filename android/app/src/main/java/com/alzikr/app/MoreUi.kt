@@ -72,7 +72,7 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "calendar" -> CalendarPage()
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
-                "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ThemeGallery() }
+                "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> BackupPage()
             }
         }
@@ -86,7 +86,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             nextOccasion()?.let { (o, d) -> Sub("${o.name} ${if (d == 0L) "اليوم" else "بعد $d يومًا"}", color = P.gold) }
         }
         listOf(
-            Triple("themes", "🎨  الثيمات", "${Looks.byId(Data.look).name} · ${Looks.all.size} ثيمات بأشكال وترتيب مختلف"),
+            Triple("themes", "🎨  الثيمات", "${Looks.byId(Data.look).name} · ${Looks.all.size} ثيمًا، ولكل ثيم سبعة ألوان"),
             Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
             Triple("month", "📅  مواقيت الشهر", "جدول الصلوات لكل أيام الشهر"),
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
