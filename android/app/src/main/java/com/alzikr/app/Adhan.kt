@@ -30,7 +30,11 @@ import java.net.URL
  */
 object Adhan {
     data class Voice(val id: String, val name: String, val credit: String, val bytes: Long, val takbirMs: Long)
+    private const val IA = "مجموعة «أذانات مساجد العالم» على أرشيف الإنترنت · وسمها رافعها بالملك العام"
     val voices = listOf(
+        Voice("makkah-mulla", "عبد الملك الملا · المسجد الحرام", IA, 4_044_886, 28_500),
+        Voice("makkah-hakim", "ماجد حكيم · المسجد الحرام", IA, 1_480_707, 32_000),
+        Voice("madinah-bukhari", "عبد العزيز بخاري · المسجد النبوي", IA, 5_532_821, 43_000),
         Voice("aaqib-azeez", "عاقب عزيز", "تسجيل Atcovi · رخصة CC BY-SA 4.0 · ويكيميديا كومنز", 1_448_294, 11_200),
         Voice("sabah-fakhri", "صباح فخري", "ملك عام · ويكيميديا كومنز", 2_530_742, 30_000),
     )

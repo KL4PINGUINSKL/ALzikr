@@ -251,7 +251,7 @@ fun AdhanChoice() {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(if (on) P.accent.copy(alpha = .10f) else P.card)
             .clickable { Adhan.voiceId = voice.id }.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text((if (on) "● " else "○ ") + "أذان " + voice.name, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                Text((if (on) "● " else "○ ") + voice.name, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 Sub(voice.credit, size = 10.sp)
             }
             when {
