@@ -253,7 +253,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                 else Column {
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 10.dp, end = 10.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Choice("🎙 ${Recitation.reciterName()} ▾", false) { sheet = "reciter" }
-                    RangeChoice()
+                    RangeChoice(scroll = false)
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Tile("▶", "استماع", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
@@ -686,10 +686,11 @@ fun SearchBar(text: String, onClick: () -> Unit) {
 
 /** How far to read: this verse only, N verses (tap again to change N), to the end of the surah, or on. */
 @Composable
-fun RangeChoice(live: Boolean = false) {
+fun RangeChoice(live: Boolean = false, scroll: Boolean = true) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val current = if (live) Recitation.playing else Recitation.range
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    // Inside a row that already scrolls sideways it must not scroll itself (nested scrolling crashes).
+    Row(if (scroll) Modifier.horizontalScroll(rememberScrollState()) else Modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Recitation.Range.entries.forEach { r ->
             val on = current == r
             Choice(if (r == Recitation.Range.COUNT) "${Quran.digits(Recitation.count)} آيات" + (if (on) " ▾" else "") else r.label, on) {
