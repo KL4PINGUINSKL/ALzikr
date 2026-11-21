@@ -89,10 +89,13 @@ fun SharhHome() {
         failed = cats.isNullOrEmpty()
     }
     LaunchedEffect(Unit) { load(false) }
+    var searching by rememberSaveable { mutableStateOf(false) }
+    if (searching) { HadithSearchPage { searching = false }; return }
     openHadith?.let { id -> SharhPage(id) { openHadith = null }; return }
     openCat?.let { id -> SharhList(cats?.firstOrNull { it.id == id }?.title ?: "", id, open = { openHadith = it }) { openCat = null }; return }
     val all = cats
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { SearchBar("ابحث عن حديث وشرحه…") { searching = true } }
         item { Hint("sharh", "💡", "أحاديث مشروحة من «موسوعة الأحاديث النبوية»: اختر موضوعًا، ثم حديثًا لترى شرحه وفوائده ودرجته.") }
         if (parent != null) item { Choice("‹ رجوع إلى المواضيع", false) { parent = null } }
         when {

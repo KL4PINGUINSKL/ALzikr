@@ -69,7 +69,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     var page by remember { mutableStateOf<String?>(null) }
     Nav.morePage?.let { page = it; Nav.morePage = null }
     page?.let { p ->
-        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
+        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -78,6 +78,7 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "qada" -> QadaPage()
                 "zakat" -> ZakatPage()
                 "quiz" -> QuizPage()
+                "hsearch" -> { HadithSearchPage { page = null } }
                 "convert" -> ConvertPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> BackupPage()
@@ -105,6 +106,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
             Triple("names", "✨  أسماء الله الحسنى", "التسعة والتسعون اسمًا"),
             Triple("qada", "🕌  قضاء الصلوات", "عدّ ما فاتك وما قضيت"),
+            Triple("hsearch", "🔍  البحث عن حديث", "في الأحاديث المشروحة وكل كتب الحديث"),
             Triple("quiz", "🎯  مسابقة القرآن", "من أي سورة هذه الآية؟ وأكمل الآية"),
             Triple("zakat", "💰  حاسبة الزكاة", "زكاة المال والذهب والفضة بالنصاب"),
             Triple("convert", "🔁  محوّل التاريخ", "من الهجري إلى الميلادي وبالعكس"),

@@ -165,6 +165,11 @@ private fun TasbihScreen() {
             Counter(count % set, set, false, "الدورة ${count / set + 1} · المجموع $count", 250.dp)
         }
         Sub("اضغط على الدائرة للتسبيح", size = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Tile("🌙", "سبحة الشاشة المظلمة", Modifier.weight(1f)) { TasbihDarkActivity.open(ctx) }
+            Tile("🔒", if (TasbihNotice.on) "إزالتها من القفل" else "على شاشة القفل", Modifier.weight(1f), on = TasbihNotice.on) { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
+        }
+        Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «على شاشة القفل»: زر «سبّح +١» في الإشعار يعمل دون فتح القفل.", size = 11.sp)
         Text("تصفير", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { Data.tasbihReset() }.padding(horizontal = 14.dp, vertical = 8.dp))
 
         Panel(pad = 14.dp) {

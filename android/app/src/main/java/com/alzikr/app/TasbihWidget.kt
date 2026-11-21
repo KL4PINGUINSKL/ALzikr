@@ -27,10 +27,11 @@ class TasbihWidget : AppWidgetProvider() {
     }
 
     companion object {
-        private const val TAP = "com.alzikr.app.TASBIH_TAP"
+        const val TAP = "com.alzikr.app.TASBIH_TAP"
         private const val RESET = "com.alzikr.app.TASBIH_RESET"
 
         fun update(c: Context) {
+            TasbihNotice.update(c)
             val manager = AppWidgetManager.getInstance(c)
             val ids = manager.getAppWidgetIds(ComponentName(c, TasbihWidget::class.java))
             if (ids.isEmpty()) return

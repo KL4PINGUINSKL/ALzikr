@@ -28,6 +28,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".TasbihDarkActivity" android:exported="false" android:showWhenLocked="true" android:turnScreenOn="true"
+            android:excludeFromRecents="true" android:taskAffinity="com.alzikr.app.tasbih" android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
         <receiver android:name=".AlertReceiver" android:exported="false" />
         <receiver android:name=".FocusReceiver" android:exported="false" />
         <receiver android:name=".AppUpdateReceiver" android:exported="false" />

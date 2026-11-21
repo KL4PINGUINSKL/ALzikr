@@ -66,8 +66,9 @@ fun LibraryScreen() {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a) { Nav.quran = null } else Loading(); return }
-    Nav.hadith?.let { (b, n) -> HadithReader(b, n) { Nav.hadith = null }; return }
+    Nav.hadith?.let { (b, n) -> HadithReader(b, n, back = { Nav.hadith = null }); return }
     Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
+    Nav.hadithQuery?.let { q -> HadithSearchPage(initial = q) { Nav.hadithQuery = null }; return }
     var section by rememberSaveable { mutableStateOf(0) }
     Nav.library?.let { section = it; Nav.library = null }
     // A books section opened from the stories or the sciences ("" = all books).
@@ -424,10 +425,13 @@ private fun TafsirHome() {
 @Composable
 private fun HadithHome() {
     val ctx = LocalContext.current
+    var searching by rememberSaveable { mutableStateOf(false) }
+    if (searching) { HadithSearchPage { searching = false }; return }
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val v = Hadith.version
     var remove by remember { mutableStateOf<Hadith.Info?>(null) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { SearchBar("ابحث عن حديث في كل الكتب…") { searching = true } }
         item { Hint("hadith", "📜", "اضغط على كتاب لتفتحه. الكتب التي بجانبها «تنزيل» تُنزَّل مرة واحدة ثم تعمل بلا إنترنت.") }
         items(Hadith.books, key = { it.id }) { b ->
             val have = Hadith.available(ctx, b.id)
@@ -478,7 +482,7 @@ private fun HadithHome() {
 }
 
 @Composable
-private fun HadithReader(bookId: String, number: Int, back: () -> Unit) {
+internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: String? = number.takeIf { it > 0 }?.toString()) {
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     var book by remember(bookId) { mutableStateOf<Hadith.Book?>(null) }
@@ -486,19 +490,22 @@ private fun HadithReader(bookId: String, number: Int, back: () -> Unit) {
     var chapter by rememberSaveable(bookId) { mutableStateOf<String?>(null) }
     var query by rememberSaveable(bookId) { mutableStateOf("") }
     val b = book
+    // Opened on one hadith: go to its chapter.
+    LaunchedEffect(b, focus) { if (b != null && focus != null && b.chapters.size > 1) b.items.firstOrNull { it.number == focus }?.let { chapter = it.chapter } }
     Subpage(Hadith.info(bookId)?.title ?: "", { if (chapter != null && query.isEmpty()) chapter = null else back() }) {
         if (b == null) { Loading(); return@Subpage }
         val q = Hadith.normalize(query)
         val manyChapters = b.chapters.size > 1
         val shown = when {
             q.length >= 2 -> remember(q, b) { b.items.filter { Hadith.normalize(it.text).contains(q) }.take(300) }
-            number > 0 && chapter == null && !manyChapters -> b.items
+            focus != null && chapter == null && !manyChapters -> b.items
             chapter != null -> b.items.filter { it.chapter == chapter }
             !manyChapters -> b.items
             else -> null
         }
-        val start = remember(b, number) { if (number > 0) b.items.indexOfFirst { it.number == number.toString() }.coerceAtLeast(0) else 0 }
-        val state = rememberLazyListState(initialFirstVisibleItemIndex = if (number > 0 && shown === b.items) start + 1 else 0)
+        val start = remember(shown, focus) { if (focus != null && shown != null) shown.indexOfFirst { it.number == focus }.coerceAtLeast(0) else 0 }
+        val state = rememberLazyListState()
+        LaunchedEffect(shown, focus) { if (focus != null && shown != null && q.isEmpty()) runCatching { state.scrollToItem(start + 2 + (if (chapter != null) 1 else 0)) } }
         LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { Hint("hadithreader", "🔍", "اختر بابًا لتقرأ أحاديثه، أو ابحث في الكتاب كله. اضغط ☆ لحفظ حديث في «المفضلة».") }
             item { OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في الكتاب") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
@@ -593,3 +600,13 @@ fun DailyWords() {
     }
 }
 
+
+/** A tap-to-search bar that opens the hadith search. */
+@Composable
+fun SearchBar(text: String, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp)).clickable(onClick = onClick)
+        .padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("🔍", fontSize = 18.sp)
+        Text(text, color = P.muted, fontSize = 15.sp, modifier = Modifier.padding(start = 10.dp))
+    }
+}

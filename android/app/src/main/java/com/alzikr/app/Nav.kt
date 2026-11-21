@@ -19,6 +19,8 @@ object Nav {
     var library by mutableStateOf<Int?>(null)
     var morePage by mutableStateOf<String?>(null)
     var story by mutableStateOf<Int?>(null)
+    /** Open the hadith search, searching this right away. */
+    var hadithQuery by mutableStateOf<String?>(null)
 
     fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }
