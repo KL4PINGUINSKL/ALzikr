@@ -144,7 +144,7 @@ fun Subpage(title: String, back: () -> Unit, content: @Composable () -> Unit) {
     }
 }
 
-private fun nextOccasion(): Pair<Content.Occasion, Long>? =
+internal fun nextOccasion(): Pair<Content.Occasion, Long>? =
     Content.occasions.mapNotNull { o -> Data.nextDate(o.month, o.day)?.let { o to ChronoUnit.DAYS.between(LocalDate.now(), it) } }.minByOrNull { it.second }
 
 // ------------------------------------------------------------------------------- qibla

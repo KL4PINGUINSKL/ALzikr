@@ -79,6 +79,7 @@ object Alerts {
         val next = upcoming().firstOrNull { it.at > System.currentTimeMillis() + 2_000 }
         val pi = PendingIntent.getBroadcast(c, 1, Intent(c, AlertReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         am.cancel(pi)
+        TasbihNotice.update(c)
         if (next == null) { PrayerWidget.updateAll(c); return }
         c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE).edit().putLong("at", next.at).putString("kind", next.kind.name).putString("prayer", next.prayer.name).apply()
         exact(am, next.at, pi)
@@ -291,6 +292,13 @@ class AlertReceiver : BroadcastReceiver() {
                 return
             }
             UNSILENCE -> { Alerts.unsilence(c); return }
+            // Swiped away: back it comes. «إخفاء»: switched off until turned on again.
+            TasbihNotice.BACK -> { TasbihNotice.update(c); return }
+            TasbihNotice.HIDE -> {
+                TasbihNotice.on = false; TasbihNotice.update(c)
+                android.widget.Toast.makeText(c, "أُخفي الإشعار. تعيده من صفحة الصلاة", android.widget.Toast.LENGTH_LONG).show()
+                return
+            }
         }
         val sp = c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE)
         val kind = runCatching { Alerts.Kind.valueOf(sp.getString("kind", "") ?: "") }.getOrNull()

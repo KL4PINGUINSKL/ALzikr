@@ -27,6 +27,11 @@ object Data {
     fun lookInk(id: String) = sp.getInt("look_ink_$id", 0)
     fun setLookInk(id: String, index: Int) = edit { putInt("look_ink_$id", index) }
 
+    /** How the prayer times are shown: 0 the theme's way, 1 cards, 2 list, 3 one line, 4 timeline. */
+    var prayerView: Int
+        get() = sp.getInt("prayer_view", 0)
+        set(v) = edit { putInt("prayer_view", v) }
+
     /** The chosen theme (see [Looks]). */
     var look: String
         get() = sp.getString("look", "emerald") ?: "emerald"

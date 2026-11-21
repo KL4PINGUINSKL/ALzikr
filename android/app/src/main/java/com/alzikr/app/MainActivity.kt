@@ -191,7 +191,7 @@ private fun Header(openSettings: () -> Unit) {
     Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
-            Sub(dateLine(), size = 12.sp)
+            Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.tab = "more" }, size = 12.sp)
         }
         Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Text("⚙", color = P.muted, fontSize = 20.sp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)

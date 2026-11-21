@@ -22,6 +22,8 @@ object Nav {
     var story by mutableStateOf<Int?>(null)
     /** Open the hadith search, searching this right away. */
     var hadithQuery by mutableStateOf<String?>(null)
+    /** Adhkar tab section to open (0 my awrad, 1 adhkar, 2 tasbih). */
+    var adhkar by mutableStateOf<Int?>(null)
     /** Inner pages open now (innermost last). While any is open the app header and the tab bar hide. */
     val pages = mutableStateListOf<Any>()
     /** Pages opened on top of the current tab (back returns to it): an explained hadith, a book hadith, a verse. */

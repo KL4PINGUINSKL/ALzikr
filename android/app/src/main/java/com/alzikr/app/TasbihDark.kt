@@ -95,29 +95,59 @@ class TasbihDarkActivity : ComponentActivity() {
     }
 }
 
-/** The tasbih on the lock screen: a quiet notification with «سبّح +١» and «الشاشة المظلمة». */
+/**
+ * ALzikr's lasting notification: the next prayer with a live countdown, and the tasbih («سبّح +١»)
+ * usable on the lock screen. Swiping it away brings it back; only «إخفاء» (or the switch) removes it.
+ */
 object TasbihNotice {
     private const val CH = "tasbih"
     private const val ID = 41
+    const val BACK = "com.alzikr.app.NOTICE_BACK"
+    const val HIDE = "com.alzikr.app.NOTICE_HIDE"
     var on: Boolean
         get() = Store.prefs.getBoolean("tasbih_notice", false)
         set(v) { Store.prefs.edit().putBoolean("tasbih_notice", v).apply(); Store.bump() }
 
+    /** The next prayer (not the sunrise) and its time. */
+    private fun next(): Pair<Prayer, Long> {
+        val zone = java.time.ZoneId.systemDefault()
+        val now = System.currentTimeMillis()
+        val today = java.time.LocalDate.now()
+        for (d in listOf(today, today.plusDays(1))) {
+            val t = Store.times(d)
+            Prayer.entries.filter { it.alertable }.forEach { p ->
+                val at = d.atStartOfDay(zone).plusMinutes(t.getValue(p).toLong()).toInstant().toEpochMilli()
+                if (at > now) return p to at
+            }
+        }
+        return Prayer.FAJR to now
+    }
+
     fun update(c: Context) {
+        Store.init(c)
         val nm = c.getSystemService(NotificationManager::class.java)
-        if (!on || !Alerts.canPost(c)) { nm.cancel(ID); return }
-        nm.createNotificationChannel(NotificationChannel(CH, "السبحة على شاشة القفل", NotificationManager.IMPORTANCE_LOW).apply {
+        if (!on || !Alerts.canPost(c) || !Store.hasLocation) { nm.cancel(ID); return }
+        nm.createNotificationChannel(NotificationChannel(CH, "إشعار ALzikr الدائم", NotificationManager.IMPORTANCE_LOW).apply {
             setShowBadge(false); lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         })
         val set = Data.tasbihSet; val n = Data.tasbih
-        val tap = PendingIntent.getBroadcast(c, 62, Intent(c, TasbihWidget::class.java).setAction(TasbihWidget.TAP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val dark = PendingIntent.getActivity(c, 63, Intent(c, TasbihDarkActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val (p, at) = next()
+        val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val tap = PendingIntent.getBroadcast(c, 62, Intent(c, TasbihWidget::class.java).setAction(TasbihWidget.TAP), flags)
+        val dark = PendingIntent.getActivity(c, 63, Intent(c, TasbihDarkActivity::class.java), flags)
+        val hide = PendingIntent.getBroadcast(c, 64, Intent(c, AlertReceiver::class.java).setAction(HIDE), flags)
+        val back = PendingIntent.getBroadcast(c, 65, Intent(c, AlertReceiver::class.java).setAction(BACK), flags)
+        val open = PendingIntent.getActivity(c, 66, Intent(c, MainActivity::class.java).putExtra("tab", "prayer").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), flags)
+        val time = Alerts.timeText(java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault()).let { it.hour * 60 + it.minute })
         val notice = Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
-            .setContentTitle("السبحة: ${n % set} من $set").setContentText("الدورة ${n / set + 1} · المجموع $n")
-            .setOngoing(true).setOnlyAlertOnce(true).setShowWhen(false).setVisibility(Notification.VISIBILITY_PUBLIC).setColor(0xFF1F7A5A.toInt())
-            .setContentIntent(dark)
+            .setContentTitle("${p.ar} $time")
+            .setContentText("السبحة: ${n % set} من $set · المجموع $n")
+            .setWhen(at).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
+            .setOngoing(true).setOnlyAlertOnce(true).setVisibility(Notification.VISIBILITY_PUBLIC).setColor(0xFF1F7A5A.toInt())
+            .setContentIntent(open).setDeleteIntent(back)
             .addAction(Notification.Action.Builder(null, "سبّح +١", tap).build())
             .addAction(Notification.Action.Builder(null, "الشاشة المظلمة", dark).build())
+            .addAction(Notification.Action.Builder(null, "إخفاء", hide).build())
             .build()
         nm.notify(ID, notice)
     }
