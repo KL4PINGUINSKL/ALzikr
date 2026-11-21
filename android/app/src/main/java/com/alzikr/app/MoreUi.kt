@@ -69,12 +69,13 @@ fun MoreScreen(openSettings: () -> Unit) {
     var page by remember { mutableStateOf<String?>(null) }
     Nav.morePage?.let { page = it; Nav.morePage = null }
     page?.let { p ->
-        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
+        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
-                "calendar" -> CalendarPage { page = "months" }
+                "calendar" -> CalendarPage({ page = "months" }, { page = "season:$it" })
                 "months" -> MonthsPage()
+                "seasons" -> SeasonsHome { page = "season:$it" }
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
                 "zakat" -> ZakatPage()
@@ -82,7 +83,10 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "hsearch" -> { HadithSearchPage { page = null } }
                 "convert" -> ConvertPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
-                else -> BackupPage()
+                else -> if (p.startsWith("season:")) {
+                    val id = p.removePrefix("season:")
+                    if (Seasons.byId(id) == null) SeasonsHome { page = "season:$it" } else SeasonPage(id) { page = "season:$it" }
+                } else BackupPage()
             }
         }
         return
@@ -107,6 +111,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
             Triple("month", "📅  مواقيت الشهر", "جدول الصلوات لكل أيام الشهر"),
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
+            Triple("seasons", "🌙  مواسم الطاعات", "رمضان وليلة القدر والعيدان وعشر ذي الحجة وعرفة والحج والعمرة وعاشوراء"),
             Triple("months", "🗓  أسماء الشهور ومعانيها", "لماذا سُمّيت الشهور الهجرية والميلادية بأسمائها"),
             Triple("names", "✨  أسماء الله الحسنى", "التسعة والتسعون اسمًا"),
             Triple("qada", "🕌  قضاء الصلوات", "عدّ ما فاتك وما قضيت"),
@@ -258,7 +263,7 @@ private fun MonthTable() {
 // ------------------------------------------------------------------------------- calendar
 
 @Composable
-private fun CalendarPage(openMonths: () -> Unit) {
+private fun CalendarPage(openMonths: () -> Unit, openSeason: (String) -> Unit) {
     val h = Data.hijri()
     val ar = Locale("ar")
     val list = Content.occasions.mapNotNull { o -> Data.nextDate(o.month, o.day)?.let { o to it } }.sortedBy { it.second }
@@ -272,10 +277,17 @@ private fun CalendarPage(openMonths: () -> Unit) {
                 Sub("يُحسب التاريخ بتقويم أم القرى. إن اختلف عن رؤية بلدك فعدّله من الإعدادات.", size = 11.sp)
             }
         }
-        item { Tile("🗓", "أسماء الشهور الهجرية والميلادية ومعانيها", Modifier.fillMaxWidth(), onClick = openMonths) }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tile("🌙", "مواسم الطاعات", Modifier.weight(1f)) { openSeason("") }
+                Tile("🗓", "أسماء الشهور", Modifier.weight(1f), onClick = openMonths)
+            }
+            Sub("اضغط على أي مناسبة لتقرأ فضلها وأذكارها وأحكامها.", Modifier.padding(top = 6.dp), size = 12.sp)
+        }
         items(list) { (o, date) ->
             val days = ChronoUnit.DAYS.between(LocalDate.now(), date)
-            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            val guide = Seasons.forOccasion(o.name)
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable(enabled = guide != null) { guide?.let { openSeason(it) } }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(o.name, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     Sub("${o.day} ${Data.months[o.month - 1]} · ${date.format(DateTimeFormatter.ofPattern("EEEE d MMMM", ar))}" + if (o.note.isNotEmpty()) "\n${o.note}" else "", size = 12.sp)

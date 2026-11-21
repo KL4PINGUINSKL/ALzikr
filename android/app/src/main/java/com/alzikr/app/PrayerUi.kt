@@ -170,7 +170,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
                 Text("$prayedWeek / $possible", color = if (prayedWeek == possible) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             nextOccasion()?.let { (o, days) ->
-                Panel(Modifier.weight(1f).clickable { Nav.morePage = "calendar"; Nav.tab = "more" }, pad = 12.dp) {
+                Panel(Modifier.weight(1f).clickable { Nav.morePage = Seasons.forOccasion(o.name)?.let { "season:$it" } ?: "calendar"; Nav.tab = "more" }, pad = 12.dp) {
                     Sub(o.name, size = 12.sp)
                     Text(if (days == 0L) "اليوم" else "بعد $days يومًا", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                 }
