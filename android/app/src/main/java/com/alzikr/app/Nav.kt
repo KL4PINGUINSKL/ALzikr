@@ -15,6 +15,10 @@ object Nav {
     var sharh by mutableStateOf<String?>(null)
     /** Sub-section inside the daily tab (0 tasks, 1 habits, 2 focus, 3 khatma, 4 notes). */
     var daily by mutableStateOf(0)
+    /** Library section to show (0 Quran … 6 favorites), a "More" page, and a Quran story by index. */
+    var library by mutableStateOf<Int?>(null)
+    var morePage by mutableStateOf<String?>(null)
+    var story by mutableStateOf<Int?>(null)
 
     fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }

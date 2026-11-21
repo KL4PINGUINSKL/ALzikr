@@ -69,7 +69,11 @@ object Recitation {
 
     private fun url(s: Int, a: Int) = "https://everyayah.com/data/$reciter/%03d%03d.mp3".format(s, a)
 
-    fun play(c: Context, s: Int, a: Int) {
+    /** Stop after this verse of the same surah (a story), or null to read on. */
+    private var stopAt: Int? = null
+
+    fun play(c: Context, s: Int, a: Int, stopAfter: Int? = null) {
+        stopAt = stopAfter
         app = c.applicationContext
         Quran.load(app)
         played = 0
@@ -105,6 +109,7 @@ object Recitation {
         played++
         if (played < repeat) { player?.seekTo(0); player?.start(); return }
         played = 0
+        if (stopAt != null && a >= stopAt!!) { stop(); return }
         val count = Quran.surahs.getOrNull(s - 1)?.count ?: 0
         when {
             a < count -> now = s to a + 1
@@ -118,7 +123,7 @@ object Recitation {
     fun skip(c: Context, delta: Int) {
         val (s, a) = now ?: return
         val count = Quran.surahs.getOrNull(s - 1)?.count ?: return
-        play(c, s, (a + delta).coerceIn(1, count))
+        play(c, s, (a + delta).coerceIn(1, count), stopAt)
     }
 
     fun pause() { player?.takeIf { it.isPlaying }?.pause(); paused = true; RecitationService.refresh(app) }

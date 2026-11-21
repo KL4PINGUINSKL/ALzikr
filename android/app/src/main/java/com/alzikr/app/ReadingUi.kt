@@ -210,7 +210,7 @@ private fun SharhPage(id: String, back: () -> Unit) {
 
 /** Islamic books: my shelf, the newest books, and the category tree; download a PDF and read it here. */
 @Composable
-fun BooksHome() {
+fun BooksHome(root: String? = null, rootTitle: String = "") {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val bv = Books.version
@@ -220,7 +220,8 @@ fun BooksHome() {
     var reading by rememberSaveable { mutableStateOf<String?>(null) }
     var readingTitle by rememberSaveable { mutableStateOf("") }
     var refreshTick by remember { mutableStateOf(0) }
-    val current = path.lastOrNull()
+    val current = path.lastOrNull() ?: root
+    val currentTitle = titles.lastOrNull() ?: rootTitle.ifBlank { null }
     LaunchedEffect(current, refreshTick) { cats = null; cats = withContext(Dispatchers.IO) { Books.categories(ctx, current ?: "397053", refreshTick > 0) } }
     reading?.let { id -> PdfReader(id, readingTitle) { reading = null }; return }
     val list = remember(current) { androidx.compose.runtime.mutableStateListOf<Books.Book>() }
@@ -240,8 +241,8 @@ fun BooksHome() {
     LaunchedEffect(state, current, query) { snapshotFlow { state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }.collect { if (query.isBlank() && it >= state.layoutInfo.totalItemsCount - 4) more() } }
     val shelf = remember(Books.version) { Books.shelf(ctx) }
     LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Hint("books", "📚", "كتب أهل السنة والجماعة من «دار الإسلام». اختر تصنيفًا أو كتابًا، ثم «تنزيل» لقراءته داخل التطبيق، ويبقى في «كتبي» بلا إنترنت.") }
-        if (path.isEmpty() && shelf.isNotEmpty()) {
+        if (root == null) item { Hint("books", "📚", "كتب أهل السنة والجماعة من «دار الإسلام». اختر تصنيفًا أو كتابًا، ثم «تنزيل» لقراءته داخل التطبيق، ويبقى في «كتبي» بلا إنترنت.") }
+        if (path.isEmpty() && root == null && shelf.isNotEmpty()) {
             item { Title("كتبي") }
             items(shelf, key = { "shelf" + it.id }) { b ->
                 Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { readingTitle = b.title; reading = b.id }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -256,7 +257,7 @@ fun BooksHome() {
         }
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-                Title(titles.lastOrNull() ?: "التصنيفات", Modifier.weight(1f))
+                Title(if (currentTitle != null) "أقسام «$currentTitle»" else "التصنيفات", Modifier.weight(1f))
                 Text("⟳ تحديث", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Books.clearCache(ctx); refreshTick++ }.padding(8.dp))
             }
             if (path.isNotEmpty()) Choice("‹ رجوع", false) { path = path.dropLast(1); titles = titles.dropLast(1) }
@@ -269,7 +270,7 @@ fun BooksHome() {
             }
         }
         item {
-            Title(if (current == null) "أحدث الكتب" else "الكتب في «${titles.last()}»", Modifier.padding(top = 8.dp))
+            Title(if (current == null) "أحدث الكتب" else "الكتب في «$currentTitle»", Modifier.padding(top = 8.dp))
             OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في الكتب المعروضة") }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
         }
         val shown = if (query.isBlank()) list else list.filter { Quran.normalize(it.title + " " + it.authors).contains(Quran.normalize(query)) }
@@ -379,3 +380,52 @@ private fun PdfPage(renderer: PdfRenderer, index: Int, widthPx: Int, modifier: M
     }
 }
 
+
+/** The Islamic sciences, each opening its books on IslamHouse; plus all books and my shelf. */
+data class Science(val id: String, val name: String, val icon: String, val about: String)
+val sciences = listOf(
+    Science("192525", "العقيدة", "🕋", "التوحيد والإيمان وأركانه ومنهج أهل السنة والجماعة"),
+    Science("728011", "التفسير", "📖", "تفاسير القرآن وأصول التفسير"),
+    Science("192742", "علوم القرآن", "✨", "نزول القرآن وجمعه وإعجازه والقراءات"),
+    Science("152181", "التجويد", "🎙", "أحكام التلاوة ومتونها"),
+    Science("144409", "كتب السنة", "📜", "دواوين الحديث"),
+    Science("344947", "شروح السنة", "💡", "شروح كتب الحديث"),
+    Science("728012", "علوم الحديث", "🔎", "مصطلح الحديث والتخريج وتراجم الرجال"),
+    Science("199946", "الفقه", "⚖", "العبادات والمعاملات والأسرة والفتاوى"),
+    Science("206212", "أصول الفقه", "🧭", "قواعد استنباط الأحكام"),
+    Science("795", "السيرة النبوية", "🌙", "حياة النبي ﷺ"),
+    Science("192527", "الآداب والأخلاق", "🤝", "الآداب الإسلامية والأخلاق"),
+    Science("200217", "الرقائق والتزكية", "💚", "ما يرقّق القلب ويزكّي النفس"),
+    Science("276190", "اللغة العربية", "ض", "النحو والصرف وعلوم العربية"),
+    Science("192529", "المتون العلمية", "📘", "متون العقيدة والفقه والحديث والنحو للحفظ والدراسة"),
+    Science("5301", "التاريخ الإسلامي", "🏛", "الحضارة والبلدان والأعلام"),
+)
+
+@Composable
+fun SciencesHome(openBooks: (String, String) -> Unit, openAll: () -> Unit) {
+    val ctx = LocalContext.current
+    val shelf = remember(Books.version) { Books.shelf(ctx) }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("sciences", "🎓", "اختر علمًا لترى كتبه، أو «كل الكتب» لتصفح المكتبة كاملة. الكتب المنزّلة تجدها في «كتبي».") }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tile("📚", "كل الكتب", Modifier.weight(1f)) { openAll() }
+                Tile("📖", if (shelf.isEmpty()) "كتبي (فارغة)" else "كتبي (${shelf.size})", Modifier.weight(1f)) { openAll() }
+            }
+        }
+        item { Title("العلوم الإسلامية", Modifier.padding(top = 6.dp)) }
+        items(sciences.chunked(2)) { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { sc ->
+                    Column(Modifier.weight(1f).clip(L.shape(16.dp)).background(P.surface).border(1.dp, P.line, L.shape(16.dp)).clickable { openBooks(sc.id, sc.name) }.padding(12.dp)) {
+                        Text(sc.icon, fontSize = 22.sp)
+                        Text(sc.name, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = L.head ?: L.body)
+                        Text(sc.about, color = P.muted, fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                if (row.size == 1) Box(Modifier.weight(1f))
+            }
+        }
+        item { Sub("الكتب من دار الإسلام (IslamHouse.com) لأهل السنة والجماعة.", Modifier.padding(6.dp), size = 11.sp) }
+    }
+}

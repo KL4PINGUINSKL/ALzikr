@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,8 +67,9 @@ import kotlin.math.roundToInt
 @Composable
 fun MoreScreen(openSettings: () -> Unit) {
     var page by remember { mutableStateOf<String?>(null) }
+    Nav.morePage?.let { page = it; Nav.morePage = null }
     page?.let { p ->
-        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
+        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -75,6 +77,7 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
                 "zakat" -> ZakatPage()
+                "quiz" -> QuizPage()
                 "convert" -> ConvertPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> BackupPage()
@@ -102,6 +105,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
             Triple("names", "✨  أسماء الله الحسنى", "التسعة والتسعون اسمًا"),
             Triple("qada", "🕌  قضاء الصلوات", "عدّ ما فاتك وما قضيت"),
+            Triple("quiz", "🎯  مسابقة القرآن", "من أي سورة هذه الآية؟ وأكمل الآية"),
             Triple("zakat", "💰  حاسبة الزكاة", "زكاة المال والذهب والفضة بالنصاب"),
             Triple("convert", "🔁  محوّل التاريخ", "من الهجري إلى الميلادي وبالعكس"),
             Triple("backup", "💾  نسخ احتياطي", "حفظ كل بياناتك في ملف واستعادتها"),
@@ -412,5 +416,74 @@ private fun ConvertPage() {
             Text(result ?: "أدخل تاريخًا صحيحًا", color = if (result != null) P.accent else P.muted, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Sub("بتقويم أم القرى${if (Data.hijriAdjust != 0) " مع تعديلك (${Data.hijriAdjust} يوم)" else ""}. يدعم 1300–1600 هـ تقريبًا.", size = 11.sp)
+    }
+}
+
+// ------------------------------------------------------------------------------- Quran quiz
+
+/** Questions made from the mushaf itself: which surah is this verse from, or how does it continue. */
+@Composable
+private fun QuizPage() {
+    if (!Quran.ready) { Sub("…", Modifier.padding(16.dp)); return }
+    var amma by rememberSaveable { mutableStateOf(true) }      // juz' 'Amma only, or the whole Quran
+    var complete by rememberSaveable { mutableStateOf(false) } // "complete the verse" instead of "which surah"
+    var seed by remember { mutableStateOf(System.nanoTime()) }
+    var picked by remember { mutableStateOf<Int?>(null) }
+    var score by rememberSaveable { mutableStateOf(0) }
+    var asked by rememberSaveable { mutableStateOf(0) }
+    val best = Store.prefs.getInt("quiz_best_${amma}_$complete", 0)
+    val q = remember(seed, amma, complete) {
+        val rnd = java.util.Random(seed)
+        val pool = Quran.ayahs.filter { (!amma || it.juz == 30) && it.text.split(' ').size >= (if (complete) 6 else 3) }
+        val a = pool[rnd.nextInt(pool.size)]
+        if (!complete) {
+            val surahs = pool.map { it.s }.distinct().filter { it != a.s }.shuffled(rnd).take(3)
+            Triple(a, (surahs + a.s).shuffled(rnd).map { "سورة " + Quran.surahs[it - 1].name }, "سورة " + Quran.surahs[a.s - 1].name)
+        } else {
+            val words = a.text.split(' '); val cut = words.size / 2
+            val right = words.drop(cut).joinToString(" ")
+            val others = pool.filter { it != a && kotlin.math.abs(it.text.split(' ').size - words.size) <= 4 }.shuffled(rnd).take(3)
+                .map { o -> o.text.split(' ').let { w -> w.drop(w.size / 2).joinToString(" ") } }
+            Triple(a.copy(text = words.take(cut).joinToString(" ") + " …"), (others + right).shuffled(rnd), right)
+        }
+    }
+    val (ayah, options, answer) = q
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Hint("quiz", "🎯", "اقرأ الآية واختر الجواب. الأسئلة مأخوذة من المصحف نفسه، فلا تتكرر. ابدأ بجزء عمّ ثم جرّب القرآن كله.")
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Choice("جزء عمّ", amma) { amma = true; picked = null; seed = System.nanoTime() }
+            Choice("القرآن كله", !amma) { amma = false; picked = null; seed = System.nanoTime() }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Choice("من أي سورة؟", !complete) { complete = false; picked = null; seed = System.nanoTime() }
+            Choice("أكمل الآية", complete) { complete = true; picked = null; seed = System.nanoTime() }
+        }
+        Sub("النتيجة: $score من $asked · أفضل سلسلة: $best", color = P.gold)
+        Panel(color = P.card) {
+            Text(if (complete) "أكمل الآية:" else "من أي سورة هذه الآية؟", color = P.muted, fontSize = 13.sp)
+            Text(ayah.text, color = P.ink, fontSize = 22.sp, lineHeight = 40.sp, fontFamily = Fonts.quran, modifier = Modifier.padding(top = 6.dp))
+        }
+        options.forEachIndexed { i, o ->
+            val state = when { picked == null -> 0; o == answer -> 1; picked == i -> 2; else -> 0 }
+            Text(o, color = when (state) { 1 -> P.onAccent; 2 -> androidx.compose.ui.graphics.Color.White; else -> P.ink }, fontSize = if (complete) 19.sp else 17.sp,
+                fontFamily = if (complete) Fonts.quran else L.body, lineHeight = if (complete) 34.sp else 24.sp,
+                modifier = Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(when (state) { 1 -> P.accent; 2 -> P.danger; else -> P.surface })
+                    .border(1.dp, P.line, L.shape(14.dp)).clickable(enabled = picked == null) {
+                        picked = i; asked++
+                        if (o == answer) {
+                            score++
+                            val streak = Store.prefs.getInt("quiz_streak", 0) + 1
+                            Store.prefs.edit().putInt("quiz_streak", streak).apply()
+                            if (streak > best) Store.prefs.edit().putInt("quiz_best_${amma}_$complete", streak).apply()
+                        } else Store.prefs.edit().putInt("quiz_streak", 0).apply()
+                    }.padding(14.dp))
+        }
+        if (picked != null) {
+            Sub("${Quran.surahs[ayah.s - 1].name} · الآية ${Quran.digits(ayah.a)}", color = P.gold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tile("➜", "السؤال التالي", Modifier.weight(1f), on = true) { picked = null; seed = System.nanoTime() }
+                Tile("📖", "افتحها في المصحف", Modifier.weight(1f)) { Nav.openQuran(ayah.s, ayah.a) }
+            }
+        }
     }
 }

@@ -69,17 +69,25 @@ fun LibraryScreen() {
     Nav.hadith?.let { (b, n) -> HadithReader(b, n) { Nav.hadith = null }; return }
     Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
     var section by rememberSaveable { mutableStateOf(0) }
+    Nav.library?.let { section = it; Nav.library = null }
+    // A books section opened from the stories or the sciences ("" = all books).
+    var booksAt by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
+    booksAt?.let { (id, name) ->
+        Subpage(if (id.isEmpty()) "الكتب الإسلامية" else name, { booksAt = null }) { BooksHome(root = id.ifEmpty { null }, rootTitle = name) }
+        return
+    }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("📖 القرآن", "📚 التفاسير", "📜 الحديث", "💡 شرح الأحاديث", "📕 كتب إسلامية", "★ المفضلة").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
+            listOf("📖 القرآن", "🌿 القصص", "📚 التفاسير", "📜 الحديث", "💡 شرح الأحاديث", "🎓 العلوم والكتب", "★ المفضلة").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
         }
         Box(Modifier.weight(1f)) {
             when (section) {
                 0 -> if (Quran.ready) QuranHome() else Loading()
-                1 -> TafsirHome()
-                2 -> HadithHome()
-                3 -> SharhHome()
-                4 -> BooksHome()
+                1 -> StoriesHome(openBooks = { id, name -> booksAt = id to name })
+                2 -> TafsirHome()
+                3 -> HadithHome()
+                4 -> SharhHome()
+                5 -> SciencesHome(openBooks = { id, name -> booksAt = id to name }, openAll = { booksAt = "" to "" })
                 else -> Favorites()
             }
         }
@@ -156,6 +164,8 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
     val state = rememberLazyListState(initialFirstVisibleItemIndex = if (s == surah) (startAyah - 1).coerceAtLeast(0) else 0)
     var chosen by remember { mutableStateOf<Quran.Ayah?>(null) }
     var study by rememberSaveable { mutableStateOf(false) }
+    var hifz by rememberSaveable { mutableStateOf(false) }
+    val shown = remember(s, hifz) { androidx.compose.runtime.mutableStateListOf<Int>() }
     var sheet by remember { mutableStateOf<String?>(null) } // "reciter" | "font"
     var fetching by remember { mutableStateOf(false) }
     val size = Quran.fontSize
@@ -178,6 +188,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
     Subpage("سورة ${info.name}", back) {
         Column(Modifier.fillMaxSize()) {
             Sub("${if (info.meccan) "مكية" else "مدنية"} · ${Quran.digits(info.count)} آية · تبدأ في الصفحة ${Quran.digits(list.first().page)}", Modifier.padding(horizontal = 16.dp), size = 12.sp)
+            if (hifz) Hint("hifz", "🧠", "وضع الحفظ: تظهر أول كلمة من كل آية فقط. سمّع الآية من حفظك ثم اضغط عليها لتتأكد. استخدم «تكرار» في الاستماع لتثبيتها.", Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
             Hint("reader", "👆", "اضغط على أي آية لتظهر خياراتها: الاستماع منها، تفسيرها، العلامة والمشاركة. والأزرار في الأسفل للسورة كلها.", Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
             if (study) {
                 // Which tafsir is shown under the verses, with a clear label.
@@ -197,11 +208,14 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                     if (i > 0 && list[i - 1].page != a.page) Text("— صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)} —", color = P.muted, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
                     val marked = Quran.marked(a.s, a.a)
                     val reading = Recitation.now == (a.s to a.a)
-                    Text(a.text + (if (a.sajda) " ۩" else "") + " ﴿${Quran.digits(a.a)}﴾", color = P.ink, fontSize = size.sp, lineHeight = (size * 1.9f).sp, fontFamily = Fonts.quran,
+                    val hidden = hifz && a.a !in shown
+                    // Memorization mode: only the first word shows until you tap to check yourself.
+                    Text(if (hidden) a.text.substringBefore(' ') + " … ﴿${Quran.digits(a.a)}﴾" else a.text + (if (a.sajda) " ۩" else "") + " ﴿${Quran.digits(a.a)}﴾",
+                        color = if (hidden) P.muted else P.ink, fontSize = size.sp, lineHeight = (size * 1.9f).sp, fontFamily = Fonts.quran,
                         textAlign = if (L.id == "mushaf" || L.id == "kaaba") TextAlign.Justify else TextAlign.Start,
                         modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp))
-                            .background(when { reading -> P.accent.copy(alpha = .18f); marked -> P.gold.copy(alpha = .14f); else -> P.bg })
-                            .clickable { chosen = a }.padding(horizontal = 6.dp, vertical = 4.dp))
+                            .background(when { hidden -> P.card; reading -> P.accent.copy(alpha = .18f); marked -> P.gold.copy(alpha = .14f); else -> P.bg })
+                            .clickable { if (hidden) shown += a.a else chosen = a }.padding(horizontal = 6.dp, vertical = 4.dp))
                     if (study) Tafsir.get(ctx, Tafsir.selected, a.s, a.a)?.takeIf { it.from == a.a && it.text.isNotBlank() }?.let { e ->
                         Column(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(L.shape(12.dp)).background(P.card).padding(12.dp)) {
                             Sub(Tafsir.book(Tafsir.selected).name + if (e.to > e.from) " · الآيات ${Quran.digits(e.from)}–${Quran.digits(e.to)}" else "", color = P.gold, size = 11.sp)
@@ -222,8 +236,9 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                 if (Recitation.now != null) PlayerBar { sheet = "reciter" }
                 else Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Tile("▶", "استماع للسورة", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
-                    Tile("📖", if (study) "إخفاء التفسير" else "التفسير تحت الآيات", Modifier.weight(1f), on = study) { study = !study }
-                    Tile("Aa", "حجم الخط", Modifier.weight(1f)) { sheet = "font" }
+                    Tile("📖", if (study) "إخفاء التفسير" else "التفسير", Modifier.weight(1f), on = study) { study = !study }
+                    Tile("🧠", if (hifz) "إنهاء الحفظ" else "وضع الحفظ", Modifier.weight(1f), on = hifz) { hifz = !hifz }
+                    Tile("Aa", "الخط", Modifier.weight(1f)) { sheet = "font" }
                 }
             }
         }
