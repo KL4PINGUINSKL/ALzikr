@@ -80,6 +80,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     }
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Hint("more", "☰", "هنا القبلة والتقويم وأسماء الله الحسنى والثيمات والنسخ الاحتياطي. الإعدادات في آخر القائمة.")
         Panel(color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)

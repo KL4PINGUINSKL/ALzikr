@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -95,6 +96,7 @@ private fun QuranHome() {
     val surahs = if (q.isEmpty()) Quran.surahs else Quran.surahs.filter { Quran.normalize(it.name).contains(q) || it.n.toString() == q }
     val hits = remember(q) { if (q.length >= 3) Quran.search(q) else emptyList() }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        item { Hint("quran", "📖", "اضغط «متابعة القراءة» لتكمل من حيث توقفت، أو اختر سورة أو جزءًا، أو ابحث بكلمة من آية.") }
         item {
             Quran.last?.let { (s, a) ->
                 Panel(Modifier.clickable { Nav.openQuran(s, a) }, color = P.card) {
@@ -151,19 +153,17 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
     val state = rememberLazyListState(initialFirstVisibleItemIndex = if (s == surah) (startAyah - 1).coerceAtLeast(0) else 0)
     var chosen by remember { mutableStateOf<Quran.Ayah?>(null) }
     var study by rememberSaveable { mutableStateOf(false) }
-    var reciterPick by remember { mutableStateOf(false) }
+    var sheet by remember { mutableStateOf<String?>(null) } // "reciter" | "font"
     var fetching by remember { mutableStateOf(false) }
     val size = Quran.fontSize
     val header = if (s != 1 && s != 9) 1 else 0
-    // Remember where reading stopped.
+    fun visibleAyah() = list.getOrNull((state.firstVisibleItemIndex - header).coerceAtLeast(0)) ?: list.first()
     LaunchedEffect(s) { snapshotFlow { state.firstVisibleItemIndex }.collect { i -> list.getOrNull((i - header).coerceAtLeast(0))?.let { Quran.last = it.s to it.a } } }
-    // Follow the recitation: open its surah and keep its verse in view.
     LaunchedEffect(Recitation.now) {
         val (rs, ra) = Recitation.now ?: return@LaunchedEffect
         if (rs != s) { s = rs }
         runCatching { state.animateScrollToItem((ra - 1 + header).coerceAtLeast(0)) }
     }
-    // Study mode: fetch this surah's tafsir once.
     LaunchedEffect(study, s, Tafsir.selected) {
         if (study && !Tafsir.has(ctx, Tafsir.selected, s)) {
             fetching = true
@@ -174,25 +174,18 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
     }
     Subpage("سورة ${info.name}", back) {
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp).horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                val playingHere = Recitation.now?.first == s
-                if (!playingHere) Choice("▶ استماع", false) {
-                    val first = list.getOrNull((state.firstVisibleItemIndex - header).coerceAtLeast(0)) ?: list.first()
-                    Recitation.play(ctx, s, first.a)
-                } else {
-                    Choice(if (Recitation.paused) "▶" else "⏸", false) { if (Recitation.paused) Recitation.resume() else Recitation.pause() }
-                    Choice("⏹", false) { Recitation.stop() }
+            Sub("${if (info.meccan) "مكية" else "مدنية"} · ${Quran.digits(info.count)} آية · تبدأ في الصفحة ${Quran.digits(list.first().page)}", Modifier.padding(horizontal = 16.dp), size = 12.sp)
+            Hint("reader", "👆", "اضغط على أي آية لتظهر خياراتها: الاستماع منها، تفسيرها، العلامة والمشاركة. والأزرار في الأسفل للسورة كلها.", Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+            if (study) {
+                // Which tafsir is shown under the verses, with a clear label.
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("التفسير المعروض:", color = P.muted, fontSize = 13.sp)
+                    Row(Modifier.padding(start = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Tafsir.books.forEach { b -> Choice(b.name, Tafsir.selected == b.id) { Tafsir.selected = b.id } }
+                    }
                 }
-                Choice("🎙 " + Recitation.reciterName().substringBefore(" ("), false) { reciterPick = true }
-                Choice("تكرار ×${Recitation.repeat}", Recitation.repeat > 1) { Recitation.repeat = listOf(1, 3, 5, 10).let { r -> r[(r.indexOf(Recitation.repeat) + 1) % r.size] } }
-                Choice("📖 تفسير", study) { study = !study }
-                Choice("ا−", false) { Quran.fontSize = size - 2 }
-                Choice("ا+", false) { Quran.fontSize = size + 2 }
+                if (fetching) Sub("جارٍ تحميل ${Tafsir.book(Tafsir.selected).name} لهذه السورة…", Modifier.padding(horizontal = 16.dp), size = 12.sp, color = P.gold)
             }
-            if (study) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Tafsir.books.forEach { b -> Choice(b.name, Tafsir.selected == b.id) { Tafsir.selected = b.id } }
-            }
-            Sub("${if (info.meccan) "مكية" else "مدنية"} · ${Quran.digits(info.count)} آية" + if (fetching) " · جارٍ تحميل التفسير…" else "", Modifier.padding(horizontal = 16.dp), size = 12.sp)
             LazyColumn(Modifier.weight(1f), state = state, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)) {
                 if (header == 1) item {
                     Text(Quran.BASMALA, color = P.accent, fontSize = (size + 2).sp, fontFamily = Fonts.quran, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
@@ -215,42 +208,101 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                 }
                 item {
                     Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        if (s > 1) Choice("‹ ${Quran.surahs[s - 2].name}", false) { s -= 1; scope.launch { state.scrollToItem(0) } } else Box(Modifier)
-                        if (s < 114) Choice("${Quran.surahs[s].name} ›", false) { s += 1; scope.launch { state.scrollToItem(0) } }
+                        if (s > 1) Choice("‹ السورة السابقة: ${Quran.surahs[s - 2].name}", false) { s -= 1; scope.launch { state.scrollToItem(0) } } else Box(Modifier)
+                        if (s < 114) Choice("السورة التالية: ${Quran.surahs[s].name} ›", false) { s += 1; scope.launch { state.scrollToItem(0) } }
                     }
+                }
+            }
+            // The bar at the bottom: three clear actions, or the player while reciting.
+            Column(Modifier.fillMaxWidth().background(P.surface)) {
+                Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
+                if (Recitation.now != null) PlayerBar { sheet = "reciter" }
+                else Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Tile("▶", "استماع للسورة", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
+                    Tile("📖", if (study) "إخفاء التفسير" else "التفسير تحت الآيات", Modifier.weight(1f), on = study) { study = !study }
+                    Tile("Aa", "حجم الخط", Modifier.weight(1f)) { sheet = "font" }
                 }
             }
         }
     }
-    chosen?.let { a -> AyahDialog(a) { chosen = null } }
-    if (reciterPick) AlertDialog(onDismissRequest = { reciterPick = false }, containerColor = P.surface,
-        title = { Text("القارئ", color = P.ink) },
-        text = {
-            LazyColumn(Modifier.heightIn(max = 420.dp)) {
-                items(Recitation.reciters) { r ->
-                    Text(r.name, color = if (r.folder == Recitation.reciter) P.accent else P.ink, fontSize = 16.sp, fontWeight = if (r.folder == Recitation.reciter) FontWeight.Bold else FontWeight.Normal,
-                        modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable {
-                            Recitation.reciter = r.folder; reciterPick = false
-                            Recitation.now?.let { (rs, ra) -> Recitation.play(ctx, rs, ra) }
-                        }.padding(horizontal = 10.dp, vertical = 11.dp))
+    chosen?.let { a -> AyahSheet(a) { chosen = null } }
+    when (sheet) {
+        "reciter" -> ReciterDialog { sheet = null }
+        "font" -> AlertDialog(onDismissRequest = { sheet = null }, containerColor = P.surface,
+            title = { Text("حجم خط المصحف", color = P.ink) },
+            text = {
+                Column {
+                    Text(Quran.BASMALA, color = P.ink, fontSize = Quran.fontSize.sp, fontFamily = Fonts.quran, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    androidx.compose.material3.Slider(Quran.fontSize.toFloat(), { Quran.fontSize = it.toInt() }, valueRange = 18f..44f)
                 }
-                item {
-                    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("المتابعة إلى السورة التالية", color = P.ink, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                        androidx.compose.material3.Switch(Recitation.continueNext, { Recitation.continueNext = it })
-                    }
-                    Sub("التلاوة من everyayah.com، تحتاج إلى الإنترنت.", size = 11.sp)
-                }
+            },
+            confirmButton = { TextButton({ sheet = null }) { Text("تم") } })
+    }
+}
+
+/** While reciting: where we are, and play / pause / previous / next / stop, the reciter and the repeat. */
+@Composable
+private fun PlayerBar(chooseReciter: () -> Unit) {
+    val ctx = LocalContext.current
+    val (s, a) = Recitation.now ?: return
+    Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("سورة ${Quran.surahs[s - 1].name} · الآية ${Quran.digits(a)}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text("القارئ: ${Recitation.reciterName()} ▾", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable(onClick = chooseReciter).padding(vertical = 2.dp))
             }
-        },
-        confirmButton = { TextButton({ reciterPick = false }) { Text("إغلاق") } })
+            if (Recitation.loading) CircularProgressIndicator(Modifier.size(22.dp), color = P.accent, strokeWidth = 2.dp)
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Tile("⏮", "السابقة", Modifier.weight(1f)) { Recitation.skip(ctx, -1) }
+            Tile(if (Recitation.paused) "▶" else "⏸", if (Recitation.paused) "متابعة" else "إيقاف مؤقت", Modifier.weight(1.2f), on = true) { if (Recitation.paused) Recitation.resume() else Recitation.pause() }
+            Tile("⏭", "التالية", Modifier.weight(1f)) { Recitation.skip(ctx, +1) }
+            Tile("🔁", "تكرار ×${Recitation.repeat}", Modifier.weight(1f), on = Recitation.repeat > 1) { Recitation.repeat = listOf(1, 3, 5, 10).let { r -> r[(r.indexOf(Recitation.repeat) + 1) % r.size] } }
+            Tile("⏹", "إنهاء", Modifier.weight(1f)) { Recitation.stop() }
+        }
+    }
 }
 
 @Composable
-private fun AyahDialog(a: Quran.Ayah, close: () -> Unit) {
+private fun ReciterDialog(close: () -> Unit) {
+    val ctx = LocalContext.current
+    AlertDialog(onDismissRequest = close, containerColor = P.surface,
+        title = { Text("اختر القارئ", color = P.ink) },
+        text = {
+            LazyColumn(Modifier.heightIn(max = 440.dp)) {
+                items(Recitation.reciters) { r ->
+                    val on = r.folder == Recitation.reciter
+                    Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .12f) else P.surface).clickable {
+                        Recitation.reciter = r.folder; close()
+                        Recitation.now?.let { (rs, ra) -> Recitation.play(ctx, rs, ra) }
+                    }.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(r.name, color = if (on) P.accent else P.ink, fontSize = 16.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.weight(1f))
+                        if (on) Text("✓", color = P.accent, fontWeight = FontWeight.Bold)
+                    }
+                }
+                item {
+                    Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("المتابعة إلى السورة التالية", color = P.ink, fontSize = 14.sp)
+                            Sub("عند نهاية السورة", size = 11.sp)
+                        }
+                        androidx.compose.material3.Switch(Recitation.continueNext, { Recitation.continueNext = it })
+                    }
+                    Sub("التلاوة من everyayah.com وتحتاج إلى الإنترنت.", Modifier.padding(top = 6.dp), size = 11.sp)
+                }
+            }
+        },
+        confirmButton = { TextButton(close) { Text("إغلاق") } })
+}
+
+/** Tapping a verse: the verse, six clear actions, then its tafsir in its own section. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ref = "سورة ${Quran.surahs[a.s - 1].name}، الآية ${a.a}"
     var loading by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
@@ -264,36 +316,51 @@ private fun AyahDialog(a: Quran.Ayah, close: () -> Unit) {
         }
     }
     val entry = Tafsir.get(ctx, sel, a.s, a.a)
-    AlertDialog(onDismissRequest = close, containerColor = P.surface,
-        title = { Text(ref, color = P.ink, fontSize = 16.sp) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                Text(a.text, color = P.ink, fontSize = 20.sp, fontFamily = Fonts.quran, lineHeight = 36.sp)
-                Sub("صفحة ${a.page} · الجزء ${a.juz}${if (a.sajda) " · موضع سجدة" else ""}", Modifier.padding(top = 6.dp), size = 12.sp)
-                Row(Modifier.padding(top = 10.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Choice("▶ استمع من هنا", false) { Recitation.play(ctx, a.s, a.a); close() }
-                    Choice(if (Quran.marked(a.s, a.a)) "★ إزالة العلامة" else "☆ علامة", false) { Quran.toggleMark(a.s, a.a) }
-                    Choice("نسخ", false) { copy(ctx, "${a.text}\n[$ref]") }
-                    Choice("مشاركة", false) { share(ctx, "${a.text}\n[$ref]") }
-                    Choice("وصلت هنا في الختمة", false) { Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString(); Toast.makeText(ctx, "الختمة: الصفحة ${a.page}", Toast.LENGTH_SHORT).show() }
-                }
-                Row(Modifier.padding(top = 12.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Tafsir.books.forEach { b -> Choice(b.name, sel == b.id) { Tafsir.selected = b.id } }
-                }
-                when {
-                    entry != null && entry.text.isNotBlank() -> {
-                        if (entry.to > entry.from) Sub("يشمل الآيات ${Quran.digits(entry.from)}–${Quran.digits(entry.to)}", Modifier.padding(top = 8.dp), color = P.gold, size = 12.sp)
-                        Text(entry.text, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (26 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
-                    }
-                    loading -> Sub("جارٍ تحميل ${Tafsir.book(sel).name} لهذه السورة…", Modifier.padding(top = 10.dp))
-                    failed -> Text("تعذّر التحميل، تحقق من الإنترنت. اضغط لإعادة المحاولة", color = P.danger, fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp).clickable {
-                        scope.launch { loading = true; failed = !withContext(Dispatchers.IO) { Tafsir.fetch(ctx, sel, a.s) }; loading = false }
-                    })
-                    else -> Sub("لا تفسير لهذه الآية في هذا الكتاب.", Modifier.padding(top = 10.dp))
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, containerColor = P.surface) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
+            Text(ref, color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(a.text, color = P.ink, fontSize = 22.sp, fontFamily = Fonts.quran, lineHeight = 40.sp, modifier = Modifier.padding(vertical = 6.dp))
+            Sub("صفحة ${a.page} · الجزء ${a.juz}${if (a.sajda) " · موضع سجدة" else ""}", size = 12.sp)
+            Text("ماذا تريد أن تفعل؟", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tile("▶", "استمع من هنا", Modifier.weight(1f), on = true) { Recitation.play(ctx, a.s, a.a); close() }
+                Tile(if (Quran.marked(a.s, a.a)) "★" else "☆", if (Quran.marked(a.s, a.a)) "إزالة العلامة" else "ضع علامة", Modifier.weight(1f)) { Quran.toggleMark(a.s, a.a) }
+                Tile("📍", "وصلت هنا", Modifier.weight(1f)) {
+                    Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString()
+                    Toast.makeText(ctx, "سُجّلت في ختمتك: الصفحة ${a.page}", Toast.LENGTH_SHORT).show()
                 }
             }
-        },
-        confirmButton = { TextButton(close) { Text("إغلاق") } })
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tile("⧉", "نسخ", Modifier.weight(1f)) { copy(ctx, "${a.text}\n[$ref]") }
+                Tile("↗", "مشاركة", Modifier.weight(1f)) { share(ctx, "${a.text}\n[$ref]") }
+                Tile("🔁", "حفظها (تكرار ×5)", Modifier.weight(1f)) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); close() }
+            }
+
+            Box(Modifier.fillMaxWidth().padding(vertical = 16.dp).height(1.dp).background(P.line))
+            Title("تفسير الآية")
+            Text("اختر التفسير:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Tafsir.books.forEach { b -> Choice(b.name, sel == b.id) { Tafsir.selected = b.id } }
+            }
+            Column(Modifier.fillMaxWidth().padding(top = 10.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
+                Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                when {
+                    entry != null && entry.text.isNotBlank() -> {
+                        if (entry.to > entry.from) Sub("يشمل الآيات ${Quran.digits(entry.from)}–${Quran.digits(entry.to)}", size = 12.sp)
+                        Text(entry.text, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (26 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
+                    }
+                    loading -> Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(Modifier.size(18.dp), color = P.accent, strokeWidth = 2.dp)
+                        Sub("  جارٍ تحميل تفسير هذه السورة…")
+                    }
+                    failed -> Text("تعذّر التحميل، تحقق من الإنترنت. اضغط هنا لإعادة المحاولة", color = P.danger, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp).clickable {
+                        scope.launch { loading = true; failed = !withContext(Dispatchers.IO) { Tafsir.fetch(ctx, sel, a.s) }; loading = false }
+                    })
+                    else -> Sub("لا يوجد في هذا الكتاب تفسير خاص بهذه الآية.", Modifier.padding(top = 8.dp))
+                }
+            }
+        }
+    }
 }
 
 /** The tafsir books: which surahs are on the phone, download the short ones whole, delete, choose the default. */
@@ -304,6 +371,7 @@ private fun TafsirHome() {
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("tafsirs", "📚", "اختر تفسيرك ليظهر أولًا. لتقرأ تفسير آية: افتح المصحف واضغط على الآية، أو اختر «التفسير تحت الآيات».") }
         item { Sub("اختر التفسير الافتراضي. كل سورة تُحمَّل عند فتح تفسيرها أول مرة ثم تبقى على الهاتف. التفاسير المختصرة يمكن تنزيلها كاملة.", size = 12.sp) }
         items(Tafsir.books, key = { it.id }) { b ->
             val have = Tafsir.count(ctx, b.id)
@@ -342,6 +410,7 @@ private fun HadithHome() {
     @Suppress("UNUSED_VARIABLE") val v = Hadith.version
     var remove by remember { mutableStateOf<Hadith.Info?>(null) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("hadith", "📜", "اضغط على كتاب لتفتحه. الكتب التي بجانبها «تنزيل» تُنزَّل مرة واحدة ثم تعمل بلا إنترنت.") }
         items(Hadith.books, key = { it.id }) { b ->
             val have = Hadith.available(ctx, b.id)
             val busy = Hadith.downloading == b.id
@@ -399,6 +468,7 @@ private fun HadithReader(bookId: String, number: Int, back: () -> Unit) {
         val start = remember(b, number) { if (number > 0) b.items.indexOfFirst { it.number == number.toString() }.coerceAtLeast(0) else 0 }
         val state = rememberLazyListState(initialFirstVisibleItemIndex = if (number > 0 && shown === b.items) start + 1 else 0)
         LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item { Hint("hadithreader", "🔍", "اختر بابًا لتقرأ أحاديثه، أو ابحث في الكتاب كله. اضغط ☆ لحفظ حديث في «المفضلة».") }
             item { OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في الكتاب") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
             if (shown == null) {
                 items(b.chapters.entries.toList()) { (id, name) ->

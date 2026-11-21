@@ -49,6 +49,7 @@ fun HabitsList() {
     var deleting by remember { mutableStateOf<Data.Habit?>(null) }
     val habits = Data.habits()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("habits", "🔥", "اضغط على العادة عندما تنجزها اليوم. كل يوم متتالٍ يزيد سلسلتك 🔥. اضغط مطولًا للحذف.") }
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -113,6 +114,7 @@ fun KhatmaPage() {
     val dayNo = started?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() + 1 } ?: 1
     val shouldBe = (dayNo * perDay).coerceAtMost(Data.PAGES)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Hint("khatma", "📗", "سجّل أين وصلت بالأزرار، أو اضغط «اقرأ في المصحف» لتكمل من صفحتك. واختر مدة الختمة في الأسفل.")
         Panel(color = P.card) {
             Sub(if (Data.khatmaCount > 0) "الختمة ${Data.khatmaCount + 1}" else "ختمتك")
             Text(if (page == 0) "لم تبدأ بعد" else "الصفحة $page · الجزء ${Data.juzOf(page)}", color = P.ink, fontSize = 26.sp, fontWeight = FontWeight.Bold)

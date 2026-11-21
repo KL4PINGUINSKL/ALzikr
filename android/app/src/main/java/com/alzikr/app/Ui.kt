@@ -152,3 +152,34 @@ fun Counter(count: Int, target: Int, done: Boolean, label: String, size: Dp) {
         }
     }
 }
+
+/** First-visit guidance: what this page is for and where to tap. Dismissed once with «فهمت». */
+object Hints {
+    fun seen(id: String) = Store.prefs.getBoolean("hint_$id", false)
+    fun dismiss(id: String) { Store.prefs.edit().putBoolean("hint_$id", true).apply(); Store.bump() }
+    fun resetAll() { val e = Store.prefs.edit(); Store.prefs.all.keys.filter { it.startsWith("hint_") }.forEach(e::remove); e.apply(); Store.bump() }
+}
+
+@Composable
+fun Hint(id: String, icon: String, text: String, modifier: Modifier = Modifier) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    if (Hints.seen(id)) return
+    val shape = L.shape(16.dp)
+    Row(modifier.fillMaxWidth().clip(shape).background(P.accent.copy(alpha = .10f)).border(1.dp, P.accent.copy(alpha = .45f), shape).padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Text(icon, fontSize = 22.sp)
+        Text(text, color = P.ink, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
+        Text("فهمت", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(10.dp)).clickable { Hints.dismiss(id) }.padding(horizontal = 10.dp, vertical = 8.dp))
+    }
+}
+
+/** A big labelled action: icon on top, a clear word under it. */
+@Composable
+fun Tile(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean = false, onClick: () -> Unit) {
+    val shape = L.shape(16.dp)
+    Column(modifier.clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(icon, fontSize = 22.sp, color = if (on) P.onAccent else P.ink)
+        Text(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+    }
+}

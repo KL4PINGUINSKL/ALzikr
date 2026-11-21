@@ -68,6 +68,7 @@ fun WirdList() {
     }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { Hint("wird", "📿", "اختر ذكرًا من القائمة، ثم اضغط على البطاقة الكبيرة لتعدّ. اضغط مطولًا على ذكر لتعديله. وفي «الأذكار» تجد أذكار الصباح والمساء كاملة.") }
         item {
             val daily = list.filter { it.target > 0 }
             val doneCount = daily.count { it.done }

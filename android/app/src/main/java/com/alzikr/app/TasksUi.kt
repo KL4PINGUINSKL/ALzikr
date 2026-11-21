@@ -71,6 +71,7 @@ private fun TaskList() {
     fun add() { if (text.isNotBlank()) { Store.addTask(text.trim(), after?.let(Prayer::valueOf)); text = "" } }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("tasks", "✅", "اكتب المهمة ثم اضغط «إضافة». اربطها بصلاة (مثل «بعد العصر») ليذكّرك بها إشعار الأذان.") }
         item {
             Panel(pad = 12.dp) {
                 OutlinedTextField(text, { text = it }, placeholder = { Text("مهمة جديدة…") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
@@ -117,6 +118,7 @@ private fun NotesList() {
     val notes = Store.notes()
     val fmt = remember { SimpleDateFormat("d MMM · h:mm a", Locale("ar")) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("notes", "📝", "اضغط «ملاحظة جديدة» لتكتب، واضغط على أي ملاحظة لتعديلها أو حذفها.") }
         item { Action("+ ملاحظة جديدة", Modifier.fillMaxWidth(), filled = false) { adding = true } }
         if (notes.isEmpty()) item { Sub("اكتب ما يخطر ببالك: فائدة، آية، فكرة…", Modifier.padding(8.dp)) }
         items(notes, key = { it.id }) { n ->

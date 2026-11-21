@@ -99,6 +99,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
     val w = window()
     val times = Store.times()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Hint("prayer", "🕌", "هنا أوقات اليوم. علّم ✓ بعد أن تصلي، واضغط 🔔 لإيقاف تنبيه صلاة أو تشغيله. الموقع وطريقة الحساب من ⚙ في الأعلى.")
         val hijri = Data.hijri()
         if (hijri.month == 9) Panel(color = P.gold.copy(alpha = .16f)) {
             Text("رمضان ${hijri.day} · تقبّل الله صيامك", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)

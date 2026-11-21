@@ -46,6 +46,7 @@ fun FocusScreen() {
     val (sessions, total) = Store.focusToday()
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Hint("focus", "⏳", "اختر المدة ثم اضغط «ابدأ التركيز». يبقى المؤقت في الإشعارات حتى لو أغلقت التطبيق، ويتوقف عند الأذان.")
         Box(Modifier.size(250.dp), contentAlignment = Alignment.Center) {
             val totalMs = (if (Store.focusIsBreak) 5 else Store.focusMinutes) * 60_000L
             val frac = if (running) ((end - now).toFloat() / totalMs).coerceIn(0f, 1f) else 1f

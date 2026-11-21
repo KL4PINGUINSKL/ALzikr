@@ -84,6 +84,7 @@ private fun CollectionsList(open: (String) -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val hint = remember { suggested() }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item { Hint("collections", "📖", "اختر مجموعة، ثم اضغط على كل ذكر لتعدّه، فينقلك إلى الذكر التالي حتى تُتمّها. مجموعة الوقت الحالي تظهر أولًا.") }
         itemsIndexed(Content.collections.sortedByDescending { it.id == hint }) { _, c ->
             val counts = Data.colCounts(c.id)
             val done = c.items.indices.count { counts[it] >= c.items[it].count }
@@ -154,6 +155,7 @@ private fun TasbihScreen() {
     val vibrator = remember { ctx.getSystemService(Vibrator::class.java) }
     val count = Data.tasbih; val set = Data.tasbihSet
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Hint("tasbih", "🟢", "اضغط على الدائرة لتسبّح، واختر عدد الدورة من الأعلى. يمكنك أيضًا وضع ويدجت «السبحة» على الشاشة الرئيسية.")
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(33, 99, 100, 1000).forEach { n -> Choice("$n", set == n) { Data.tasbihSet = n } } }
         Box(Modifier.size(270.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.card)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {

@@ -114,6 +114,13 @@ object Recitation {
         load()
     }
 
+    /** Jump to the previous or next verse of the surah being read. */
+    fun skip(c: Context, delta: Int) {
+        val (s, a) = now ?: return
+        val count = Quran.surahs.getOrNull(s - 1)?.count ?: return
+        play(c, s, (a + delta).coerceIn(1, count))
+    }
+
     fun pause() { player?.takeIf { it.isPlaying }?.pause(); paused = true; RecitationService.refresh(app) }
     fun resume() { if (now == null) return; paused = false; if (!loading) player?.start(); RecitationService.refresh(app) }
     fun stop() {

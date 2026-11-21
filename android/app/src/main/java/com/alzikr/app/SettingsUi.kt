@@ -190,6 +190,14 @@ fun SettingsSheet(close: () -> Unit) {
                 }
             }
 
+            Panel {
+                Title("المساعدة")
+                Sub("في أول زيارة لكل صفحة تظهر تلميحة تشرح ما فيها وأين تضغط.", Modifier.padding(bottom = 8.dp), size = 12.sp)
+                Action("إظهار التلميحات من جديد", Modifier.fillMaxWidth(), filled = false) {
+                    Hints.resetAll(); android.widget.Toast.makeText(ctx, "ستظهر التلميحات في كل صفحة من جديد", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+
             Panel { AboutSection(ink = P.ink, muted = P.muted, accent = P.accent, card = P.card) }
         }
     }
