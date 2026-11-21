@@ -489,6 +489,8 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
     LaunchedEffect(bookId) { book = withContext(Dispatchers.IO) { Hadith.load(ctx, bookId) } }
     var chapter by rememberSaveable(bookId) { mutableStateOf<String?>(null) }
     var query by rememberSaveable(bookId) { mutableStateOf("") }
+    var sharhId by rememberSaveable(bookId) { mutableStateOf<String?>(null) }
+    sharhId?.let { id -> SharhOpen(id) { sharhId = null }; return }
     val b = book
     // Opened on one hadith: go to its chapter.
     LaunchedEffect(b, focus) { if (b != null && focus != null && b.chapters.size > 1) b.items.firstOrNull { it.number == focus }?.let { chapter = it.chapter } }
@@ -520,18 +522,20 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
             } else {
                 if (chapter != null && q.isEmpty()) item { Title(b.chapters[chapter] ?: "") }
                 if (shown.isEmpty()) item { Sub("لا نتائج") }
-                items(shown, key = { "${it.chapter}-${it.number}-${it.text.length}" }) { h -> HadithCard(b, h) }
+                items(shown, key = { "${it.chapter}-${it.number}-${it.text.length}" }) { h -> HadithCard(b, h, focused = h.number == focus, openSharh = { sharhId = it }) }
             }
         }
     }
 }
 
 @Composable
-private fun HadithCard(b: Hadith.Book, h: Hadith.Item) {
+private fun HadithCard(b: Hadith.Book, h: Hadith.Item, focused: Boolean = false, openSharh: (String) -> Unit = {}) {
     val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var finding by remember { mutableStateOf(false) }
     val fav = Hadith.isFavorite(b.info.id, h.number)
     val ref = "${b.info.title}، رقم ${h.number}"
-    Panel(pad = 14.dp) {
+    Panel(if (focused) Modifier.border(2.dp, P.accent, L.shape()) else Modifier, pad = 14.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(Quran.digits(h.number.toIntOrNull() ?: 0).takeIf { h.number.toIntOrNull() != null } ?: h.number, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text(if (fav) "★" else "☆", color = if (fav) P.gold else P.muted, fontSize = 18.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Hadith.toggleFavorite(b.info.id, h.number) }.padding(horizontal = 8.dp))
@@ -539,6 +543,16 @@ private fun HadithCard(b: Hadith.Book, h: Hadith.Item) {
             Text("مشاركة", color = P.muted, fontSize = 12.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { share(ctx, "${h.text}\n[$ref]") }.padding(horizontal = 8.dp, vertical = 4.dp))
         }
         Text(h.text, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = (30 * Data.textScale).sp, fontFamily = Fonts.naskh)
+        Text(if (finding) "جارٍ البحث عن الشرح…" else "💡 الشرح والدرجة", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 8.dp).clip(L.shape(10.dp)).background(P.accent.copy(alpha = .10f)).clickable(enabled = !finding) {
+                finding = true
+                scope.launch {
+                    val id = withContext(Dispatchers.IO) { HadithSearch.findSharh(ctx, h.text) }
+                    finding = false
+                    if (id != null) openSharh(id)
+                    else Toast.makeText(ctx, if (HadithSearch.hasIndex(ctx)) "لا يوجد شرح لهذا الحديث في موسوعة الأحاديث المشروحة" else "تحتاج المرة الأولى إلى الإنترنت لتحميل فهرس الشروح", Toast.LENGTH_LONG).show()
+                }
+            }.padding(horizontal = 12.dp, vertical = 8.dp))
     }
 }
 
@@ -589,10 +603,20 @@ fun DailyWords() {
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     val ayah = if (Quran.ready) Quran.ofTheDay() else null
     val hadith = remember { runCatching { Hadith.ofTheDay(ctx) }.getOrNull() }
+    var explained by remember { mutableStateOf<Sharh.Brief?>(null) }
+    LaunchedEffect(Unit) { explained = withContext(Dispatchers.IO) { runCatching { HadithSearch.sharhIndex(ctx); HadithSearch.ofTheDay(ctx) }.getOrNull() } }
     if (ayah != null) Panel(Modifier.clickable { Nav.openQuran(ayah.s, ayah.a) }) {
         Sub("آية اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
         Text(ayah.text, color = P.ink, fontSize = 20.sp, fontFamily = Fonts.quran, lineHeight = 36.sp, modifier = Modifier.padding(top = 4.dp))
         Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)}", size = 12.sp)
+    }
+    explained?.let { e ->
+        Panel(Modifier.clickable { Nav.sharh = e.id; Nav.tab = "library" }) {
+            Sub("حديث اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
+            Text(e.title, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = 28.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 4.dp))
+            Text("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+        }
+        return
     }
     if (hadith != null) Panel(Modifier.clickable { Nav.openHadith(hadith.first.id, hadith.second.number.toIntOrNull() ?: 0) }) {
         Sub("حديث اليوم · ${hadith.first.title}", color = P.gold)

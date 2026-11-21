@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.sp
 class TasbihDarkActivity : ComponentActivity() {
     private val count = mutableIntStateOf(0)
     private val showHelp = mutableStateOf(true)
+    private val levels = floatArrayOf(0.02f, 0.12f, 0.35f)
+    private val level = mutableIntStateOf(0)
 
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +50,7 @@ class TasbihDarkActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.attributes = window.attributes.apply { screenBrightness = 0.01f }
+        window.attributes = window.attributes.apply { screenBrightness = levels[level.intValue] }
         count.intValue = Data.tasbih
         setContent {
             val c = count.intValue
@@ -57,10 +59,16 @@ class TasbihDarkActivity : ComponentActivity() {
                 .combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = { tap() }, onLongClick = { finish() }),
                 contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("${c % set}", color = Color(0xFF2A2A2A), fontSize = 72.sp)
-                    Text("الدورة ${c / set + 1} · المجموع $c", color = Color(0xFF1E1E1E), fontSize = 13.sp)
+                    Text("${c % set}", color = Color(0xFFB8B8B8), fontSize = 110.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text("الدورة ${c / set + 1} من $set · المجموع $c", color = Color(0xFF8A8A8A), fontSize = 16.sp)
                 }
-                if (showHelp.value) Text("اضغط في أي مكان للتسبيح، أو بأزرار الصوت.\nضغطة مطوّلة للخروج.", color = Color(0xFF3A3A3A), fontSize = 13.sp,
+                // ☀ changes the screen light (its own tap does not count).
+                Text("☀ ${level.intValue + 1}", color = Color(0xFF8A8A8A), fontSize = 18.sp,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 20.dp).combinedClickable(onClick = {
+                        level.intValue = (level.intValue + 1) % levels.size
+                        window.attributes = window.attributes.apply { screenBrightness = levels[level.intValue] }
+                    }).padding(12.dp))
+                if (showHelp.value) Text("اضغط في أي مكان للتسبيح، أو بأزرار الصوت.\nضغطة مطوّلة للخروج.", color = Color(0xFF7A7A7A), fontSize = 14.sp,
                     textAlign = TextAlign.Center, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp))
             }
         }

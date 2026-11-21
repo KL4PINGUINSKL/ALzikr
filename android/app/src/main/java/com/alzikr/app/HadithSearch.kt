@@ -84,6 +84,38 @@ object HadithSearch {
         return { text -> val n = Quran.normalize(text); words.isNotEmpty() && words.all { n.contains(it) } }
     }
 
+    /** Letters and spaces only (no marks, no punctuation), one form of alef / ya / ta marbuta. */
+    private fun letters(t: String) = Quran.normalize(t).replace(Regex("[^\u0621-\u064A\\s]"), " ").replace(Regex("\\s+"), " ").trim()
+
+    private var titleWords: List<Pair<String, List<String>>>? = null
+
+    /**
+     * The explanation for a hadith from its text: the encyclopedia's titles are the hadith's key words,
+     * so a title whose first five words appear in the text is a candidate, and the one that matches the
+     * most words in a row wins. About 40 of the Forty Nawawi match. Blocking.
+     */
+    fun findSharh(c: Context, hadithText: String): String? {
+        val words = titleWords ?: sharhIndex(c).map { it.id to letters(it.title).split(' ') }.filter { it.second.size >= 3 }.also { titleWords = it }
+        val text = " " + letters(hadithText) + " "
+        var best: String? = null; var bestScore = 0
+        for ((id, w) in words) {
+            val key = w.take(5).joinToString(" ")
+            if (!text.contains(" $key ")) continue
+            var n = minOf(5, w.size)
+            while (n < w.size && text.contains(" " + w.take(n + 1).joinToString(" ") + " ")) n++
+            if (n > bestScore) { bestScore = n; best = id }
+        }
+        return best
+    }
+
+    /** A hadith with an explanation for each day (from the kept index; null until it exists). */
+    fun ofTheDay(c: Context, date: java.time.LocalDate = java.time.LocalDate.now()): Sharh.Brief? {
+        if (!hasIndex(c)) return null
+        val all = sharhIndex(c).filter { it.title.length in 25..160 }
+        if (all.isEmpty()) return null
+        return all[Math.floorMod(date.toEpochDay() * 31, all.size.toLong()).toInt()]
+    }
+
     fun searchSharh(c: Context, q: String, limit: Int = 100): List<Hit> {
         val m = matcher(q)
         return sharhIndex(c).asSequence().filter { m(it.title) }.take(limit).map { Hit("sharh", "موسوعة الأحاديث المشروحة", "", it.title, it.id) }.toList()
