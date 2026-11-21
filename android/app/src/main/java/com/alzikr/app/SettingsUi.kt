@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -130,6 +131,62 @@ fun SettingsSheet(close: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(-1, 15, 30, 60).forEach { m -> Choice(if (m < 0) "إيقاف" else "$m د", Store.morningAfter == m) { Store.morningAfter = m; reschedule() } } }
                 Sub("أذكار المساء بعد العصر بـ", Modifier.padding(top = 10.dp, bottom = 6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(-1, 15, 30, 60).forEach { m -> Choice(if (m < 0) "إيقاف" else "$m د", Store.eveningAfter == m) { Store.eveningAfter = m; reschedule() } } }
+            }
+
+            Panel {
+                Title("تذكيرات أخرى")
+                Sub("أذكار النوم", Modifier.padding(top = 6.dp, bottom = 6.dp))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(-1, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60, 23 * 60 + 30, 0).forEach { m ->
+                        Choice(if (m < 0) "إيقاف" else Alerts.timeText(m), Data.sleepAt == m) { Data.sleepAt = m; reschedule() }
+                    }
+                }
+                Sub("ذكر خلال اليوم (من 9 صباحًا إلى 9 مساءً)", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0 to "إيقاف", 1 to "كل ساعة", 2 to "كل ساعتين", 3 to "كل 3 ساعات").forEach { (n, l) -> Choice(l, Data.salawatEvery == n) { Data.salawatEvery = n; reschedule() } }
+                }
+                SettingRow("سورة الكهف يوم الجمعة", "تذكير الساعة 10 صباحًا") { Switch(Data.kahf, { Data.kahf = it; reschedule() }) }
+                SettingRow("صيام التطوع", "مساء الأحد والأربعاء، وقبل الأيام البيض") { Switch(Data.fastReminder, { Data.fastReminder = it; reschedule() }) }
+                Sub("السحور في رمضان، قبل الفجر بـ", Modifier.padding(top = 6.dp, bottom = 6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0 to "إيقاف", 30 to "30 د", 45 to "45 د", 60 to "ساعة").forEach { (n, l) -> Choice(l, Data.suhoorBefore == n) { Data.suhoorBefore = n; reschedule() } }
+                }
+            }
+
+            Panel {
+                Title("الصلاة والتركيز")
+                Sub("صمت الهاتف بعد الأذان (وضع عدم الإزعاج)", Modifier.padding(top = 6.dp, bottom = 6.dp))
+                val nm = ctx.getSystemService(android.app.NotificationManager::class.java)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0 to "إيقاف", 10 to "10 د", 15 to "15 د", 20 to "20 د", 30 to "30 د").forEach { (n, l) ->
+                        Choice(l, Data.silentAfterAdhan == n) {
+                            Data.silentAfterAdhan = n
+                            if (n > 0 && !nm.isNotificationPolicyAccessGranted) runCatching { ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) }
+                        }
+                    }
+                }
+                if (Data.silentAfterAdhan > 0 && !nm.isNotificationPolicyAccessGranted) Warn("اسمح لـ ALzikr بالتحكم في «عدم الإزعاج» ليصمت الهاتف وقت الصلاة. اضغط هنا.") {
+                    ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                }
+                SettingRow("إيقاف جلسة التركيز عند الأذان", "تُحسب الدقائق التي أنجزتها") { Switch(Data.focusStopsAtAdhan, { Data.focusStopsAtAdhan = it }) }
+            }
+
+            Panel {
+                Title("المظهر")
+                Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0 to "حسب الهاتف", 1 to "نهاري", 2 to "ليلي").forEach { (n, l) -> Choice(l, Data.theme == n) { Data.theme = n } }
+                }
+                Sub("حجم خط الأذكار", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0 to "عادي", 1 to "كبير", 2 to "أكبر").forEach { (n, l) -> Choice(l, Data.textSize == n) { Data.textSize = n } }
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("تعديل التاريخ الهجري", color = P.ink, fontSize = 15.sp)
+                        Sub("اليوم: ${Data.hijri().day} ${Data.hijri().monthName}", size = 12.sp)
+                    }
+                    Stepper(Data.hijriAdjust) { Data.hijriAdjust = it; reschedule() }
+                }
             }
 
             Panel { AboutSection(ink = P.ink, muted = P.muted, accent = P.accent, card = P.card) }

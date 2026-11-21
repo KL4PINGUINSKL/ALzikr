@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AdhkarScreen() {
+fun WirdList() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val list = Store.adhkar()
@@ -83,7 +83,7 @@ fun AdhkarScreen() {
         if (current != null) item {
             // The counter: tap anywhere on the panel.
             Panel(Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tap() }, color = P.card) {
-                Text(current.text, color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, lineHeight = 34.sp, modifier = Modifier.fillMaxWidth())
+                Text(current.text, color = P.ink, fontSize = (22 * Data.textScale).sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, lineHeight = 34.sp, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(14.dp))
                 Box(Modifier.fillMaxWidth().height(190.dp), contentAlignment = Alignment.Center) {
                     val frac = if (current.target > 0) (current.today.toFloat() / current.target).coerceAtMost(1f) else 0f

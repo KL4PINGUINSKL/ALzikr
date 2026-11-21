@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -96,6 +97,13 @@ fun PrayerScreen(openSettings: () -> Unit) {
     val w = window()
     val times = Store.times()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        val hijri = Data.hijri()
+        if (hijri.month == 9) Panel(color = P.gold.copy(alpha = .16f)) {
+            Text("رمضان ${hijri.day} · تقبّل الله صيامك", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            val iftar = Store.times().getValue(Prayer.MAGHRIB); val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+            Sub("الإمساك ${Alerts.timeText(times.getValue(Prayer.FAJR) - 10)} · الإفطار ${Alerts.timeText(iftar)}" +
+                if (nowMin < iftar && nowMin > times.getValue(Prayer.FAJR)) " · بعد ${durationText((iftar - nowMin) * 60_000L)}" else "", color = P.ink)
+        }
         Panel(color = P.card) {
             Sub(if (w.next == Prayer.SUNRISE) "الشروق" else "الصلاة القادمة")
             Row(verticalAlignment = Alignment.Bottom) {
@@ -115,6 +123,17 @@ fun PrayerScreen(openSettings: () -> Unit) {
                 val isNext = p == w.next
                 Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (isNext) P.accent.copy(alpha = .12f) else P.surface)
                     .padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (p.alertable) {
+                        val today = LocalDate.now()
+                        val started = times.getValue(p) <= java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+                        val done = Data.prayed(today, p)
+                        Box(Modifier.size(26.dp).clip(RoundedCornerShape(8.dp)).background(if (done) P.accent else P.surface)
+                            .border(2.dp, if (done) P.accent else if (started) P.muted else P.line, RoundedCornerShape(8.dp))
+                            .clickable(enabled = started || done) { Data.setPrayed(today, p, !done) }, contentAlignment = Alignment.Center) {
+                            if (done) Text("✓", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    } else Box(Modifier.size(26.dp))
+                    Spacer(Modifier.size(12.dp))
                     Text(p.ar, color = if (isNext) P.accent else if (p.alertable) P.ink else P.muted, fontSize = 17.sp, fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium, modifier = Modifier.weight(1f))
                     Text(Alerts.timeText(times.getValue(p)), color = if (isNext) P.accent else P.ink, fontSize = 17.sp, fontWeight = FontWeight.Medium)
                     Box(Modifier.size(width = 48.dp, height = 32.dp), contentAlignment = Alignment.CenterEnd) {
@@ -129,6 +148,16 @@ fun PrayerScreen(openSettings: () -> Unit) {
             }
         }
 
+        val (prayedWeek, possible) = Data.week()
+        if (possible > 0) Panel(pad = 14.dp) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("صلواتك في آخر 7 أيام", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    Sub("علّم ✓ على الصلاة بعد أدائها، أو من إشعار الأذان", size = 12.sp)
+                }
+                Text("$prayedWeek/$possible", color = if (prayedWeek == possible) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            }
+        }
         val qibla = PrayTimes.qibla(Store.lat, Store.lng).roundToInt()
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = openSettings).padding(horizontal = 6.dp, vertical = 4.dp)) {
             Sub("📍 ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }} · ${Store.method.ar}${if (Store.hanafi) " · العصر حنفي" else ""}", size = 12.sp)

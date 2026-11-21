@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -50,8 +51,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.time.LocalDate
-import java.time.chrono.HijrahChronology
-import java.time.chrono.HijrahDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -85,7 +84,8 @@ class MainActivity : ComponentActivity() {
 /** "الجمعة 20 جمادى الأولى 1448 هـ · 21 نوفمبر" */
 fun dateLine(date: LocalDate = LocalDate.now()): String {
     val ar = Locale("ar")
-    val hijri = runCatching { HijrahDate.from(date).format(DateTimeFormatter.ofPattern("d MMMM y", ar).withChronology(HijrahChronology.INSTANCE)) }.getOrDefault("")
+    val h = Data.hijri(date)
+    val hijri = "${h.day} ${h.monthName} ${h.year}"
     val day = date.format(DateTimeFormatter.ofPattern("EEEE", ar))
     val greg = date.format(DateTimeFormatter.ofPattern("d MMMM", ar))
     return "$day $hijri هـ · $greg"
@@ -93,7 +93,8 @@ fun dateLine(date: LocalDate = LocalDate.now()): String {
 
 @Composable
 private fun Root(tab: String, onTab: (String) -> Unit) {
-    val pal = if (isSystemInDarkTheme()) Night else Day
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val pal = when (Data.theme) { 1 -> Day; 2 -> Night; else -> if (isSystemInDarkTheme()) Night else Day }
     val scheme = if (pal.dark) darkColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
         else lightColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
     var settings by remember { mutableStateOf(false) }
@@ -112,8 +113,9 @@ private fun Root(tab: String, onTab: (String) -> Unit) {
                 Box(Modifier.weight(1f)) {
                     when (tab) {
                         "adhkar" -> AdhkarScreen()
-                        "tasks" -> TasksScreen()
+                        "tasks", "daily" -> TasksScreen()
                         "focus" -> FocusScreen()
+                        "more" -> MoreScreen(openSettings = { settings = true })
                         else -> PrayerScreen(openSettings = { settings = true })
                     }
                 }
@@ -129,21 +131,22 @@ private fun TabBar(tab: String, onTab: (String) -> Unit) {
     val items = listOf(
         Triple("prayer", "الصلاة", Icons.Filled.Notifications),
         Triple("adhkar", "الأذكار", Icons.Filled.Favorite),
-        Triple("tasks", "المهام", Icons.Filled.CheckCircle),
+        Triple("daily", "يومي", Icons.Filled.CheckCircle),
         Triple("focus", "التركيز", Icons.Filled.PlayArrow),
+        Triple("more", "المزيد", Icons.Filled.Menu),
     )
     Column(Modifier.fillMaxWidth().background(P.surface)) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceAround) {
-            items.forEach { (id, label, icon) -> TabItem(label, icon, tab == id) { onTab(id) } }
+            items.forEach { (id, label, icon) -> TabItem(label, icon, tab == id || id == "daily" && tab == "tasks") { onTab(id) } }
         }
     }
 }
 
 @Composable
 private fun TabItem(label: String, icon: ImageVector, on: Boolean, onClick: () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.clip(RoundedCornerShape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 14.dp, vertical = 4.dp)) {
+    Column(Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 6.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.clip(RoundedCornerShape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 12.dp, vertical = 4.dp)) {
             Icon(icon, null, tint = if (on) P.accent else P.muted, modifier = Modifier.size(22.dp))
         }
         Spacer(Modifier.height(2.dp))

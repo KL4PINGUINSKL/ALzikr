@@ -38,7 +38,7 @@ object Alerts {
     private const val ID_REMIND = 11
     const val ID_FOCUS = 12
 
-    enum class Kind { PRAYER, BEFORE, MORNING, EVENING }
+    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR }
     data class Event(val at: Long, val kind: Kind, val prayer: Prayer)
 
     fun timeText(minutes: Int): String {
@@ -63,6 +63,11 @@ object Alerts {
             }
             if (Store.morningAfter >= 0) list += Event(epoch(date, t.getValue(Prayer.FAJR) + Store.morningAfter), Kind.MORNING, Prayer.FAJR)
             if (Store.eveningAfter >= 0) list += Event(epoch(date, t.getValue(Prayer.ASR) + Store.eveningAfter), Kind.EVENING, Prayer.ASR)
+            if (Data.sleepAt >= 0) list += Event(epoch(date, Data.sleepAt), Kind.SLEEP, Prayer.ISHA)
+            if (Data.salawatEvery > 0) for (m in 9 * 60..21 * 60 step Data.salawatEvery * 60) list += Event(epoch(date, m), Kind.DHIKR, Prayer.DHUHR)
+            if (Data.kahf && date.dayOfWeek == java.time.DayOfWeek.FRIDAY) list += Event(epoch(date, 10 * 60), Kind.KAHF, Prayer.DHUHR)
+            if (Data.fastReminder && Data.isFastingEve(date) != null) list += Event(epoch(date, 20 * 60 + 30), Kind.FAST, Prayer.ISHA)
+            if (Data.suhoorBefore > 0 && Data.hijri(date).month == 9) list += Event(epoch(date, t.getValue(Prayer.FAJR) - Data.suhoorBefore), Kind.SUHOOR, Prayer.FAJR)
         }
         return list.sortedBy { it.at }
     }
@@ -73,9 +78,10 @@ object Alerts {
         val next = upcoming().firstOrNull { it.at > System.currentTimeMillis() + 2_000 }
         val pi = PendingIntent.getBroadcast(c, 1, Intent(c, AlertReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         am.cancel(pi)
-        if (next == null) return
+        if (next == null) { PrayerWidget.updateAll(c); return }
         c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE).edit().putLong("at", next.at).putString("kind", next.kind.name).putString("prayer", next.prayer.name).apply()
         exact(am, next.at, pi)
+        PrayerWidget.updateAll(c)
     }
 
     @SuppressLint("MissingPermission")
@@ -120,16 +126,51 @@ object Alerts {
         val b = when (kind) {
             Kind.PRAYER -> {
                 val tasks = Store.openTasksAfter(p)
-                val text = if (tasks.isEmpty()) "حيّ على الصلاة" else "بعد ${p.ar}: " + tasks.joinToString("، ") { it.text }
+                var text = if (tasks.isEmpty()) "حيّ على الصلاة" else "بعد ${p.ar}: " + tasks.joinToString("، ") { it.text }
+                // A focus session gives way to the prayer.
+                if (Data.focusStopsAtAdhan && Store.focusEnd > System.currentTimeMillis() && !Store.focusIsBreak) {
+                    val done = ((System.currentTimeMillis() - (Store.focusEnd - Store.focusMinutes * 60_000L)) / 60_000L).toInt()
+                    stopFocus(c); if (done > 0) Store.addFocus(done)
+                    text += " · أُوقفت جلسة التركيز ($done دقيقة)"
+                }
+                silence(c)
                 Notification.Builder(c, prayerChannel(c)).setContentTitle("حان الآن وقت صلاة ${p.ar}").setContentText(text)
                     .setStyle(Notification.BigTextStyle().bigText(text)).setCategory(Notification.CATEGORY_REMINDER).setContentIntent(open(c, if (tasks.isEmpty()) "prayer" else "tasks"))
+                    .addAction(Notification.Action.Builder(null, "صليت ✓", PendingIntent.getBroadcast(c, 40 + p.ordinal,
+                        Intent(c, AlertReceiver::class.java).setAction(AlertReceiver.PRAYED).putExtra("prayer", p.name), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)).build())
             }
             Kind.BEFORE -> Notification.Builder(c, CH_REMIND).setContentTitle("صلاة ${p.ar} بعد ${Store.before} دقائق").setContentText("استعد للصلاة").setContentIntent(open(c, "prayer")).setTimeoutAfter(Store.before * 60_000L)
             Kind.MORNING -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار الصباح").setContentText(awradLeft()).setContentIntent(open(c, "adhkar"))
             Kind.EVENING -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار المساء").setContentText(awradLeft()).setContentIntent(open(c, "adhkar"))
+            Kind.SLEEP -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار النوم").setContentText("باسمك اللهم أموت وأحيا").setContentIntent(open(c, "adhkar"))
+            Kind.DHIKR -> Content.reminders[(System.currentTimeMillis() / 3_600_000L % Content.reminders.size).toInt()].let { z ->
+                Notification.Builder(c, CH_REMIND).setContentTitle("ذكر").setContentText(z).setContentIntent(open(c, "adhkar")).setTimeoutAfter(50 * 60_000L) }
+            Kind.KAHF -> Notification.Builder(c, CH_REMIND).setContentTitle("يوم الجمعة").setContentText("قراءة سورة الكهف، والإكثار من الصلاة على النبي ﷺ").setContentIntent(open(c, "adhkar"))
+            Kind.FAST -> Notification.Builder(c, CH_REMIND).setContentTitle("تذكير بالصيام").setContentText((Data.isFastingEve(LocalDate.now()) ?: "غدًا") + ": صيام تطوع إن تيسر").setContentIntent(open(c, "more"))
+            Kind.SUHOOR -> Notification.Builder(c, CH_REMIND).setContentTitle("السحور").setContentText("الفجر بعد ${Data.suhoorBefore} دقيقة · تسحروا فإن في السحور بركة").setContentIntent(open(c, "prayer"))
         }
         b.setSmallIcon(R.drawable.ic_stat_zikr).setAutoCancel(true).setColor(0xFF1F7A5A.toInt())
         nm.notify(if (kind == Kind.PRAYER) ID_PRAYER else ID_REMIND, b.build())
+    }
+
+    /** Do Not Disturb for a few minutes after the adhan, when the user asked for it and allowed ALzikr to. */
+    private fun silence(c: Context) {
+        val minutes = Data.silentAfterAdhan
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (minutes <= 0 || !nm.isNotificationPolicyAccessGranted || nm.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL) return
+        nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+        c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE).edit().putBoolean("silenced", true).apply()
+        exact(c.getSystemService(AlarmManager::class.java), System.currentTimeMillis() + minutes * 60_000L,
+            PendingIntent.getBroadcast(c, 3, Intent(c, AlertReceiver::class.java).setAction(AlertReceiver.UNSILENCE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+    }
+
+    fun unsilence(c: Context) {
+        val sp = c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE)
+        if (!sp.getBoolean("silenced", false)) return
+        sp.edit().putBoolean("silenced", false).apply()
+        val nm = c.getSystemService(NotificationManager::class.java)
+        // Only undo our own change: if the mode was changed meanwhile, leave it.
+        if (nm.isNotificationPolicyAccessGranted && nm.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY) nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
     }
 
     /** "Try the sound" in Settings: the real prayer channel, with a test title. */
@@ -232,8 +273,17 @@ object Alerts {
 }
 
 class AlertReceiver : BroadcastReceiver() {
+    companion object { const val PRAYED = "com.alzikr.app.PRAYED"; const val UNSILENCE = "com.alzikr.app.UNSILENCE" }
     override fun onReceive(c: Context, i: Intent) {
         Store.init(c)
+        when (i.action) {
+            PRAYED -> {
+                runCatching { Prayer.valueOf(i.getStringExtra("prayer") ?: "") }.getOrNull()?.let { Data.setPrayed(LocalDate.now(), it, true) }
+                c.getSystemService(NotificationManager::class.java).cancel(10)
+                return
+            }
+            UNSILENCE -> { Alerts.unsilence(c); return }
+        }
         val sp = c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE)
         val kind = runCatching { Alerts.Kind.valueOf(sp.getString("kind", "") ?: "") }.getOrNull()
         val prayer = runCatching { Prayer.valueOf(sp.getString("prayer", "") ?: "") }.getOrNull()

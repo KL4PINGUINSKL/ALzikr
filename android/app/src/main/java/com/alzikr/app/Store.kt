@@ -21,6 +21,9 @@ object Store {
 
     fun init(c: Context) { if (!::sp.isInitialized) sp = c.applicationContext.getSharedPreferences("alzikr", Context.MODE_PRIVATE) }
     private fun changed() { version++ }
+    /** For the other stores that share this file (Data.kt). */
+    internal val prefs: SharedPreferences get() = sp
+    internal fun bump() = changed()
 
     // ----------------------------------------------------------------- location and calculation
 

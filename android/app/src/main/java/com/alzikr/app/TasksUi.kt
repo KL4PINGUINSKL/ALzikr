@@ -45,13 +45,17 @@ import java.util.Locale
 
 @Composable
 fun TasksScreen() {
-    var notes by rememberSaveable { mutableStateOf(false) }
+    var section by rememberSaveable { mutableStateOf(0) }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Choice("المهام", !notes) { notes = false }
-            Choice("الملاحظات", notes) { notes = true }
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("المهام", "العادات", "الختمة", "الملاحظات").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
         }
-        if (notes) NotesList() else TaskList()
+        when (section) {
+            1 -> HabitsList()
+            2 -> KhatmaPage()
+            3 -> NotesList()
+            else -> TaskList()
+        }
     }
 }
 
