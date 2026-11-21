@@ -235,11 +235,17 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
             Column(Modifier.fillMaxWidth().background(P.surface)) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
                 if (Recitation.now != null) PlayerBar { sheet = "reciter" }
-                else Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Tile("▶", "استماع للسورة", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
+                else Column {
+                Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("مدى الاستماع:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(end = 6.dp))
+                    RangeChoice()
+                }
+                Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Tile("▶", "استماع", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
                     Tile("📖", if (study) "إخفاء التفسير" else "التفسير", Modifier.weight(1f), on = study) { study = !study }
                     Tile("🧠", if (hifz) "إنهاء الحفظ" else "وضع الحفظ", Modifier.weight(1f), on = hifz) { hifz = !hifz }
                     Tile("Aa", "الخط", Modifier.weight(1f)) { sheet = "font" }
+                }
                 }
             }
         }
@@ -279,6 +285,10 @@ private fun PlayerBar(chooseReciter: () -> Unit) {
             Tile("🔁", "تكرار ×${Recitation.repeat}", Modifier.weight(1f), on = Recitation.repeat > 1) { Recitation.repeat = listOf(1, 3, 5, 10).let { r -> r[(r.indexOf(Recitation.repeat) + 1) % r.size] } }
             Tile("⏹", "إنهاء", Modifier.weight(1f)) { Recitation.stop() }
         }
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("المدى:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(end = 6.dp))
+            RangeChoice(live = true)
+        }
     }
 }
 
@@ -300,13 +310,8 @@ private fun ReciterDialog(close: () -> Unit) {
                     }
                 }
                 item {
-                    Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("المتابعة إلى السورة التالية", color = P.ink, fontSize = 14.sp)
-                            Sub("عند نهاية السورة", size = 11.sp)
-                        }
-                        androidx.compose.material3.Switch(Recitation.continueNext, { Recitation.continueNext = it })
-                    }
+                    Text("مدى القراءة", color = P.ink, fontSize = 14.sp, modifier = Modifier.padding(top = 10.dp))
+                    RangeChoice()
                     Sub("التلاوة من everyayah.com وتحتاج إلى الإنترنت.", Modifier.padding(top = 6.dp), size = 11.sp)
                 }
             }
@@ -342,13 +347,16 @@ private fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
             Sub("صفحة ${a.page} · الجزء ${a.juz}${if (a.sajda) " · موضع سجدة" else ""}", size = 12.sp)
             Text("ماذا تريد أن تفعل؟", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tile("▶", "استمع من هنا", Modifier.weight(1f), on = true) { Recitation.play(ctx, a.s, a.a); close() }
+                Tile("▶", "هذه الآية فقط", Modifier.weight(1f), on = true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); close() }
+                Tile("⏩", "من هنا: " + Recitation.rangeText(), Modifier.weight(1f), on = true) { Recitation.play(ctx, a.s, a.a); close() }
                 Tile(if (Quran.marked(a.s, a.a)) "★" else "☆", if (Quran.marked(a.s, a.a)) "إزالة العلامة" else "ضع علامة", Modifier.weight(1f)) { Quran.toggleMark(a.s, a.a) }
                 Tile("📍", "وصلت هنا", Modifier.weight(1f)) {
                     Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString()
                     Toast.makeText(ctx, "سُجّلت في ختمتك: الصفحة ${a.page}", Toast.LENGTH_SHORT).show()
                 }
             }
+            Text("مدى «من هنا»:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
+            RangeChoice()
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tile("⧉", "نسخ", Modifier.weight(1f)) { copy(ctx, "${a.text}\n[$ref]") }
                 Tile("↗", "مشاركة", Modifier.weight(1f)) { share(ctx, "${a.text}\n[$ref]") }
@@ -632,5 +640,21 @@ fun SearchBar(text: String, onClick: () -> Unit) {
         .padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("🔍", fontSize = 18.sp)
         Text(text, color = P.muted, fontSize = 15.sp, modifier = Modifier.padding(start = 10.dp))
+    }
+}
+
+/** How far to read: this verse only, N verses (tap again to change N), to the end of the surah, or on. */
+@Composable
+fun RangeChoice(live: Boolean = false) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val current = if (live) Recitation.playing else Recitation.range
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Recitation.Range.entries.forEach { r ->
+            val on = current == r
+            Choice(if (r == Recitation.Range.COUNT) "${Quran.digits(Recitation.count)} آيات" + (if (on) " ▾" else "") else r.label, on) {
+                if (r == Recitation.Range.COUNT && on) Recitation.count = Recitation.counts[(Recitation.counts.indexOf(Recitation.count) + 1) % Recitation.counts.size]
+                if (live) Recitation.changeRange(r) else Recitation.range = r
+            }
+        }
     }
 }

@@ -48,9 +48,16 @@ object Recitation {
     var repeat: Int
         get() = Store.prefs.getInt("recite_repeat", 1)
         set(v) { Store.prefs.edit().putInt("recite_repeat", v).apply(); Store.bump() }
-    var continueNext: Boolean
-        get() = Store.prefs.getBoolean("recite_continue", true)
-        set(v) { Store.prefs.edit().putBoolean("recite_continue", v).apply(); Store.bump() }
+    /** How far to read from the chosen verse: AYAH (that verse), COUNT (N verses), SURAH (to its end), ON (into the next surahs). */
+    enum class Range(val label: String) { AYAH("الآية فقط"), COUNT("عدد من الآيات"), SURAH("حتى نهاية السورة"), ON("متابعة السور") }
+    var range: Range
+        get() = runCatching { Range.valueOf(Store.prefs.getString("recite_range", null) ?: "") }.getOrDefault(Range.SURAH)
+        set(v) { Store.prefs.edit().putString("recite_range", v.name).apply(); Store.bump() }
+    var count: Int
+        get() = Store.prefs.getInt("recite_count", 5)
+        set(v) { Store.prefs.edit().putInt("recite_count", v).apply(); Store.bump() }
+    val counts = listOf(3, 5, 7, 10, 20)
+    fun rangeText(r: Range = range) = if (r == Range.COUNT) "${Quran.digits(count)} آيات" else r.label
     fun reciterName() = reciters.firstOrNull { it.folder == reciter }?.name ?: ""
 
     /** The verse being read (surah, ayah), or null when stopped. */
@@ -69,11 +76,27 @@ object Recitation {
 
     private fun url(s: Int, a: Int) = "https://everyayah.com/data/$reciter/%03d%03d.mp3".format(s, a)
 
-    /** Stop after this verse of the same surah (a story), or null to read on. */
+    /** Stop after this verse of the same surah, or null to read on; [story] keeps a story's own end. */
     private var stopAt: Int? = null
+    private var story: Int? = null
+    private var crossSurahs = false
+    /** The range in use now (a one-off "this verse only" does not change the saved choice). */
+    var playing by mutableStateOf(Range.SURAH)
+        private set
 
-    fun play(c: Context, s: Int, a: Int, stopAfter: Int? = null) {
-        stopAt = stopAfter
+    /** Where to stop when reading from verse [a] of surah [s] with range [r]. */
+    private fun stopFor(s: Int, a: Int, r: Range): Int? {
+        val last = Quran.surahs.getOrNull(s - 1)?.count ?: a
+        return when (r) { Range.AYAH -> a; Range.COUNT -> (a + count - 1).coerceAtMost(last); Range.SURAH, Range.ON -> null }
+    }
+
+    fun play(c: Context, s: Int, a: Int, stopAfter: Int? = null, only: Range? = null) {
+        Quran.load(c.applicationContext)
+        story = stopAfter
+        val r = only ?: range
+        playing = if (stopAfter != null) Range.SURAH else r
+        stopAt = stopAfter ?: stopFor(s, a, r)
+        crossSurahs = stopAfter == null && r == Range.ON
         app = c.applicationContext
         Quran.load(app)
         played = 0
@@ -110,10 +133,10 @@ object Recitation {
         if (played < repeat) { player?.seekTo(0); player?.start(); return }
         played = 0
         if (stopAt != null && a >= stopAt!!) { stop(); return }
-        val count = Quran.surahs.getOrNull(s - 1)?.count ?: 0
+        val verses = Quran.surahs.getOrNull(s - 1)?.count ?: 0
         when {
-            a < count -> now = s to a + 1
-            continueNext && s < 114 -> { now = s + 1 to 1; basmalaFirst = s + 1 != 9 }
+            a < verses -> now = s to a + 1
+            crossSurahs && s < 114 -> { now = s + 1 to 1; basmalaFirst = s + 1 != 9 }
             else -> { stop(); return }
         }
         load()
@@ -122,8 +145,18 @@ object Recitation {
     /** Jump to the previous or next verse of the surah being read. */
     fun skip(c: Context, delta: Int) {
         val (s, a) = now ?: return
-        val count = Quran.surahs.getOrNull(s - 1)?.count ?: return
-        play(c, s, (a + delta).coerceIn(1, count), stopAt)
+        val verses = Quran.surahs.getOrNull(s - 1)?.count ?: return
+        val na = (a + delta).coerceIn(1, verses)
+        if (story != null) play(c, s, na, story) else play(c, s, na, only = playing)
+    }
+
+    /** Change how far to read while reading, counted from the verse being read now. */
+    fun changeRange(r: Range) {
+        range = r
+        val (s, a) = now ?: return
+        if (story != null) return
+        playing = r; stopAt = stopFor(s, a, r); crossSurahs = r == Range.ON
+        RecitationService.refresh(app)
     }
 
     fun pause() { player?.takeIf { it.isPlaying }?.pause(); paused = true; RecitationService.refresh(app) }
@@ -185,7 +218,7 @@ class RecitationService : Service() {
             val open = PendingIntent.getActivity(c, 30, Intent(c, MainActivity::class.java).putExtra("quran", "$s:$a").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             return Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
                 .setContentTitle("سورة $name · الآية ${Quran.digits(a)}")
-                .setContentText(Recitation.reciterName() + if (Recitation.repeat > 1) " · تكرار ×${Recitation.repeat}" else "")
+                .setContentText(Recitation.reciterName() + " · " + Recitation.rangeText(Recitation.playing) + if (Recitation.repeat > 1) " · تكرار ×${Recitation.repeat}" else "")
                 .setContentIntent(open).setOngoing(true).setShowWhen(false).setColor(0xFF1F7A5A.toInt())
                 .addAction(Notification.Action.Builder(null, if (Recitation.paused) "متابعة" else "إيقاف مؤقت", action(c, if (Recitation.paused) RESUME else PAUSE, 31)).build())
                 .addAction(Notification.Action.Builder(null, "إنهاء", action(c, STOP, 32)).build())
