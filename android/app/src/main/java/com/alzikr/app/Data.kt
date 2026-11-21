@@ -17,6 +17,10 @@ object Data {
 
     // ----------------------------------------------------------------- look
 
+    /** The chosen theme (see [Looks]). */
+    var look: String
+        get() = sp.getString("look", "emerald") ?: "emerald"
+        set(v) = edit { putString("look", v) }
     /** 0 follow the phone, 1 day, 2 night. */
     var theme: Int
         get() = sp.getInt("theme", 0)

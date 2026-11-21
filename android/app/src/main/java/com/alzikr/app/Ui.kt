@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,12 +44,21 @@ val P: Pal @Composable get() = LocalPal.current
 /** A rounded panel. */
 @Composable
 fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surface, content: @Composable ColumnScope.() -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
+    val look = L
+    if (look.flat) {
+        // "Lines only" themes: no card, a thin rule under the content.
+        Column(modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = pad * 0.6f), content = content)
+            Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
+        }
+        return
+    }
+    val shape = look.shape()
     Column(modifier.fillMaxWidth().clip(shape).background(color).border(1.dp, P.line, shape).padding(pad), content = content)
 }
 
 @Composable
-fun Title(text: String, modifier: Modifier = Modifier) = Text(text, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = modifier)
+fun Title(text: String, modifier: Modifier = Modifier) = Text(text, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body, modifier = modifier)
 
 @Composable
 fun Sub(text: String, modifier: Modifier = Modifier, size: TextUnit = 13.sp, color: Color = P.muted) = Text(text, color = color, fontSize = size, modifier = modifier)
@@ -54,7 +66,7 @@ fun Sub(text: String, modifier: Modifier = Modifier, size: TextUnit = 13.sp, col
 /** A selectable choice: rounded rectangle, filled when on. */
 @Composable
 fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(10.dp)
+    val shape = L.shape(10.dp)
     Box(modifier.clip(shape).background(if (on) P.accent else P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
         Text(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
     }
@@ -63,7 +75,7 @@ fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: (
 /** The main button. */
 @Composable
 fun Action(label: String, modifier: Modifier = Modifier, filled: Boolean = true, color: Color = P.accent, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = L.shape(14.dp)
     Box(modifier.clip(shape).background(if (filled) color else Color.Transparent).border(1.dp, if (filled) color else P.line, shape)
         .clickable(onClick = onClick).padding(horizontal = 18.dp, vertical = 12.dp), contentAlignment = Alignment.Center) {
         Text(label, color = if (filled) P.onAccent else color, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
@@ -96,4 +108,47 @@ fun durationText(ms: Long): String {
 fun clockText(ms: Long): String {
     val s = (ms / 1000).coerceAtLeast(0)
     return "%d:%02d".format(s / 60, s % 60)
+}
+
+/**
+ * The dhikr counter in the theme's style: a ring, prayer beads (up to 33 around a circle, the
+ * larger "imam" bead on top), or a large numeral with a thin bar.
+ */
+@Composable
+fun Counter(count: Int, target: Int, done: Boolean, label: String, size: Dp) {
+    val frac = if (target > 0) (count.toFloat() / target).coerceIn(0f, 1f) else 0f
+    val ring = P.line; val fill = if (done) P.gold else P.accent; val imam = P.gold
+    when (L.counter) {
+        CounterStyle.PLAIN -> Column(Modifier.height(size), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text("$count", color = if (done) P.gold else P.ink, fontSize = (size.value / 2.8f).sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
+            Box(Modifier.width(size * 0.8f).height(4.dp).background(ring)) { Box(Modifier.fillMaxWidth(frac).height(4.dp).background(fill)) }
+            Sub(label, Modifier.padding(top = 8.dp))
+        }
+        else -> Box(Modifier.size(size), contentAlignment = Alignment.Center) {
+            if (L.counter == CounterStyle.BEADS) {
+                val n = if (target in 1..33) target else 33
+                val lit = if (target in 1..33) count.coerceAtMost(n) else (count % n).let { if (it == 0 && count > 0 && frac >= 1f) n else it }
+                androidx.compose.foundation.Canvas(Modifier.size(size)) {
+                    val r = this.size.minDimension / 2 - 12.dp.toPx()
+                    val bead = (2 * Math.PI * r / n * 0.34).toFloat().coerceAtMost(9.dp.toPx())
+                    for (i in 0 until n) {
+                        val ang = Math.toRadians(-90.0 + 360.0 * i / n)
+                        val c = androidx.compose.ui.geometry.Offset(center.x + r * Math.cos(ang).toFloat(), center.y + r * Math.sin(ang).toFloat())
+                        drawCircle(if (i < lit) fill else ring, if (i == 0) bead * 1.45f else bead, c)
+                    }
+                    drawCircle(imam, bead * 0.7f, androidx.compose.ui.geometry.Offset(center.x, center.y - r - bead * 2.2f))
+                }
+            } else {
+                androidx.compose.foundation.Canvas(Modifier.size(size - 10.dp)) {
+                    val w = 12.dp.toPx(); val s = androidx.compose.ui.geometry.Size(this.size.width - w, this.size.height - w); val o = androidx.compose.ui.geometry.Offset(w / 2, w / 2)
+                    drawArc(ring, 0f, 360f, false, o, s, style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+                    if (frac > 0) drawArc(fill, -90f, 360f * frac, false, o, s, style = androidx.compose.ui.graphics.drawscope.Stroke(w, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$count", color = if (done) P.gold else P.ink, fontSize = (size.value / 3.6f).sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
+                Sub(label, size = 12.sp)
+            }
+        }
+    }
 }

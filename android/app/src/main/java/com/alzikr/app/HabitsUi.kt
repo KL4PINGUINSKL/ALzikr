@@ -56,14 +56,14 @@ fun HabitsList() {
                     Sub("أنجزت ${habits.count { it.doneToday }} من ${habits.size} اليوم")
                 }
                 Text("+ عادة", color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clip(RoundedCornerShape(10.dp)).combinedClickable(onClick = { adding = true }).padding(horizontal = 12.dp, vertical = 8.dp))
+                    modifier = Modifier.clip(L.shape(10.dp)).combinedClickable(onClick = { adding = true }).padding(horizontal = 12.dp, vertical = 8.dp))
             }
         }
         items(habits, key = { it.id }) { h ->
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(if (h.doneToday) P.accent.copy(alpha = .12f) else P.surface)
-                .border(1.dp, P.line, RoundedCornerShape(16.dp)).combinedClickable(onClick = { Data.toggleHabit(h.id) }, onLongClick = { deleting = h })
+            Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(if (h.doneToday) P.accent.copy(alpha = .12f) else P.surface)
+                .border(1.dp, P.line, L.shape(16.dp)).combinedClickable(onClick = { Data.toggleHabit(h.id) }, onLongClick = { deleting = h })
                 .padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(26.dp).clip(RoundedCornerShape(8.dp)).background(if (h.doneToday) P.accent else P.surface).border(2.dp, if (h.doneToday) P.accent else P.muted, RoundedCornerShape(8.dp)),
+                Box(Modifier.size(26.dp).clip(L.shape(8.dp)).background(if (h.doneToday) P.accent else P.surface).border(2.dp, if (h.doneToday) P.accent else P.muted, L.shape(8.dp)),
                     contentAlignment = Alignment.Center) { if (h.doneToday) Text("✓", color = P.onAccent, fontWeight = FontWeight.Bold) }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
@@ -125,6 +125,9 @@ fun KhatmaPage() {
                 if (page >= shouldBe) "أنت على الخطة أو متقدم عليها، بارك الله فيك" else "لتبقى على الخطة: اقرأ حتى الصفحة $shouldBe اليوم",
                 color = if (page >= shouldBe) P.accent else P.gold, size = 13.sp)
         }
+        if (Quran.ready && page < Data.PAGES) Action("📖 اقرأ في المصحف من الصفحة ${page + 1}", Modifier.fillMaxWidth()) {
+            val a = Quran.firstOfPage(page + 1); Nav.openQuran(a.s, a.a)
+        }
         if (page >= Data.PAGES) {
             Text("ختمت القرآن، تقبّل الله منك 🌙", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Action("ابدأ ختمة جديدة", Modifier.fillMaxWidth()) { Data.newKhatma() }
@@ -146,7 +149,7 @@ fun KhatmaPage() {
                 listOf(7 to "أسبوع", 15 to "15 يومًا", 30 to "شهر", 60 to "شهرين").forEach { (d, l) -> Choice(l, days == d) { Data.khatmaDays = d } }
             }
             Sub("$perDay صفحة يوميًا تقريبًا (${"%.1f".format(perDay / 20.0)} جزء)", Modifier.padding(top = 8.dp), size = 12.sp)
-            Text("البدء من الصفحة الأولى", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(8.dp)).combinedClickableSafe { Data.newKhatma() }.padding(6.dp))
+            Text("البدء من الصفحة الأولى", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp).clip(L.shape(8.dp)).combinedClickableSafe { Data.newKhatma() }.padding(6.dp))
         }
     }
     if (custom) {

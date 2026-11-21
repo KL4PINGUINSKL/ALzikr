@@ -45,15 +45,15 @@ import java.util.Locale
 
 @Composable
 fun TasksScreen() {
-    var section by rememberSaveable { mutableStateOf(0) }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("المهام", "العادات", "الختمة", "الملاحظات").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
+            listOf("المهام", "العادات", "التركيز", "الختمة", "الملاحظات").forEachIndexed { i, t -> Choice(t, Nav.daily == i) { Nav.daily = i } }
         }
-        when (section) {
+        when (Nav.daily) {
             1 -> HabitsList()
-            2 -> KhatmaPage()
-            3 -> NotesList()
+            2 -> FocusScreen()
+            3 -> KhatmaPage()
+            4 -> NotesList()
             else -> TaskList()
         }
     }
@@ -86,8 +86,8 @@ private fun TaskList() {
         items(open, key = { it.id }) { TaskRow(it) }
         if (done.isNotEmpty()) item {
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("${if (showDone) "▾" else "◂"} المنجزة (${done.size})", color = P.muted, fontSize = 14.sp, modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).clickable { showDone = !showDone }.padding(6.dp))
-                if (showDone) Text("حذف المنجزة", color = P.danger, fontSize = 13.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { Store.clearDone() }.padding(6.dp))
+                Text("${if (showDone) "▾" else "◂"} المنجزة (${done.size})", color = P.muted, fontSize = 14.sp, modifier = Modifier.weight(1f).clip(L.shape(8.dp)).clickable { showDone = !showDone }.padding(6.dp))
+                if (showDone) Text("حذف المنجزة", color = P.danger, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.clearDone() }.padding(6.dp))
             }
         }
         if (showDone) items(done, key = { it.id }) { TaskRow(it) }
@@ -96,16 +96,16 @@ private fun TaskList() {
 
 @Composable
 private fun TaskRow(t: Store.Task) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(P.surface).border(1.dp, P.line, RoundedCornerShape(14.dp))
+    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).border(1.dp, P.line, L.shape(14.dp))
         .clickable { Store.toggleTask(t.id) }.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(22.dp).clip(RoundedCornerShape(6.dp)).background(if (t.done) P.accent else P.surface).border(2.dp, if (t.done) P.accent else P.muted, RoundedCornerShape(6.dp)),
+        Box(Modifier.size(22.dp).clip(L.shape(6.dp)).background(if (t.done) P.accent else P.surface).border(2.dp, if (t.done) P.accent else P.muted, L.shape(6.dp)),
             contentAlignment = Alignment.Center) { if (t.done) Text("✓", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(t.text, color = if (t.done) P.muted else P.ink, fontSize = 15.sp, textDecoration = if (t.done) TextDecoration.LineThrough else null)
             t.after?.let { Sub("بعد ${it.ar}", size = 12.sp, color = P.gold) }
         }
-        Text("✕", color = P.muted, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { Store.deleteTask(t.id) }.padding(horizontal = 8.dp, vertical = 2.dp))
+        Text("✕", color = P.muted, fontSize = 15.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.deleteTask(t.id) }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
 

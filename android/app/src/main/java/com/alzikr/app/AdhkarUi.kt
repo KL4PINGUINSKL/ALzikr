@@ -77,7 +77,7 @@ fun WirdList() {
                     Sub("أتممت $doneCount من ${daily.size}" + (Store.streak.takeIf { it > 1 }?.let { " · $it أيام متتالية" } ?: ""))
                 }
                 Text("+ ذكر", color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { adding = true }.padding(horizontal = 12.dp, vertical = 8.dp))
+                    modifier = Modifier.clip(L.shape(10.dp)).clickable { adding = true }.padding(horizontal = 12.dp, vertical = 8.dp))
             }
         }
         if (current != null) item {
@@ -85,25 +85,16 @@ fun WirdList() {
             Panel(Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tap() }, color = P.card) {
                 Text(current.text, color = P.ink, fontSize = (22 * Data.textScale).sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, lineHeight = 34.sp, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(14.dp))
-                Box(Modifier.fillMaxWidth().height(190.dp), contentAlignment = Alignment.Center) {
-                    val frac = if (current.target > 0) (current.today.toFloat() / current.target).coerceAtMost(1f) else 0f
-                    val ring = P.line; val fill = if (current.done) P.gold else P.accent
-                    Canvas(Modifier.size(180.dp)) {
-                        val w = 12.dp.toPx(); val s = Size(size.width - w, size.height - w); val o = Offset(w / 2, w / 2)
-                        drawArc(ring, 0f, 360f, false, o, s, style = Stroke(w))
-                        if (frac > 0) drawArc(fill, -90f, 360f * frac, false, o, s, style = Stroke(w, cap = StrokeCap.Round))
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("${current.today}", color = if (current.done) P.gold else P.ink, fontSize = 52.sp, fontWeight = FontWeight.Bold)
-                        Sub(if (current.target > 0) (if (current.done) "تم ✓ من ${current.target}" else "من ${current.target}") else "تسبيح حر")
-                    }
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Counter(current.today, current.target, current.done,
+                        if (current.target > 0) (if (current.done) "تم ✓ من ${current.target}" else "من ${current.target}") else "تسبيح حر", 190.dp)
                 }
                 Sub("اضغط في أي مكان هنا للعدّ", Modifier.fillMaxWidth(), size = 12.sp)
             }
         }
         items(list, key = { it.id }) { z ->
             val on = z.id == current?.id
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (on) P.accent.copy(alpha = .12f) else P.surface)
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(if (on) P.accent.copy(alpha = .12f) else P.surface)
                 .combinedClickable(onClick = { selected = z.id }, onLongClick = { menu = z }).padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(z.text, color = P.ink, fontSize = 15.sp, maxLines = 2, modifier = Modifier.weight(1f))
@@ -124,7 +115,7 @@ fun WirdList() {
                         "نقل للأعلى" to { Store.moveZikr(z.id, true); menu = null }, "نقل للأسفل" to { Store.moveZikr(z.id, false); menu = null },
                         "حذف" to { Store.deleteZikr(z.id); menu = null }).forEach { (label, act) ->
                         Text(label, color = if (label == "حذف") P.danger else P.ink, fontSize = 16.sp,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable { act() }.padding(horizontal = 8.dp, vertical = 12.dp))
+                            modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { act() }.padding(horizontal = 8.dp, vertical = 12.dp))
                     }
                     Sub("المجموع منذ البداية: ${z.total}", Modifier.padding(top = 6.dp, start = 8.dp), size = 12.sp)
                 }

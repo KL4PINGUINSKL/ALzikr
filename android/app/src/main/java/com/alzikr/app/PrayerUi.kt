@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -118,34 +120,10 @@ fun PrayerScreen(openSettings: () -> Unit) {
             }
         }
 
-        Panel(pad = 6.dp) {
-            Prayer.entries.forEach { p ->
-                val isNext = p == w.next
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (isNext) P.accent.copy(alpha = .12f) else P.surface)
-                    .padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (p.alertable) {
-                        val today = LocalDate.now()
-                        val started = times.getValue(p) <= java.time.LocalTime.now().let { it.hour * 60 + it.minute }
-                        val done = Data.prayed(today, p)
-                        Box(Modifier.size(26.dp).clip(RoundedCornerShape(8.dp)).background(if (done) P.accent else P.surface)
-                            .border(2.dp, if (done) P.accent else if (started) P.muted else P.line, RoundedCornerShape(8.dp))
-                            .clickable(enabled = started || done) { Data.setPrayed(today, p, !done) }, contentAlignment = Alignment.Center) {
-                            if (done) Text("✓", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        }
-                    } else Box(Modifier.size(26.dp))
-                    Spacer(Modifier.size(12.dp))
-                    Text(p.ar, color = if (isNext) P.accent else if (p.alertable) P.ink else P.muted, fontSize = 17.sp, fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium, modifier = Modifier.weight(1f))
-                    Text(Alerts.timeText(times.getValue(p)), color = if (isNext) P.accent else P.ink, fontSize = 17.sp, fontWeight = FontWeight.Medium)
-                    Box(Modifier.size(width = 48.dp, height = 32.dp), contentAlignment = Alignment.CenterEnd) {
-                        if (p.alertable) {
-                            val on = Store.alert(p)
-                            val ctx = LocalContext.current
-                            Text(if (on) "🔔" else "🔕", fontSize = 18.sp, color = if (on) P.ink else P.muted,
-                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { Store.setAlert(p, !on); Alerts.reschedule(ctx) }.padding(horizontal = 8.dp, vertical = 2.dp))
-                        }
-                    }
-                }
-            }
+        when (L.prayers) {
+            PrayerLayout.CARDS -> PrayerCards(w, times)
+            PrayerLayout.TIMELINE -> PrayerTimeline(w, times)
+            PrayerLayout.LIST -> Panel(pad = 6.dp) { Prayer.entries.forEach { p -> PrayerRow(p, p == w.next, times) } }
         }
 
         val (prayedWeek, possible) = Data.week()
@@ -158,8 +136,9 @@ fun PrayerScreen(openSettings: () -> Unit) {
                 Text("$prayedWeek/$possible", color = if (prayedWeek == possible) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
+        DailyWords()
         val qibla = PrayTimes.qibla(Store.lat, Store.lng).roundToInt()
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = openSettings).padding(horizontal = 6.dp, vertical = 4.dp)) {
+        Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).clickable(onClick = openSettings).padding(horizontal = 6.dp, vertical = 4.dp)) {
             Sub("📍 ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }} · ${Store.method.ar}${if (Store.hanafi) " · العصر حنفي" else ""}", size = 12.sp)
             Sub("🕋 القبلة: $qibla° من الشمال باتجاه عقارب الساعة", size = 12.sp)
         }
@@ -215,7 +194,7 @@ fun CityDialog(onDismiss: () -> Unit, onPick: (City) -> Unit) {
                 OutlinedTextField(lng, { lng = it }, label = { Text("خط الطول (مثل 46.67)") }, singleLine = true)
             } else LazyColumn(Modifier.heightIn(max = 420.dp)) {
                 items(CITIES) { c ->
-                    Text(c.name, color = P.ink, fontSize = 16.sp, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable { onPick(c) }.padding(horizontal = 10.dp, vertical = 11.dp))
+                    Text(c.name, color = P.ink, fontSize = 16.sp, modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { onPick(c) }.padding(horizontal = 10.dp, vertical = 11.dp))
                 }
             }
         },
@@ -228,4 +207,95 @@ fun CityDialog(onDismiss: () -> Unit, onPick: (City) -> Unit) {
             else TextButton({ coords = true }) { Text("إدخال إحداثيات") }
         },
         dismissButton = { TextButton(onDismiss) { Text("إلغاء") } })
+}
+
+/** The "prayed" check: only once the prayer's time has come (or to undo). */
+@Composable
+private fun PrayedBox(p: Prayer, times: Map<Prayer, Int>) {
+    if (!p.alertable) { Box(Modifier.size(26.dp)); return }
+    val today = LocalDate.now()
+    val started = times.getValue(p) <= java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+    val done = Data.prayed(today, p)
+    Box(Modifier.size(26.dp).clip(L.shape(8.dp)).background(if (done) P.accent else P.surface)
+        .border(2.dp, if (done) P.accent else if (started) P.muted else P.line, L.shape(8.dp))
+        .clickable(enabled = started || done) { Data.setPrayed(today, p, !done) }, contentAlignment = Alignment.Center) {
+        if (done) Text("✓", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun Bell(p: Prayer) {
+    if (!p.alertable) return
+    val on = Store.alert(p)
+    val ctx = LocalContext.current
+    Text(if (on) "🔔" else "🔕", fontSize = 16.sp, color = if (on) P.ink else P.muted,
+        modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.setAlert(p, !on); Alerts.reschedule(ctx) }.padding(horizontal = 8.dp, vertical = 2.dp))
+}
+
+@Composable
+private fun PrayerRow(p: Prayer, isNext: Boolean, times: Map<Prayer, Int>) {
+    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(if (isNext) P.accent.copy(alpha = .12f) else P.surface)
+        .padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        PrayedBox(p, times)
+        Spacer(Modifier.size(12.dp))
+        Text(p.ar, color = if (isNext) P.accent else if (p.alertable) P.ink else P.muted, fontSize = 17.sp, fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium, modifier = Modifier.weight(1f))
+        Text(Alerts.timeText(times.getValue(p)), color = if (isNext) P.accent else P.ink, fontSize = 17.sp, fontWeight = FontWeight.Medium)
+        Box(Modifier.size(width = 48.dp, height = 32.dp), contentAlignment = Alignment.CenterEnd) { Bell(p) }
+    }
+}
+
+/** Two columns of cards; the next prayer's card is filled with the accent. */
+@Composable
+private fun PrayerCards(w: Window, times: Map<Prayer, Int>) {
+    Prayer.entries.chunked(2).forEach { row ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            row.forEach { p ->
+                val next = p == w.next
+                Column(Modifier.weight(1f).clip(L.shape()).background(if (next) P.accent else P.card).border(1.dp, if (next) P.accent else P.line, L.shape())
+                    .padding(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(p.ar, color = if (next) P.onAccent else if (p.alertable) P.ink else P.muted, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = L.head ?: L.body, modifier = Modifier.weight(1f))
+                        if (!next) Bell(p)
+                    }
+                    Text(Alerts.timeText(times.getValue(p)), color = if (next) P.onAccent else P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 6.dp))
+                    if (p.alertable && !next) PrayedBox(p, times) else if (next) Text("القادمة", color = P.onAccent.copy(alpha = .8f), fontSize = 12.sp)
+                }
+            }
+            if (row.size == 1) Box(Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(10.dp))
+    }
+}
+
+/** A vertical line through the day; passed prayers are filled dots, the next one glows. */
+@Composable
+private fun PrayerTimeline(w: Window, times: Map<Prayer, Int>) {
+    val now = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+    val line = P.line; val accent = P.accent
+    Panel(pad = 10.dp) {
+        Prayer.entries.forEachIndexed { i, p ->
+            val passed = times.getValue(p) <= now
+            val next = p == w.next
+            Row(Modifier.fillMaxWidth().height(58.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                        val x = size.width / 2
+                        if (i > 0) drawLine(if (passed) accent else line, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, size.height / 2), strokeWidth = 3.dp.toPx())
+                        if (i < Prayer.entries.size - 1) drawLine(if (passed && !next) accent else line, androidx.compose.ui.geometry.Offset(x, size.height / 2), androidx.compose.ui.geometry.Offset(x, size.height), strokeWidth = 3.dp.toPx())
+                        if (next) drawCircle(accent.copy(alpha = .25f), 13.dp.toPx())
+                        drawCircle(if (passed || next) accent else line, if (next) 8.dp.toPx() else 6.dp.toPx())
+                    }
+                }
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(p.ar, color = if (next) P.accent else if (p.alertable) P.ink else P.muted, fontSize = if (next) 19.sp else 16.sp, fontWeight = if (next) FontWeight.Bold else FontWeight.Medium, fontFamily = L.head ?: L.body)
+                    if (next) Sub("القادمة", size = 11.sp)
+                }
+                Text(Alerts.timeText(times.getValue(p)), color = if (next) P.accent else P.ink, fontSize = 17.sp, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.width(8.dp))
+                PrayedBox(p, times)
+                Box(Modifier.width(44.dp), contentAlignment = Alignment.CenterEnd) { Bell(p) }
+            }
+        }
+    }
 }

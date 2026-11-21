@@ -65,13 +65,14 @@ import kotlin.math.roundToInt
 fun MoreScreen(openSettings: () -> Unit) {
     var page by remember { mutableStateOf<String?>(null) }
     page?.let { p ->
-        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; else -> "نسخ احتياطي" }, back = { page = null }) {
+        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; else -> "نسخ احتياطي" }, back = { page = null }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
                 "calendar" -> CalendarPage()
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
+                "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ThemeGallery() }
                 else -> BackupPage()
             }
         }
@@ -85,6 +86,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             nextOccasion()?.let { (o, d) -> Sub("${o.name} ${if (d == 0L) "اليوم" else "بعد $d يومًا"}", color = P.gold) }
         }
         listOf(
+            Triple("themes", "🎨  الثيمات", "${Looks.byId(Data.look).name} · ${Looks.all.size} ثيمات بأشكال وترتيب مختلف"),
             Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
             Triple("month", "📅  مواقيت الشهر", "جدول الصلوات لكل أيام الشهر"),
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
@@ -98,7 +100,7 @@ fun MoreScreen(openSettings: () -> Unit) {
 
 @Composable
 private fun MenuRow(title: String, sub: String, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(P.surface).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.surface).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             Sub(sub, size = 12.sp)
@@ -113,7 +115,7 @@ fun Subpage(title: String, back: () -> Unit, content: @Composable () -> Unit) {
     BackHandler(onBack = back)
     Column(Modifier.fillMaxSize().background(P.bg)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("→", color = P.accent, fontSize = 22.sp, modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick = back).padding(horizontal = 12.dp, vertical = 6.dp))
+            Text("→", color = P.accent, fontSize = 22.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = back).padding(horizontal = 12.dp, vertical = 6.dp))
             Text(title, color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
         }
         Box(Modifier.weight(1f)) { content() }
@@ -214,7 +216,7 @@ private fun MonthTable() {
             items((0 until month.lengthOfMonth()).toList()) { i ->
                 val d = month.plusDays(i.toLong()); val t = Store.times(d); val today = d == LocalDate.now()
                 val h = Data.hijri(d)
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(if (today) P.accent.copy(alpha = .14f) else if (i % 2 == 0) P.surface else P.bg).padding(vertical = 7.dp),
+                Row(Modifier.fillMaxWidth().clip(L.shape(8.dp)).background(if (today) P.accent.copy(alpha = .14f) else if (i % 2 == 0) P.surface else P.bg).padding(vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1.3f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${d.dayOfMonth} ${d.format(DateTimeFormatter.ofPattern("EEE", ar))}", color = if (today) P.accent else P.ink, fontSize = 12.sp)
@@ -246,7 +248,7 @@ private fun CalendarPage() {
         }
         items(list) { (o, date) ->
             val days = ChronoUnit.DAYS.between(LocalDate.now(), date)
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(P.surface).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(o.name, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     Sub("${o.day} ${Data.months[o.month - 1]} · ${date.format(DateTimeFormatter.ofPattern("EEEE d MMMM", ar))}" + if (o.note.isNotEmpty()) "\n${o.note}" else "", size = 12.sp)
@@ -263,7 +265,7 @@ private fun CalendarPage() {
 private fun NamesPage() {
     LazyVerticalGrid(GridCells.Fixed(3), Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         itemsIndexed(Content.names) { i, n ->
-            Column(Modifier.clip(RoundedCornerShape(14.dp)).background(if (i == 0) P.card else P.surface).padding(vertical = 14.dp, horizontal = 6.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.clip(L.shape(14.dp)).background(if (i == 0) P.card else P.surface).padding(vertical = 14.dp, horizontal = 6.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("${i + 1}", color = P.gold, fontSize = 11.sp)
                 Text(n, color = P.ink, fontSize = (17 * Data.textScale).sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
             }
@@ -279,7 +281,7 @@ private fun QadaPage() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Sub("سجّل عدد الصلوات التي فاتتك، وأنقص منها كلما قضيت واحدة.", size = 13.sp)
         Prayer.entries.filter { it.alertable }.forEach { p ->
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(P.surface).padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(p.ar, color = P.ink, fontSize = 16.sp, modifier = Modifier.weight(1f))
                 Choice("−1 قضيت", false) { Data.setQada(p, Data.qada(p) - 1) }
                 Text("${Data.qada(p)}", color = if (Data.qada(p) > 0) P.gold else P.muted, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(56.dp))

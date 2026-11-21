@@ -56,7 +56,7 @@ fun SettingsSheet(close: () -> Unit) {
     Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("الإعدادات", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Text("تم", color = P.accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick = close).padding(horizontal = 14.dp, vertical = 8.dp))
+            Text("تم", color = P.accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = close).padding(horizontal = 14.dp, vertical = 8.dp))
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Panel {
@@ -70,7 +70,7 @@ fun SettingsSheet(close: () -> Unit) {
                 Sub("اختر ما يعتمده بلدك أو مسجدك.", Modifier.padding(bottom = 6.dp), size = 12.sp)
                 Method.entries.forEach { m ->
                     val on = Store.method == m
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (on) P.accent.copy(alpha = .12f) else P.surface)
+                    Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(if (on) P.accent.copy(alpha = .12f) else P.surface)
                         .clickable { Store.method = m; Store.methodChosen = true; reschedule() }.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(m.ar, color = if (on) P.accent else P.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
                         Sub(if (m.ishaMinutes > 0) "${m.fajr}° · العشاء +${m.ishaMinutes} د" else "${m.fajr}° / ${m.isha}°", size = 11.sp)
@@ -172,10 +172,10 @@ fun SettingsSheet(close: () -> Unit) {
             }
 
             Panel {
-                Title("المظهر")
-                Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(0 to "حسب الهاتف", 1 to "نهاري", 2 to "ليلي").forEach { (n, l) -> Choice(l, Data.theme == n) { Data.theme = n } }
-                }
+                Title("الثيم والمظهر")
+                Sub("الثيم يغيّر الألوان والأشكال والخطوط وترتيب الصفحات والأيقونات وشكل العدّاد.", Modifier.padding(bottom = 8.dp), size = 12.sp)
+                ModeChoice()
+                Box(Modifier.padding(top = 10.dp)) { ThemeGallery() }
                 Sub("حجم خط الأذكار", Modifier.padding(top = 10.dp, bottom = 6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf(0 to "عادي", 1 to "كبير", 2 to "أكبر").forEach { (n, l) -> Choice(l, Data.textSize == n) { Data.textSize = n } }
@@ -197,14 +197,14 @@ fun SettingsSheet(close: () -> Unit) {
 @Composable
 private fun Stepper(value: Int, set: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(P.card).clickable { set(value - 1) }, contentAlignment = Alignment.Center) { Text("−", color = P.ink, fontSize = 18.sp) }
+        Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card).clickable { set(value - 1) }, contentAlignment = Alignment.Center) { Text("−", color = P.ink, fontSize = 18.sp) }
         Text(if (value > 0) "+$value" else "$value", color = if (value == 0) P.muted else P.accent, fontSize = 15.sp, textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
-        Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(P.card).clickable { set(value + 1) }, contentAlignment = Alignment.Center) { Text("+", color = P.ink, fontSize = 18.sp) }
+        Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card).clickable { set(value + 1) }, contentAlignment = Alignment.Center) { Text("+", color = P.ink, fontSize = 18.sp) }
     }
 }
 
 @Composable
 private fun Warn(text: String, onClick: () -> Unit) {
-    Text(text, color = P.danger, fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp).fillMaxWidth().clip(RoundedCornerShape(10.dp))
+    Text(text, color = P.danger, fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp).fillMaxWidth().clip(L.shape(10.dp))
         .background(P.danger.copy(alpha = .1f)).clickable(onClick = onClick).padding(10.dp))
 }

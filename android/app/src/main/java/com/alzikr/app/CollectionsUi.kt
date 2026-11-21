@@ -88,8 +88,8 @@ private fun CollectionsList(open: (String) -> Unit) {
             val counts = Data.colCounts(c.id)
             val done = c.items.indices.count { counts[it] >= c.items[it].count }
             val complete = done == c.items.size
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(if (c.id == hint && !complete) P.accent.copy(alpha = .12f) else P.surface)
-                .border(1.dp, P.line, RoundedCornerShape(16.dp)).clickable { open(c.id) }.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(if (c.id == hint && !complete) P.accent.copy(alpha = .12f) else P.surface)
+                .border(1.dp, P.line, L.shape(16.dp)).clickable { open(c.id) }.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(c.title, color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                     Sub(if (c.id == hint && !complete) "${c.subtitle} · وقتها الآن" else c.subtitle, size = 12.sp, color = if (c.id == hint && !complete) P.accent else P.muted)
@@ -118,8 +118,8 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
             LazyColumn(Modifier.weight(1f), state = list, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 itemsIndexed(c.items) { i, item ->
                     val n = counts[i]; val finished = n >= item.count
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(if (finished) P.surface else P.card)
-                        .border(1.dp, if (finished) P.line else P.accent.copy(alpha = .35f), RoundedCornerShape(18.dp))
+                    Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(if (finished) P.surface else P.card)
+                        .border(1.dp, if (finished) P.line else P.accent.copy(alpha = .35f), L.shape(18.dp))
                         .clickable(enabled = !finished) {
                             val after = Data.colTap(c.id, i)[i]
                             val now = after >= item.count
@@ -130,7 +130,7 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
                         Text(item.text, color = if (finished) P.muted else P.ink, fontSize = (18 * Data.textScale).sp, lineHeight = (30 * Data.textScale).sp)
                         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Sub(if (item.count > 1) "${item.count} مرات" else "مرة واحدة", Modifier.weight(1f), size = 12.sp)
-                            Box(Modifier.clip(RoundedCornerShape(10.dp)).background(if (finished) P.gold.copy(alpha = .2f) else P.accent).padding(horizontal = 14.dp, vertical = 6.dp)) {
+                            Box(Modifier.clip(L.shape(10.dp)).background(if (finished) P.gold.copy(alpha = .2f) else P.accent).padding(horizontal = 14.dp, vertical = 6.dp)) {
                                 Text(if (finished) "✓" else "${n} / ${item.count}", color = if (finished) P.gold else P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
                         }
@@ -139,7 +139,7 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
                 item {
                     Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         if (done == c.items.size) Text("تقبّل الله منك ✓", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Text("البدء من جديد", color = P.muted, fontSize = 13.sp, modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { Data.colReset(c.id); scope.launch { list.scrollToItem(0) } }.padding(10.dp))
+                        Text("البدء من جديد", color = P.muted, fontSize = 13.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { Data.colReset(c.id); scope.launch { list.scrollToItem(0) } }.padding(10.dp))
                     }
                 }
             }
@@ -155,25 +155,15 @@ private fun TasbihScreen() {
     val count = Data.tasbih; val set = Data.tasbihSet
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(33, 99, 100, 1000).forEach { n -> Choice("$n", set == n) { Data.tasbihSet = n } } }
-        Box(Modifier.size(270.dp).clip(RoundedCornerShape(135.dp)).background(P.card)
+        Box(Modifier.size(270.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.card)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 val n = Data.tasbihTap()
                 runCatching { vibrator?.vibrate(if (n % set == 0) VibrationEffect.createWaveform(longArrayOf(0, 70, 90, 70), -1) else VibrationEffect.createOneShot(14, 100)) }
             }, contentAlignment = Alignment.Center) {
-            val inRound = count % set; val frac = inRound.toFloat() / set
-            val ring = P.line; val fill = P.accent
-            Canvas(Modifier.size(250.dp)) {
-                val w = 12.dp.toPx(); val s = Size(size.width - w, size.height - w); val o = Offset(w / 2, w / 2)
-                drawArc(ring, 0f, 360f, false, o, s, style = Stroke(w))
-                if (frac > 0) drawArc(fill, -90f, 360f * frac, false, o, s, style = Stroke(w, cap = StrokeCap.Round))
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("$inRound", color = P.ink, fontSize = 60.sp, fontWeight = FontWeight.Bold)
-                Sub("الدورة ${count / set + 1} · المجموع $count")
-            }
+            Counter(count % set, set, false, "الدورة ${count / set + 1} · المجموع $count", 250.dp)
         }
         Sub("اضغط على الدائرة للتسبيح", size = 12.sp)
-        Text("تصفير", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { Data.tasbihReset() }.padding(horizontal = 14.dp, vertical = 8.dp))
+        Text("تصفير", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { Data.tasbihReset() }.padding(horizontal = 14.dp, vertical = 8.dp))
 
         Panel(pad = 14.dp) {
             Title("آخر سبعة أيام")

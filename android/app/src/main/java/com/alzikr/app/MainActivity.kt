@@ -8,7 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,17 +24,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -44,8 +43,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -55,23 +56,39 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
-    private val tab = mutableStateOf("prayer")
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Store.init(this)
         enableEdgeToEdge()
-        intent?.getStringExtra("tab")?.let { tab.value = it }
+        intent?.getStringExtra("tab")?.let(::openTab)
+        openPlace(intent)
         AppUpdate.check(this)
         // Installed before methods followed the country: look the country up once.
         if (Store.hasLocation && Store.country.isEmpty() && !Store.methodChosen) Alerts.resolvePlace(this, Store.lat, Store.lng)
         if (Build.VERSION.SDK_INT >= 33 && !Alerts.canPost(this)) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
-        setContent { Root(tab.value) { tab.value = it } }
+        Thread { Quran.load(applicationContext) }.start()
+        setContent { Root() }
+    }
+
+    /** "quran" = "2:255" opens the mushaf there; "hadith" = "bukhari:1" opens a book (shortcuts and links). */
+    private fun openPlace(i: Intent?) {
+        i?.getStringExtra("quran")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.openQuran(it[0], it[1]) }
+        i?.getStringExtra("hadith")?.split(':')?.takeIf { it.size == 2 }?.let { Nav.openHadith(it[0], it[1].toIntOrNull() ?: 0) }
+    }
+
+    /** Notifications open a tab by name; a few names moved inside other tabs in 1.1. */
+    private fun openTab(t: String) {
+        when (t) {
+            "focus" -> { Nav.tab = "daily"; Nav.daily = 2 }
+            "tasks" -> { Nav.tab = "daily"; Nav.daily = 0 }
+            else -> Nav.tab = t
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent.getStringExtra("tab")?.let { tab.value = it }
+        intent.getStringExtra("tab")?.let(::openTab)
+        openPlace(intent)
     }
 
     override fun onResume() {
@@ -91,35 +108,52 @@ fun dateLine(date: LocalDate = LocalDate.now()): String {
     return "$day $hijri هـ · $greg"
 }
 
+/** Material's text styles with the theme's font everywhere. */
+private fun typography(font: FontFamily?): Typography {
+    val t = Typography()
+    if (font == null) return t
+    fun TextStyle.f() = copy(fontFamily = font)
+    return Typography(t.displayLarge.f(), t.displayMedium.f(), t.displaySmall.f(), t.headlineLarge.f(), t.headlineMedium.f(), t.headlineSmall.f(),
+        t.titleLarge.f(), t.titleMedium.f(), t.titleSmall.f(), t.bodyLarge.f(), t.bodyMedium.f(), t.bodySmall.f(), t.labelLarge.f(), t.labelMedium.f(), t.labelSmall.f())
+}
+
+data class Section(val id: String, val label: String, val glyph: String)
+val sections = listOf(
+    Section("prayer", "الصلاة", "🕌"), Section("adhkar", "الأذكار", "📿"), Section("library", "المكتبة", "📖"),
+    Section("daily", "يومي", "☑"), Section("more", "المزيد", "☰"),
+)
+
 @Composable
-private fun Root(tab: String, onTab: (String) -> Unit) {
+private fun Root() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    val pal = when (Data.theme) { 1 -> Day; 2 -> Night; else -> if (isSystemInDarkTheme()) Night else Day }
+    val look = Looks.byId(Data.look)
+    val pal = look.pal(isSystemInDarkTheme(), Data.theme)
     val scheme = if (pal.dark) darkColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
         else lightColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
     var settings by remember { mutableStateOf(false) }
-    MaterialTheme(colorScheme = scheme) {
-        CompositionLocalProvider(LocalPal provides pal, LocalLayoutDirection provides LayoutDirection.Rtl) {
-            Column(Modifier.fillMaxSize().background(pal.bg)) {
-                Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("ALzikr", color = pal.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Sub(dateLine(), size = 12.sp)
+    MaterialTheme(colorScheme = scheme, typography = typography(look.body)) {
+        CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Box(Modifier.fillMaxSize().background(pal.bg)) {
+                Column(Modifier.fillMaxSize()) {
+                    Header { settings = true }
+                    if (look.nav == NavStyle.TOP) TopTabs()
+                    Box(Modifier.weight(1f)) {
+                        when (Nav.tab) {
+                            "adhkar" -> AdhkarScreen()
+                            "library" -> LibraryScreen()
+                            "daily" -> TasksScreen()
+                            "more" -> MoreScreen(openSettings = { settings = true })
+                            else -> PrayerScreen(openSettings = { settings = true })
+                        }
                     }
-                    Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).clickable { settings = true }, contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Settings, "الإعدادات", tint = pal.muted)
+                    when (look.nav) {
+                        NavStyle.BAR -> BottomBar()
+                        NavStyle.WORDS -> WordsBar()
+                        NavStyle.DOCK -> Spacer(Modifier.height(86.dp).navigationBarsPadding())
+                        NavStyle.TOP -> Spacer(Modifier.navigationBarsPadding())
                     }
                 }
-                Box(Modifier.weight(1f)) {
-                    when (tab) {
-                        "adhkar" -> AdhkarScreen()
-                        "tasks", "daily" -> TasksScreen()
-                        "focus" -> FocusScreen()
-                        "more" -> MoreScreen(openSettings = { settings = true })
-                        else -> PrayerScreen(openSettings = { settings = true })
-                    }
-                }
-                TabBar(tab, onTab)
+                if (look.nav == NavStyle.DOCK) Box(Modifier.align(Alignment.BottomCenter)) { Dock() }
             }
             if (settings) SettingsSheet { settings = false }
         }
@@ -127,30 +161,98 @@ private fun Root(tab: String, onTab: (String) -> Unit) {
 }
 
 @Composable
-private fun TabBar(tab: String, onTab: (String) -> Unit) {
-    val items = listOf(
-        Triple("prayer", "الصلاة", Icons.Filled.Notifications),
-        Triple("adhkar", "الأذكار", Icons.Filled.Favorite),
-        Triple("daily", "يومي", Icons.Filled.CheckCircle),
-        Triple("focus", "التركيز", Icons.Filled.PlayArrow),
-        Triple("more", "المزيد", Icons.Filled.Menu),
-    )
-    Column(Modifier.fillMaxWidth().background(P.surface)) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
-        Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceAround) {
-            items.forEach { (id, label, icon) -> TabItem(label, icon, tab == id || id == "daily" && tab == "tasks") { onTab(id) } }
+private fun Header(openSettings: () -> Unit) {
+    Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
+            Sub(dateLine(), size = 12.sp)
         }
+        Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
+            if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Text("⚙", color = P.muted, fontSize = 20.sp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
+        }
+    }
+}
+
+/** The section icon in the theme's icon set. */
+@Composable
+private fun SectionIcon(s: Section, on: Boolean, size: Int = 22) {
+    val tint = if (on) P.accent else P.muted
+    when (L.icons) {
+        IconStyle.GLYPH -> Text(s.glyph, fontSize = (size - 2).sp, color = tint)
+        IconStyle.NONE -> {}
+        else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = tint, modifier = Modifier.size(size.dp))
     }
 }
 
 @Composable
-private fun TabItem(label: String, icon: ImageVector, on: Boolean, onClick: () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 6.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.clip(RoundedCornerShape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 12.dp, vertical = 4.dp)) {
-            Icon(icon, null, tint = if (on) P.accent else P.muted, modifier = Modifier.size(22.dp))
+private fun BottomBar() {
+    Column(Modifier.fillMaxWidth().background(P.surface)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
+        Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceAround) {
+            sections.forEach { s ->
+                val on = Nav.tab == s.id
+                Column(Modifier.clip(L.shape(12.dp)).clickable { Nav.tab = s.id }.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 12.dp, vertical = 4.dp)) { SectionIcon(s, on) }
+                    Spacer(Modifier.height(2.dp))
+                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                }
+            }
         }
-        Spacer(Modifier.height(2.dp))
-        Text(label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
     }
 }
 
+/** Words only, with a short line over the chosen one. */
+@Composable
+private fun WordsBar() {
+    Column(Modifier.fillMaxWidth().background(P.bg)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
+        Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceAround) {
+            sections.forEach { s ->
+                val on = Nav.tab == s.id
+                Column(Modifier.clickable { Nav.tab = s.id }.padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.width(22.dp).height(3.dp).background(if (on) P.accent else P.bg))
+                    Spacer(Modifier.height(6.dp))
+                    Text(s.label, color = if (on) P.ink else P.muted, fontSize = 14.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
+                }
+            }
+        }
+    }
+}
+
+/** Tabs under the header, like a book's sections. */
+@Composable
+private fun TopTabs() {
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            sections.forEach { s ->
+                val on = Nav.tab == s.id
+                Column(Modifier.clickable { Nav.tab = s.id }.padding(horizontal = 10.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SectionIcon(s, on, 18); if (L.icons != IconStyle.NONE) Spacer(Modifier.width(4.dp))
+                        Text(s.label, color = if (on) P.accent else P.muted, fontSize = 15.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Box(Modifier.width(36.dp).height(2.dp).background(if (on) P.accent else P.bg))
+                }
+            }
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
+    }
+}
+
+/** A floating dock with icons only. */
+@Composable
+private fun Dock() {
+    Row(Modifier.navigationBarsPadding().padding(bottom = 14.dp).shadow(10.dp, L.shape(28.dp)).clip(L.shape(28.dp)).background(P.card).border(1.dp, P.line, L.shape(28.dp))
+        .padding(horizontal = 10.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        sections.forEach { s ->
+            val on = Nav.tab == s.id
+            Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.tab = s.id }, contentAlignment = Alignment.Center) {
+                when (L.icons) {
+                    IconStyle.GLYPH, IconStyle.NONE -> Text(s.glyph, fontSize = 20.sp)
+                    else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = if (on) P.onAccent else P.muted, modifier = Modifier.size(24.dp))
+                }
+            }
+        }
+    }
+}
