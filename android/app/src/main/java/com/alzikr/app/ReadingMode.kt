@@ -66,6 +66,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -204,6 +205,17 @@ fun ReadingShell(
     var auto by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf(false) }
     BackHandler(onBack = back)
+    // The tools hide by themselves (longer the very first time, when the explanation shows; it then never returns).
+    LaunchedEffect(controls, sheet) {
+        if (controls && !sheet) {
+            val first = !Hints.seen("readmode")
+            delay(if (first) 8_000 else 4_000)
+            controls = false
+            if (first) Hints.dismiss("readmode")
+        }
+    }
+    var pillDim by remember { mutableStateOf(false) }
+    LaunchedEffect(auto, controls) { pillDim = false; if (auto && !controls) { delay(3_000); pillDim = true } }
     DisposableEffect(window) {
         val ctl = window?.let { WindowCompat.getInsetsController(it, view) }
         ctl?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -259,7 +271,7 @@ fun ReadingShell(
         }
         // While scrolling by itself with the tools hidden: a small quiet control.
         if (auto && !controls) Row(Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)).padding(bottom = 14.dp)
-            .clip(RoundedCornerShape(50)).background(Color(paper.ink).copy(alpha = .10f)).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            .alpha(if (pillDim) .35f else 1f).clip(RoundedCornerShape(50)).background(Color(paper.ink).copy(alpha = .10f)).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             val ink = Color(paper.muted)
             Text("−", color = ink, fontSize = 20.sp, modifier = Modifier.clip(RoundedCornerShape(50)).clickable { Reading.speed = speed - 1 }.padding(horizontal = 14.dp, vertical = 6.dp))
             Text("السرعة ${Quran.digits(speed)}", color = ink, fontSize = 13.sp)
