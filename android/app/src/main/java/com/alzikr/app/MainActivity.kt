@@ -55,10 +55,19 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/** Touch each object that holds Compose state, so it is created on the main thread. */
+fun warmStates() {
+    Store.version; Nav.tab; Quran.ready; Recitation.now; Tafsir.version; Hadith.version; Books.version
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Store.init(this)
+        // Create every shared Compose state on the main thread first. If a background thread (the Quran
+        // loading below) is the first to touch one of these objects, its state is born outside the
+        // composition's snapshot and Compose can crash with "Reading a state that was created after the snapshot was taken".
+        warmStates()
         enableEdgeToEdge()
         intent?.getStringExtra("tab")?.let(::openTab)
         openPlace(intent)
