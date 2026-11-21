@@ -11,6 +11,8 @@ object Nav {
     var quran by mutableStateOf<Pair<Int, Int>?>(null)
     /** Open a hadith book at a hadith number. */
     var hadith by mutableStateOf<Pair<String, Int>?>(null)
+    /** Open an explained hadith (HadeethEnc id). */
+    var sharh by mutableStateOf<String?>(null)
     /** Sub-section inside the daily tab (0 tasks, 1 habits, 2 focus, 3 khatma, 4 notes). */
     var daily by mutableStateOf(0)
 

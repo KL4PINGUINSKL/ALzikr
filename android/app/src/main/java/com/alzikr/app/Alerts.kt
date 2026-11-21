@@ -38,7 +38,7 @@ object Alerts {
     private const val ID_REMIND = 11
     const val ID_FOCUS = 12
 
-    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR }
+    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR, KHATMA }
     data class Event(val at: Long, val kind: Kind, val prayer: Prayer)
 
     fun timeText(minutes: Int): String {
@@ -64,6 +64,7 @@ object Alerts {
             if (Store.morningAfter >= 0) list += Event(epoch(date, t.getValue(Prayer.FAJR) + Store.morningAfter), Kind.MORNING, Prayer.FAJR)
             if (Store.eveningAfter >= 0) list += Event(epoch(date, t.getValue(Prayer.ASR) + Store.eveningAfter), Kind.EVENING, Prayer.ASR)
             if (Data.sleepAt >= 0) list += Event(epoch(date, Data.sleepAt), Kind.SLEEP, Prayer.ISHA)
+            if (Data.khatmaRemindAt >= 0 && Data.khatmaPage < Data.PAGES) list += Event(epoch(date, Data.khatmaRemindAt), Kind.KHATMA, Prayer.DHUHR)
             if (Data.salawatEvery > 0) for (m in 9 * 60..21 * 60 step Data.salawatEvery * 60) list += Event(epoch(date, m), Kind.DHIKR, Prayer.DHUHR)
             if (Data.kahf && date.dayOfWeek == java.time.DayOfWeek.FRIDAY) list += Event(epoch(date, 10 * 60), Kind.KAHF, Prayer.DHUHR)
             if (Data.fastReminder && Data.isFastingEve(date) != null) list += Event(epoch(date, 20 * 60 + 30), Kind.FAST, Prayer.ISHA)
@@ -142,6 +143,13 @@ object Alerts {
             Kind.BEFORE -> Notification.Builder(c, CH_REMIND).setContentTitle("صلاة ${p.ar} بعد ${Store.before} دقائق").setContentText("استعد للصلاة").setContentIntent(open(c, "prayer")).setTimeoutAfter(Store.before * 60_000L)
             Kind.MORNING -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار الصباح").setContentText(awradLeft()).setContentIntent(open(c, "adhkar"))
             Kind.EVENING -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار المساء").setContentText(awradLeft()).setContentIntent(open(c, "adhkar"))
+            Kind.KHATMA -> {
+                val from = Data.khatmaPage + 1
+                val to = (Data.khatmaPage + kotlin.math.ceil(Data.PAGES.toDouble() / Data.khatmaDays).toInt()).coerceAtMost(Data.PAGES)
+                val read = Data.pagesToday()
+                Notification.Builder(c, CH_REMIND).setContentTitle("وِرد القرآن").setContentText(if (read > 0) "قرأت اليوم $read صفحة، بارك الله فيك" else "وردك اليوم: من الصفحة $from إلى $to")
+                    .setContentIntent(PendingIntent.getActivity(c, 77, Intent(c, MainActivity::class.java).putExtra("quran", Quran.firstOfPageSafe(c, from)).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+            }
             Kind.SLEEP -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار النوم").setContentText("باسمك اللهم أموت وأحيا").setContentIntent(open(c, "adhkar"))
             Kind.DHIKR -> Content.reminders[(System.currentTimeMillis() / 3_600_000L % Content.reminders.size).toInt()].let { z ->
                 Notification.Builder(c, CH_REMIND).setContentTitle("ذكر").setContentText(z).setContentIntent(open(c, "adhkar")).setTimeoutAfter(50 * 60_000L) }

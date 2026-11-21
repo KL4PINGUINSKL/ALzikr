@@ -67,16 +67,19 @@ fun LibraryScreen() {
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a) { Nav.quran = null } else Loading(); return }
     Nav.hadith?.let { (b, n) -> HadithReader(b, n) { Nav.hadith = null }; return }
+    Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
     var section by rememberSaveable { mutableStateOf(0) }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("القرآن الكريم", "التفاسير", "الحديث", "المفضلة").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("📖 القرآن", "📚 التفاسير", "📜 الحديث", "💡 شرح الأحاديث", "📕 كتب إسلامية", "★ المفضلة").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
         }
         Box(Modifier.weight(1f)) {
             when (section) {
                 0 -> if (Quran.ready) QuranHome() else Loading()
                 1 -> TafsirHome()
                 2 -> HadithHome()
+                3 -> SharhHome()
+                4 -> BooksHome()
                 else -> Favorites()
             }
         }
@@ -438,10 +441,24 @@ private fun HadithHome() {
         item { Sub("الكتب الكبيرة تُنزّل مرة واحدة ثم تعمل بلا إنترنت. المصدر: hadith-json و hadith-api على GitHub. اضغط ✓ لحذف كتاب من الهاتف.", Modifier.padding(6.dp), size = 11.sp) }
     }
     remove?.let { b ->
-        AlertDialog(onDismissRequest = { remove = null }, containerColor = P.surface, title = { Text("حذف «${b.title}» من الهاتف؟", color = P.ink) },
-            text = { Sub("يمكنك تنزيله مرة أخرى متى شئت.") },
-            confirmButton = { TextButton({ Hadith.delete(ctx, b.id); remove = null }) { Text("حذف", color = P.danger) } },
-            dismissButton = { TextButton({ remove = null }) { Text("إلغاء") } })
+        AlertDialog(onDismissRequest = { remove = null }, containerColor = P.surface, title = { Text("«${b.title}» على هاتفك", color = P.ink) },
+            text = { Sub("«تحديث» يعيد تنزيله من المصدر بأحدث نسخة، و«حذف» يوفّر المساحة ويمكنك تنزيله لاحقًا.") },
+            confirmButton = {
+                TextButton({
+                    remove = null
+                    scope.launch {
+                        Hadith.delete(ctx, b.id)
+                        val ok = withContext(Dispatchers.IO) { Hadith.download(ctx, b.id) }
+                        Toast.makeText(ctx, if (ok) "حُدّث «${b.title}»" else "تعذّر التحديث، تحقق من الإنترنت", Toast.LENGTH_LONG).show()
+                    }
+                }) { Text("تحديث") }
+            },
+            dismissButton = {
+                Row {
+                    TextButton({ Hadith.delete(ctx, b.id); remove = null }) { Text("حذف", color = P.danger) }
+                    TextButton({ remove = null }) { Text("إلغاء") }
+                }
+            })
     }
 }
 
@@ -507,6 +524,7 @@ private fun HadithCard(b: Hadith.Book, h: Hadith.Item) {
 
 @Composable
 private fun Favorites() {
+    val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val marks = if (Quran.ready) Quran.bookmarks() else emptyList()
     val favs = Hadith.favorites()
@@ -518,6 +536,16 @@ private fun Favorites() {
             Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { Nav.openQuran(s, a) }.padding(12.dp)) {
                 Text(ay.text, color = P.ink, fontSize = 18.sp, fontFamily = Fonts.quran, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 32.sp)
                 Sub("${Quran.surahs[s - 1].name} ${Quran.digits(a)}", size = 12.sp, color = P.gold)
+            }
+        }
+        val sharhFav = Sharh.favorites()
+        if (sharhFav.isNotEmpty()) {
+            item { Title("أحاديث مشروحة", Modifier.padding(top = 12.dp)) }
+            items(sharhFav.toList()) { id ->
+                val title = remember(id) { runCatching { java.io.File(ctx.filesDir, "sharh/h_$id.json").readText().let { org.json.JSONObject(it).optString("title") } }.getOrDefault("حديث $id") }
+                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { Nav.sharh = id }.padding(14.dp)) {
+                    Text(title, color = P.ink, fontSize = 15.sp, fontFamily = Fonts.naskh, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
             }
         }
         item { Title("أحاديث مفضلة", Modifier.padding(top = 12.dp)) }

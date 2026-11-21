@@ -68,7 +68,7 @@ fun Sub(text: String, modifier: Modifier = Modifier, size: TextUnit = 13.sp, col
 fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val shape = L.shape(10.dp)
     Box(modifier.clip(shape).background(if (on) P.accent else P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+        Text(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, softWrap = false)
     }
 }
 

@@ -46,6 +46,8 @@ object Quran {
     fun ofSurah(s: Int): List<Ayah> = ayahs.subList(start[s], if (s < 114) start[s + 1] else ayahs.size)
     fun at(s: Int, a: Int): Ayah? = ayahs.getOrNull(start[s] + a - 1)
     fun firstOfPage(page: Int): Ayah = ayahs.firstOrNull { it.page >= page } ?: ayahs.last()
+    /** "s:a" of a page's first verse, loading the text if needed (for notifications). */
+    fun firstOfPageSafe(c: Context, page: Int): String { load(c); return firstOfPage(page).let { "${it.s}:${it.a}" } }
     fun firstOfJuz(juz: Int): Ayah = ayahs.first { it.juz >= juz }
 
     /** Same folding as the search column: no marks, one form of alef, ya and ta marbuta. */

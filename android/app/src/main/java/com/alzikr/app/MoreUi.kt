@@ -35,6 +35,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -65,13 +67,15 @@ import kotlin.math.roundToInt
 fun MoreScreen(openSettings: () -> Unit) {
     var page by remember { mutableStateOf<String?>(null) }
     page?.let { p ->
-        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; else -> "نسخ احتياطي" }, back = { page = null }) {
+        Subpage(title = when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
                 "calendar" -> CalendarPage()
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
+                "zakat" -> ZakatPage()
+                "convert" -> ConvertPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> BackupPage()
             }
@@ -86,6 +90,11 @@ fun MoreScreen(openSettings: () -> Unit) {
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             nextOccasion()?.let { (o, d) -> Sub("${o.name} ${if (d == 0L) "اليوم" else "بعد $d يومًا"}", color = P.gold) }
         }
+        val activity = LocalContext.current as? android.app.Activity
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Tile("⬆", "تحديث التطبيق", Modifier.weight(1f)) { activity?.let { AppUpdate.checkNow(it) } }
+            Tile("↗", "مشاركة التطبيق", Modifier.weight(1f)) { activity?.let { shareApp(it) } }
+        }
         listOf(
             Triple("themes", "🎨  الثيمات", "${Looks.byId(Data.look).name} · ${Looks.all.size} ثيمًا، ولكل ثيم سبعة ألوان"),
             Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
@@ -93,6 +102,8 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
             Triple("names", "✨  أسماء الله الحسنى", "التسعة والتسعون اسمًا"),
             Triple("qada", "🕌  قضاء الصلوات", "عدّ ما فاتك وما قضيت"),
+            Triple("zakat", "💰  حاسبة الزكاة", "زكاة المال والذهب والفضة بالنصاب"),
+            Triple("convert", "🔁  محوّل التاريخ", "من الهجري إلى الميلادي وبالعكس"),
             Triple("backup", "💾  نسخ احتياطي", "حفظ كل بياناتك في ملف واستعادتها"),
         ).forEach { (id, title, sub) -> MenuRow(title, sub) { page = id } }
         MenuRow("⚙️  الإعدادات", "الموقع والحساب والتنبيهات والمظهر", openSettings)
@@ -319,3 +330,87 @@ private fun BackupPage() {
     }
 }
 
+
+/** The same link always gives the newest version (the public ALzikr repo keeps a fixed-name copy). */
+const val APP_LINK = "https://github.com/KL4PINGUINSKL/ALzikr/releases/latest/download/ALzikr.apk"
+
+fun shareApp(c: android.content.Context) {
+    val text = "تطبيق ALzikr: أوقات الصلاة وتنبيهها، والأذكار والأوراد، والقرآن الكريم مع التفاسير والتلاوة، وكتب الحديث وشروحها، والكتب الإسلامية. مجاني وبلا إعلانات.\n\nللتنزيل مباشرة (أندرويد):\n$APP_LINK"
+    c.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, text), "مشاركة ALzikr"))
+}
+
+// ------------------------------------------------------------------------------- zakat
+
+/** Zakat on money, gold and silver: 2.5% of what reaches the nisab (85 g of gold, or 595 g of silver). */
+@Composable
+private fun ZakatPage() {
+    var cash by rememberSaveable { mutableStateOf("") }
+    var gold by rememberSaveable { mutableStateOf("") }      // grams
+    var silver by rememberSaveable { mutableStateOf("") }    // grams
+    var goldPrice by rememberSaveable { mutableStateOf(Store.prefs.getString("zakat_gold_price", "") ?: "") }
+    var silverPrice by rememberSaveable { mutableStateOf(Store.prefs.getString("zakat_silver_price", "") ?: "") }
+    var debts by rememberSaveable { mutableStateOf("") }
+    var bySilver by rememberSaveable { mutableStateOf(false) }
+    fun n(t: String) = t.replace('،', '.').replace(',', '.').trim().toDoubleOrNull() ?: 0.0
+    val gp = n(goldPrice); val sp = n(silverPrice)
+    val total = n(cash) + n(gold) * gp + n(silver) * sp - n(debts)
+    val nisab = if (bySilver) 595 * sp else 85 * gp
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Hint("zakat", "💰", "أدخل سعر غرام الذهب (والفضة) اليوم، ثم ما عندك من مال وذهب وفضة مرّ عليه حول هجري كامل. تُحسب الزكاة ربع العشر (2.5٪) إذا بلغ المجموع النصاب.")
+        Title("الأسعار اليوم (لكل غرام)")
+        OutlinedTextField(goldPrice, { goldPrice = it; Store.prefs.edit().putString("zakat_gold_price", it).apply() }, label = { Text("سعر غرام الذهب (عيار 24)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(silverPrice, { silverPrice = it; Store.prefs.edit().putString("zakat_silver_price", it).apply() }, label = { Text("سعر غرام الفضة") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Title("ما عندك منذ حول كامل")
+        OutlinedTextField(cash, { cash = it }, label = { Text("النقود والأرصدة وعروض التجارة") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(gold, { gold = it }, label = { Text("الذهب (غرام)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(silver, { silver = it }, label = { Text("الفضة (غرام)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(debts, { debts = it }, label = { Text("ديون حالّة عليك (تُخصم)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Sub("النصاب بـ:"); Choice("الذهب (85 غ)", !bySilver) { bySilver = false }; Choice("الفضة (595 غ)", bySilver) { bySilver = true }
+        }
+        Panel(color = P.card) {
+            Sub("المجموع: ${"%,.2f".format(total)} · النصاب: ${if (nisab > 0) "%,.2f".format(nisab) else "أدخل السعر"}")
+            if (nisab > 0 && total >= nisab) {
+                Text("الزكاة الواجبة: ${"%,.2f".format(total * 0.025)}", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Sub("ربع العشر (2.5٪) من المجموع", size = 12.sp)
+            } else Text(if (nisab > 0) "لم يبلغ النصاب، فلا زكاة فيه الآن" else "أدخل سعر الذهب أو الفضة لمعرفة النصاب", color = P.ink, fontSize = 16.sp)
+        }
+        Sub("هذا حساب تقريبي للحالات الشائعة. للزروع والأنعام والأحوال الخاصة اسأل أهل العلم.", size = 11.sp)
+    }
+}
+
+// ------------------------------------------------------------------------------- date converter
+
+@Composable
+private fun ConvertPage() {
+    val ar = Locale("ar")
+    var toHijri by rememberSaveable { mutableStateOf(true) }
+    var d by rememberSaveable { mutableStateOf("") }; var m by rememberSaveable { mutableStateOf("") }; var y by rememberSaveable { mutableStateOf("") }
+    val result: String? = runCatching {
+        val dd = d.toInt(); val mm = m.toInt(); val yy = y.toInt()
+        if (toHijri) {
+            val g = LocalDate.of(yy, mm, dd); val h = Data.hijri(g)
+            "${g.format(DateTimeFormatter.ofPattern("EEEE", ar))} ${h.day} ${h.monthName} ${h.year} هـ"
+        } else {
+            val g = LocalDate.from(java.time.chrono.HijrahChronology.INSTANCE.date(yy, mm, dd)).minusDays(Data.hijriAdjust.toLong())
+            g.format(DateTimeFormatter.ofPattern("EEEE d MMMM y م", ar))
+        }
+    }.getOrNull()
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Hint("convert", "🔁", "اختر اتجاه التحويل، ثم أدخل اليوم والشهر والسنة بالأرقام.")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Choice("ميلادي ← هجري", toHijri) { toHijri = true }
+            Choice("هجري ← ميلادي", !toHijri) { toHijri = false }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(d, { d = it.filter(Char::isDigit).take(2) }, label = { Text("اليوم") }, singleLine = true, modifier = Modifier.weight(1f))
+            OutlinedTextField(m, { m = it.filter(Char::isDigit).take(2) }, label = { Text("الشهر") }, singleLine = true, modifier = Modifier.weight(1f))
+            OutlinedTextField(y, { y = it.filter(Char::isDigit).take(4) }, label = { Text("السنة") }, singleLine = true, modifier = Modifier.weight(1.3f))
+        }
+        if (!toHijri) Sub("الأشهر: " + Data.months.mapIndexed { i, n -> "${i + 1} $n" }.joinToString(" · "), size = 11.sp)
+        Panel(color = P.card) {
+            Text(result ?: "أدخل تاريخًا صحيحًا", color = if (result != null) P.accent else P.muted, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
+        Sub("بتقويم أم القرى${if (Data.hijriAdjust != 0) " مع تعديلك (${Data.hijriAdjust} يوم)" else ""}. يدعم 1300–1600 هـ تقريبًا.", size = 11.sp)
+    }
+}

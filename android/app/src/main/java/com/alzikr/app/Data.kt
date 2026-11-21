@@ -199,6 +199,10 @@ object Data {
     var khatmaCount: Int
         get() = sp.getInt("khatma_count", 0)
         set(v) = edit { putInt("khatma_count", v) }
+    /** Daily reminder of today's portion, minutes after midnight (-1 = off). */
+    var khatmaRemindAt: Int
+        get() = sp.getInt("khatma_remind", -1)
+        set(v) = edit { putInt("khatma_remind", v) }
     fun pagesToday() = JSONObject(sp.getString("khatma_log", "{}")!!).optInt(today())
     fun juzOf(page: Int) = if (page <= 1) 1 else ((page - 2) / 20 + 1).coerceIn(1, 30)
     fun newKhatma() { khatmaCount = khatmaCount + if (khatmaPage >= PAGES) 1 else 0; edit { putInt("khatma_page", 0).putString("khatma_started", today()) } }

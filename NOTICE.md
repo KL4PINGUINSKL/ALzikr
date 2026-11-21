@@ -7,3 +7,5 @@
 - **Hadith, downloaded in the app on request**: github.com/AhmedBaset/hadith-json (Arabic text and Arabic chapter names). Not redistributed by this project; each phone fetches the book from the source.
 - **Fonts** (SIL Open Font License 1.1, from github.com/google/fonts): Amiri and Amiri Quran (Khaled Hosny), Tajawal, Reem Kufi, El Messiri, Changa.
 - **Adhkar texts** (Content.kt): Hisn al-Muslim wording, typed without diacritics.
+- **Explained hadith** (fetched on request): HadeethEnc.com API (hadeethenc.com/api).
+- **Islamic books** (fetched on request): IslamHouse.com API; the books are theirs and are downloaded from their servers.

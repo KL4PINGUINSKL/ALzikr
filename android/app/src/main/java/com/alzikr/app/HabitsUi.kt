@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -149,6 +150,13 @@ fun KhatmaPage() {
             Sub("أختم في: ", Modifier.padding(top = 6.dp))
             Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(7 to "أسبوع", 15 to "15 يومًا", 30 to "شهر", 60 to "شهرين").forEach { (d, l) -> Choice(l, days == d) { Data.khatmaDays = d } }
+            }
+            Sub("تذكير يومي بالورد", Modifier.padding(top = 10.dp))
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(-1, 6 * 60, 8 * 60, 13 * 60, 17 * 60, 20 * 60, 21 * 60 + 30).forEach { m ->
+                    Choice(if (m < 0) "إيقاف" else Alerts.timeText(m), Data.khatmaRemindAt == m) { Data.khatmaRemindAt = m; Alerts.reschedule(ctx) }
+                }
             }
             Sub("$perDay صفحة يوميًا تقريبًا (${"%.1f".format(perDay / 20.0)} جزء)", Modifier.padding(top = 8.dp), size = 12.sp)
             Text("البدء من الصفحة الأولى", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp).clip(L.shape(8.dp)).combinedClickableSafe { Data.newKhatma() }.padding(6.dp))
