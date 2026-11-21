@@ -244,7 +244,8 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
                 if (Recitation.now != null) PlayerBar { sheet = "reciter" }
                 else Column {
-                Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                ReciterLine(Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp)) { sheet = "reciter" }
+                Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("مدى الاستماع:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(end = 6.dp))
                     RangeChoice()
                 }
@@ -301,7 +302,7 @@ private fun PlayerBar(chooseReciter: () -> Unit) {
 }
 
 @Composable
-private fun ReciterDialog(close: () -> Unit) {
+internal fun ReciterDialog(close: () -> Unit) {
     val ctx = LocalContext.current
     AlertDialog(onDismissRequest = close, containerColor = P.surface,
         title = { Text("اختر القارئ", color = P.ink) },
@@ -348,6 +349,8 @@ private fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
         }
     }
     val entry = Tafsir.get(ctx, sel, a.s, a.a)
+    var pickReciter by remember { mutableStateOf(false) }
+    if (pickReciter) ReciterDialog { pickReciter = false }
     androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, containerColor = P.surface) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
             Text(ref, color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
@@ -363,6 +366,7 @@ private fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
                     Toast.makeText(ctx, "سُجّلت في ختمتك: الصفحة ${a.page}", Toast.LENGTH_SHORT).show()
                 }
             }
+            ReciterLine(Modifier.padding(top = 8.dp)) { pickReciter = true }
             Text("مدى «من هنا»:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
             RangeChoice()
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -671,5 +675,18 @@ fun RangeChoice(live: Boolean = false) {
                 if (live) Recitation.changeRange(r) else Recitation.range = r
             }
         }
+    }
+}
+
+/** «🎙 القارئ: … ▾» — always visible where listening starts. */
+@Composable
+fun ReciterLine(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    Row(modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Text("🎙", fontSize = 16.sp)
+        Text("القارئ: ", color = P.muted, fontSize = 14.sp, modifier = Modifier.padding(start = 6.dp))
+        Text(Recitation.reciterName(), color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text("تغيير ▾", color = P.accent, fontSize = 13.sp)
     }
 }

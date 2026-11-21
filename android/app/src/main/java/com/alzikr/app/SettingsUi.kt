@@ -191,6 +191,20 @@ fun SettingsSheet(close: () -> Unit) {
             }
 
             Panel {
+                Title("التلاوة")
+                Sub("القارئ ومدى القراءة والتكرار عند الاستماع للقرآن.", Modifier.padding(bottom = 8.dp), size = 12.sp)
+                var pick by remember { mutableStateOf(false) }
+                if (pick) ReciterDialog { pick = false }
+                ReciterLine { pick = true }
+                Sub("مدى القراءة", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                RangeChoice()
+                Sub("تكرار كل آية", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(1, 3, 5, 10).forEach { n -> Choice(if (n == 1) "بلا تكرار" else "×$n", Recitation.repeat == n) { Recitation.repeat = n } }
+                }
+            }
+
+            Panel {
                 Title("المساعدة")
                 Sub("في أول زيارة لكل صفحة تظهر تلميحة تشرح ما فيها وأين تضغط.", Modifier.padding(bottom = 8.dp), size = 12.sp)
                 Action("إظهار التلميحات من جديد", Modifier.fillMaxWidth(), filled = false) {
