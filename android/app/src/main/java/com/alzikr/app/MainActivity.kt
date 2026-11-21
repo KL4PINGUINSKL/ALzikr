@@ -57,7 +57,7 @@ import java.util.Locale
 
 /** Touch each object that holds Compose state, so it is created on the main thread. */
 fun warmStates() {
-    Store.version; Nav.tab; Quran.ready; Recitation.now; Tafsir.version; Hadith.version; Books.version
+    Store.version; Nav.tab; Quran.ready; Recitation.now; Tafsir.version; Hadith.version; Books.version; Adhan.downloading
 }
 
 class MainActivity : ComponentActivity() {

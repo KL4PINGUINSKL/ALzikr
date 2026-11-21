@@ -35,6 +35,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.launch
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -98,7 +99,8 @@ fun SettingsSheet(close: () -> Unit) {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf(0, 5, 10, 15, 20, 30).forEach { m -> Choice(if (m == 0) "بدون" else "$m د", Store.before == m) { Store.before = m; reschedule() } }
                 }
-                Sub("صوت الأذان", Modifier.padding(top = 12.dp, bottom = 6.dp))
+                AdhanChoice()
+                Sub(if (Adhan.mode == 0) "صوت التنبيه" else "صوت التنبيه (إن لم يُشغَّل الأذان)", Modifier.padding(top = 12.dp, bottom = 6.dp))
                 val soundName = remember(Store.sound, Store.silent) {
                     when { Store.silent -> "اهتزاز فقط"; Store.sound == null -> "صوت الهاتف الافتراضي"
                         else -> runCatching { RingtoneManager.getRingtone(ctx, Uri.parse(Store.sound)).getTitle(ctx) }.getOrDefault("صوت مختار") }
@@ -230,4 +232,55 @@ private fun Stepper(value: Int, set: (Int) -> Unit) {
 private fun Warn(text: String, onClick: () -> Unit) {
     Text(text, color = P.danger, fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp).fillMaxWidth().clip(L.shape(10.dp))
         .background(P.danger.copy(alpha = .1f)).clickable(onClick = onClick).padding(10.dp))
+}
+
+/** The adhan at prayer time: off, the whole adhan, or the takbirs only; the voice, its download and a sample. */
+@Composable
+fun AdhanChoice() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    Sub("الأذان عند دخول الوقت", Modifier.padding(top = 12.dp, bottom = 6.dp))
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(0 to "تنبيه فقط", 1 to "الأذان كاملًا", 2 to "التكبيرات فقط").forEach { (m, l) -> Choice(l, Adhan.mode == m) { Adhan.mode = m } }
+    }
+    if (Adhan.mode == 0) return
+    Adhan.voices.forEach { voice ->
+        val on = Adhan.voiceId == voice.id
+        val has = Adhan.has(ctx, voice)
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(if (on) P.accent.copy(alpha = .10f) else P.card)
+            .clickable { Adhan.voiceId = voice.id }.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text((if (on) "● " else "○ ") + "أذان " + voice.name, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                Sub(voice.credit, size = 10.sp)
+            }
+            when {
+                Adhan.downloading == voice.id -> Text("${(Adhan.progress * 100).toInt()}٪", color = P.accent, fontSize = 13.sp)
+                has -> Text("▶ تجربة", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Adhan.voiceId = voice.id; Adhan.start(ctx, null) }.padding(6.dp))
+                else -> Text("تنزيل · ${"%.1f".format(voice.bytes / 1_048_576f)} م.ب", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
+                    Adhan.voiceId = voice.id
+                    scope.launch {
+                        val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Adhan.download(ctx, voice) }
+                        if (!ok) android.widget.Toast.makeText(ctx, "تعذّر التنزيل، تحقق من الإنترنت", android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }.padding(6.dp))
+            }
+        }
+    }
+    if (!Adhan.has(ctx, Adhan.voice())) Sub("نزّل صوت الأذان المختار مرة واحدة ليعمل دون إنترنت. حتى ذلك الحين يُستعمل صوت التنبيه.", Modifier.padding(top = 6.dp), size = 11.sp, color = P.gold)
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("الفجر: التكبيرات فقط", color = P.ink, fontSize = 14.sp)
+            Sub("التسجيلان ليس فيهما «الصلاة خير من النوم»", size = 11.sp)
+        }
+        androidx.compose.material3.Switch(Adhan.fajrTakbir, { Adhan.fajrTakbir = it })
+    }
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("لا تشغّل الأذان والهاتف صامت", color = P.ink, fontSize = 14.sp)
+            Sub("في وضع الصامت أو الاهتزاز يكتفي بالتنبيه", size = 11.sp)
+        }
+        androidx.compose.material3.Switch(Adhan.respectSilent, { Adhan.respectSilent = it })
+    }
+    Sub("يُشغَّل الأذان بصوت المنبّه، ولا يُشغَّل أثناء المكالمات. لإيقافه اضغط «إيقاف» في الإشعار.", Modifier.padding(top = 4.dp), size = 11.sp)
 }

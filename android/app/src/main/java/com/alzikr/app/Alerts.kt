@@ -109,6 +109,14 @@ object Alerts {
         return id
     }
 
+    /** The prayer notice while the adhan itself is playing: no sound of its own. */
+    private fun adhanNoticeChannel(c: Context): String {
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (nm.getNotificationChannel("prayer_notice_adhan") == null)
+            nm.createNotificationChannel(NotificationChannel("prayer_notice_adhan", "أوقات الصلاة (مع الأذان)", NotificationManager.IMPORTANCE_HIGH).apply { setSound(null, null); enableVibration(true) })
+        return "prayer_notice_adhan"
+    }
+
     fun channels(c: Context) {
         val nm = c.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(NotificationChannel(CH_REMIND, "تذكير قبل الصلاة والأذكار", NotificationManager.IMPORTANCE_DEFAULT))
@@ -135,8 +143,11 @@ object Alerts {
                     stopFocus(c); if (done > 0) Store.addFocus(done)
                     text += " · أُوقفت جلسة التركيز ($done دقيقة)"
                 }
+                // The adhan itself plays; the notice then stays quiet (no second sound).
+                val adhan = Adhan.willPlay(c, p)
+                if (adhan) Adhan.start(c, p)
                 silence(c)
-                Notification.Builder(c, prayerChannel(c)).setContentTitle("حان الآن وقت صلاة ${p.ar}").setContentText(text)
+                Notification.Builder(c, if (adhan) adhanNoticeChannel(c) else prayerChannel(c)).setContentTitle("حان الآن وقت صلاة ${p.ar}").setContentText(text)
                     .setStyle(Notification.BigTextStyle().bigText(text)).setCategory(Notification.CATEGORY_REMINDER).setContentIntent(open(c, if (tasks.isEmpty()) "prayer" else "tasks"))
                     .addAction(Notification.Action.Builder(null, "صليت ✓", PendingIntent.getBroadcast(c, 40 + p.ordinal,
                         Intent(c, AlertReceiver::class.java).setAction(AlertReceiver.PRAYED).putExtra("prayer", p.name), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)).build())
