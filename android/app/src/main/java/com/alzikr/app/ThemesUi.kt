@@ -1,5 +1,7 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -97,11 +99,13 @@ fun ColorChoice() {
     val look = Looks.byId(Data.look)
     val dark = isSystemInDarkTheme()
     val chosen = Data.lookColor(look.id)
-    val base = look.basePal(dark, Data.theme)
+    val now = look.pal(dark, Data.theme)
+    val base = look.basePal(dark, Data.theme).copy(dark = now.dark)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Sub("ألوان «${look.name}»", size = 13.sp)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Tints.list.forEachIndexed { i, t ->
+        Sub("لون الأزرار والعناوين في «${look.name}»", size = 13.sp)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Tints.presets.forEach { i ->
+                val t = Tints.tint(i)!!
                 val c = Tints.accentFor(i, 0f, base.dark) ?: base.accent
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { Data.setLookColor(look.id, i) }) {
                     Box(Modifier.size(34.dp).clip(look.shape(10.dp)).background(c).border(if (chosen == i) 3.dp else 1.dp, if (chosen == i) P.ink else P.line, look.shape(10.dp)),
@@ -119,5 +123,35 @@ fun ColorChoice() {
                     colors = androidx.compose.material3.SliderDefaults.colors(thumbColor = androidx.compose.ui.graphics.Color.hsv(hue, .7f, .6f), activeTrackColor = androidx.compose.ui.graphics.Color.hsv(hue, .7f, .6f)))
             }
         }
+        // The background, then the text color: mix any of them with any buttons color.
+        val back = Data.lookBack(look.id)
+        Sub("الخلفية", Modifier.padding(top = 6.dp), size = 13.sp)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Backs.list.forEachIndexed { i, b ->
+                val bg = if (i == 0) look.basePal(dark, Data.theme).bg else androidx.compose.ui.graphics.Color(b.bg)
+                val card = if (i == 0) look.basePal(dark, Data.theme).card else androidx.compose.ui.graphics.Color(b.card)
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { Data.setLookBack(look.id, i) }) {
+                    Box(Modifier.size(width = 46.dp, height = 34.dp).clip(look.shape(10.dp)).background(bg).border(if (back == i) 3.dp else 1.dp, if (back == i) P.accent else P.line, look.shape(10.dp)),
+                        contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(width = 24.dp, height = 10.dp).clip(look.shape(4.dp)).background(card))
+                    }
+                    Text(b.name, color = if (back == i) P.accent else P.muted, fontSize = 9.sp)
+                }
+            }
+        }
+        val ink = Data.lookInk(look.id)
+        Sub("لون الخط", Modifier.padding(top = 6.dp), size = 13.sp)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Inks.list.forEachIndexed { i, k ->
+                val c = if (i == 0) (if (now.dark) androidx.compose.ui.graphics.Color(0xFFF2F2F2) else androidx.compose.ui.graphics.Color(0xFF151515)) else androidx.compose.ui.graphics.Color(k.c)
+                val readable = i == 0 || Tints.contrast(c, now.bg) >= 3f
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(enabled = readable) { Data.setLookInk(look.id, i) }) {
+                    Box(Modifier.size(34.dp).clip(look.shape(10.dp)).background(now.bg).border(if (ink == i) 3.dp else 1.dp, if (ink == i) P.accent else P.line, look.shape(10.dp)),
+                        contentAlignment = Alignment.Center) { Text("أ", color = c.copy(alpha = if (readable) 1f else .25f), fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                    Text(k.name, color = if (ink == i) P.accent else P.muted.copy(alpha = if (readable) 1f else .4f), fontSize = 9.sp)
+                }
+            }
+        }
+        Sub("امزج أي خلفية مع أي لون للأزرار ولون للخط. الخلفيات السوداء تبقى سوداء نقية مهما غيّرت اللون، والألوان التي لا تُقرأ على الخلفية تظهر باهتة ولا تُختار.", size = 11.sp)
     }
 }

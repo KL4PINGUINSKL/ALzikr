@@ -43,9 +43,24 @@ data class Look(
         systemDark -> night
         else -> day
     }
-    /** The palette with this theme's chosen color (one of seven, or a free hue). */
-    fun pal(systemDark: Boolean, mode: Int, color: Int = Data.lookColor(id), hue: Float = Data.lookHue(id)): Pal =
-        Tints.apply(basePal(systemDark, mode), color, hue)
+    /**
+     * The palette: the theme's colors, its chosen buttons color, and optionally its own background and
+     * text color (mixed freely). A black background stays black whatever the color.
+     */
+    fun pal(systemDark: Boolean, mode: Int, color: Int = Data.lookColor(id), hue: Float = Data.lookHue(id),
+            back: Int = Data.lookBack(id), ink: Int = Data.lookInk(id)): Pal {
+        val b = Backs.list.getOrNull(back)?.takeIf { back > 0 }
+        var p = if (b == null) basePal(systemDark, mode) else (if (b.dark) night ?: day else day ?: night)!!
+        if (b != null) p = p.copy(dark = b.dark, bg = Color(b.bg), surface = Color(b.surface), card = Color(b.card), line = Color(b.line),
+            ink = if (b.dark) Color(0xFFF2F2F2) else Color(0xFF151515), muted = if (b.dark) Color(0xFF9A9A9A) else Color(0xFF6A6A6A))
+        p = Tints.apply(p, color, hue, keepBg = b != null || p.bg.luminance() < 0.004f)
+        Inks.list.getOrNull(ink)?.takeIf { ink > 0 }?.let { k ->
+            val c = Color(k.c)
+            if (Tints.contrast(c, p.bg) >= 3f) p = p.copy(ink = c, muted = Tints.mix(c, p.bg, .42f))
+        }
+        val accent = Tints.fit(p.accent, p.bg)
+        return p.copy(accent = accent, onAccent = Tints.on(accent), gold = Tints.fit(p.gold, p.bg))
+    }
 
     fun shape(r: Dp = radius): Shape = when (corners) {
         Corners.CUT -> CutCornerShape(r.coerceAtMost(14.dp))
@@ -143,23 +158,71 @@ object Tints {
         Tint("فحمي", 0xFF3E4A52, 0xFFB8C4CC, 0xFFB08D3C),
     )
     const val CUSTOM = 7
+    /** More colors after the free one (indices 8, 9, …), so saved choices keep their meaning. */
+    val extra = listOf(
+        Tint("بنفسجي غامق", 0xFF3F1D6B, 0xFF9C6ADE, 0xFFD9A441),
+        Tint("ذهبي", 0xFF8A6512, 0xFFE3C060, 0xFF2F8F7A),
+        Tint("وردي", 0xFFB0436A, 0xFFF08FB4, 0xFFD9A441),
+    )
+    /** The preset swatches in order: the original, the six, then the extra ones. */
+    val presets: List<Int> = (0..6).toList() + extra.indices.map { it + 8 }
+    fun tint(index: Int): Tint? = when (index) { in 0..6 -> list[index]; in 8 until 8 + extra.size -> extra[index - 8]; else -> null }
 
-    private fun mix(a: Color, b: Color, t: Float) = Color(a.red + (b.red - a.red) * t, a.green + (b.green - a.green) * t, a.blue + (b.blue - a.blue) * t, 1f)
-    private fun on(c: Color) = if (c.luminance() > 0.5f) Color(0xFF111111) else Color(0xFFFFFFFF)
-
-    fun accentFor(index: Int, hue: Float, dark: Boolean): Color? = when (index) {
-        in 1..6 -> Color(if (dark) list[index].night else list[index].day)
-        CUSTOM -> Color.hsv(hue, if (dark) 0.55f else 0.70f, if (dark) 0.88f else 0.55f)
-        else -> null
+    fun mix(a: Color, b: Color, t: Float) = Color(a.red + (b.red - a.red) * t, a.green + (b.green - a.green) * t, a.blue + (b.blue - a.blue) * t, 1f)
+    fun on(c: Color) = if (c.luminance() > 0.5f) Color(0xFF111111) else Color(0xFFFFFFFF)
+    fun contrast(a: Color, b: Color): Float { val x = a.luminance() + .05f; val y = b.luminance() + .05f; return maxOf(x, y) / minOf(x, y) }
+    /** The same color, lightened on a dark background (or darkened on a light one) until it reads clearly. */
+    fun fit(c: Color, bg: Color): Color {
+        val toward = if (bg.luminance() < .4f) Color.White else Color.Black
+        var t = 0f; var r = c
+        while (contrast(r, bg) < 3f && t < 1f) { t += .08f; r = mix(c, toward, t) }
+        return r
     }
 
-    fun apply(base: Pal, index: Int, hue: Float): Pal {
+    fun accentFor(index: Int, hue: Float, dark: Boolean): Color? = when (index) {
+        CUSTOM -> Color.hsv(hue, if (dark) 0.55f else 0.70f, if (dark) 0.88f else 0.55f)
+        0 -> null
+        else -> tint(index)?.let { Color(if (dark) it.night else it.day) }
+    }
+
+    /** [keepBg]: the background and panels keep their own color (black stays black); only cards and lines take a hint. */
+    fun apply(base: Pal, index: Int, hue: Float, keepBg: Boolean = false): Pal {
         val accent = accentFor(index, hue, base.dark) ?: return base
-        val gold = if (index in 1..6) Color(list[index].gold) else Color.hsv((hue + 40f) % 360f, 0.6f, if (base.dark) 0.85f else 0.65f)
+        val gold = tint(index)?.takeIf { index != 0 }?.let { Color(it.gold) } ?: Color.hsv((hue + 40f) % 360f, 0.6f, if (base.dark) 0.85f else 0.65f)
         val k = if (base.dark) 1.4f else 1f
         return base.copy(
-            bg = mix(base.bg, accent, 0.05f * k), surface = mix(base.surface, accent, 0.03f * k), card = mix(base.card, accent, 0.10f * k),
+            bg = if (keepBg) base.bg else mix(base.bg, accent, 0.05f * k), surface = if (keepBg) base.surface else mix(base.surface, accent, 0.03f * k),
+            card = mix(base.card, accent, (if (keepBg) 0.06f else 0.10f) * k),
             line = mix(base.line, accent, 0.14f * k), accent = accent, onAccent = on(accent), gold = gold,
         )
     }
+}
+
+/** Backgrounds any theme can take, dark and light (0 = the theme's own). */
+object Backs {
+    data class Back(val name: String, val dark: Boolean, val bg: Long, val surface: Long, val card: Long, val line: Long)
+    val list = listOf(
+        Back("الأصلية", true, 0, 0, 0, 0),
+        Back("أسود نقي", true, 0xFF000000, 0xFF0A0A0A, 0xFF141414, 0xFF262626),
+        Back("أسود فانتوم", true, 0xFF0A0A0F, 0xFF121219, 0xFF1A1A24, 0xFF2B2B38),
+        Back("أسود شديد", true, 0xFF000000, 0xFF000000, 0xFF080808, 0xFF303030),
+        Back("بنفسجي غامق", true, 0xFF120A1F, 0xFF1B1030, 0xFF24163E, 0xFF3A2659),
+        Back("كحلي غامق", true, 0xFF0A1020, 0xFF111A30, 0xFF18233F, 0xFF263457),
+        Back("أخضر غامق", true, 0xFF07150F, 0xFF0D2018, 0xFF132A20, 0xFF1F4031),
+        Back("عنابي غامق", true, 0xFF19080D, 0xFF241017, 0xFF30161F, 0xFF4A2331),
+        Back("فحمي", true, 0xFF1C1E21, 0xFF25282C, 0xFF2E3237, 0xFF40454C),
+        Back("أبيض", false, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFF2F2F2, 0xFFE0E0E0),
+        Back("كريمي", false, 0xFFF6EFDF, 0xFFFFF9EC, 0xFFEEE3CB, 0xFFDCCBA8),
+        Back("رمادي فاتح", false, 0xFFEEF0F2, 0xFFFFFFFF, 0xFFE3E6E9, 0xFFD2D6DA),
+    )
+}
+
+/** Text colors any theme can take (0 = automatic). A color too close to the background is ignored. */
+object Inks {
+    data class Ink(val name: String, val c: Long)
+    val list = listOf(
+        Ink("تلقائي", 0), Ink("أبيض", 0xFFFFFFFF), Ink("عاجي", 0xFFF3EAD3), Ink("رمادي فاتح", 0xFFC9C9C9), Ink("ذهبي فاتح", 0xFFF0DCA0),
+        Ink("أخضر فاتح", 0xFFCBEBD8), Ink("سماوي فاتح", 0xFFCFE6F5), Ink("بنفسجي فاتح", 0xFFE2D4F7),
+        Ink("أسود", 0xFF111111), Ink("بني داكن", 0xFF3A2816), Ink("كحلي", 0xFF0F2440),
+    )
 }

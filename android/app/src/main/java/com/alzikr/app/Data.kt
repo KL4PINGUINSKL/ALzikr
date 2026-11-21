@@ -21,6 +21,11 @@ object Data {
     fun lookColor(id: String) = sp.getInt("look_color_$id", 0)
     fun lookHue(id: String) = sp.getFloat("look_hue_$id", 160f)
     fun setLookColor(id: String, index: Int, hue: Float = lookHue(id)) = edit { putInt("look_color_$id", index).putFloat("look_hue_$id", hue) }
+    /** Each theme's own background ([Backs], 0 = the theme's) and text color ([Inks], 0 = automatic). */
+    fun lookBack(id: String) = sp.getInt("look_back_$id", 0)
+    fun setLookBack(id: String, index: Int) = edit { putInt("look_back_$id", index) }
+    fun lookInk(id: String) = sp.getInt("look_ink_$id", 0)
+    fun setLookInk(id: String, index: Int) = edit { putInt("look_ink_$id", index) }
 
     /** The chosen theme (see [Looks]). */
     var look: String
