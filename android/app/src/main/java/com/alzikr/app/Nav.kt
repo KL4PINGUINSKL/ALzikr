@@ -1,6 +1,7 @@
 package com.alzikr.app
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
@@ -21,6 +22,8 @@ object Nav {
     var story by mutableStateOf<Int?>(null)
     /** Open the hadith search, searching this right away. */
     var hadithQuery by mutableStateOf<String?>(null)
+    /** Inner pages open now (innermost last). While any is open the app header and the tab bar hide. */
+    val pages = mutableStateListOf<Any>()
     /** Pages opened on top of the current tab (back returns to it): an explained hadith, a book hadith, a verse. */
     var overlaySharh by mutableStateOf<String?>(null)
     var overlayHadith by mutableStateOf<Pair<String, String>?>(null)

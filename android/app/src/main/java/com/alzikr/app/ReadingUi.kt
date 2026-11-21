@@ -349,10 +349,9 @@ private fun PdfReader(id: String, title: String, back: () -> Unit) {
         if (renderer == null) { Sub("تعذّر فتح الملف. احذفه ونزّله من جديد.", Modifier.padding(16.dp)); return@Subpage }
         val count = renderer.pageCount
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 10.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Choice("📜 وضع القراءة", false) { readMode = true }
-                Sub("صفحة ${state.firstVisibleItemIndex + 1} من $count", Modifier.weight(1f), size = 13.sp)
-                Choice("انتقل إلى…", false) { goTo = true }
+                Choice("ص ${state.firstVisibleItemIndex + 1} / $count", false) { goTo = true }
                 Choice("−", false) { zoom = (zoom - .25f).coerceAtLeast(1f) }
                 Choice("${(zoom * 100).toInt()}٪", false) { zoom = 1f }
                 Choice("+", false) { zoom = (zoom + .25f).coerceAtMost(3f) }

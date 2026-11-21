@@ -131,10 +131,14 @@ private fun MenuRow(title: String, sub: String, onClick: () -> Unit) {
 @Composable
 fun Subpage(title: String, back: () -> Unit, content: @Composable () -> Unit) {
     BackHandler(onBack = back)
+    val token = remember { Any() }
+    DisposableEffect(token) { Nav.pages += token; onDispose { Nav.pages.remove(token) } }
+    // Pages opened inside pages: only the innermost title shows, as one thin line.
+    val top = Nav.pages.lastOrNull().let { it == null || it === token }
     Column(Modifier.fillMaxSize().background(P.bg)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("→", color = P.accent, fontSize = 22.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = back).padding(horizontal = 12.dp, vertical = 6.dp))
-            Text(title, color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+        if (top) Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("→", color = P.accent, fontSize = 21.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = back).padding(horizontal = 12.dp, vertical = 4.dp))
+            Text(title, color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
         Box(Modifier.weight(1f)) { content() }
     }

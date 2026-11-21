@@ -141,9 +141,11 @@ private fun Root() {
     MaterialTheme(colorScheme = scheme, typography = typography(look.body)) {
         CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl) {
             Box(Modifier.fillMaxSize().background(pal.bg)) {
+                val inPage = Nav.pages.isNotEmpty()
                 Column(Modifier.fillMaxSize()) {
-                    Header { settings = true }
-                    if (look.nav == NavStyle.TOP) TopTabs()
+                    if (inPage) Spacer(Modifier.statusBarsPadding())
+                    else Header { settings = true }
+                    if (look.nav == NavStyle.TOP && !inPage) TopTabs()
                     Box(Modifier.weight(1f)) {
                         when (Nav.tab) {
                             "adhkar" -> AdhkarScreen()
@@ -153,14 +155,15 @@ private fun Root() {
                             else -> PrayerScreen(openSettings = { settings = true })
                         }
                     }
-                    when (look.nav) {
+                    if (inPage) Spacer(Modifier.navigationBarsPadding())
+                    else when (look.nav) {
                         NavStyle.BAR -> BottomBar()
                         NavStyle.WORDS -> WordsBar()
                         NavStyle.DOCK -> Spacer(Modifier.height(86.dp).navigationBarsPadding())
                         NavStyle.TOP -> Spacer(Modifier.navigationBarsPadding())
                     }
                 }
-                if (look.nav == NavStyle.DOCK) Box(Modifier.align(Alignment.BottomCenter)) { Dock() }
+                if (look.nav == NavStyle.DOCK && !inPage) Box(Modifier.align(Alignment.BottomCenter)) { Dock() }
                 Overlays()
             }
             if (settings) SettingsSheet { settings = false }

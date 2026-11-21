@@ -251,12 +251,11 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
                 if (Recitation.now != null) PlayerBar { sheet = "reciter" }
                 else Column {
-                ReciterLine(Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp)) { sheet = "reciter" }
-                Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("مدى الاستماع:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(end = 6.dp))
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(start = 10.dp, end = 10.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Choice("🎙 ${Recitation.reciterName()} ▾", false) { sheet = "reciter" }
                     RangeChoice()
                 }
-                Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Tile("▶", "استماع", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
                     Tile("📖", if (study) "إخفاء التفسير" else "التفسير", Modifier.weight(1f), on = study) { study = !study }
                     Tile("🧠", if (hifz) "إنهاء الحفظ" else "وضع الحفظ", Modifier.weight(1f), on = hifz) { hifz = !hifz }
