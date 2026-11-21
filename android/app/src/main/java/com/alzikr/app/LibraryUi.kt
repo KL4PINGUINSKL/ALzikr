@@ -65,7 +65,7 @@ private fun copy(c: Context, text: String) {
 fun LibraryScreen() {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
-    Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a) { Nav.quran = null } else Loading(); return }
+    Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a, back = { Nav.quran = null }) else Loading(); return }
     Nav.hadith?.let { (b, n) -> HadithReader(b, n, back = { Nav.hadith = null }); return }
     Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
     Nav.hadithQuery?.let { q -> HadithSearchPage(initial = q) { Nav.hadithQuery = null }; return }
@@ -165,11 +165,11 @@ private fun QuranHome() {
 fun QuranOverlay(surah: Int, ayah: Int, back: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
-    if (Quran.ready) QuranReader(surah, ayah, back) else Loading()
+    if (Quran.ready) QuranReader(surah, ayah, back, mark = true) else Loading()
 }
 
 @Composable
-private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
+private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Boolean = false) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
     val ctx = LocalContext.current
@@ -224,13 +224,14 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit) {
                     if (i > 0 && list[i - 1].page != a.page) Text("— صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)} —", color = P.muted, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
                     val marked = Quran.marked(a.s, a.a)
                     val reading = Recitation.now == (a.s to a.a)
+                    val focused = mark && a.s == surah && a.a == startAyah
                     val hidden = hifz && a.a !in shown
                     // Memorization mode: only the first word shows until you tap to check yourself.
                     Text(if (hidden) a.text.substringBefore(' ') + " … ﴿${Quran.digits(a.a)}﴾" else a.text + (if (a.sajda) " ۩" else "") + " ﴿${Quran.digits(a.a)}﴾",
                         color = if (hidden) P.muted else P.ink, fontSize = size.sp, lineHeight = (size * 1.9f).sp, fontFamily = Fonts.quran,
                         textAlign = if (L.id == "mushaf" || L.id == "kaaba") TextAlign.Justify else TextAlign.Start,
                         modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp))
-                            .background(when { hidden -> P.card; reading -> P.accent.copy(alpha = .18f); marked -> P.gold.copy(alpha = .14f); else -> P.bg })
+                            .background(when { hidden -> P.card; reading -> P.accent.copy(alpha = .18f); focused -> P.accent.copy(alpha = .12f); marked -> P.gold.copy(alpha = .14f); else -> P.bg })
                             .clickable { if (hidden) shown += a.a else chosen = a }.padding(horizontal = 6.dp, vertical = 4.dp))
                     if (study) Tafsir.get(ctx, Tafsir.selected, a.s, a.a)?.takeIf { it.from == a.a && it.text.isNotBlank() }?.let { e ->
                         Column(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(L.shape(12.dp)).background(P.card).padding(12.dp)) {
@@ -338,7 +339,7 @@ internal fun ReciterDialog(close: () -> Unit) {
 /** Tapping a verse: the verse, six clear actions, then its tafsir in its own section. */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-internal fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
+internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
@@ -367,6 +368,7 @@ internal fun AyahSheet(a: Quran.Ayah, close: () -> Unit) {
             // The actions in one short line.
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Choice("▶ هذه الآية", true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); close() }
+                if (inContext != null) Choice("📖 في سياقها", false) { close(); inContext() }
                 Choice("⏩ من هنا: " + Recitation.rangeText(), false) { Recitation.play(ctx, a.s, a.a); close() }
                 Choice(if (Quran.marked(a.s, a.a)) "★ مُعلَّمة" else "☆ علامة", Quran.marked(a.s, a.a)) { Quran.toggleMark(a.s, a.a) }
                 Choice("📍 وصلت هنا", false) {
@@ -652,10 +654,12 @@ fun DailyWords() {
             e to (if (e == null) runCatching { Hadith.ofTheDay(ctx) }.getOrNull() else null)
         }
     }
-    if (ayah != null) Panel(Modifier.clickable { Nav.overlayQuran = ayah.s to ayah.a }) {
+    var shown by remember { mutableStateOf<Quran.Ayah?>(null) }
+    shown?.let { a -> AyahSheet(a, inContext = { Nav.overlayQuran = a.s to a.a }) { shown = null } }
+    if (ayah != null) Panel(Modifier.clickable { shown = ayah }) {
         Sub("آية اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
         Text(ayah.text, color = P.ink, fontSize = 20.sp, fontFamily = Fonts.quran, lineHeight = 36.sp, modifier = Modifier.padding(top = 4.dp))
-        Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)} · اضغط لقراءتها في سياقها", size = 12.sp)
+        Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)} · اضغط لتفسيرها وسماعها", size = 12.sp)
     }
     val d = daily ?: return
     d.first?.let { e ->

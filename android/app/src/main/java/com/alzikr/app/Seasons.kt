@@ -253,7 +253,7 @@ fun SeasonPage(id: String, open: (String) -> Unit) {
                 Tile("📜", "ختمة: ٢٠ صفحة يوميًا", Modifier.weight(1f)) {
                     Reading.goal = 20; val (s, a) = Quran.last ?: (1 to 1); Nav.reading = s to a
                 }
-                Tile("🟢", "السبحة", Modifier.weight(1f)) { Nav.adhkar = 2; Nav.tab = "adhkar" }
+                Tile("🟢", "السبحة", Modifier.weight(1f)) { Nav.adhkar = 2; Nav.go("adhkar") }
             }
         }
         g.sections.forEach { sec ->

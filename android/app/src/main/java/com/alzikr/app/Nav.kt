@@ -33,6 +33,13 @@ object Nav {
     /** The mushaf in reading mode (surah, verse), full screen over everything. */
     var reading by mutableStateOf<Pair<Int, Int>?>(null)
 
+    /** The tab a shortcut came from: back returns there (cleared when a tab is chosen in the bar). */
+    var backTo by mutableStateOf<String?>(null)
+    /** Go to a tab from a shortcut, remembering where we were. */
+    fun go(t: String) { if (t != tab) backTo = tab; tab = t }
+    /** Back to where the shortcut came from; false when there is nowhere to return. */
+    fun back(): Boolean { val t = backTo ?: return false; backTo = null; tab = t; return true }
+
     fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }
 }

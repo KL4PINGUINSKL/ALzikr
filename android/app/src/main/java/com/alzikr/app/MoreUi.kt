@@ -66,26 +66,28 @@ import kotlin.math.roundToInt
 
 @Composable
 fun MoreScreen(openSettings: () -> Unit) {
-    var page by remember { mutableStateOf<String?>(null) }
-    Nav.morePage?.let { page = it; Nav.morePage = null }
-    page?.let { p ->
-        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { page = null }) {
+    val stack = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    fun open(p: String) { stack.add(p) }
+    fun close() { if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex); if (stack.isEmpty()) Nav.back() }
+    Nav.morePage?.let { open(it); Nav.morePage = null }
+    stack.lastOrNull()?.let { p ->
+        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
-                "calendar" -> CalendarPage({ page = "months" }, { page = "season:$it" })
+                "calendar" -> CalendarPage({ open("months") }, { open("season:$it") })
                 "months" -> MonthsPage()
-                "seasons" -> SeasonsHome { page = "season:$it" }
+                "seasons" -> SeasonsHome { open("season:$it") }
                 "names" -> NamesPage()
                 "qada" -> QadaPage()
                 "zakat" -> ZakatPage()
                 "quiz" -> QuizPage()
-                "hsearch" -> { HadithSearchPage { page = null } }
+                "hsearch" -> { HadithSearchPage { close() } }
                 "convert" -> ConvertPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> if (p.startsWith("season:")) {
                     val id = p.removePrefix("season:")
-                    if (Seasons.byId(id) == null) SeasonsHome { page = "season:$it" } else SeasonPage(id) { page = "season:$it" }
+                    if (Seasons.byId(id) == null) SeasonsHome { open("season:$it") } else SeasonPage(id) { open("season:$it") }
                 } else BackupPage()
             }
         }
@@ -95,7 +97,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
         Hint("more", "☰", "هنا القبلة والتقويم وأسماء الله الحسنى والثيمات والنسخ الاحتياطي. الإعدادات في آخر القائمة.")
-        Panel(Modifier.clickable { page = "months" }, color = P.card) {
+        Panel(Modifier.clickable { open("months") }, color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             nextOccasion()?.let { (o, d) -> Sub("${o.name} ${if (d == 0L) "اليوم" else "بعد $d يومًا"}", color = P.gold) }
@@ -120,7 +122,7 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("zakat", "💰  حاسبة الزكاة", "زكاة المال والذهب والفضة بالنصاب"),
             Triple("convert", "🔁  محوّل التاريخ", "من الهجري إلى الميلادي وبالعكس"),
             Triple("backup", "💾  نسخ احتياطي", "حفظ كل بياناتك في ملف واستعادتها"),
-        ).forEach { (id, title, sub) -> MenuRow(title, sub) { page = id } }
+        ).forEach { (id, title, sub) -> MenuRow(title, sub) { open(id) } }
         MenuRow("⚙️  الإعدادات", "الموقع والحساب والتنبيهات والمظهر", openSettings)
     }
 }

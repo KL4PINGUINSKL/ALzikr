@@ -135,10 +135,10 @@ fun PrayerScreen(openSettings: () -> Unit) {
         }
         // Shortcuts.
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Tile("🧭", "القبلة", Modifier.weight(1f)) { Nav.morePage = "qibla"; Nav.tab = "more" }
-            Tile("📿", "الأذكار", Modifier.weight(1f)) { Nav.adhkar = 1; Nav.tab = "adhkar" }
-            Tile("📖", "القرآن", Modifier.weight(1f)) { Nav.library = 0; Nav.tab = "library" }
-            Tile("🟢", "السبحة", Modifier.weight(1f)) { Nav.adhkar = 2; Nav.tab = "adhkar" }
+            Tile("🧭", "القبلة", Modifier.weight(1f)) { Nav.morePage = "qibla"; Nav.go("more") }
+            Tile("📿", "الأذكار", Modifier.weight(1f)) { Nav.adhkar = 1; Nav.go("adhkar") }
+            Tile("📖", "القرآن", Modifier.weight(1f)) { Nav.library = 0; Nav.go("library") }
+            Tile("🟢", "السبحة", Modifier.weight(1f)) { Nav.adhkar = 2; Nav.go("adhkar") }
             Tile("📜", "وردي", Modifier.weight(1f)) { val (s0, a0) = Quran.last ?: (1 to 1); Nav.reading = s0 to a0 }
         }
         // Today's times, in the chosen view.
@@ -170,7 +170,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
                 Text("$prayedWeek / $possible", color = if (prayedWeek == possible) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             nextOccasion()?.let { (o, days) ->
-                Panel(Modifier.weight(1f).clickable { Nav.morePage = Seasons.forOccasion(o.name)?.let { "season:$it" } ?: "calendar"; Nav.tab = "more" }, pad = 12.dp) {
+                Panel(Modifier.weight(1f).clickable { Nav.morePage = Seasons.forOccasion(o.name)?.let { "season:$it" } ?: "calendar"; Nav.go("more") }, pad = 12.dp) {
                     Sub(o.name, size = 12.sp)
                     Text(if (days == 0L) "اليوم" else "بعد $days يومًا", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                 }
@@ -221,9 +221,9 @@ private fun TimesOptions(openSettings: () -> Unit, close: () -> Unit) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Title("خيارات الأوقات")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tile("📅", "التقويم", Modifier.weight(1f)) { close(); Nav.morePage = "calendar"; Nav.tab = "more" }
-                Tile("🗓", "مواقيت الشهر", Modifier.weight(1f)) { close(); Nav.morePage = "month"; Nav.tab = "more" }
-                Tile("🧭", "القبلة", Modifier.weight(1f)) { close(); Nav.morePage = "qibla"; Nav.tab = "more" }
+                Tile("📅", "التقويم", Modifier.weight(1f)) { close(); Nav.morePage = "calendar"; Nav.go("more") }
+                Tile("🗓", "مواقيت الشهر", Modifier.weight(1f)) { close(); Nav.morePage = "month"; Nav.go("more") }
+                Tile("🧭", "القبلة", Modifier.weight(1f)) { close(); Nav.morePage = "qibla"; Nav.go("more") }
             }
             Sub("الموقع: ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }}", Modifier.padding(top = 6.dp))
             LocationSetup(compact = true)

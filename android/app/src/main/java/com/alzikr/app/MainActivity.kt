@@ -150,6 +150,8 @@ private fun Root() {
     var settings by remember { mutableStateOf(false) }
     MaterialTheme(colorScheme = scheme, typography = typography(look.body)) {
         CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl) {
+            // Back after a shortcut returns to the page it came from (inner pages handle back first).
+            androidx.activity.compose.BackHandler(enabled = Nav.backTo != null) { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
                 val inPage = Nav.pages.isNotEmpty()
                 Column(Modifier.fillMaxSize()) {
@@ -201,7 +203,7 @@ private fun Header(openSettings: () -> Unit) {
     Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
-            Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.tab = "more" }, size = 12.sp)
+            Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
         Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Text("⚙", color = P.muted, fontSize = 20.sp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
@@ -227,7 +229,7 @@ private fun BottomBar() {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceAround) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clip(L.shape(12.dp)).clickable { Nav.tab = s.id }.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.clip(L.shape(12.dp)).clickable { Nav.backTo = null; Nav.tab = s.id }.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 12.dp, vertical = 4.dp)) { SectionIcon(s, on) }
                     Spacer(Modifier.height(2.dp))
                     Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
@@ -245,7 +247,7 @@ private fun WordsBar() {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceAround) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clickable { Nav.tab = s.id }.padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.clickable { Nav.backTo = null; Nav.tab = s.id }.padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.width(22.dp).height(3.dp).background(if (on) P.accent else P.bg))
                     Spacer(Modifier.height(6.dp))
                     Text(s.label, color = if (on) P.ink else P.muted, fontSize = 14.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
@@ -262,7 +264,7 @@ private fun TopTabs() {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clickable { Nav.tab = s.id }.padding(horizontal = 10.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.clickable { Nav.backTo = null; Nav.tab = s.id }.padding(horizontal = 10.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         SectionIcon(s, on, 18); if (L.icons != IconStyle.NONE) Spacer(Modifier.width(4.dp))
                         Text(s.label, color = if (on) P.accent else P.muted, fontSize = 15.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
@@ -283,7 +285,7 @@ private fun Dock() {
         .padding(horizontal = 10.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         sections.forEach { s ->
             val on = Nav.tab == s.id
-            Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.tab = s.id }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.backTo = null; Nav.tab = s.id }, contentAlignment = Alignment.Center) {
                 when (L.icons) {
                     IconStyle.GLYPH, IconStyle.NONE -> Text(s.glyph, fontSize = 20.sp)
                     else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = if (on) P.onAccent else P.muted, modifier = Modifier.size(24.dp))
