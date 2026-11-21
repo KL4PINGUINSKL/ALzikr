@@ -62,7 +62,7 @@ fun WirdList() {
         val z = current ?: return
         val after = Store.tap(z.id) ?: return
         val reached = after.target > 0 && after.today == after.target
-        runCatching { vibrator?.vibrate(if (reached) VibrationEffect.createWaveform(longArrayOf(0, 60, 80, 60), -1) else VibrationEffect.createOneShot(18, 120)) }
+        Haptics.tap(ctx, reached)
         // Wird finished: move on to the next unfinished one.
         if (reached) Store.adhkar().firstOrNull { !it.done && it.target > 0 }?.let { selected = it.id }
     }

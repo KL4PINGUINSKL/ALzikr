@@ -125,7 +125,7 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
                         .clickable(enabled = !finished) {
                             val after = Data.colTap(c.id, i)[i]
                             val now = after >= item.count
-                            runCatching { vibrator?.vibrate(if (now) VibrationEffect.createWaveform(longArrayOf(0, 50, 70, 50), -1) else VibrationEffect.createOneShot(15, 110)) }
+                            Haptics.tap(ctx, now)
                             if (now) scope.launch { runCatching { list.animateScrollToItem((i + 1).coerceAtMost(c.items.size)) } }
                         }.padding(16.dp)) {
                         if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 6.dp))
@@ -161,7 +161,7 @@ private fun TasbihScreen() {
         Box(Modifier.size(270.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.card)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 val n = Data.tasbihTap(); TasbihWidget.update(ctx)
-                runCatching { vibrator?.vibrate(if (n % set == 0) VibrationEffect.createWaveform(longArrayOf(0, 70, 90, 70), -1) else VibrationEffect.createOneShot(14, 100)) }
+                Haptics.tap(ctx, n % set == 0)
             }, contentAlignment = Alignment.Center) {
             Counter(count % set, set, false, "الدورة ${count / set + 1} · المجموع $count", 250.dp)
         }
@@ -171,6 +171,10 @@ private fun TasbihScreen() {
             Tile("🔒", if (TasbihNotice.on) "إزالتها من القفل" else "على شاشة القفل", Modifier.weight(1f), on = TasbihNotice.on) { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
         }
         Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «على شاشة القفل»: زر «سبّح +١» في الإشعار يعمل دون فتح القفل.", size = 11.sp)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("📳", fontSize = 16.sp)
+            Haptics.names.forEachIndexed { i, n -> Choice(n, Haptics.level == i) { Haptics.level = i; Haptics.tap(ctx) } }
+        }
         Text("تصفير", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { Data.tasbihReset() }.padding(horizontal = 14.dp, vertical = 8.dp))
 
         Panel(pad = 14.dp) {

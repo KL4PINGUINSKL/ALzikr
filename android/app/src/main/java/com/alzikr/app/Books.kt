@@ -99,6 +99,26 @@ object Books {
         } finally { tmp.delete(); downloading = null }
     }
 
+    /**
+     * A PDF chosen from the phone (e.g. a book downloaded from its publisher's site) joins "my books".
+     * Returns the title, or null when the file is not a PDF or cannot be read. Blocking.
+     */
+    fun importPdf(c: Context, uri: android.net.Uri): String? = runCatching {
+        val cr = c.contentResolver
+        var name = uri.lastPathSegment?.substringAfterLast('/') ?: "كتاب"
+        cr.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) it.getString(0)?.let { n -> name = n } }
+        val title = name.substringBeforeLast('.').replace('_', ' ').trim().ifEmpty { "كتاب" }
+        val id = "local" + System.currentTimeMillis()
+        val tmp = File(dir(c), "$id.part")
+        cr.openInputStream(uri)!!.use { input -> tmp.outputStream().use { input.copyTo(it, 64 * 1024) } }
+        val head = tmp.inputStream().use { s -> ByteArray(5).also { s.read(it) } }
+        if (String(head, Charsets.US_ASCII) != "%PDF-") { tmp.delete(); return null }
+        tmp.renameTo(file(c, id))
+        File(dir(c), "$id.json").writeText(JSONObject().put("id", id).put("title", title).put("authors", "أضفته من هاتفك").toString())
+        version++
+        title
+    }.getOrNull()
+
     /** Books on the phone. */
     fun shelf(c: Context): List<Book> = dir(c).listFiles { f -> f.name.endsWith(".json") }?.mapNotNull { f ->
         runCatching { JSONObject(f.readText()).let { Book(it.getString("id"), it.optString("title"), "", it.optString("authors"), null, "") } }.getOrNull()

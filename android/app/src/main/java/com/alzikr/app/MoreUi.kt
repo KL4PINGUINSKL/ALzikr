@@ -191,7 +191,7 @@ private fun QiblaCompass() {
     val aligned = abs(turn) < 4f
     val vibrator = remember { ctx.getSystemService(Vibrator::class.java) }
     var buzzed by remember { mutableStateOf(false) }
-    if (aligned && !buzzed) { buzzed = true; runCatching { vibrator?.vibrate(VibrationEffect.createOneShot(40, 160)) } } else if (!aligned && abs(turn) > 10f) buzzed = false
+    if (aligned && !buzzed) { buzzed = true; Haptics.pulse(ctx) } else if (!aligned && abs(turn) > 10f) buzzed = false
 
     Column(Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         if (!hasSensor) { Sub("لا يوجد حساس بوصلة في هذا الهاتف. القبلة ${qibla.roundToInt()}° من الشمال."); return@Column }

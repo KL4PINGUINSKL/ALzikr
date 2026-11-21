@@ -262,6 +262,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
     val shelf = remember(Books.version) { Books.shelf(ctx) }
     LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (root == null) item { Hint("books", "📚", "كتب أهل السنة والجماعة من «دار الإسلام». اختر تصنيفًا أو كتابًا، ثم «تنزيل» لقراءته داخل التطبيق، ويبقى في «كتبي» بلا إنترنت.") }
+        if (path.isEmpty() && root == null) item { ImportPdfTile(Modifier.fillMaxWidth()) }
         if (path.isEmpty() && root == null && shelf.isNotEmpty()) {
             item { Title("كتبي") }
             items(shelf, key = { "shelf" + it.id }) { b ->
@@ -434,6 +435,7 @@ fun SciencesHome(openBooks: (String, String) -> Unit, openAll: () -> Unit) {
                 Tile("📚", "كل الكتب", Modifier.weight(1f)) { openAll() }
                 Tile("📖", if (shelf.isEmpty()) "كتبي (فارغة)" else "كتبي (${shelf.size})", Modifier.weight(1f)) { openAll() }
             }
+            ImportPdfTile(Modifier.fillMaxWidth().padding(top = 8.dp))
         }
         item { Title("العلوم الإسلامية", Modifier.padding(top = 6.dp)) }
         items(sciences.chunked(2)) { row ->
@@ -479,5 +481,26 @@ private fun PdfReading(renderer: PdfRenderer, id: String, title: String, back: (
             text = { OutlinedTextField(text, { text = it.filter(Char::isDigit).take(5) }, singleLine = true, placeholder = { Text("1 – $count") }) },
             confirmButton = { TextButton({ text.toIntOrNull()?.let { n -> scope.launch { state.scrollToItem((n - 1).coerceIn(0, count - 1)) } }; goTo = false }) { Text("انتقل") } },
             dismissButton = { TextButton({ goTo = false }) { Text("إلغاء") } })
+    }
+}
+
+/** «➕ إضافة كتاب PDF من هاتفك»: pick a PDF, it joins "my books" and opens in the reader and reading mode. */
+@Composable
+fun ImportPdfTile(modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
+    val pick = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        busy = true
+        scope.launch {
+            val title = withContext(Dispatchers.IO) { Books.importPdf(ctx, uri) }
+            busy = false
+            Toast.makeText(ctx, if (title != null) "أُضيف إلى «كتبي»: $title" else "هذا الملف ليس PDF أو تعذّرت قراءته", Toast.LENGTH_LONG).show()
+        }
+    }
+    Column(modifier) {
+        Tile("➕", if (busy) "جارٍ الإضافة…" else "إضافة كتاب PDF من هاتفك", Modifier.fillMaxWidth()) { if (!busy) pick.launch(arrayOf("application/pdf")) }
+        Sub("نزّل الكتاب من موقع ناشره (مثل موقع مؤسسة الشيخ ابن عثيمين) ثم أضفه هنا، فيظهر في «كتبي» ويُفتح في القارئ ووضع القراءة.", Modifier.padding(top = 4.dp), size = 11.sp)
     }
 }

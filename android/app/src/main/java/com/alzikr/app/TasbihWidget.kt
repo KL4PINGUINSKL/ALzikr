@@ -19,7 +19,7 @@ class TasbihWidget : AppWidgetProvider() {
             TAP -> {
                 Store.init(c)
                 val n = Data.tasbihTap()
-                runCatching { c.getSystemService(Vibrator::class.java)?.vibrate(if (n % Data.tasbihSet == 0) VibrationEffect.createWaveform(longArrayOf(0, 70, 90, 70), -1) else VibrationEffect.createOneShot(14, 100)) }
+                Haptics.tap(c, n % Data.tasbihSet == 0)
                 update(c)
             }
             RESET -> { Store.init(c); Data.tasbihReset(); update(c) }

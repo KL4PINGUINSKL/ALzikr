@@ -79,7 +79,7 @@ class TasbihDarkActivity : ComponentActivity() {
         val n = Data.tasbihTap()
         count.intValue = n
         if (n >= 3) showHelp.value = false
-        runCatching { getSystemService(Vibrator::class.java)?.vibrate(if (n % Data.tasbihSet == 0) VibrationEffect.createWaveform(longArrayOf(0, 80, 100, 80), -1) else VibrationEffect.createOneShot(16, 110)) }
+        Haptics.tap(this, n % Data.tasbihSet == 0)
         TasbihWidget.update(this)
     }
 
