@@ -381,6 +381,7 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
                 }
                 Choice("⧉ نسخ", false) { copy(ctx, "${a.text}\n[$ref]") }
                 Choice("↗ مشاركة", false) { share(ctx, "${a.text}\n[$ref]") }
+                Choice("🖼 صورة", false) { ShareCard.share(ctx, ref, a.text, "", quran = true) }
                 Choice("🔁 حفظها ×5", false) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); if (inContext == null) close() }
             }
             Recitation.now?.takeIf { inContext != null }?.let { (ps, pa) ->
@@ -685,6 +686,7 @@ fun DailyWords() {
             Text(e.title, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = 28.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 4.dp))
             Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 GText("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Choice("🖼", false) { ShareCard.share(ctx, "حديث اليوم", e.title, "") }
                 Choice("🔀 حديث آخر", false) { Data.nextDaily("hadith") }
             }
         }

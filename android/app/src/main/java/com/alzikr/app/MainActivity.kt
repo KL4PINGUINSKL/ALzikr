@@ -97,6 +97,7 @@ class MainActivity : ComponentActivity() {
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
         i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
         i?.getStringExtra("coll")?.let { Nav.collection = it; Nav.go("adhkar") }
+        i?.getIntExtra("adhkarsec", -1)?.takeIf { it >= 0 }?.let { Nav.adhkar = it; Nav.go("adhkar") }
         i?.getStringExtra("day")?.let { d -> runCatching { java.time.LocalDate.parse(d) }.getOrNull()?.let { Nav.daySheet = it } }
         i?.getStringExtra("psheet")?.let { n -> runCatching { Prayer.valueOf(n) }.getOrNull()?.let { Nav.prayerSheet = it; Nav.tab = "prayer" } }
         i?.getStringExtra("quran")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.openQuran(it[0], it[1]) }

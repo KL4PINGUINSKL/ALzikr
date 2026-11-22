@@ -143,6 +143,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             }
             },
             "moment" to { MomentCard() },
+            "forbid" to { ForbidBanner() },
             "tomorrow" to { TomorrowCard { Nav.daySheet = it } },
             "tiles" to { HomeShortcuts() },
             "times" to {

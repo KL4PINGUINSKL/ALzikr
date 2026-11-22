@@ -139,6 +139,7 @@ object Home {
     val parts = listOf(
         Part("tiles", "الاختصارات"),
         Part("next", "الصلاة القادمة والعدّ التنازلي"),
+        Part("forbid", "وقت النهي عن الصلاة (يظهر عند دخوله فقط)"),
         Part("times", "مواقيت اليوم"),
         Part("moment", "ذكر الوقت (الصباح، المساء، النوم، الكهف…)"),
         Part("extra", "الإمساك والضحى ومنتصف الليل"),
@@ -166,6 +167,8 @@ object Home {
         Short("seasons", "🌙", "المواسم") { Nav.morePage = "seasons"; Nav.go("more") },
         Short("alarm", "⏰", "المنبه") { Nav.morePage = "alarms"; Nav.go("more") },
         Short("world", "🌍", "الساعات") { Nav.morePage = "world"; Nav.go("more") },
+        Short("hifz", "🧠", "الحفظ") { Nav.morePage = "hifz"; Nav.go("more") },
+        Short("duas", "🤲", "أدعيتي") { Nav.adhkar = 3; Nav.go("adhkar") },
         Short("stats", "📊", "إحصائياتي") { Nav.morePage = "stats"; Nav.go("more") },
         Short("tasks", "☑", "المهام") { Nav.daily = 0; Nav.go("daily") },
         Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },

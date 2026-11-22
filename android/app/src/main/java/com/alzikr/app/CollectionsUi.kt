@@ -69,12 +69,13 @@ fun AdhkarScreen(openCollection: String? = null) {
     reading?.let { id -> Content.collection(id)?.let { CollectionReader(it, readAt) { reading = null; readAt = -1 }; return } }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("أورادي", "الأذكار", "السبحة").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
+            listOf(0 to "أورادي", 1 to "الأذكار", 3 to "أدعيتي", 2 to "السبحة").forEach { (i, t) -> Choice(t, section == i) { section = i } }
         }
         Box(Modifier.weight(1f)) {
             when (section) {
                 0 -> WirdList()
                 1 -> CollectionsList { id, at -> reading = id; readAt = at }
+                3 -> DuasPage()
                 else -> TasbihScreen()
             }
         }

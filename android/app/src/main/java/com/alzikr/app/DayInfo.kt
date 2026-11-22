@@ -1,5 +1,17 @@
 package com.alzikr.app
 
+import java.time.LocalTime
+
+import androidx.compose.runtime.LaunchedEffect
+
+import androidx.compose.runtime.remember
+
+import androidx.compose.runtime.mutableStateOf
+
+import androidx.compose.runtime.setValue
+
+import androidx.compose.runtime.getValue
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -176,4 +188,53 @@ fun TomorrowCard(open: (LocalDate) -> Unit) {
         }
         Text("‹", color = P.gold, fontSize = 22.sp)
     }
+}
+
+/** The times when voluntary prayer is not prayed: after Fajr until the sun is up a spear's length, at the zenith, after Asr until sunset. */
+object Forbid {
+    /** (what, until minute) when now is one of them. */
+    fun now(): Pair<String, Int>? {
+        if (!Store.hasLocation) return null
+        val t = Store.times(); val m = LocalTime.now().let { it.hour * 60 + it.minute }
+        val fajr = t.getValue(Prayer.FAJR); val sun = t.getValue(Prayer.SUNRISE); val dhuhr = t.getValue(Prayer.DHUHR)
+        val asr = t.getValue(Prayer.ASR); val maghrib = t.getValue(Prayer.MAGHRIB)
+        val prayedFajr = Data.prayed(LocalDate.now(), Prayer.FAJR) || m >= fajr + 25
+        val prayedAsr = Data.prayed(LocalDate.now(), Prayer.ASR) || m >= asr + 25
+        return when {
+            m in sun until sun + 15 -> "طلوع الشمس حتى ترتفع" to sun + 15
+            m in fajr until sun && prayedFajr -> "بعد صلاة الفجر حتى ترتفع الشمس" to sun + 15
+            m in dhuhr - 10 until dhuhr -> "قيام الشمس في وسط السماء حتى تزول" to dhuhr
+            m in asr until maghrib && prayedAsr -> "بعد صلاة العصر حتى تغرب الشمس" to maghrib
+            else -> null
+        }
+    }
+    val proofs = listOf(
+        DayInfo.G("«لا صلاة بعد الصبح حتى ترتفع الشمس، ولا صلاة بعد العصر حتى تغيب الشمس».", "البخاري ومسلم"),
+        DayInfo.G("عن عقبة بن عامر: «ثلاث ساعات كان رسول الله ﷺ ينهانا أن نصلي فيهن… حين تطلع الشمس بازغة حتى ترتفع، وحين يقوم قائم الظهيرة حتى تميل الشمس، وحين تضيّف الشمس للغروب حتى تغرب».", "مسلم"),
+        DayInfo.G("ويُقضى الفرض الفائت في أي وقت: «من نام عن صلاة أو نسيها فليصلها إذا ذكرها».", "البخاري ومسلم"),
+        DayInfo.G("واختلف العلماء في ذوات الأسباب كتحية المسجد وسنة الوضوء في هذه الأوقات.", ""),
+    )
+}
+
+/** A slim line on the home page while a forbidden time lasts; tap for its evidence. */
+@Composable
+fun ForbidBanner() {
+    var tick by remember { mutableStateOf(0L) }
+    LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(30_000); tick++ } }
+    @Suppress("UNUSED_VARIABLE") val t0 = tick
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val (what, until) = Forbid.now() ?: return
+    var open by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.danger.copy(alpha = .10f)).clickable { open = true }.padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Glyph("⛔", tint = P.danger, size = 22.dp)
+        Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Text("وقت نهي عن صلاة النافلة حتى ${Alerts.timeText(until)}", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Sub(what + " · اضغط للدليل", size = 12.sp)
+        }
+    }
+    if (open) androidx.compose.material3.AlertDialog(onDismissRequest = { open = false }, containerColor = P.surface,
+        title = { Text("أوقات النهي عن الصلاة", color = P.ink) },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) { Forbid.proofs.forEach { g -> Text(g.text, color = P.ink, fontSize = 15.sp, lineHeight = 25.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 8.dp)); if (g.src.isNotEmpty()) Sub(g.src, size = 11.sp) } } },
+        confirmButton = { androidx.compose.material3.TextButton({ open = false }) { Text("حسنًا") } })
 }
