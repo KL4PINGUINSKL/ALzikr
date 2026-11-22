@@ -13,3 +13,7 @@
 ## Icons
 
 Material Symbols Rounded by Google (https://github.com/google/material-design-icons), Apache License 2.0. Converted to Android vector drawables (`res/drawable/ms_*.xml`).
+
+## Companion animations
+
+The companion pets are free animations from LottieFiles (https://lottiefiles.com), used under the Lottie Simple License. The source page and creator of each file are listed in `design/pet-candidates/chosen.tsv` and `gallery.json`. Playback: lottie-android (Airbnb), Apache License 2.0.
