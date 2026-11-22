@@ -202,7 +202,7 @@ object Data {
     /** Days to finish the khatma (30 = a juz a day). */
     var khatmaDays: Int
         get() = sp.getInt("khatma_days", 30)
-        set(v) = edit { putInt("khatma_days", v) }
+        set(v) = edit { putInt("khatma_days", v.coerceIn(1, 3650)) }
     var khatmaStarted: String
         get() = sp.getString("khatma_started", "") ?: ""
         set(v) = edit { putString("khatma_started", v) }
@@ -216,6 +216,39 @@ object Data {
     fun pagesToday() = JSONObject(sp.getString("khatma_log", "{}")!!).optInt(today())
     fun juzOf(page: Int) = if (page <= 1) 1 else ((page - 2) / 20 + 1).coerceIn(1, 30)
     fun newKhatma() { khatmaCount = khatmaCount + if (khatmaPage >= PAGES) 1 else 0; edit { putInt("khatma_page", 0).putString("khatma_started", today()) } }
+
+    /** Reading mode used to keep its own khatma place; take it over once, so there is one khatma. */
+    fun mergeOldKhatma() {
+        if (sp.getBoolean("khatma_merged", false)) return
+        val far = sp.getInt("khatma_far", 0)
+        val e = sp.edit().putBoolean("khatma_merged", true)
+        if (far > sp.getInt("khatma_page", 0)) { e.putInt("khatma_page", far); if (khatmaStarted.isEmpty()) e.putString("khatma_started", today()) }
+        val n = sp.getInt("khatmas", 0); if (n > khatmaCount) e.putInt("khatma_count", n)
+        e.apply()
+    }
+    private fun startedDate(): LocalDate = khatmaStarted.takeIf { it.isNotEmpty() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.now()
+    /** The day the khatma should be finished. */
+    fun khatmaEnd(): LocalDate = startedDate().plusDays((khatmaDays - 1).toLong())
+    /** Days left, today included (at least 1). */
+    fun daysLeft(): Int = (java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), khatmaEnd()).toInt() + 1).coerceAtLeast(1)
+    /** Finish the khatma within [n] days from today, whatever was planned before. */
+    fun finishIn(n: Int) {
+        if (khatmaStarted.isEmpty() || khatmaPage == 0) khatmaStarted = today()
+        val elapsed = java.time.temporal.ChronoUnit.DAYS.between(startedDate(), LocalDate.now()).toInt()
+        khatmaDays = (elapsed + n.coerceIn(1, 365))
+    }
+    /** A fixed number of pages a day: the plan follows from it. */
+    fun setPagesPerDay(pages: Int) {
+        val left = (PAGES - (khatmaPage - pagesToday())).coerceAtLeast(1)
+        finishIn(kotlin.math.ceil(left.toDouble() / pages.coerceAtLeast(1)).toInt())
+    }
+    /** Today's wird: the pages to read today to finish on time (counted from where today began). */
+    fun wirdToday(): Int {
+        val left = PAGES - (khatmaPage - pagesToday())
+        if (left <= 0) return 0
+        return kotlin.math.ceil(left.toDouble() / daysLeft()).toInt().coerceAtLeast(1)
+    }
+    fun wirdLeftToday(): Int = (wirdToday() - pagesToday()).coerceAtLeast(0)
 
     // ----------------------------------------------------------------- dates
 

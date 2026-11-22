@@ -107,58 +107,77 @@ fun HabitsList() {
 @Composable
 fun KhatmaPage() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var custom by remember { mutableStateOf(false) }
+    var askDays by remember { mutableStateOf(false) }
     val page = Data.khatmaPage
-    val days = Data.khatmaDays
-    val perDay = ceil(Data.PAGES.toDouble() / days).toInt()
-    val started = Data.khatmaStarted.takeIf { it.isNotEmpty() }?.let(LocalDate::parse)
-    val dayNo = started?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() + 1 } ?: 1
-    val shouldBe = (dayNo * perDay).coerceAtMost(Data.PAGES)
+    val wird = Data.wirdToday()
+    val read = Data.pagesToday()
+    val from = (page - read + 1).coerceAtLeast(1)
+    val to = (page - read + wird).coerceAtMost(Data.PAGES)
+    val end = Data.khatmaEnd()
+    fun start() { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("khatma", "📗", "سجّل أين وصلت بالأزرار، أو اضغط «اقرأ في المصحف» لتكمل من صفحتك. واختر مدة الختمة في الأسفل.")
+        Hint("khatma2", "📗", "وردك هو نصيبك اليومي من ختمتك: عدد الصفحات التي تقرؤها اليوم لتختم في الموعد الذي تختاره. يُحسب وحده إذا قرأت في وضع القراءة، أو سجّله بالأزرار. وزر «وردي» في الصفحة الرئيسية يفتح المصحف على صفحتك التالية.")
+
+        // Today's wird.
+        if (page < Data.PAGES) Panel(color = P.accent.copy(alpha = .12f), pad = 14.dp) {
+            Sub("ورد اليوم", color = P.gold, size = 12.sp)
+            Text("من الصفحة $from إلى $to", color = P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Sub("$wird صفحة (${"%.1f".format(wird / 20.0)} جزء) · قرأت منها ${read.coerceAtMost(wird)}" + if (read >= wird) " ✓ أتممت وردك، تقبّل الله" else "", color = if (read >= wird) P.accent else P.ink)
+            if (Quran.ready) Action("📖 اقرأ وردك من الصفحة ${page + 1}", Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                val a = Quran.firstOfPage(page + 1); Nav.reading = a.s to a.a
+            }
+        }
+
+        // The whole khatma.
         Panel(color = P.card) {
             Sub(if (Data.khatmaCount > 0) "الختمة ${Data.khatmaCount + 1}" else "ختمتك")
-            Text(if (page == 0) "لم تبدأ بعد" else "الصفحة $page · الجزء ${Data.juzOf(page)}", color = P.ink, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text(if (page == 0) "لم تبدأ بعد" else "الصفحة $page · الجزء ${Data.juzOf(page)}", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
             Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(P.line)) {
                 Box(Modifier.fillMaxWidth(page.toFloat() / Data.PAGES).height(8.dp).clip(RoundedCornerShape(4.dp)).background(if (page >= Data.PAGES) P.gold else P.accent))
             }
-            Sub("${(page * 100 / Data.PAGES)}% · بقي ${Data.PAGES - page} صفحة · اليوم قرأت ${Data.pagesToday()} صفحة", Modifier.padding(top = 6.dp), size = 12.sp)
-            if (page in 1 until Data.PAGES && started != null) Sub(
-                if (page >= shouldBe) "أنت على الخطة أو متقدم عليها، بارك الله فيك" else "لتبقى على الخطة: اقرأ حتى الصفحة $shouldBe اليوم",
-                color = if (page >= shouldBe) P.accent else P.gold, size = 13.sp)
-        }
-        if (Quran.ready && page < Data.PAGES) Action("📖 اقرأ في المصحف من الصفحة ${page + 1}", Modifier.fillMaxWidth()) {
-            val a = Quran.firstOfPage(page + 1); Nav.openQuran(a.s, a.a)
+            Sub("${(page * 100 / Data.PAGES)}% · بقي ${Data.PAGES - page} صفحة" + if (page < Data.PAGES) " · تختم يوم ${end.dayOfMonth}/${end.monthValue} (بعد ${Data.daysLeft()} يومًا)" else "", Modifier.padding(top = 6.dp), size = 12.sp)
         }
         if (page >= Data.PAGES) {
             Text("ختمت القرآن، تقبّل الله منك 🌙", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Action("ابدأ ختمة جديدة", Modifier.fillMaxWidth()) { Data.newKhatma() }
         } else {
-            Sub("أين وصلت؟")
+            Sub("سجّل ما قرأت خارج وضع القراءة")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Action("+1 صفحة", Modifier.weight(1f)) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = page + 1 }
-                Action("+$perDay (ورد اليوم)", Modifier.weight(1f), filled = false) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = page + perDay }
+                Action("+1 صفحة", Modifier.weight(1f)) { start(); Data.khatmaPage = page + 1 }
+                if (read < wird) Action("+${wird - read} (باقي وردي)", Modifier.weight(1f), filled = false) { start(); Data.khatmaPage = page + (wird - read) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Action("+جزء", Modifier.weight(1f), filled = false) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = page + 20 }
+                Action("+جزء", Modifier.weight(1f), filled = false) { start(); Data.khatmaPage = page + 20 }
                 Action("رقم الصفحة…", Modifier.weight(1f), filled = false) { custom = true }
             }
         }
+
+        // The plan: any length, or pages a day.
         Panel(pad = 14.dp) {
-            Title("الخطة")
-            Sub("أختم في: ", Modifier.padding(top = 6.dp))
-            Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(7 to "أسبوع", 15 to "15 يومًا", 30 to "شهر", 60 to "شهرين").forEach { (d, l) -> Choice(l, days == d) { Data.khatmaDays = d } }
+            Title("متى تختم؟")
+            Sub("أتمّها خلال (من اليوم):", Modifier.padding(top = 6.dp))
+            val left = Data.daysLeft()
+            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(3, 7, 10, 15, 20, 30, 40, 60, 90).forEach { d -> Choice(if (d == 7) "أسبوع" else if (d == 30) "شهر" else "$d يومًا", left == d) { Data.finishIn(d) } }
+                Choice("مدة أخرى…", false) { askDays = true }
+            }
+            Sub("أو اختر وردك اليومي بالصفحات:", Modifier.padding(top = 10.dp))
+            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(1, 2, 4, 5, 10, 20, 40).forEach { n -> Choice(if (n == 20) "جزء" else if (n == 40) "جزآن" else "$n صفحات", wird == n) { Data.setPagesPerDay(n) } }
             }
             Sub("تذكير يومي بالورد", Modifier.padding(top = 10.dp))
-            val ctx = androidx.compose.ui.platform.LocalContext.current
-            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(-1, 6 * 60, 8 * 60, 13 * 60, 17 * 60, 20 * 60, 21 * 60 + 30).forEach { m ->
-                    Choice(if (m < 0) "إيقاف" else Alerts.timeText(m), Data.khatmaRemindAt == m) { Data.khatmaRemindAt = m; Alerts.reschedule(ctx) }
+            val remind = Data.khatmaRemindAt
+            Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Choice(if (remind < 0) "متوقف" else "⏰ " + Alerts.timeText(remind), remind >= 0) {
+                    val m0 = if (remind >= 0) remind else 20 * 60
+                    android.app.TimePickerDialog(ctx, { _, h, m -> Data.khatmaRemindAt = h * 60 + m; Alerts.reschedule(ctx) }, m0 / 60, m0 % 60, android.text.format.DateFormat.is24HourFormat(ctx)).show()
                 }
+                Text(if (remind < 0) "اضغط لاختيار الوقت" else "اضغط لتغيير الوقت", color = P.muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                if (remind >= 0) Choice("إيقاف", false) { Data.khatmaRemindAt = -1; Alerts.reschedule(ctx) }
             }
-            Sub("$perDay صفحة يوميًا تقريبًا (${"%.1f".format(perDay / 20.0)} جزء)", Modifier.padding(top = 8.dp), size = 12.sp)
             Text("البدء من الصفحة الأولى", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp).clip(L.shape(8.dp)).combinedClickableSafe { Data.newKhatma() }.padding(6.dp))
         }
     }
@@ -167,8 +186,16 @@ fun KhatmaPage() {
         AlertDialog(onDismissRequest = { custom = false }, containerColor = P.surface,
             title = { Text("وصلت إلى الصفحة", color = P.ink) },
             text = { OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, placeholder = { Text("1 – 604") }) },
-            confirmButton = { TextButton({ text.toIntOrNull()?.let { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = it }; custom = false }) { Text("حفظ") } },
+            confirmButton = { TextButton({ text.toIntOrNull()?.let { start(); Data.khatmaPage = it }; custom = false }) { Text("حفظ") } },
             dismissButton = { TextButton({ custom = false }) { Text("إلغاء") } })
+    }
+    if (askDays) {
+        var text by remember { mutableStateOf("${Data.daysLeft()}") }
+        AlertDialog(onDismissRequest = { askDays = false }, containerColor = P.surface,
+            title = { Text("أختم خلال كم يومًا؟", color = P.ink) },
+            text = { OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, placeholder = { Text("1 – 365") }) },
+            confirmButton = { TextButton({ text.toIntOrNull()?.takeIf { it in 1..365 }?.let { Data.finishIn(it) }; askDays = false }) { Text("حفظ") } },
+            dismissButton = { TextButton({ askDays = false }) { Text("إلغاء") } })
     }
 }
 

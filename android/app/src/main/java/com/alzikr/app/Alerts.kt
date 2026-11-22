@@ -158,7 +158,7 @@ object Alerts {
             Kind.EVENING -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار المساء").setContentText(awradLeft()).setContentIntent(open(c, "adhkar"))
             Kind.KHATMA -> {
                 val from = Data.khatmaPage + 1
-                val to = (Data.khatmaPage + kotlin.math.ceil(Data.PAGES.toDouble() / Data.khatmaDays).toInt()).coerceAtMost(Data.PAGES)
+                val to = (Data.khatmaPage + Data.wirdLeftToday()).coerceAtMost(Data.PAGES)
                 val read = Data.pagesToday()
                 Notification.Builder(c, CH_REMIND).setContentTitle("وِرد القرآن").setContentText(if (read > 0) "قرأت اليوم $read صفحة، بارك الله فيك" else "وردك اليوم: من الصفحة $from إلى $to")
                     .setContentIntent(PendingIntent.getActivity(c, 77, Intent(c, MainActivity::class.java).putExtra("quran", Quran.firstOfPageSafe(c, from)).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))

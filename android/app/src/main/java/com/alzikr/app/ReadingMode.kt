@@ -142,9 +142,10 @@ object Reading {
     var pages: Boolean
         get() = p.getBoolean("read_pager", false)
         set(v) { p.edit().putBoolean("read_pager", v).apply(); Store.bump() }
+    /** Today's wird in pages: it comes from the khatma plan (setting it changes the plan). */
     var goal: Int
-        get() = p.getInt("read_goal", 5)
-        set(v) { p.edit().putInt("read_goal", v).apply(); Store.bump() }
+        get() = Data.wirdToday()
+        set(v) { Data.setPagesPerDay(v) }
 
     /** Where a book was left: item index and offset. */
     fun pos(key: String): Pair<Int, Int> = p.getString("read_pos_$key", null)?.split(':')?.let { (it[0].toIntOrNull() ?: 0) to (it.getOrNull(1)?.toIntOrNull() ?: 0) } ?: (0 to 0)
@@ -152,11 +153,11 @@ object Reading {
 
     // ---- the daily wird (pages read today) and the khatma (how far, in order)
     private fun today() = LocalDate.now().toString()
-    fun todayPages(): Int = if (p.getString("wird_day", "") == today()) p.getStringSet("wird_pages", emptySet())?.size ?: 0 else 0
+    fun todayPages(): Int = Data.pagesToday()
     var far: Int
-        get() = p.getInt("khatma_far", 0)
-        set(v) { p.edit().putInt("khatma_far", v.coerceIn(0, 604)).apply(); Store.bump() }
-    val khatmas get() = p.getInt("khatmas", 0)
+        get() = Data.khatmaPage
+        set(v) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = today(); Data.khatmaPage = v }
+    val khatmas get() = Data.khatmaCount
 
     /** A page stayed open long enough to be read. */
     fun visit(c: Context, page: Int) {
@@ -166,13 +167,17 @@ object Reading {
         set += page.toString()
         val e = p.edit().putString("wird_day", d).putStringSet("wird_pages", set)
         var msg: String? = null
-        if (before < goal && set.size >= goal) msg = "أتممت وردك اليوم، تقبّل الله منك"
+        e.apply()
+        // The khatma moves on when the next pages (in order) are read.
+        val goalBefore = Data.wirdToday(); val readBefore = Data.pagesToday()
         val f = far
-        if (f == 0 || page in (f + 1)..(f + 3)) {
-            if (page >= 604) { e.putInt("khatma_far", 0).putInt("khatmas", khatmas + 1); msg = "أتممت ختمة القرآن الكريم، تقبّل الله منك" }
-            else e.putInt("khatma_far", maxOf(page, if (f == 0) 0 else f))
+        if (page in (f + 1)..(f + 3) && f < 604) {
+            far = page
+            if (page >= 604) msg = "أتممت ختمة القرآن الكريم، تقبّل الله منك"
+            else if (readBefore < goalBefore && Data.pagesToday() >= goalBefore) msg = "أتممت وردك اليوم، تقبّل الله منك"
         }
-        e.apply(); Store.bump()
+        @Suppress("UNUSED_VARIABLE") val unused = before
+        Store.bump()
         msg?.let { Toast.makeText(c, it, Toast.LENGTH_LONG).show() }
     }
 }
@@ -393,10 +398,10 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
             }
             val left = 604 - Reading.far
             Sub("الختمة: وصلت الصفحة ${Quran.digits(Reading.far)}" + (if (Reading.khatmas > 0) " · ختمات مكتملة: ${Quran.digits(Reading.khatmas)}" else "") +
-                " · بوردك الحالي تتمها في نحو ${Quran.digits((left + Reading.goal - 1) / Reading.goal)} يومًا", size = 12.sp)
+                " · تتمها في ${Quran.digits(Data.daysLeft())} يومًا (${Data.khatmaEnd().dayOfMonth}/${Data.khatmaEnd().monthValue})", size = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Choice("موضع ختمتي هنا", false) { Reading.far = cur }
-                Choice("ختمة جديدة", false) { Reading.far = 0 }
+                Choice("ختمة جديدة", false) { Data.newKhatma() }
             }
             Sub("تُحسب الصفحة مقروءة إذا بقيت أمامك عشر ثوانٍ.", size = 11.sp)
         },

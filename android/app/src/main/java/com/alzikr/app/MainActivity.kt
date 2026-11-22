@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
         // loading below) is the first to touch one of these objects, its state is born outside the
         // composition's snapshot and Compose can crash with "Reading a state that was created after the snapshot was taken".
         warmStates()
+        Data.mergeOldKhatma()
         enableEdgeToEdge()
         intent?.getStringExtra("tab")?.let(::openTab)
         openPlace(intent)
@@ -97,6 +98,7 @@ class MainActivity : ComponentActivity() {
         when (t) {
             "focus" -> { Nav.tab = "daily"; Nav.daily = 2 }
             "tasks" -> { Nav.tab = "daily"; Nav.daily = 0 }
+            "khatma" -> { Nav.tab = "daily"; Nav.daily = 3 }
             else -> Nav.tab = t
         }
     }

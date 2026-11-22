@@ -151,7 +151,7 @@ object Home {
         Short("adhkar", "📿", "الأذكار") { Nav.adhkar = 1; Nav.go("adhkar") },
         Short("quran", "📖", "القرآن") { Nav.library = 0; Nav.go("library") },
         Short("tasbih", "🟢", "السبحة") { Nav.adhkar = 2; Nav.go("adhkar") },
-        Short("wird", "📜", "وردي") { val (s0, a0) = Quran.last ?: (1 to 1); Nav.reading = s0 to a0 },
+        Short("wird", "📜", "وردي") { Nav.reading = runCatching { Quran.firstOfPage((Data.khatmaPage + 1).coerceAtMost(Data.PAGES)).let { it.s to it.a } }.getOrNull() ?: Quran.last ?: (1 to 1) },
         Short("morning", "🌅", "الصباح") { Nav.collection = "morning"; Nav.go("adhkar") },
         Short("evening", "🌇", "المساء") { Nav.collection = "evening"; Nav.go("adhkar") },
         Short("sleep", "🌙", "النوم") { Nav.collection = "sleep"; Nav.go("adhkar") },
