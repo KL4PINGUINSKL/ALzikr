@@ -28,10 +28,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -121,8 +124,10 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         val v = ComposeView(this).apply {
             setViewTreeLifecycleOwner(this@PetOverlay)
             setViewTreeSavedStateRegistryOwner(this@PetOverlay)
-            setContent { AppTheme { Floating(species) } }
+            // Left-to-right for the layout only, so the sprite stays on its edge and the bubble opens inward (the text inside stays Arabic).
+            setContent { AppTheme { androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) { Floating(species) } } }
         }
+        v.setOnTouchListener(touch)
         if (appOpen) v.visibility = android.view.View.GONE
         runCatching { wm?.addView(v, params) }.onSuccess { view = v }
     }
@@ -135,16 +140,50 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         Row(Modifier.onSizeChanged { fit(it.width) }, verticalAlignment = Alignment.CenterVertically) {
             if (right && b != null) Box(Modifier.padding(end = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
             Box(Modifier.size(Pet.floatSize.dp).alpha(Pet.floatAlpha)
-                .pointerInput(Unit) { detectDragGestures(onDragEnd = { snap() }) { ch, d -> ch.consume(); moveBy(d.x, d.y) } }
-                .pointerInput(Unit) { detectTapGestures(onTap = { speak(force = true) }, onLongPress = { openApp(null) }) }) {
+            ) {
                 PetSprite(species, {
                     val t = clock() / 1000f
                     Pose(t = t, blink = (t % 4.4f) < .15f, sleep = Pet.asleep(), happy = Pet.happy(), left = right, flap = if (b != null && (t % 1.2f) < .3f) .6f else 0f)
-                }, Modifier.size(Pet.floatSize.dp))
+                }, Modifier.size(Pet.floatSize.dp), Pet.lineStyle(P.accent, P.surface))
             }
             if (!right && b != null) Box(Modifier.padding(start = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
         }
     }
+
+    /** Touches on the sprite: drag (raw screen coordinates, so it follows the finger), tap to speak, long press for the app. Touches on the bubble go to it. */
+    private val touch by lazy { object : android.view.View.OnTouchListener {
+        var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var downAt = 0L; var dragging = false; var mine = false
+        val slop = android.view.ViewConfiguration.get(this@PetOverlay).scaledTouchSlop
+        val long = Runnable { if (!dragging && mine) { mine = false; openApp(null) } }
+        @android.annotation.SuppressLint("ClickableViewAccessibility")
+        override fun onTouch(v: android.view.View, e: android.view.MotionEvent): Boolean {
+            when (e.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    // On the sprite? (it sits at the window's outer edge; the bubble is the rest)
+                    mine = if (onRight.value) e.x >= v.width - petPx else e.x <= petPx
+                    if (!mine) return false
+                    downX = e.rawX; downY = e.rawY; startX = params.x; startY = params.y; downAt = System.currentTimeMillis(); dragging = false
+                    handler.postDelayed(long, 650)
+                    return true
+                }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    if (!mine) return false
+                    val dx = e.rawX - downX; val dy = e.rawY - downY
+                    if (!dragging && kotlin.math.hypot(dx, dy) > slop) { dragging = true; handler.removeCallbacks(long); bubble.value = null; showTrash() }
+                    if (dragging) moveTo(startX + dx.toInt(), startY + dy.toInt())
+                    return true
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    handler.removeCallbacks(long)
+                    if (!mine) return false
+                    mine = false
+                    if (dragging) dropped() else if (e.actionMasked == android.view.MotionEvent.ACTION_UP && System.currentTimeMillis() - downAt < 600) speak(force = true)
+                    return true
+                }
+            }
+            return false
+        }
+    } }
 
     /** Keeps the sprite on its edge when the bubble widens the window. */
     private fun fit(width: Int) {
@@ -152,12 +191,45 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         params.x = if (onRight.value) (screenW - width - margin).coerceAtLeast(0) else margin
         runCatching { wm?.updateViewLayout(view, params) }
     }
-    private fun moveBy(dx: Float, dy: Float) {
+    private fun moveTo(x: Int, y: Int) {
         if (view == null) return
-        bubble.value = null
-        params.x = (params.x + dx.toInt()).coerceIn(0, screenW - petPx)
-        params.y = (params.y + dy.toInt()).coerceIn(0, resources.displayMetrics.heightPixels - petPx)
+        params.x = x.coerceIn(0, screenW - petPx)
+        params.y = y.coerceIn(0, resources.displayMetrics.heightPixels - petPx)
         runCatching { wm?.updateViewLayout(view, params) }
+        // Near the ✕ at the bottom?
+        val d = resources.displayMetrics.density
+        val loc = IntArray(2); view?.getLocationOnScreen(loc)
+        val tloc = IntArray(2); trash?.getLocationOnScreen(tloc)
+        val tx = if (trash != null) tloc[0] + (trash?.width ?: 0) / 2f else screenW / 2f
+        val ty = if (trash != null) tloc[1] + 30 * d else resources.displayMetrics.heightPixels - 110 * d
+        val cx = (if (onRight.value) loc[0] + (view?.width ?: petPx) - petPx / 2f else loc[0] + petPx / 2f); val cy = loc[1] + petPx / 2f
+        overTrash.value = kotlin.math.hypot(cx - tx, cy - ty) < 95 * d
+    }
+
+    // ---- the ✕ that appears at the bottom while dragging: drop the friend on it to hide it
+    val overTrash = mutableStateOf(false)
+    private var trash: ComposeView? = null
+    private fun showTrash() {
+        if (trash != null) return
+        val p = WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, PixelFormat.TRANSLUCENT).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL; y = (72 * resources.displayMetrics.density).toInt()
+        }
+        val v = ComposeView(this).apply {
+            setViewTreeLifecycleOwner(this@PetOverlay); setViewTreeSavedStateRegistryOwner(this@PetOverlay)
+            setContent { AppTheme { TrashTarget(overTrash.value) } }
+        }
+        runCatching { wm?.addView(v, p) }.onSuccess { trash = v }
+    }
+    private fun hideTrash() { trash?.let { runCatching { wm?.removeView(it) } }; trash = null }
+    private fun dropped() {
+        hideTrash()
+        if (overTrash.value) {
+            overTrash.value = false
+            Pet.floating = false
+            android.widget.Toast.makeText(this, "أُخفي ${Pet.name}. تعيده من صفحة «صديقي»", android.widget.Toast.LENGTH_LONG).show()
+            stopSelf()
+        } else snap()
     }
     /** After a drag: to the nearest edge, out of the way. */
     private fun snap() {
@@ -186,7 +258,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         runCatching { startActivity(i) }
     }
 
-    private fun removeView() { view?.let { runCatching { wm?.removeView(it) } }; view = null }
+    private fun removeView() { hideTrash(); view?.let { runCatching { wm?.removeView(it) } }; view = null }
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
@@ -211,3 +283,17 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         fun appVisible(c: Context, visible: Boolean) { instance?.get()?.let { s -> s.handler.post { s.appOpen = visible; s.view?.visibility = if (visible) android.view.View.GONE else android.view.View.VISIBLE } } }
     }
 }
+
+/** The drop target: a soft round ✕ that grows and turns red when the friend is over it. */
+@androidx.compose.runtime.Composable
+private fun TrashTarget(over: Boolean) {
+    val size = if (over) 76.dp else 60.dp
+    androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.size(size).androidx_clipCircle().background(if (over) P.danger else P.surface.copy(alpha = .92f)), contentAlignment = Alignment.Center) {
+            androidx.compose.material3.Text("✕", color = if (over) androidx.compose.ui.graphics.Color.White else P.ink, fontSize = if (over) 30.sp else 24.sp)
+        }
+        androidx.compose.material3.Text("اسحبه هنا لإخفائه", color = androidx.compose.ui.graphics.Color.White, fontSize = 12.sp,
+            modifier = Modifier.padding(top = 6.dp).background(androidx.compose.ui.graphics.Color.Black.copy(alpha = .45f), androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 3.dp))
+    }
+}
+private fun Modifier.androidx_clipCircle() = this.clip(androidx.compose.foundation.shape.CircleShape)

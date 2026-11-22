@@ -14,9 +14,35 @@ object Pet {
     var species: Species?
         get() = sp.getString("pet_species", null)?.let { runCatching { Species.valueOf(it) }.getOrNull() }
         set(v) { sp.edit().putString("pet_species", v?.name).apply(); Store.bump() }
+    /** Each friend keeps its own name. */
+    fun nameOf(s: Species) = sp.getString("pet_name_${s.name}", null)?.takeIf { it.isNotBlank() }
+        // The first test build kept one name for all: it belongs to the friend chosen then.
+        ?: sp.getString("pet_name", null)?.takeIf { it.isNotBlank() && s == species }?.also { setName(s, it); sp.edit().remove("pet_name").apply() }
+        ?: defaultName(s)
+    fun setName(s: Species, v: String) { sp.edit().putString("pet_name_${s.name}", v.trim().take(20)).apply(); Store.bump() }
     var name: String
-        get() = sp.getString("pet_name", null) ?: species?.let { defaultName(it) } ?: "صديقي"
-        set(v) { sp.edit().putString("pet_name", v.trim().take(20)).apply(); Store.bump() }
+        get() = species?.let { nameOf(it) } ?: "صديقي"
+        set(v) { species?.let { setName(it, v) } }
+    /** Line drawing in the theme's color for adults; the colorful drawing for children. */
+    fun lineStyle(ink: androidx.compose.ui.graphics.Color, paper: androidx.compose.ui.graphics.Color) = if (kids) null else PetLine(ink, paper)
+
+    /** How the day went, 0..100: prayers marked so far, the morning/evening adhkar, the wird, some tasbih. */
+    fun mood(): Int {
+        var m = 0
+        if (Store.hasLocation) {
+            val t = Store.times(); val now = LocalTime.now().let { it.hour * 60 + it.minute }
+            val due = Prayer.entries.filter { it.alertable && t.getValue(it) + 20 <= now }
+            m += if (due.isEmpty()) 25 else 50 * due.count { Data.prayed(LocalDate.now(), it) } / due.size
+        }
+        if (Data.colDone("morning")) m += 12
+        if (Data.colDone("evening")) m += 13
+        if (Data.wirdToday() > 0 && Data.pagesToday() >= Data.wirdToday()) m += 15
+        if ((Data.tasbihHistory(1).firstOrNull()?.second ?: 0) >= 33) m += 10
+        return m.coerceIn(0, 100)
+    }
+    /** Something good was just done: the friend hops and says so. */
+    fun cheer(text: String = "ما شاء الله، أحسنت!") { sp.edit().putLong("pet_cheer_at", System.currentTimeMillis()).putString("pet_cheer", text).apply(); Store.bump() }
+    fun cheerNow(): String? = sp.getString("pet_cheer", null)?.takeIf { System.currentTimeMillis() - sp.getLong("pet_cheer_at", 0) < 6000 }
     fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة" }
     /** For children: encouragement and lessons instead of reminders. */
     var kids: Boolean
@@ -79,12 +105,7 @@ object Pet {
 
     // ---- mood and sleep
     /** Happy when today's prayers so far are marked and the adhkar of the time are done. */
-    fun happy(): Boolean {
-        if (!Store.hasLocation) return false
-        val t = Store.times(); val m = LocalTime.now().let { it.hour * 60 + it.minute }
-        val due = Prayer.entries.filter { it.alertable && t.getValue(it) + 20 <= m }
-        return due.isNotEmpty() && due.all { Data.prayed(LocalDate.now(), it) }
-    }
+    fun happy(): Boolean = mood() >= 60
     fun asleep(): Boolean {
         if (!Store.hasLocation) return false
         val t = Store.times(); val m = LocalTime.now().let { it.hour * 60 + it.minute }

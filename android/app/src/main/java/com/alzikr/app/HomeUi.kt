@@ -245,7 +245,7 @@ fun MomentCard() {
                 modifier = Modifier.clip(L.shape(12.dp)).background(P.accent).clickable { m.go() }.padding(horizontal = 14.dp, vertical = 8.dp))
             androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
             Text("✓ أتممته", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clip(L.shape(12.dp)).border(1.dp, P.accent, L.shape(12.dp)).clickable { Moments.markDone(m); runCatching { MomentWidget.update(ctx) } }.padding(horizontal = 14.dp, vertical = 8.dp))
+                modifier = Modifier.clip(L.shape(12.dp)).border(1.dp, P.accent, L.shape(12.dp)).clickable { Moments.markDone(m); Pet.cheer("بارك الله فيك!"); runCatching { MomentWidget.update(ctx) } }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
         if (list.size > 1) {
             Sub("ويناسب الآن أيضًا:", Modifier.padding(top = 10.dp), size = 12.sp)

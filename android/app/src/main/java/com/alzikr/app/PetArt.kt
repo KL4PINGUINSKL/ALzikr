@@ -45,7 +45,12 @@ data class Pose(
     val sleep: Boolean = false,
     val happy: Boolean = false,
     val left: Boolean = false,  // facing left
+    val tilt: Float = 0f,       // degrees, rocking around the feet (a penguin's waddle)
+    val squash: Float = 0f,     // 0..1, a soft squash on landing
 )
+
+/** Line drawing: shapes filled with [paper] and outlined in [ink] (the theme's color); null = the colorful drawing. */
+data class PetLine(val ink: Color, val paper: Color, val width: Float = 2.4f)
 
 /** A clock for the drawing: frame-accurate in the app, gentler (about 12 fps) over other apps. */
 @Composable
@@ -60,20 +65,29 @@ fun rememberPetClock(gentle: Boolean = false): () -> Long {
 
 /** The friend drawn in [modifier]'s box; [pose] is read in the draw phase only, so animating it is cheap. */
 @Composable
-fun PetSprite(species: Species, pose: () -> Pose, modifier: Modifier) {
-    Canvas(modifier) { drawPet(species, pose()) }
+fun PetSprite(species: Species, pose: () -> Pose, modifier: Modifier, line: PetLine? = null) {
+    Canvas(modifier) { drawPet(species, pose(), line) }
 }
+
+/** Set while one friend is drawn (drawing happens on the main thread, one at a time). */
+private var lineMode: PetLine? = null
 
 private fun c(hex: Long) = Color(hex)
 
-fun DrawScope.drawPet(s: Species, p: Pose) {
+fun DrawScope.drawPet(s: Species, p: Pose, line: PetLine? = null) {
+    lineMode = line
     val u = size.minDimension / 100f
     val breathe = sin(p.t * 2.2f) * 0.9f
-    val lift = p.hop * 14f
+    // Walking bobs gently; the rabbit hops instead of walking.
+    val bob = if (p.walk == 0f) 0f else if (s == Species.RABBIT) abs(sin(p.walk * PI.toFloat())) * 9f else abs(sin(p.walk * PI.toFloat() * 2f)) * 1.6f
+    val lift = p.hop * 14f + bob
     // Ground shadow (smaller in the air).
-    val sh = 1f - p.hop * 0.5f
-    drawOval(Color.Black.copy(alpha = .13f * sh), Offset((50 - 22 * sh) * u, 93.5f * u), Size(44 * sh * u, 5 * u))
+    val sh = 1f - (lift / 14f).coerceIn(0f, 1f) * 0.5f
+    drawOval((line?.ink ?: Color.Black).copy(alpha = if (line != null) .16f else .13f * sh), Offset((50 - 22 * sh) * u, 93.5f * u), Size(44 * sh * u, 5 * u))
+    val waddle = if (s == Species.PENGUIN && p.walk != 0f) sin(p.walk * PI.toFloat() * 2f) * 7f else 0f
     scale(if (p.left) -1f else 1f, 1f, Offset(size.width / 2, size.height / 2)) {
+        scale(1f + p.squash * .08f, 1f - p.squash * .12f, Offset(50 * u, 94 * u)) {
+        rotate(p.tilt + waddle, Offset(50 * u, 92 * u)) {
         translate(0f, (-lift - breathe * .4f) * u) {
             when (s) {
                 Species.CAT -> cat(u, p)
@@ -85,33 +99,61 @@ fun DrawScope.drawPet(s: Species, p: Pose) {
                 Species.CHICKEN -> chicken(u, p)
             }
         }
+        }
+        }
     }
     if (p.happy && !p.sleep) hearts(u, p.t)
     if (p.sleep) zzz(u, p.t)
+    lineMode = null
 }
 
 // ------------------------------------------------------------------ helpers (units of 1/100 of the box)
 
-private fun DrawScope.oval(u: Float, cx: Float, cy: Float, w: Float, h: Float, col: Color) = drawOval(col, Offset((cx - w / 2) * u, (cy - h / 2) * u), Size(w * u, h * u))
-private fun DrawScope.dot(u: Float, cx: Float, cy: Float, r: Float, col: Color) = drawCircle(col, r * u, Offset(cx * u, cy * u))
+private fun DrawScope.oval(u: Float, cx: Float, cy: Float, w: Float, h: Float, col: Color) {
+    val o = Offset((cx - w / 2) * u, (cy - h / 2) * u); val sz = Size(w * u, h * u)
+    val l = lineMode
+    if (l == null) drawOval(col, o, sz) else { drawOval(l.paper, o, sz); drawOval(l.ink, o, sz, style = Stroke(l.width * u * .5f)) }
+}
+private fun DrawScope.dot(u: Float, cx: Float, cy: Float, r: Float, col: Color) {
+    val l = lineMode
+    if (l == null) drawCircle(col, r * u, Offset(cx * u, cy * u)) else { drawCircle(l.paper, r * u, Offset(cx * u, cy * u)); drawCircle(l.ink, r * u, Offset(cx * u, cy * u), style = Stroke(l.width * u * .5f)) }
+}
 private fun DrawScope.poly(u: Float, col: Color, vararg pts: Float) {
     val path = Path().apply { moveTo(pts[0] * u, pts[1] * u); var i = 2; while (i < pts.size) { lineTo(pts[i] * u, pts[i + 1] * u); i += 2 }; close() }
-    drawPath(path, col)
+    val l = lineMode
+    if (l == null) drawPath(path, col) else { drawPath(path, l.paper); drawPath(path, l.ink, style = Stroke(l.width * u * .5f, join = androidx.compose.ui.graphics.StrokeJoin.Round)) }
 }
-private fun DrawScope.line(u: Float, col: Color, w: Float, x1: Float, y1: Float, x2: Float, y2: Float) =
-    drawLine(col, Offset(x1 * u, y1 * u), Offset(x2 * u, y2 * u), w * u, StrokeCap.Round)
+private fun DrawScope.line(u: Float, col: Color, w: Float, x1: Float, y1: Float, x2: Float, y2: Float) {
+    val l = lineMode
+    drawLine(l?.ink ?: col, Offset(x1 * u, y1 * u), Offset(x2 * u, y2 * u), (if (l != null) minOf(w, l.width * .5f).coerceAtLeast(l.width * .4f) else w) * u, StrokeCap.Round)
+}
+/** A stroked curve (a tail): thick colour, or a thin ink line. */
+private fun DrawScope.curve(u: Float, path: Path, col: Color, w: Float) {
+    val l = lineMode
+    drawPath(path, l?.ink ?: col, style = Stroke((if (l != null) l.width * .55f else w) * u, cap = StrokeCap.Round))
+}
+private fun DrawScope.rrect(u: Float, x: Float, y: Float, w: Float, h: Float, r: Float, col: Color) {
+    val l = lineMode
+    val cr = androidx.compose.ui.geometry.CornerRadius(r * u)
+    if (l == null) drawRoundRect(col, Offset(x * u, y * u), Size(w * u, h * u), cr)
+    else { drawRoundRect(l.paper, Offset(x * u, y * u), Size(w * u, h * u), cr); drawRoundRect(l.ink, Offset(x * u, y * u), Size(w * u, h * u), cr, style = Stroke(l.width * u * .5f)) }
+}
 
 /** Eyes: open with a shine, closed as a soft arc (blinking or asleep). */
-private fun DrawScope.eye(u: Float, cx: Float, cy: Float, r: Float, closed: Boolean, ink: Color = c(0xFF2B2B2B)) {
+private fun DrawScope.eye(u: Float, cx: Float, cy: Float, r: Float, closed: Boolean, ink0: Color = c(0xFF2B2B2B)) {
+    val ink = lineMode?.ink ?: ink0
     if (closed) {
         val path = Path().apply { moveTo((cx - r) * u, cy * u); quadraticTo(cx * u, (cy + r * .9f) * u, (cx + r) * u, cy * u) }
         drawPath(path, ink, style = Stroke(r * .55f * u, cap = StrokeCap.Round))
     } else {
-        dot(u, cx, cy, r, ink)
-        dot(u, cx + r * .35f, cy - r * .35f, r * .35f, Color.White)
+        drawCircle(ink, r * u, Offset(cx * u, cy * u))
+        drawCircle(lineMode?.paper ?: Color.White, r * .35f * u, Offset((cx + r * .35f) * u, (cy - r * .35f) * u))
     }
 }
-private fun DrawScope.cheek(u: Float, cx: Float, cy: Float, on: Boolean) { if (on) oval(u, cx, cy, 6f, 3.4f, c(0xFFFF8FA3).copy(alpha = .55f)) }
+private fun DrawScope.cheek(u: Float, cx: Float, cy: Float, on: Boolean) {
+    if (!on) return
+    drawOval((lineMode?.ink ?: c(0xFFFF8FA3)).copy(alpha = if (lineMode != null) .25f else .55f), Offset((cx - 3f) * u, (cy - 1.7f) * u), Size(6f * u, 3.4f * u))
+}
 private fun legSwing(p: Pose, phase: Float) = if (p.walk == 0f) 0f else sin(p.walk * 2f * PI.toFloat() + phase) * 3.2f
 
 private fun DrawScope.hearts(u: Float, t: Float) {
@@ -120,13 +162,14 @@ private fun DrawScope.hearts(u: Float, t: Float) {
     heart(u, 74f, y + 4f, 4.2f, c(0xFFFF5C7A).copy(alpha = a))
     heart(u, 84f, y + 10f, 3f, c(0xFFFF8FA3).copy(alpha = a * .8f))
 }
-private fun DrawScope.heart(u: Float, cx: Float, cy: Float, r: Float, col: Color) {
-    dot(u, cx - r * .5f, cy, r * .6f, col); dot(u, cx + r * .5f, cy, r * .6f, col)
-    poly(u, col, cx - r * 1.05f, cy + r * .2f, cx + r * 1.05f, cy + r * .2f, cx, cy + r * 1.4f)
+private fun DrawScope.heart(u: Float, cx: Float, cy: Float, r: Float, col0: Color) {
+    val col = lineMode?.ink?.copy(alpha = col0.alpha) ?: col0
+    drawCircle(col, r * .6f * u, Offset((cx - r * .5f) * u, cy * u)); drawCircle(col, r * .6f * u, Offset((cx + r * .5f) * u, cy * u))
+    drawPath(Path().apply { moveTo((cx - r * 1.05f) * u, (cy + r * .2f) * u); lineTo((cx + r * 1.05f) * u, (cy + r * .2f) * u); lineTo(cx * u, (cy + r * 1.4f) * u); close() }, col)
 }
 private fun DrawScope.zzz(u: Float, t: Float) {
     val k = (t * .6f) % 1f
-    val col = c(0xFF8FA3B8).copy(alpha = 1f - k)
+    val col = (lineMode?.ink ?: c(0xFF8FA3B8)).copy(alpha = 1f - k)
     val x = 74f + k * 8f; val y = 22f - k * 12f; val s = 5f + k * 3f
     line(u, col, 1.6f, x, y, x + s, y); line(u, col, 1.6f, x + s, y, x, y + s); line(u, col, 1.6f, x, y + s, x + s, y + s)
 }
@@ -138,11 +181,11 @@ private fun DrawScope.cat(u: Float, p: Pose) {
     // Tail sways.
     val sw = sin(p.t * 1.6f) * 7f
     val tail = Path().apply { moveTo(30 * u, 74 * u); cubicTo(14 * u, (70 + sw * .3f) * u, (10 + sw * .2f) * u, 52 * u, (18 + sw) * u, 42 * u) }
-    drawPath(tail, fur, style = Stroke(6.5f * u, cap = StrokeCap.Round))
+    curve(u, tail, fur, 6.5f)
     // Legs.
     for ((x, ph) in listOf(36f to 0f, 44f to PI.toFloat(), 58f to PI.toFloat(), 64f to 0f)) {
         val d = legSwing(p, ph)
-        drawRoundRect(if (x < 50) dark else fur, Offset((x - 3 + d) * u, 80 * u), Size(6.5f * u, 13 * u), androidx.compose.ui.geometry.CornerRadius(3 * u))
+        rrect(u, x - 3 + d, 80f, 6.5f, 13f, 3f, if (x < 50) dark else fur)
     }
     oval(u, 50f, 72f, 46f, 26f, fur)
     oval(u, 54f, 76f, 26f, 14f, light)
@@ -166,9 +209,9 @@ private fun DrawScope.penguin(u: Float, p: Pose) {
     oval(u, 43f + w, 92f, 12f, 5f, orange); oval(u, 58f - w, 92f, 12f, 5f, orange)
     // Flippers.
     val f = -20f - p.flap * 45f - (if (p.walk != 0f) sin(p.walk * 6.28f) * 8f else 0f)
-    rotate(f, Offset(31 * u, 52 * u)) { oval(u, 31f, 64f, 9f, 26f, black) }
-    rotate(-f, Offset(69 * u, 52 * u)) { oval(u, 69f, 64f, 9f, 26f, black) }
     oval(u, 50f, 60f, 44f, 64f, black)
+    rotate(f, Offset(31 * u, 52 * u)) { oval(u, 29f, 64f, 9f, 26f, black) }
+    rotate(-f, Offset(69 * u, 52 * u)) { oval(u, 71f, 64f, 9f, 26f, black) }
     oval(u, 51f, 66f, 30f, 46f, white)
     // Face.
     oval(u, 51f, 42f, 26f, 18f, white)

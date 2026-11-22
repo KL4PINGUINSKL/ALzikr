@@ -161,7 +161,7 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
         val after = Data.colTap(c.id, cur)[cur]
         val now = after >= c.items[cur].count
         Haptics.tap(ctx, now)
-        if (now) { MomentWidget.update(ctx); val at = cur; scope.launch { kotlinx.coroutines.delay(450); if (cur == at) cur = nextOpen(at) } }
+        if (now) { MomentWidget.update(ctx); if (Data.colDone(c.id)) Pet.cheer("أتممت ${c.title}، أحسنت!"); val at = cur; scope.launch { kotlinx.coroutines.delay(450); if (cur == at) cur = nextOpen(at) } }
     }
     // The volume keys count too, and the screen stays on while reading.
     androidx.compose.runtime.DisposableEffect(c.id) {

@@ -1,5 +1,7 @@
 package com.alzikr.app
 
+import androidx.compose.ui.graphics.compositeOver
+
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -60,7 +62,7 @@ import kotlin.random.Random
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true) {
+fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, paper: androidx.compose.ui.graphics.Color = P.bg) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val sp = Pet.species ?: return
     val clock = rememberPetClock()
@@ -70,26 +72,53 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true) 
     var walking by remember { mutableStateOf(false) }
     val hop = remember { Animatable(0f) }
     val flap = remember { Animatable(0f) }
+    val squash = remember { Animatable(0f) }
+    val tilt = remember { Animatable(0f) }
+    val line = Pet.lineStyle(P.accent, paper)
+    suspend fun jump(h: Float = 1f) {
+        squash.animateTo(.7f, tween(90)); squash.animateTo(0f, tween(90))
+        hop.animateTo(h, tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+        hop.animateTo(0f, tween(230, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+        squash.animateTo(1f, tween(70)); squash.animateTo(0f, androidx.compose.animation.core.spring(dampingRatio = .4f))
+    }
     var said by remember { mutableStateOf<Pet.Say?>(null) }
     var n by remember { mutableIntStateOf(Random.nextInt(100)) }
     val asleep = Pet.asleep(); val happy = Pet.happy() || said != null && Pet.kids
-    fun speak() { said = Pet.say(n++); scope.launch { hop.animateTo(1f, tween(160)); hop.animateTo(0f, tween(220)) } }
+    // A tap: it speaks, with a different little move each time.
+    fun speak() {
+        said = Pet.say(n++)
+        scope.launch {
+            when (n % 4) {
+                0 -> jump()
+                1 -> { flap.animateTo(1f, tween(150)); flap.animateTo(0f, tween(150)); flap.animateTo(1f, tween(150)); flap.animateTo(0f, tween(220)) }
+                2 -> { tilt.animateTo(-10f, tween(160)); tilt.animateTo(10f, tween(240)); tilt.animateTo(0f, androidx.compose.animation.core.spring(dampingRatio = .5f)) }
+                else -> { left = !left; delay(220); left = !left; jump(.6f) }
+            }
+        }
+    }
+    // Something good was just done: it celebrates.
+    val cheer = Pet.cheerNow()
+    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); jump(); delay(120); jump(.7f) } }
 
     // A gentle life: walk somewhere, rest, sometimes hop or flap; asleep at night it stays put.
     LaunchedEffect(sp, asleep) {
         while (true) {
             if (asleep) { walking = false; delay(4000); continue }
             delay(Random.nextLong(2500, 6500))
-            when (Random.nextInt(6)) {
+            when (Random.nextInt(7)) {
                 0, 1, 2 -> {
                     val to = Random.nextFloat() * .9f + .05f
-                    left = to < x.value; walking = true
-                    x.animateTo(to, tween((kotlin.math.abs(to - x.value) * 9000).toInt().coerceAtLeast(600), easing = LinearEasing))
+                    val turn = (to < x.value) != left
+                    if (turn) { left = !left; delay(180) }
+                    walking = true
+                    x.animateTo(to, tween((kotlin.math.abs(to - x.value) * 9000).toInt().coerceAtLeast(700), easing = androidx.compose.animation.core.FastOutSlowInEasing))
                     walking = false
+                    squash.animateTo(.4f, tween(90)); squash.animateTo(0f, tween(160))
                 }
-                3 -> { hop.animateTo(1f, tween(180)); hop.animateTo(0f, tween(240)) }
+                3 -> jump()
                 4 -> { flap.animateTo(1f, tween(200)); flap.animateTo(0f, tween(300)) }
-                else -> left = !left
+                5 -> { left = !left; delay(700); left = !left }   // looks around
+                else -> { tilt.animateTo(-6f, tween(500)); delay(400); tilt.animateTo(0f, tween(500)) }   // a lazy stretch
             }
         }
     }
@@ -110,8 +139,9 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true) 
                 onLongClick = { Nav.morePage = "pet"; Nav.go("more") }) { speak() }) {
             PetSprite(sp, {
                 val t = clock() / 1000f
-                Pose(t = t, blink = !asleep && (t % 4.2f) < .13f, walk = if (walking) t * 1.6f else 0f, hop = hop.value, flap = flap.value, sleep = asleep, happy = happy, left = left)
-            }, Modifier.fillMaxSize())
+                Pose(t = t, blink = !asleep && (t % 4.2f) < .13f, walk = if (walking) t * 1.8f else 0f, hop = hop.value, flap = flap.value, sleep = asleep, happy = happy, left = left,
+                    tilt = tilt.value, squash = squash.value)
+            }, Modifier.fillMaxSize(), line)
             said?.let { s ->
                 val px = with(LocalDensity.current) { box.roundToPx() }
                 Popup(alignment = if (bubbleBelow) Alignment.TopCenter else Alignment.BottomCenter, offset = IntOffset(0, if (bubbleBelow) px else -px)) {
@@ -125,7 +155,7 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true) 
 /** The speech bubble: small, soft, closes by itself; a tap goes where it points. */
 @Composable
 fun Bubble(text: String, onClick: () -> Unit) {
-    Text(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
+    GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
         modifier = Modifier.widthIn(max = 240.dp).clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp))
             .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp))
 }
@@ -154,6 +184,7 @@ fun PetIntro() {
 @Composable
 fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
     val clock = rememberPetClock()
+    val line = Pet.lineStyle(P.accent, P.card)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Species.entries.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -162,8 +193,10 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
                     Column(Modifier.weight(1f).clip(L.shape(16.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
                         .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(16.dp)).clickable { pick(s) }.padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
-                        PetSprite(s, { val t = clock() / 1000f + s.ordinal; Pose(t = t, blink = (t % 3.7f) < .12f, flap = if ((t % 5f) < .4f) .8f else 0f, happy = on) }, Modifier.size(78.dp))
+                        PetSprite(s, { val t = clock() / 1000f + s.ordinal; Pose(t = t, blink = (t % 3.7f) < .12f, flap = if ((t % 5f) < .4f) .8f else 0f, happy = on) }, Modifier.size(78.dp),
+                            if (on) line?.copy(paper = P.accent.copy(alpha = .14f).compositeOver(P.card)) else line)
                         Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        Text(Pet.nameOf(s), color = P.muted, fontSize = 11.sp, maxLines = 1)
                     }
                 }
                 repeat(3 - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
@@ -188,16 +221,21 @@ fun PetPage() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Hint("pet", "🐾", "اختر صديقك وسمّه. يعيش في أعلى التطبيق أو على أرضية في أسفله، يمشي بهدوء ويتكلم أحيانًا. اضغط عليه ليقول شيئًا، واضغط مطولًا لتفتح هذه الصفحة.")
         if (sp != null) Panel(color = P.card, pad = 12.dp) {
-            Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110) }
+            Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110, paper = P.card) }
             Text(Pet.name, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            Sub(if (Pet.asleep()) "نائم الآن 💤" else if (Pet.happy()) "سعيد لأنك صلّيت ما مضى من صلوات اليوم" else "اضغط عليه ليتكلم", Modifier.fillMaxWidth(), size = 12.sp)
+            val mood = Pet.mood()
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
+                repeat(5) { k -> val on = mood >= (k + 1) * 20 - 10; Glyph(if (on) "❤" else "♡", tint = if (on) P.accent else P.line, size = 26.dp, modifier = Modifier.padding(horizontal = 3.dp)) }
+            }
+            Sub(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلواتك وأذكارك ليفرح" }, Modifier.fillMaxWidth(), size = 12.sp)
+            Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
         }
         Title("اختر صديقك")
         SpeciesGrid(sp) { Pet.species = it }
         if (sp == null) return@Column
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            var name by remember(sp) { mutableStateOf(Pet.name) }
-            OutlinedTextField(name, { name = it; if (it.isNotBlank()) Pet.name = it }, singleLine = true, label = { Text("اسمه") }, modifier = Modifier.weight(1f))
+            var name by remember(sp) { mutableStateOf(Pet.nameOf(sp)) }
+            OutlinedTextField(name, { name = it; if (it.isNotBlank()) Pet.setName(sp, it) }, singleLine = true, label = { Text("اسم ${sp.ar}") }, modifier = Modifier.weight(1f))
         }
 
         Panel(pad = 14.dp) {

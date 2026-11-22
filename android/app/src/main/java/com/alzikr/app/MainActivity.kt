@@ -248,7 +248,7 @@ private fun Header(openSettings: () -> Unit) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
-        if (pet) PetStage(Modifier.weight(1f).padding(horizontal = 6.dp), height = 50)
+        if (pet) PetStage(Modifier.weight(1f).padding(horizontal = 6.dp), height = 58)
         Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("⚙", tint = P.muted, size = 22.dp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
         }
