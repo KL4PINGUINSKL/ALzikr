@@ -53,6 +53,7 @@ fun AdhkarScreen(openCollection: String? = null) {
     var section by rememberSaveable { mutableStateOf(if (openCollection != null) 1 else 0) }
     var reading by rememberSaveable { mutableStateOf(openCollection) }
     Nav.adhkar?.let { section = it; reading = null; Nav.adhkar = null }
+    Nav.collection?.let { section = 1; reading = it; Nav.collection = null }
     reading?.let { id -> Content.collection(id)?.let { CollectionReader(it) { reading = null }; return } }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -99,12 +99,14 @@ fun PrayerScreen(openSettings: () -> Unit) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
     var options by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf(false) }
     val w = window()
     val times = Store.times()
     val view = when (Data.prayerView) { 1 -> 1; 2 -> 2; 3 -> 3; 4 -> 4; else -> when (L.prayers) { PrayerLayout.CARDS -> 1; PrayerLayout.LIST -> 2; PrayerLayout.TIMELINE -> 4 } }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
         Hint("prayer2", "🕌", "اضغط على أي وقت لخيارات الحساب والموقع والتعديل. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
+        Hint("home1", "✎", "«ذكر الوقت» يتغير وحده: الصباح والمساء والنوم، والكهف يوم الجمعة، والمواسم. ورتّب هذه الصفحة كما تحب من «✎ تخصيص هذه الصفحة» في أسفلها.")
         val hijri = Data.hijri()
         if (hijri.month == 9) Panel(color = P.gold.copy(alpha = .16f), pad = 12.dp) {
             Text("رمضان ${hijri.day} · تقبّل الله صيامك", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -112,85 +114,93 @@ fun PrayerScreen(openSettings: () -> Unit) {
             Sub("الإمساك ${Alerts.timeText(times.getValue(Prayer.FAJR) - 10)} · الإفطار ${Alerts.timeText(iftar)}" +
                 if (nowMin < iftar && nowMin > times.getValue(Prayer.FAJR)) " · بعد ${durationText((iftar - nowMin) * 60_000L)}" else "", color = P.ink)
         }
-        // The next prayer, the countdown, and how far the current time has gone.
-        Panel(Modifier.clickable { options = true }, color = P.card, pad = 14.dp) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Sub(if (w.next == Prayer.SUNRISE) "الشروق" else "الصلاة القادمة", size = 12.sp)
-                    Text(w.next.ar, color = P.ink, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(Alerts.timeText(Store.times(java.time.Instant.ofEpochMilli(w.nextAt).atZone(ZoneId.systemDefault()).toLocalDate()).getValue(w.next)), color = P.gold, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
-                    Text("بعد " + durationText(w.nextAt - now), color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
-            }
-            Spacer(Modifier.height(10.dp))
-            val frac = ((now - w.prevAt).toFloat() / (w.nextAt - w.prevAt).coerceAtLeast(1)).coerceIn(0f, 1f)
-            Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(P.line)) {
-                Box(Modifier.fillMaxWidth(frac).height(6.dp).clip(RoundedCornerShape(3.dp)).background(P.accent))
-            }
-            w.current?.takeIf { it.alertable && it != w.next }?.let { cur ->
-                Sub("الوقت الحالي: ${cur.ar}" + if (Data.prayed(LocalDate.now(), cur)) " ✓ صلّيتها" else " · لم تُعلَّم بعد", Modifier.padding(top = 6.dp), size = 12.sp)
-            }
-        }
-        // Shortcuts.
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Tile("🧭", "القبلة", Modifier.weight(1f)) { Nav.morePage = "qibla"; Nav.go("more") }
-            Tile("📿", "الأذكار", Modifier.weight(1f)) { Nav.adhkar = 1; Nav.go("adhkar") }
-            Tile("📖", "القرآن", Modifier.weight(1f)) { Nav.library = 0; Nav.go("library") }
-            Tile("🟢", "السبحة", Modifier.weight(1f)) { Nav.adhkar = 2; Nav.go("adhkar") }
-            Tile("📜", "وردي", Modifier.weight(1f)) { val (s0, a0) = Quran.last ?: (1 to 1); Nav.reading = s0 to a0 }
-        }
-        // Today's times, in the chosen view.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("مواقيت اليوم", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                listOf(1 to "بطاقات", 2 to "قائمة", 3 to "سطر", 4 to "خط زمني").forEach { (n, l) -> Choice(l, view == n) { Data.prayerView = n } }
-            }
-        }
         val open = { options = true }
-        when (view) {
-            1 -> PrayerCards(w, times, open)
-            3 -> PrayerLine(w, times, open)
-            4 -> PrayerTimeline(w, times, open)
-            else -> Panel(pad = 6.dp) { Prayer.entries.forEach { p -> PrayerRow(p, p == w.next, times, open) } }
-        }
-        ExtraTimes(times, open)
-
-        // This week, and the next occasion.
-        val (prayedWeek, possible) = Data.week()
-        val today = Prayer.entries.count { it.alertable && Data.prayed(LocalDate.now(), it) }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Panel(Modifier.weight(1f), pad = 12.dp) {
-                Sub("صلوات اليوم", size = 12.sp)
-                Text("$today / 5", color = if (today == 5) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
-            if (possible > 0) Panel(Modifier.weight(1f), pad = 12.dp) {
-                Sub("آخر 7 أيام", size = 12.sp)
-                Text("$prayedWeek / $possible", color = if (prayedWeek == possible) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
-            nextOccasion()?.let { (o, days) ->
-                Panel(Modifier.weight(1f).clickable { Nav.morePage = Seasons.forOccasion(o.name)?.let { "season:$it" } ?: "calendar"; Nav.go("more") }, pad = 12.dp) {
-                    Sub(o.name, size = 12.sp)
-                    Text(if (days == 0L) "اليوم" else "بعد $days يومًا", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        val parts = mapOf<String, @Composable () -> Unit>(
+            "next" to {
+            // The next prayer, the countdown, and how far the current time has gone.
+            Panel(Modifier.clickable { options = true }, color = P.card, pad = 14.dp) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Sub(if (w.next == Prayer.SUNRISE) "الشروق" else "الصلاة القادمة", size = 12.sp)
+                        Text(w.next.ar, color = P.ink, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(Alerts.timeText(Store.times(java.time.Instant.ofEpochMilli(w.nextAt).atZone(ZoneId.systemDefault()).toLocalDate()).getValue(w.next)), color = P.gold, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                        Text("بعد " + durationText(w.nextAt - now), color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                val frac = ((now - w.prevAt).toFloat() / (w.nextAt - w.prevAt).coerceAtLeast(1)).coerceIn(0f, 1f)
+                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(P.line)) {
+                    Box(Modifier.fillMaxWidth(frac).height(6.dp).clip(RoundedCornerShape(3.dp)).background(P.accent))
+                }
+                w.current?.takeIf { it.alertable && it != w.next }?.let { cur ->
+                    Sub("الوقت الحالي: ${cur.ar}" + if (Data.prayed(LocalDate.now(), cur)) " ✓ صلّيتها" else " · لم تُعلَّم بعد", Modifier.padding(top = 6.dp), size = 12.sp)
                 }
             }
-        }
-        // The lasting notification.
-        Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
-            .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("📌 إشعار دائم في قائمة الإشعارات", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                Sub("الصلاة القادمة بعدّ تنازلي وزر «سبّح +١»، يبقى حتى تضغط «إخفاء»", size = 11.sp)
+            },
+            "moment" to { MomentCard() },
+            "tiles" to { HomeShortcuts() },
+            "times" to {
+            // Today's times, in the chosen view.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("مواقيت اليوم", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(1 to "بطاقات", 2 to "قائمة", 3 to "سطر", 4 to "خط زمني").forEach { (n, l) -> Choice(l, view == n) { Data.prayerView = n } }
+                }
             }
-            androidx.compose.material3.Switch(TasbihNotice.on, { TasbihNotice.on = it; TasbihNotice.update(ctx) })
-        }
-        DailyWords()
-        val qibla = PrayTimes.qibla(Store.lat, Store.lng).roundToInt()
-        Sub("📍 ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }} · ${Store.method.ar}${if (Store.hanafi) " · العصر حنفي" else ""} · 🕋 $qibla°",
-            Modifier.clip(L.shape(10.dp)).clickable { options = true }.padding(6.dp), size = 12.sp)
+            when (view) {
+                1 -> PrayerCards(w, times, open)
+                3 -> PrayerLine(w, times, open)
+                4 -> PrayerTimeline(w, times, open)
+                else -> Panel(pad = 6.dp) { Prayer.entries.forEach { p -> PrayerRow(p, p == w.next, times, open) } }
+            }
+            },
+            "extra" to { ExtraTimes(times, open) },
+            "stats" to {
+            // This week, and the next occasion.
+            val (prayedWeek, possible) = Data.week()
+            val today = Prayer.entries.count { it.alertable && Data.prayed(LocalDate.now(), it) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Panel(Modifier.weight(1f), pad = 12.dp) {
+                    Sub("صلوات اليوم", size = 12.sp)
+                    Text("$today / 5", color = if (today == 5) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                if (possible > 0) Panel(Modifier.weight(1f), pad = 12.dp) {
+                    Sub("آخر 7 أيام", size = 12.sp)
+                    Text("$prayedWeek / $possible", color = if (prayedWeek == possible) P.gold else P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                nextOccasion()?.let { (o, days) ->
+                    Panel(Modifier.weight(1f).clickable { Nav.morePage = Seasons.forOccasion(o.name)?.let { "season:$it" } ?: "calendar"; Nav.go("more") }, pad = 12.dp) {
+                        Sub(o.name, size = 12.sp)
+                        Text(if (days == 0L) "اليوم" else "بعد $days يومًا", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                }
+            }
+            },
+            "notice" to {
+            // The lasting notification.
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
+                .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("📌 إشعار دائم في قائمة الإشعارات", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Sub("الصلاة القادمة بعدّ تنازلي وزر «سبّح +١»، يبقى حتى تضغط «إخفاء»", size = 11.sp)
+                }
+                androidx.compose.material3.Switch(TasbihNotice.on, { TasbihNotice.on = it; TasbihNotice.update(ctx) })
+            }
+            },
+            "words" to { DailyWords() },
+            "place" to {
+            val qibla = PrayTimes.qibla(Store.lat, Store.lng).roundToInt()
+            Sub("📍 ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }} · ${Store.method.ar}${if (Store.hanafi) " · العصر حنفي" else ""} · 🕋 $qibla°",
+                Modifier.clip(L.shape(10.dp)).clickable { options = true }.padding(6.dp), size = 12.sp)
+            },
+        )
+        Home.order.filter { it !in Home.hidden }.forEach { parts[it]?.invoke() }
+        Text("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
     }
     if (options) TimesOptions(openSettings) { options = false }
+    if (editing) HomeEditor { editing = false }
 }
 
 /** Other useful times: imsak, duha, the middle of the night and its last third. */
@@ -217,8 +227,9 @@ private fun ExtraTimes(times: Map<Prayer, Int>, open: () -> Unit) {
 private fun TimesOptions(openSettings: () -> Unit, close: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, containerColor = P.surface) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val state = androidx.compose.material3.rememberModalBottomSheetState()
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, sheetState = state, containerColor = P.surface) {
+        Column(Modifier.fillMaxWidth().quickDismiss(state, close).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Title("خيارات الأوقات")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tile("📅", "التقويم", Modifier.weight(1f)) { close(); Nav.morePage = "calendar"; Nav.go("more") }

@@ -135,8 +135,8 @@ private fun typography(font: FontFamily?): Typography {
 }
 
 data class Section(val id: String, val label: String, val glyph: String)
-val sections = listOf(
-    Section("prayer", "الصلاة", "🕌"), Section("adhkar", "الأذكار", "📿"), Section("library", "المكتبة", "📖"),
+val sections get() = listOf(
+    Section("prayer", Home.name, "🕌"), Section("adhkar", "الأذكار", "📿"), Section("library", "المكتبة", "📖"),
     Section("daily", "يومي", "☑"), Section("more", "المزيد", "☰"),
 )
 

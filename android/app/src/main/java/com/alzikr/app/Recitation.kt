@@ -170,12 +170,15 @@ object Recitation {
 
     /** Pause for calls and other audio; carry on when it ends. */
     private fun requestFocus(): Boolean {
+        // Still holding focus from the verse before (changing the reciter or the verse while reading): asking again would
+        // make Android send our own old request a LOSS, which paused the new reciter before it started.
+        if (focus != null) return true
         val am = app.getSystemService(AudioManager::class.java)
         val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
             .setOnAudioFocusChangeListener { change ->
                 when (change) {
-                    AudioManager.AUDIOFOCUS_LOSS -> pause()
+                    AudioManager.AUDIOFOCUS_LOSS -> { pause(); focus?.let { f -> am.abandonAudioFocusRequest(f) }; focus = null }
                     AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> { player?.takeIf { it.isPlaying }?.pause() }
                     AudioManager.AUDIOFOCUS_GAIN -> if (!paused && now != null) player?.start()
                 }
