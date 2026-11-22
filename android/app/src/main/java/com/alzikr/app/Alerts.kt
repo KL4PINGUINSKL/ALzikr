@@ -352,6 +352,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent) {
         Store.init(c)
         Alerts.reschedule(c)
+        runCatching { PetOverlay.start(c) }
         if (Store.focusEnd > System.currentTimeMillis()) {
             Alerts.exact(c.getSystemService(AlarmManager::class.java), Store.focusEnd, PendingIntent.getBroadcast(c, FocusReceiver.END.hashCode(),
                 Intent(c, FocusReceiver::class.java).setAction(FocusReceiver.END), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))

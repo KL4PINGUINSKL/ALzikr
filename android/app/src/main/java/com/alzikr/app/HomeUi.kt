@@ -169,6 +169,7 @@ object Home {
         Short("world", "🌍", "الساعات") { Nav.morePage = "world"; Nav.go("more") },
         Short("hifz", "🧠", "الحفظ") { Nav.morePage = "hifz"; Nav.go("more") },
         Short("duas", "🤲", "أدعيتي") { Nav.adhkar = 3; Nav.go("adhkar") },
+        Short("pet", "🐾", "صديقي") { Nav.morePage = "pet"; Nav.go("more") },
         Short("stats", "📊", "إحصائياتي") { Nav.morePage = "stats"; Nav.go("more") },
         Short("tasks", "☑", "المهام") { Nav.daily = 0; Nav.go("daily") },
         Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },

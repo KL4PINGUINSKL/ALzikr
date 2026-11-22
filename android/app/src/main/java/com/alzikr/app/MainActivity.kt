@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
         // composition's snapshot and Compose can crash with "Reading a state that was created after the snapshot was taken".
         warmStates()
         Data.mergeOldKhatma()
+        PetOverlay.start(this)
         enableEdgeToEdge()
         intent?.getStringExtra("tab")?.let(::openTab)
         openPlace(intent)
@@ -121,7 +122,10 @@ class MainActivity : ComponentActivity() {
         openPlace(intent)
     }
 
+    override fun onPause() { super.onPause(); PetOverlay.appVisible(this, false) }
+
     override fun onResume() {
+        PetOverlay.appVisible(this, true)
         super.onResume()
         Alerts.reschedule(this)
         Alerts.focusNotification(this)
@@ -196,6 +200,10 @@ private fun Root() {
                             else -> PrayerScreen(openSettings = { settings = true })
                         }
                     }
+                    if (!inPage && Pet.species != null && Pet.place == "ground") Column(Modifier.fillMaxWidth()) {
+                        PetStage(Modifier.fillMaxWidth().padding(horizontal = 10.dp), height = 46, bubbleBelow = false)
+                        Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp).clip(L.shape(1.dp)).background(P.line))
+                    }
                     MiniPlayer()
                     if (inPage) Spacer(Modifier.navigationBarsPadding())
                     else when (look.nav) {
@@ -210,6 +218,7 @@ private fun Root() {
             }
             Nav.daySheet?.let { d -> DaySheet(d) { Nav.daySheet = null } }
             UpdateDialog()
+            PetIntro()
             if (settings) SettingsSheet { settings = false }
         }
     }
@@ -234,10 +243,12 @@ private fun Overlays() {
 @Composable
 private fun Header(openSettings: () -> Unit) {
     Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
+        val pet = Pet.species != null && Pet.place == "top"
+        Column(if (pet) Modifier else Modifier.weight(1f)) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
+        if (pet) PetStage(Modifier.weight(1f).padding(horizontal = 6.dp), height = 50)
         Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("⚙", tint = P.muted, size = 22.dp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
         }
