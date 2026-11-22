@@ -67,9 +67,14 @@ import kotlin.math.roundToInt
 @Composable
 fun MoreScreen(openSettings: () -> Unit) {
     val stack = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    // A page opened from another tab (a shortcut) goes back to that tab; one opened here goes back to More.
+    var fromOutside by remember { mutableStateOf(false) }
     fun open(p: String) { stack.add(p) }
-    fun close() { if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex); if (stack.isEmpty()) Nav.back() }
-    Nav.morePage?.let { open(it); Nav.morePage = null }
+    fun close() {
+        if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+        if (stack.isEmpty() && fromOutside) { fromOutside = false; Nav.back() }
+    }
+    Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
         Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {

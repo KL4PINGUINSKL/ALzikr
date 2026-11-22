@@ -67,6 +67,8 @@ object Recitation {
         private set
     var loading by mutableStateOf(false)
         private set
+    /** How many full players are on screen now (the small bar hides while one is). */
+    var bars by mutableStateOf(0)
 
     private var player: MediaPlayer? = null
     private var played = 0

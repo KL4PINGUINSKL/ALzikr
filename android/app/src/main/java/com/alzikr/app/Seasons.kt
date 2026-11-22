@@ -226,7 +226,7 @@ fun SeasonsHome(open: (String) -> Unit) {
         item { Hint("seasons", "🌙", "لكل موسم: فضله، وأذكاره وأدعيته الثابتة، وأحكامه باختصار مع المصدر. تفتحها أيضًا بالضغط على المناسبة في التقويم.") }
         items(Seasons.all) { g ->
             Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { open(g.id) }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(g.icon, fontSize = 24.sp, modifier = Modifier.padding(end = 12.dp))
+                Glyph(g.icon, tint = P.accent, size = 28.dp, modifier = Modifier.padding(end = 12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(g.title, color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     Sub(g.about, size = 12.sp)
@@ -244,7 +244,7 @@ fun SeasonPage(id: String, open: (String) -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
             Panel(color = P.card, pad = 14.dp) {
-                Text("${g.icon} ${g.title}", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                GText("${g.icon} ${g.title}", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Sub(g.about, size = 13.sp)
             }
         }

@@ -442,7 +442,7 @@ fun SciencesHome(openBooks: (String, String) -> Unit, openAll: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { sc ->
                     Column(Modifier.weight(1f).clip(L.shape(16.dp)).background(P.surface).border(1.dp, P.line, L.shape(16.dp)).clickable { openBooks(sc.id, sc.name) }.padding(12.dp)) {
-                        Text(sc.icon, fontSize = 22.sp)
+                        Glyph(sc.icon, tint = P.accent, size = 26.dp)
                         Text(sc.name, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = L.head ?: L.body)
                         Text(sc.about, color = P.muted, fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }

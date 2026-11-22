@@ -286,6 +286,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
 @Composable
 private fun PlayerBar(chooseReciter: () -> Unit) {
     val ctx = LocalContext.current
+    androidx.compose.runtime.DisposableEffect(Unit) { Recitation.bars++; onDispose { Recitation.bars-- } }
     val (s, a) = Recitation.now ?: return
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -733,5 +734,28 @@ fun ReciterLine(modifier: Modifier = Modifier, onClick: () -> Unit) {
         Text("القارئ: ", color = P.muted, fontSize = 14.sp, modifier = Modifier.padding(start = 6.dp))
         Text(Recitation.reciterName(), color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         Text("تغيير ▾", color = P.accent, fontSize = 13.sp)
+    }
+}
+
+/** While a recitation plays and its page is closed: the verse, the surah, the reciter, pause and stop, at the bottom of every page. */
+@Composable
+fun MiniPlayer() {
+    val (s, a) = Recitation.now ?: return
+    if (Recitation.bars > 0) return
+    Column(Modifier.fillMaxWidth().background(P.surface)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
+        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Glyph("🎙", tint = P.accent, size = 22.dp)
+            Column(Modifier.weight(1f).padding(horizontal = 10.dp).clip(L.shape(8.dp)).clickable { Nav.overlayQuran = s to a }) {
+                Text("سورة ${Quran.surahs[s - 1].name} · الآية ${Quran.digits(a)}", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(if (Recitation.loading) "جارٍ التحميل…" else Recitation.reciterName() + if (Recitation.paused) " · متوقفة مؤقتًا" else "", color = P.muted, fontSize = 12.sp, maxLines = 1)
+            }
+            Box(Modifier.size(44.dp).clip(L.shape(12.dp)).background(P.accent).clickable { if (Recitation.paused) Recitation.resume() else Recitation.pause() }, contentAlignment = Alignment.Center) {
+                Glyph(if (Recitation.paused) "▶" else "⏸", tint = P.onAccent, size = 24.dp)
+            }
+            Box(Modifier.padding(start = 6.dp).size(44.dp).clip(L.shape(12.dp)).background(P.card).clickable { Recitation.stop() }, contentAlignment = Alignment.Center) {
+                Glyph("⏹", tint = P.ink, size = 24.dp)
+            }
+        }
     }
 }

@@ -185,6 +185,7 @@ private fun Root() {
                             else -> PrayerScreen(openSettings = { settings = true })
                         }
                     }
+                    MiniPlayer()
                     if (inPage) Spacer(Modifier.navigationBarsPadding())
                     else when (look.nav) {
                         NavStyle.BAR -> BottomBar()
