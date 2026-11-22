@@ -1,0 +1,88 @@
+<title>أصدقاء ALzikr الجدد</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Tajawal:wght@400;500;700&display=swap">
+<style>
+/* Layout: one column of species sections, each a wrapping grid of pickable animation tiles; a fixed tray at the bottom collects the picks. */
+:root {
+  --bg: #F3F6F3; --surface: #FFFFFF; --ink: #17261F; --muted: #5E6F66; --line: #D9E2DC;
+  --accent: #1F7A5A; --on-accent: #FFFFFF; --gold: #A57A1C; --pick: rgba(31,122,90,.12); --stage: #FFFFFF;
+  --display: "Noto Naskh Arabic", "Amiri", serif; --body: "Tajawal", "Segoe UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1512; --surface: #16211C; --ink: #E6EFE9; --muted: #93A69B; --line: #26352E;
+  --accent: #3FBF8F; --on-accent: #08130E; --gold: #D9B45A; --pick: rgba(63,191,143,.16); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E1512; --surface: #16211C; --ink: #E6EFE9; --muted: #93A69B; --line: #26352E;
+  --accent: #3FBF8F; --on-accent: #08130E; --gold: #D9B45A; --pick: rgba(63,191,143,.16); color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; }
+.wrap { direction: rtl; max-width: 1100px; margin: 0 auto; padding-block: 24px 120px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+header h1 { font-family: var(--display); font-size: 30px; margin: 0; text-wrap: balance; }
+header p { color: var(--muted); margin: 6px 0 0; max-width: 62ch; line-height: 1.7; }
+h2 { font-family: var(--display); font-size: 22px; margin: 0 0 12px; display: flex; align-items: baseline; gap: 8px; }
+h2 small, h3 { color: var(--gold); font-family: var(--body); font-size: 14px; font-weight: 500; }
+h3 { margin: 18px 0 8px; }
+.note { color: var(--muted); margin: -4px 0 12px; line-height: 1.6; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 8px 10px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; color: inherit; font: inherit; }
+.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card[aria-pressed="true"] { border-color: var(--accent); background: var(--pick); box-shadow: inset 0 0 0 1px var(--accent); }
+.pic { width: 100%; aspect-ratio: 1; max-width: 100%; border-radius: 10px; background: var(--stage); display: grid; place-items: center; overflow: hidden; }
+.pic img { width: 100%; height: 100%; object-fit: contain; }
+.lab { font-weight: 700; font-size: 15px; }
+.by { color: var(--muted); font-size: 11.5px; text-align: center; overflow-wrap: anywhere; }
+.tick { position: absolute; top: 6px; left: 6px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
+  display: none; place-items: center; font-weight: 700; }
+.card[aria-pressed="true"] .tick { display: grid; }
+.tray { position: fixed; inset: auto 0 0; z-index: 5; direction: rtl; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.tray-in { max-width: 1100px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+#picked { flex: 1 1 240px; min-width: 0; font-size: 14px; line-height: 1.6; user-select: all; }
+#picked:empty::before { content: "اضغط على الصور لاختيارها، ثم انسخ القائمة وأرسلها لي."; color: var(--muted); user-select: none; }
+.btn { border: 0; border-radius: 12px; padding: 9px 16px; font: inherit; font-weight: 700; cursor: pointer; background: var(--accent); color: var(--on-accent); }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+</style>
+<div class="wrap">
+  <header>
+    <h1>أصدقاء جدد لـ ALzikr</h1>
+    <p>رسوم متحركة مجانية من LottieFiles للبقرة وفرس النهر والفيل والزرافة، وتحتها أصدقاؤك الموجودون (%%NOLD%%). اختر ما يعجبك من الجديد ومن الموجود، ثم انسخ القائمة وأرسلها لي.</p>
+  </header>
+  %%NEW%%
+  <section><h2>أصدقاؤك الحاليون <small>%%NOLD%%</small></h2>
+    <p class="note">هذه الموجودة في التطبيق الآن. اختر منها ما تريد إضافة أشكال مثله، أو أخبرني بما تريد حذفه.</p>
+    %%OLD%%
+  </section>
+</div>
+<div class="tray"><div class="tray-in">
+  <div id="picked" aria-live="polite"></div>
+  <button class="btn" id="copy" type="button">نسخ القائمة</button>
+  <button class="btn ghost" id="clear" type="button">مسح</button>
+</div></div>
+<script>
+const K = 'alzikr-pets-pick-2';
+let picks = [];
+try { picks = JSON.parse(localStorage.getItem(K) || '[]'); } catch (e) {}
+const cards = [...document.querySelectorAll('.card')];
+function render() {
+  cards.forEach(c => c.setAttribute('aria-pressed', picks.includes(c.dataset.l)));
+  document.getElementById('picked').textContent = picks.join('، ');
+  try { localStorage.setItem(K, JSON.stringify(picks)); } catch (e) {}
+}
+cards.forEach(c => c.addEventListener('click', () => {
+  const l = c.dataset.l;
+  picks = picks.includes(l) ? picks.filter(x => x !== l) : [...picks, l];
+  render();
+}));
+document.getElementById('clear').addEventListener('click', () => { picks = []; render(); });
+document.getElementById('copy').addEventListener('click', e => {
+  const t = picks.join('، '), b = e.currentTarget;
+  const sel = () => { const r = document.createRange(); r.selectNodeContents(document.getElementById('picked')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+  try {
+    navigator.clipboard.writeText(t).then(() => { b.textContent = 'نُسخت ✓'; setTimeout(() => { b.textContent = 'نسخ القائمة'; }, 1500); }).catch(sel);
+  } catch (err) { sel(); }
+});
+render();
+</script>

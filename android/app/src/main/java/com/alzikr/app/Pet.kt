@@ -43,7 +43,7 @@ object Pet {
     /** Something good was just done: the friend hops and says so. */
     fun cheer(text: String = "ما شاء الله، أحسنت!") { sp.edit().putLong("pet_cheer_at", System.currentTimeMillis()).putString("pet_cheer", text).apply(); Store.bump() }
     fun cheerNow(): String? = sp.getString("pet_cheer", null)?.takeIf { System.currentTimeMillis() - sp.getLong("pet_cheer_at", 0) < 6000 }
-    fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة"; Species.COW -> "زهرة"; Species.ELEPHANT -> "فيلو"; Species.GIRAFFE -> "طويلة"; Species.BIRD -> "زقزوق" }
+    fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة"; Species.COW -> "زهرة"; Species.ELEPHANT -> "فيلو"; Species.GIRAFFE -> "طويلة"; Species.BIRD -> "زقزوق"; Species.BEAR -> "دبدوب"; Species.PANDA -> "بمبو" }
     /** For children: encouragement and lessons instead of reminders. */
     var kids: Boolean
         get() = Data.look == "kids" || sp.getBoolean("pet_kids", false)
