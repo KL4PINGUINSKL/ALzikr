@@ -58,7 +58,7 @@ fun AlarmPage() {
         @Suppress("UNUSED_VARIABLE") val r = resumed
         if (PrayerAlarm.anyOn() && !PrayerAlarm.canFullScreen(ctx))
             Panel(Modifier.clickable { PrayerAlarm.fullScreenSettings(ctx) }, color = P.danger.copy(alpha = .14f), pad = 12.dp) {
-                Text("⚠ اسمح للمنبه بالظهور على شاشة القفل", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                GText("⚠ اسمح للمنبه بالظهور على شاشة القفل", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 Sub("بدون هذا الإذن يرنّ المنبه لكن يظهر كإشعار فقط. اضغط هنا ثم فعّل «السماح».", size = 12.sp)
             }
         if (PrayerAlarm.anyOn() && !Alerts.canPost(ctx))

@@ -320,7 +320,7 @@ class AlarmActivity : ComponentActivity() {
                 val t = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalTime()
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(P.surface, P.bg))), contentAlignment = Alignment.Center) {
                     Column(Modifier.fillMaxWidth().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("⏰", fontSize = 48.sp)
+                        Glyph("⏰", tint = P.accent, size = 60.dp)
                         Text(Alerts.timeText(t.hour * 60 + t.minute), color = P.ink, fontSize = 76.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
                         Text(PrayerAlarm.title(p), color = P.gold, fontSize = 26.sp, fontWeight = FontWeight.SemiBold, fontFamily = L.head ?: L.body)
                         Text(PrayerAlarm.line(p), color = P.muted, fontSize = 17.sp, textAlign = TextAlign.Center)

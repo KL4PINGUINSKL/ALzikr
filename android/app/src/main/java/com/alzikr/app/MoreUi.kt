@@ -245,7 +245,7 @@ private fun QiblaCompass() {
                 // Fixed marker: the top of the phone.
                 drawLine(P_INK_MARK, Offset(c.x, 0f), Offset(c.x, 14.dp.toPx()), strokeWidth = 4.dp.toPx())
             }
-            Text("🕋", fontSize = 26.sp)
+            GText("🕋", fontSize = 26.sp)
         }
         Sub("القبلة ${qibla.roundToInt()}° من الشمال · وجّه أعلى الهاتف حتى يصل السهم إلى الأعلى", Modifier.fillMaxWidth(), size = 13.sp)
         if (accuracyLow) Sub("البوصلة تحتاج معايرة: حرّك الهاتف على شكل الرقم 8 عدة مرات، وابتعد عن المعادن والمغناطيس.", color = P.gold, size = 12.sp)

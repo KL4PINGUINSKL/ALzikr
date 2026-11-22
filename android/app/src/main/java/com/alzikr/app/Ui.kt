@@ -58,17 +58,17 @@ fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surfa
 }
 
 @Composable
-fun Title(text: String, modifier: Modifier = Modifier) = Text(text, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body, modifier = modifier)
+fun Title(text: String, modifier: Modifier = Modifier) = GText(text, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body, modifier = modifier)
 
 @Composable
-fun Sub(text: String, modifier: Modifier = Modifier, size: TextUnit = 13.sp, color: Color = P.muted) = Text(text, color = color, fontSize = size, modifier = modifier)
+fun Sub(text: String, modifier: Modifier = Modifier, size: TextUnit = 13.sp, color: Color = P.muted) = GText(text, color = color, fontSize = size, modifier = modifier)
 
 /** A selectable choice: rounded rectangle, filled when on. */
 @Composable
 fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val shape = L.shape(10.dp)
     Box(modifier.clip(shape).background(if (on) P.accent else P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, softWrap = false)
+        GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, softWrap = false)
     }
 }
 
@@ -78,7 +78,7 @@ fun Action(label: String, modifier: Modifier = Modifier, filled: Boolean = true,
     val shape = L.shape(14.dp)
     Box(modifier.clip(shape).background(if (filled) color else Color.Transparent).border(1.dp, if (filled) color else P.line, shape)
         .clickable(onClick = onClick).padding(horizontal = 18.dp, vertical = 12.dp), contentAlignment = Alignment.Center) {
-        Text(label, color = if (filled) P.onAccent else color, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        GText(label, color = if (filled) P.onAccent else color, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -167,8 +167,8 @@ fun Hint(id: String, icon: String, text: String, modifier: Modifier = Modifier) 
     val shape = L.shape(16.dp)
     Row(modifier.fillMaxWidth().clip(shape).background(P.accent.copy(alpha = .10f)).border(1.dp, P.accent.copy(alpha = .45f), shape).padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, fontSize = 22.sp)
-        Text(text, color = P.ink, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
+        Glyph(icon, tint = P.accent, size = 24.dp)
+        GText(text, color = P.ink, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
         Text("فهمت", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(10.dp)).clickable { Hints.dismiss(id) }.padding(horizontal = 10.dp, vertical = 8.dp))
     }
 }
@@ -181,7 +181,7 @@ fun UpdateBanner() {
     val ver = androidx.compose.runtime.remember(v) { AppUpdate.available(ctx) } ?: return
     Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.accent).clickable { (ctx as? android.app.Activity)?.let { AppUpdate.checkNow(it) } }
         .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("⬆", color = P.onAccent, fontSize = 18.sp)
+        GText("⬆", color = P.onAccent, fontSize = 18.sp)
         Text("يتوفر تحديث ALzikr $ver · اضغط للتحديث", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 10.dp))
     }
 }
@@ -192,7 +192,8 @@ fun Tile(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean
     val shape = L.shape(16.dp)
     Column(modifier.clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(icon, fontSize = 22.sp, color = if (on) P.onAccent else P.ink)
-        Text(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        Glyph(icon, tint = if (on) P.onAccent else P.accent, size = 26.dp)
+        androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
+        GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
     }
 }

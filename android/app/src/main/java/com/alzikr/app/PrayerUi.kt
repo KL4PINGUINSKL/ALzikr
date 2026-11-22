@@ -186,7 +186,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
                 .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("📌 إشعار دائم في قائمة الإشعارات", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    GText("📌 إشعار دائم في قائمة الإشعارات", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     Sub("الصلاة القادمة بعدّ تنازلي وزر «سبّح +١»، يبقى حتى تضغط «إخفاء»", size = 11.sp)
                 }
                 androidx.compose.material3.Switch(TasbihNotice.on, { TasbihNotice.on = it; TasbihNotice.update(ctx) })
@@ -200,7 +200,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             },
         )
         Home.order.filter { it !in Home.hidden }.forEach { parts[it]?.invoke() }
-        Text("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
+        GText("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
     }
     if (options) TimesOptions(openSettings) { options = false }
     if (editing) HomeEditor { editing = false }
@@ -358,7 +358,7 @@ private fun Bell(p: Prayer) {
     if (!p.alertable) return
     val on = Store.alert(p)
     val ctx = LocalContext.current
-    Text(if (on) "🔔" else "🔕", fontSize = 16.sp, color = if (on) P.ink else P.muted,
+    GText(if (on) "🔔" else "🔕", fontSize = 16.sp, color = if (on) P.ink else P.muted,
         modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.setAlert(p, !on); Alerts.reschedule(ctx) }.padding(horizontal = 8.dp, vertical = 2.dp))
 }
 

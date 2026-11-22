@@ -203,7 +203,7 @@ fun MomentCard() {
     val m = list.firstOrNull() ?: return
     Panel(Modifier.clickable { m.go() }, color = P.accent.copy(alpha = .12f), pad = 14.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(m.icon, fontSize = 26.sp)
+            Glyph(m.icon, tint = P.accent, size = 30.dp)
             Column(Modifier.weight(1f).padding(start = 10.dp)) {
                 Sub("ذكر الوقت" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold, size = 12.sp)
                 Text(m.title, color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)

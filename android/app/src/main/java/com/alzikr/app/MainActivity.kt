@@ -225,7 +225,7 @@ private fun Header(openSettings: () -> Unit) {
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
         Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
-            if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Text("⚙", color = P.muted, fontSize = 20.sp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
+            if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("⚙", tint = P.muted, size = 22.dp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
         }
     }
 }
@@ -235,7 +235,7 @@ private fun Header(openSettings: () -> Unit) {
 private fun SectionIcon(s: Section, on: Boolean, size: Int = 22) {
     val tint = if (on) P.accent else P.muted
     when (L.icons) {
-        IconStyle.GLYPH -> Text(s.glyph, fontSize = (size - 2).sp, color = tint)
+        IconStyle.GLYPH -> Glyph(s.glyph, tint = tint, size = size.dp)
         IconStyle.NONE -> {}
         else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = tint, modifier = Modifier.size(size.dp))
     }
@@ -306,7 +306,7 @@ private fun Dock() {
             val on = Nav.tab == s.id
             Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.go(s.id) }, contentAlignment = Alignment.Center) {
                 when (L.icons) {
-                    IconStyle.GLYPH, IconStyle.NONE -> Text(s.glyph, fontSize = 20.sp)
+                    IconStyle.GLYPH, IconStyle.NONE -> Glyph(s.glyph, tint = if (on) P.onAccent else P.muted, size = 24.dp)
                     else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = if (on) P.onAccent else P.muted, modifier = Modifier.size(24.dp))
                 }
             }

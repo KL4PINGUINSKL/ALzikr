@@ -173,7 +173,7 @@ private fun TasbihScreen() {
         }
         Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «على شاشة القفل»: زر «سبّح +١» في الإشعار يعمل دون فتح القفل.", size = 11.sp)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("📳", fontSize = 16.sp)
+            GText("📳", fontSize = 16.sp)
             Haptics.names.forEachIndexed { i, n -> Choice(n, Haptics.level == i) { Haptics.level = i; Haptics.tap(ctx) } }
         }
         Text("تصفير", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { Data.tasbihReset() }.padding(horizontal = 14.dp, vertical = 8.dp))

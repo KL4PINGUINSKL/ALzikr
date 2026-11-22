@@ -71,7 +71,7 @@ private fun copyText(c: Context, text: String) {
 /** A small rounded-rectangle label (grade, size…). */
 @Composable
 private fun Badge(text: String, color: androidx.compose.ui.graphics.Color) =
-    Text(text, color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(6.dp)).background(color.copy(alpha = .14f)).padding(horizontal = 8.dp, vertical = 3.dp))
+    GText(text, color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(6.dp)).background(color.copy(alpha = .14f)).padding(horizontal = 8.dp, vertical = 3.dp))
 
 // =============================================================================== explained hadith
 
@@ -267,7 +267,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
             item { Title("كتبي") }
             items(shelf, key = { "shelf" + it.id }) { b ->
                 Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { readingTitle = b.title; reading = b.id }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("📖", fontSize = 20.sp)
+                    GText("📖", fontSize = 20.sp)
                     Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                         Text(b.title, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Sub((if (Books.lastPage(b.id) > 0) "وصلت إلى الصفحة ${Books.lastPage(b.id) + 1} · " else "") + b.authors, size = 11.sp)

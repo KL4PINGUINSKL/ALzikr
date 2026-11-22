@@ -9,3 +9,7 @@
 - **Adhkar texts** (Content.kt): Hisn al-Muslim wording, typed without diacritics.
 - **Explained hadith** (fetched on request): HadeethEnc.com API (hadeethenc.com/api).
 - **Islamic books** (fetched on request): IslamHouse.com API; the books are theirs and are downloaded from their servers.
+
+## Icons
+
+Material Symbols Rounded by Google (https://github.com/google/material-design-icons), Apache License 2.0. Converted to Android vector drawables (`res/drawable/ms_*.xml`).

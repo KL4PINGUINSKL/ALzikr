@@ -77,7 +77,7 @@ fun HabitsList() {
                         }
                     }
                 }
-                if (h.streak > 1) Text("${h.streak} 🔥", color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                if (h.streak > 1) GText("${h.streak} 🔥", color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         }
         item { Sub("اضغط لتسجيل اليوم، واضغط مطولًا للحذف.", Modifier.padding(6.dp), size = 12.sp) }
@@ -139,7 +139,7 @@ fun KhatmaPage() {
             Sub("${(page * 100 / Data.PAGES)}% · بقي ${Data.PAGES - page} صفحة" + if (page < Data.PAGES) " · تختم يوم ${end.dayOfMonth}/${end.monthValue} (بعد ${Data.daysLeft()} يومًا)" else "", Modifier.padding(top = 6.dp), size = 12.sp)
         }
         if (page >= Data.PAGES) {
-            Text("ختمت القرآن، تقبّل الله منك 🌙", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            GText("ختمت القرآن، تقبّل الله منك 🌙", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Action("ابدأ ختمة جديدة", Modifier.fillMaxWidth()) { Data.newKhatma() }
         } else {
             Sub("سجّل ما قرأت خارج وضع القراءة")

@@ -283,7 +283,7 @@ fun ReadingShell(
             Text("−", color = ink, fontSize = 20.sp, modifier = Modifier.clip(RoundedCornerShape(50)).clickable { Reading.speed = speed - 1 }.padding(horizontal = 14.dp, vertical = 6.dp))
             Text("السرعة ${Quran.digits(speed)}", color = ink, fontSize = 13.sp)
             Text("+", color = ink, fontSize = 20.sp, modifier = Modifier.clip(RoundedCornerShape(50)).clickable { Reading.speed = speed + 1 }.padding(horizontal = 14.dp, vertical = 6.dp))
-            Text("⏸", color = ink, fontSize = 16.sp, modifier = Modifier.clip(RoundedCornerShape(50)).clickable { auto = false }.padding(horizontal = 12.dp, vertical = 6.dp))
+            GText("⏸", color = ink, fontSize = 16.sp, modifier = Modifier.clip(RoundedCornerShape(50)).clickable { auto = false }.padding(horizontal = 12.dp, vertical = 6.dp))
         }
     }
     if (sheet) ModalBottomSheet(onDismissRequest = { sheet = false }, containerColor = P.surface) {
@@ -562,7 +562,7 @@ fun WirdReader(back: () -> Unit) {
         }
         if (plan == null) {
             Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("ختمت القرآن، تقبّل الله منك 🌙", color = acc, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                GText("ختمت القرآن، تقبّل الله منك 🌙", color = acc, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Text("ابدأ ختمة جديدة من صفحة الختمة في «يومي».", color = muted, fontSize = 15.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
             }
             return@Column

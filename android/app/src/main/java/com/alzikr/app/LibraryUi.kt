@@ -112,7 +112,7 @@ private fun QuranHome() {
         item {
             val (ls, la) = Quran.last ?: (1 to 1)
             Panel(Modifier.clickable { Nav.reading = ls to la }, color = P.accent.copy(alpha = .10f)) {
-                Text("📜 وضع القراءة", color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
+                GText("📜 وضع القراءة", color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
                 Sub("صفحات كاملة بلون ورق مريح وخط كبير، دون أزرار تشغلك، وتتابع من حيث توقفت. ورد اليوم: ${Quran.digits(Reading.todayPages())} من ${Quran.digits(Reading.goal)} صفحات · الختمة ${Quran.digits(Reading.far * 100 / 604)}٪", size = 12.sp)
             }
         }
@@ -382,7 +382,7 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
             Recitation.now?.takeIf { inContext != null }?.let { (ps, pa) ->
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.accent.copy(alpha = .12f)).padding(horizontal = 10.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(if (Recitation.loading) "⏳ جارٍ التحميل…" else "🎙 ${Quran.surahs[ps - 1].name} ${Quran.digits(pa)}", color = P.ink, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                    GText(if (Recitation.loading) "⏳ جارٍ التحميل…" else "🎙 ${Quran.surahs[ps - 1].name} ${Quran.digits(pa)}", color = P.ink, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
                     Choice(if (Recitation.paused) "▶ متابعة" else "⏸ إيقاف مؤقت", false) { if (Recitation.paused) Recitation.resume() else Recitation.pause() }
                     Choice("■ إنهاء", false) { Recitation.stop() }
                 }
@@ -390,7 +390,7 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
 
             // The tafsir, right under the verse.
             Row(Modifier.fillMaxWidth().padding(top = 12.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("📖 التفسير:", color = P.muted, fontSize = 13.sp)
+                GText("📖 التفسير:", color = P.muted, fontSize = 13.sp)
                 Tafsir.books.forEach { b -> Choice(b.name, sel == b.id) { Tafsir.selected = b.id } }
             }
             Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
@@ -680,7 +680,7 @@ fun DailyWords() {
             Sub("حديث اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
             Text(e.title, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = 28.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 4.dp))
             Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                GText("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.weight(1f))
                 Choice("🔀 حديث آخر", false) { Data.nextDaily("hadith") }
             }
         }
@@ -701,7 +701,7 @@ fun DailyWords() {
 fun SearchBar(text: String, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp)).clickable(onClick = onClick)
         .padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("🔍", fontSize = 18.sp)
+        GText("🔍", fontSize = 18.sp)
         Text(text, color = P.muted, fontSize = 15.sp, modifier = Modifier.padding(start = 10.dp))
     }
 }
@@ -729,7 +729,7 @@ fun ReciterLine(modifier: Modifier = Modifier, onClick: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     Row(modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Text("🎙", fontSize = 16.sp)
+        GText("🎙", fontSize = 16.sp)
         Text("القارئ: ", color = P.muted, fontSize = 14.sp, modifier = Modifier.padding(start = 6.dp))
         Text(Recitation.reciterName(), color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         Text("تغيير ▾", color = P.accent, fontSize = 13.sp)

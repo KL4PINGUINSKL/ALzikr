@@ -151,7 +151,7 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
 @Composable
 private fun Line(icon: String, title: String, sub: String, right: @Composable () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, fontSize = 20.sp, modifier = Modifier.width(36.dp))
+        androidx.compose.foundation.layout.Box(Modifier.width(36.dp)) { Glyph(icon, tint = P.accent, size = 22.dp) }
         Column(Modifier.weight(1f)) {
             Text(title, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
             Sub(sub, size = 12.sp)
