@@ -54,6 +54,9 @@ object Moments {
         val counts = Data.colCounts(c.id)
         return c.items.indices.all { counts[it] >= c.items[it].count }
     }
+    /** Undo every «✓ أتممته» of today. */
+    fun undoDone() { Store.prefs.edit().remove("moment_done").apply(); Store.bump() }
+    fun anyMarked() = Store.prefs.getStringSet("moment_done", emptySet())!!.any { it.startsWith(day().toString()) }
     fun markDone(m: Moment) {
         val today = day().toString()
         val keep = Store.prefs.getStringSet("moment_done", emptySet())!!.filter { it.startsWith(today) || it.startsWith(LocalDate.now().toString()) }.toSet()
@@ -200,7 +203,11 @@ fun MomentCard() {
     var tick by remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) { while (true) { delay(60_000); tick++ } }
     val list = remember(tick, v) { Moments.now().filterNot { Moments.done(it) } }
-    val m = list.firstOrNull() ?: return
+    val m = list.firstOrNull() ?: run {
+        if (Moments.anyMarked()) Text("أتممت ذكر الوقت ✓ · إظهاره من جديد", color = P.muted, fontSize = 13.sp,
+            modifier = Modifier.clip(L.shape(10.dp)).clickable { Moments.undoDone() }.padding(8.dp))
+        return
+    }
     Panel(Modifier.clickable { m.go() }, color = P.accent.copy(alpha = .12f), pad = 14.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Glyph(m.icon, tint = P.accent, size = 30.dp)

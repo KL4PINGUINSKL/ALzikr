@@ -61,6 +61,14 @@ fun warmStates() {
 }
 
 class MainActivity : ComponentActivity() {
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        val tap = Nav.volumeTap
+        if (tap != null && (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP || keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN)) {
+            if (event?.repeatCount == 0) tap()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Store.init(this)

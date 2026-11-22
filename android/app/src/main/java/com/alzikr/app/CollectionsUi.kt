@@ -1,4 +1,11 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 package com.alzikr.app
+
+import androidx.compose.ui.input.pointer.pointerInput
+
+import androidx.compose.foundation.gestures.detectDragGestures
+
+import androidx.compose.foundation.combinedClickable
 
 import androidx.compose.foundation.layout.heightIn
 
@@ -126,12 +133,20 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
     fun nextOpen(from: Int) = (from + 1 until c.items.size).firstOrNull { Data.colCounts(c.id)[it] < c.items[it].count }
         ?: (0 until c.items.size).firstOrNull { Data.colCounts(c.id)[it] < c.items[it].count } ?: c.items.size
     fun tap() {
-        if (cur !in c.items.indices || finished(cur)) return
+        if (cur !in c.items.indices || Data.colCounts(c.id)[cur] >= c.items[cur].count) return
         val after = Data.colTap(c.id, cur)[cur]
         val now = after >= c.items[cur].count
         Haptics.tap(ctx, now)
         if (now) { val at = cur; scope.launch { kotlinx.coroutines.delay(450); if (cur == at) cur = nextOpen(at) } }
     }
+    // The volume keys count too, and the screen stays on while reading.
+    androidx.compose.runtime.DisposableEffect(c.id) {
+        Nav.volumeTap = { tap() }
+        val w = (ctx as? android.app.Activity)?.window
+        w?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose { Nav.volumeTap = null; w?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+    }
+    val swipe = with(androidx.compose.ui.platform.LocalDensity.current) { 56.dp.toPx() }
     Subpage(c.title, back) {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             // Where you are.
@@ -144,6 +159,7 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
                 Box(Modifier.fillMaxWidth(done.toFloat() / c.items.size).height(5.dp).clip(RoundedCornerShape(3.dp)).background(if (done == c.items.size) P.gold else P.accent))
             }
             if (whole) { Box(Modifier.weight(1f)) { CollectionList(c, cur) { cur = it } }; return@Column }
+            Hint("dhikr_focus", "👆", "اسحب على الذكر للأعلى أو نحو اليمين للتالي، وللأسفل أو نحو اليسار للسابق. تعدّ بالضغط عليه أو بأزرار الصوت. ضغطة مطوّلة تنسخه. و«أعد قراءته» يجعله غير منجز.", Modifier.padding(top = 8.dp))
 
             // The one before (done ✓), small.
             val prev = (cur - 1).takeIf { it >= 0 }
@@ -155,7 +171,14 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
             }
 
             // The current one, in the middle.
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(Modifier.weight(1f).fillMaxWidth().pointerInput(c.id) {
+                var dx = 0f; var dy = 0f
+                detectDragGestures(onDragStart = { dx = 0f; dy = 0f }, onDragEnd = {
+                    val next = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) (if (dx > swipe) 1 else if (dx < -swipe) -1 else 0) else (if (dy < -swipe) 1 else if (dy > swipe) -1 else 0)
+                    if (next == 1 && cur < c.items.size) cur += 1
+                    if (next == -1 && cur > 0) cur -= 1
+                }) { change, d -> change.consume(); dx += d.x; dy += d.y }
+            }, contentAlignment = Alignment.Center) {
                 androidx.compose.animation.AnimatedContent(cur, transitionSpec = {
                     (androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn()) togetherWith
                         (androidx.compose.animation.slideOutVertically { -it / 3 } + androidx.compose.animation.fadeOut())
@@ -168,12 +191,19 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
                         val item = c.items[i]; val n = Data.colCounts(c.id)[i]; val fin = n >= item.count
                         Column(Modifier.fillMaxWidth().heightIn(max = 520.dp).clip(L.shape(22.dp)).background(if (fin) P.surface else P.card)
                             .border(2.dp, if (fin) P.gold.copy(alpha = .6f) else P.accent.copy(alpha = .7f), L.shape(22.dp))
-                            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) { tap() }
-                            .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            .combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
+                                onLongClick = { copy(ctx, item.text) }) { tap() }
+                            .then(if (item.text.length > 380) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                            .padding(horizontal = 20.dp, vertical = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 10.dp))
                             Text(item.text, color = if (fin) P.muted else P.ink, fontSize = (21 * Data.textScale).sp, lineHeight = (36 * Data.textScale).sp,
                                 fontFamily = Fonts.naskh, textAlign = TextAlign.Center)
                             Sub(if (item.count > 1) "يُقال ${item.count} مرات" else "يُقال مرة واحدة", Modifier.padding(top = 12.dp), size = 12.sp)
+                            // Done by mistake, or to read it again.
+                            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (fin) Choice("↺ أعد قراءته (غير منجز)", false) { Data.colSet(c.id, i, 0) }
+                                else if (n > 0) Choice("− تراجع عن عدّة", false) { Data.colSet(c.id, i, n - 1) }
+                            }
                         }
                     }
                 }
@@ -224,7 +254,8 @@ private fun CollectionList(c: Collection, focus: Int, pick: (Int) -> Unit) {
                     val n = counts[i]; val finished = n >= item.count
                     Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(if (finished) P.surface else if (i == focus) P.accent.copy(alpha = .12f) else P.card)
                         .border(if (i == focus) 2.dp else 1.dp, if (finished) P.line else if (i == focus) P.accent else P.line, L.shape(18.dp))
-                        .clickable(enabled = !finished) {
+                        .combinedClickable(onLongClick = { if (finished) Data.colSet(c.id, i, 0) }) {
+                            if (finished) return@combinedClickable
                             pick(i)
                             val after = Data.colTap(c.id, i)[i]
                             val now = after >= item.count
@@ -238,6 +269,7 @@ private fun CollectionList(c: Collection, focus: Int, pick: (Int) -> Unit) {
                             Box(Modifier.clip(L.shape(10.dp)).background(if (finished) P.gold.copy(alpha = .2f) else P.accent).padding(horizontal = 14.dp, vertical = 6.dp)) {
                                 Text(if (finished) "✓" else "${n} / ${item.count}", color = if (finished) P.gold else P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
+                            if (finished) Text("↺", color = P.accent, fontSize = 18.sp, modifier = Modifier.padding(start = 6.dp).clip(L.shape(8.dp)).clickable { Data.colSet(c.id, i, 0) }.padding(horizontal = 8.dp, vertical = 2.dp))
                         }
                     }
                 }

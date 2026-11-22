@@ -25,12 +25,20 @@ import androidx.compose.runtime.setValue
  * foreground service keeps it playing with the screen off and shows pause / stop.
  */
 object Recitation {
-    data class Reciter(val folder: String, val name: String)
+    /** style: 0 murattal, 1 mujawwad, 2 teaching (for memorizing). */
+    data class Reciter(val folder: String, val name: String, val style: Int = 0)
+    val styles = listOf("مرتّل", "مجوّد", "معلّم (للتحفيظ)")
     val reciters = listOf(
         Reciter("Alafasy_128kbps", "مشاري العفاسي"),
         Reciter("Abdul_Basit_Murattal_192kbps", "عبد الباسط عبد الصمد (مرتل)"),
         Reciter("Husary_128kbps", "محمود خليل الحصري"),
-        Reciter("Husary_Muallim_128kbps", "الحصري (المعلّم، للتحفيظ)"),
+        Reciter("Husary_Muallim_128kbps", "محمود خليل الحصري (المعلّم)", 2),
+        Reciter("Minshawy_Teacher_128kbps", "محمد صديق المنشاوي (المعلّم)", 2),
+        Reciter("Minshawy_Mujawwad_192kbps", "محمد صديق المنشاوي (مجوّد)", 1),
+        Reciter("Abdul_Basit_Mujawwad_128kbps", "عبد الباسط عبد الصمد (مجوّد)", 1),
+        Reciter("Husary_128kbps_Mujawwad", "محمود خليل الحصري (مجوّد)", 1),
+        Reciter("Mohammad_al_Tablaway_128kbps", "محمد محمود الطبلاوي", 1),
+        Reciter("Mahmoud_Ali_Al_Banna_32kbps", "محمود علي البنا", 1),
         Reciter("Minshawy_Murattal_128kbps", "محمد صديق المنشاوي (مرتل)"),
         Reciter("MaherAlMuaiqly128kbps", "ماهر المعيقلي"),
         Reciter("Abdurrahmaan_As-Sudais_192kbps", "عبد الرحمن السديس"),
@@ -40,6 +48,22 @@ object Recitation {
         Reciter("Nasser_Alqatami_128kbps", "ناصر القطامي"),
         Reciter("Abu_Bakr_Ash-Shaatree_128kbps", "أبو بكر الشاطري"),
         Reciter("Hudhaify_128kbps", "علي الحذيفي"),
+        Reciter("Muhammad_Ayyoub_128kbps", "محمد أيوب"),
+        Reciter("Muhammad_Jibreel_128kbps", "محمد جبريل"),
+        Reciter("Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net", "أحمد بن علي العجمي"),
+        Reciter("Fares_Abbad_64kbps", "فارس عباد"),
+        Reciter("Hani_Rifai_192kbps", "هاني الرفاعي"),
+        Reciter("Ali_Jaber_64kbps", "علي جابر"),
+        Reciter("Abdullah_Basfar_192kbps", "عبد الله بصفر"),
+        Reciter("Salah_Al_Budair_128kbps", "صلاح البدير"),
+        Reciter("Khaalid_Abdullaah_al-Qahtaanee_192kbps", "خالد القحطاني"),
+        Reciter("Abdullaah_3awwaad_Al-Juhaynee_128kbps", "عبد الله الجهني"),
+        Reciter("Muhsin_Al_Qasim_192kbps", "محسن القاسم"),
+        Reciter("Salaah_AbdulRahman_Bukhatir_128kbps", "صلاح بو خاطر"),
+        Reciter("Abdullah_Matroud_128kbps", "عبد الله المطرود"),
+        Reciter("Ibrahim_Akhdar_32kbps", "إبراهيم الأخضر"),
+        Reciter("Yaser_Salamah_128kbps", "ياسر سلامة"),
+        Reciter("Akram_AlAlaqimy_128kbps", "أكرم العلاقمي"),
     )
 
     var reciter: String

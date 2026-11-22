@@ -30,6 +30,8 @@ object Nav {
     var prayerSheet by mutableStateOf<Prayer?>(null)
     /** Today's wird: its mushaf pages on black, full screen. */
     var wird by mutableStateOf(false)
+    /** The counter on screen now (adhkar): the volume keys tap it. */
+    var volumeTap: (() -> Unit)? = null
     /** Inner pages open now (innermost last). While any is open the app header and the tab bar hide. */
     val pages = mutableStateListOf<Any>()
     /** Pages opened on top of the current tab (back returns to it): an explained hadith, a book hadith, a verse. */

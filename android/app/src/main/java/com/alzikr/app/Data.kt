@@ -118,6 +118,12 @@ object Data {
         return c
     }
     fun colReset(id: String) = edit { remove("col_${id}_${today()}") }
+    /** One dhikr's count today (0 = read it again; one less = undo a tap). */
+    fun colSet(id: String, index: Int, n: Int) {
+        val c = colCounts(id)
+        if (index in c.indices) c[index] = n.coerceAtLeast(0)
+        edit { putString("col_${id}_${today()}", JSONArray(c.toList()).toString()) }
+    }
     fun colDone(id: String): Boolean {
         val items = Content.collection(id)?.items ?: return false
         val c = colCounts(id)

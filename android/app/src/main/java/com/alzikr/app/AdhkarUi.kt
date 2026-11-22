@@ -67,6 +67,7 @@ fun WirdList() {
         if (reached) Store.adhkar().firstOrNull { !it.done && it.target > 0 }?.let { selected = it.id }
     }
 
+    androidx.compose.runtime.DisposableEffect(current?.id) { Nav.volumeTap = { tap() }; onDispose { Nav.volumeTap = null } }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Hint("wird", "📿", "اختر ذكرًا من القائمة، ثم اضغط على البطاقة الكبيرة لتعدّ. اضغط مطولًا على ذكر لتعديله. وفي «الأذكار» تجد أذكار الصباح والمساء كاملة.") }
         item {
@@ -90,7 +91,10 @@ fun WirdList() {
                     Counter(current.today, current.target, current.done,
                         if (current.target > 0) (if (current.done) "تم ✓ من ${current.target}" else "من ${current.target}") else "تسبيح حر", 190.dp)
                 }
-                Sub("اضغط في أي مكان هنا للعدّ", Modifier.fillMaxWidth(), size = 12.sp)
+                Sub("اضغط في أي مكان هنا للعدّ، أو بأزرار الصوت", Modifier.fillMaxWidth(), size = 12.sp)
+                if (current.today > 0) Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.Center) {
+                    Choice(if (current.done) "↺ أعد قراءته (غير منجز)" else "↺ تصفير", false) { Store.resetToday(current.id) }
+                }
             }
         }
         items(list, key = { it.id }) { z ->

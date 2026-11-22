@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private fun share(c: Context, text: String) = c.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "مشاركة"))
-private fun copy(c: Context, text: String) {
+internal fun copy(c: Context, text: String) {
     c.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("ALzikr", text))
     Toast.makeText(c, "نُسخ", Toast.LENGTH_SHORT).show()
 }
@@ -317,7 +317,9 @@ internal fun ReciterDialog(close: () -> Unit) {
         title = { Text("اختر القارئ", color = P.ink) },
         text = {
             LazyColumn(Modifier.heightIn(max = 440.dp)) {
-                items(Recitation.reciters) { r ->
+                Recitation.styles.forEachIndexed { st, label ->
+                item { Text(label, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = if (st == 0) 0.dp else 12.dp, bottom = 4.dp, start = 4.dp)) }
+                items(Recitation.reciters.filter { it.style == st }) { r ->
                     val on = r.folder == Recitation.reciter
                     Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .12f) else P.surface).clickable {
                         Recitation.reciter = r.folder; close()
@@ -326,6 +328,7 @@ internal fun ReciterDialog(close: () -> Unit) {
                         Text(r.name, color = if (on) P.accent else P.ink, fontSize = 16.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.weight(1f))
                         if (on) Text("✓", color = P.accent, fontWeight = FontWeight.Bold)
                     }
+                }
                 }
                 item {
                     Text("مدى القراءة", color = P.ink, fontSize = 14.sp, modifier = Modifier.padding(top = 10.dp))
