@@ -94,6 +94,7 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "hifz" -> HifzPage()
                 "pet" -> PetPage()
                 "kids" -> KidsPage()
+                "pettest" -> PetLooksTest()
                 "world" -> WorldClockPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> if (p.startsWith("season:")) {
