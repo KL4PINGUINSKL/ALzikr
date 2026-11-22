@@ -30,6 +30,8 @@ object Nav {
     var prayerSheet by mutableStateOf<Prayer?>(null)
     /** Today's wird: its mushaf pages on black, full screen. */
     var wird by mutableStateOf(false)
+    /** A day's card (virtue and sunan), over any page. */
+    var daySheet by mutableStateOf<java.time.LocalDate?>(null)
     /** The counter on screen now (adhkar): the volume keys tap it. */
     var volumeTap: (() -> Unit)? = null
     /** Inner pages open now (innermost last). While any is open the app header and the tab bar hide. */

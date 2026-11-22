@@ -182,7 +182,13 @@ fun SettingsSheet(close: () -> Unit) {
                         listOf(0 to "إيقاف", 1 to "كل ساعة", 2 to "كل ساعتين", 3 to "كل 3 ساعات").forEach { (n, l) -> Choice(l, Data.salawatEvery == n) { Data.salawatEvery = n; reschedule() } }
                     }
                     SettingRow("سورة الكهف يوم الجمعة", "تذكير الساعة 10 صباحًا") { Switch(Data.kahf, { Data.kahf = it; reschedule() }) }
-                    SettingRow("صيام التطوع", "مساء الأحد والأربعاء، وقبل الأيام البيض") { Switch(Data.fastReminder, { Data.fastReminder = it; reschedule() }) }
+                    SettingRow("تنبيه المناسبة القادمة", "مساء قبل الجمعة والاثنين والخميس والأيام البيض وعرفة والعيدين وعاشوراء ورمضان…") { Switch(Data.fastReminder, { Data.fastReminder = it; reschedule() }) }
+                    if (Data.fastReminder) Row(Modifier.padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Sub("وقته:")
+                        Choice("⏰ " + Alerts.timeText(DayInfo.eveAt), true) {
+                            android.app.TimePickerDialog(ctx, { _, hh, mm -> DayInfo.eveAt = hh * 60 + mm; reschedule() }, DayInfo.eveAt / 60, DayInfo.eveAt % 60, android.text.format.DateFormat.is24HourFormat(ctx)).show()
+                        }
+                    }
                     Sub("السحور في رمضان، قبل الفجر بـ", Modifier.padding(top = 6.dp, bottom = 6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(0 to "إيقاف", 30 to "30 د", 45 to "45 د", 60 to "ساعة").forEach { (n, l) -> Choice(l, Data.suhoorBefore == n) { Data.suhoorBefore = n; reschedule() } }

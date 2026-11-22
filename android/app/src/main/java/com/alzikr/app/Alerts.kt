@@ -67,7 +67,7 @@ object Alerts {
             if (Data.khatmaRemindAt >= 0 && Data.khatmaPage < Data.PAGES) list += Event(epoch(date, Data.khatmaRemindAt), Kind.KHATMA, Prayer.DHUHR)
             if (Data.salawatEvery > 0) for (m in 9 * 60..21 * 60 step Data.salawatEvery * 60) list += Event(epoch(date, m), Kind.DHIKR, Prayer.DHUHR)
             if (Data.kahf && date.dayOfWeek == java.time.DayOfWeek.FRIDAY) list += Event(epoch(date, 10 * 60), Kind.KAHF, Prayer.DHUHR)
-            if (Data.fastReminder && Data.isFastingEve(date) != null) list += Event(epoch(date, 20 * 60 + 30), Kind.FAST, Prayer.ISHA)
+            if (Data.fastReminder && DayInfo.of(date.plusDays(1)) != null) list += Event(epoch(date, DayInfo.eveAt), Kind.FAST, Prayer.ISHA)
             if (Data.suhoorBefore > 0 && Data.hijri(date).month == 9) list += Event(epoch(date, t.getValue(Prayer.FAJR) - Data.suhoorBefore), Kind.SUHOOR, Prayer.FAJR)
         }
         return list.sortedBy { it.at }
@@ -168,7 +168,15 @@ object Alerts {
             Kind.DHIKR -> Content.reminders[(System.currentTimeMillis() / 3_600_000L % Content.reminders.size).toInt()].let { z ->
                 Notification.Builder(c, CH_REMIND).setContentTitle("ذكر").setContentText(z).setContentIntent(open(c, "adhkar")).setTimeoutAfter(50 * 60_000L) }
             Kind.KAHF -> Notification.Builder(c, CH_REMIND).setContentTitle("يوم الجمعة").setContentText("قراءة سورة الكهف، والإكثار من الصلاة على النبي ﷺ").setContentIntent(open(c, "adhkar"))
-            Kind.FAST -> Notification.Builder(c, CH_REMIND).setContentTitle("تذكير بالصيام").setContentText((Data.isFastingEve(LocalDate.now()) ?: "غدًا") + ": صيام تطوع إن تيسر").setContentIntent(open(c, "more"))
+            Kind.FAST -> {
+                val d = LocalDate.now().plusDays(1)
+                val card = DayInfo.of(d)
+                val body = card?.parts?.joinToString("\n") { p -> "• " + p.name + ": " + (p.sunan.firstOrNull()?.text ?: "") } ?: ""
+                val tap = PendingIntent.getActivity(c, 77, Intent(c, MainActivity::class.java).putExtra("tab", "prayer").putExtra("day", d.toString()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                Notification.Builder(c, CH_REMIND).setContentTitle("غدًا " + (card?.title ?: "")).setContentText((card?.let { DayInfo.line(it) } ?: "") + " · اضغط لفضله وسننه")
+                    .setStyle(Notification.BigTextStyle().bigText(body + "\nاضغط لفضله وسننه كاملة")).setContentIntent(tap)
+            }
             Kind.SUHOOR -> Notification.Builder(c, CH_REMIND).setContentTitle("السحور").setContentText("الفجر بعد ${Data.suhoorBefore} دقيقة · تسحروا فإن في السحور بركة").setContentIntent(open(c, "prayer"))
         }
         b.setSmallIcon(R.drawable.ic_stat_zikr).setAutoCancel(true).setColor(0xFF1F7A5A.toInt())

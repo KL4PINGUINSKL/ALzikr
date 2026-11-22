@@ -143,6 +143,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             }
             },
             "moment" to { MomentCard() },
+            "tomorrow" to { TomorrowCard { Nav.daySheet = it } },
             "tiles" to { HomeShortcuts() },
             "times" to {
             // Today's times, in the chosen view.

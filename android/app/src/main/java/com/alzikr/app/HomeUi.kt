@@ -127,7 +127,7 @@ object Moments {
         // Monday and Thursday fasts: on the eve, and on the day.
         val tomorrow = date.plusDays(1).dayOfWeek
         if (h.month != 9 && min >= maghrib && (tomorrow == DayOfWeek.MONDAY || tomorrow == DayOfWeek.THURSDAY))
-            out += Moment("🍽", "غدًا ${if (tomorrow == DayOfWeek.MONDAY) "الاثنين" else "الخميس"}: صيام سنة", "«تُعرض الأعمال يوم الاثنين والخميس، فأحب أن يُعرض عملي وأنا صائم». وتسحّر فإن في السحور بركة.", "الترمذي، وصححه الألباني؛ والسحور في البخاري ومسلم", "أذكار المساء", "evening")
+            out += Moment("🍽", "غدًا ${if (tomorrow == DayOfWeek.MONDAY) "الاثنين" else "الخميس"}: صيام سنة", "«تُعرض الأعمال يوم الاثنين والخميس، فأحب أن يُعرض عملي وأنا صائم». وتسحّر فإن في السحور بركة.", "الترمذي، وصححه الألباني؛ والسحور في البخاري ومسلم", "فضل الغد وسننه") { Nav.daySheet = date.plusDays(1) }
         val d = day().toString()
         return out.distinctBy { it.title }.onEach { it.key = d + "|" + it.title }
     }
@@ -139,6 +139,7 @@ object Home {
     val parts = listOf(
         Part("next", "الصلاة القادمة والعدّ التنازلي"),
         Part("moment", "ذكر الوقت (الصباح، المساء، النوم، الكهف…)"),
+        Part("tomorrow", "المناسبة القادمة (غدًا الجمعة، الاثنين، الأيام البيض…)"),
         Part("tiles", "الاختصارات"),
         Part("times", "مواقيت اليوم"),
         Part("extra", "الإمساك والضحى ومنتصف الليل"),
@@ -176,7 +177,14 @@ object Home {
     var order: List<String>
         get() {
             val saved = Store.prefs.getString("home_order", null)?.split(',')?.filter { id -> parts.any { it.id == id } } ?: emptyList()
-            return saved + parts.map { it.id }.filter { it !in saved }
+            val out = saved.toMutableList()
+            parts.map { it.id }.filter { it !in saved }.forEach { id ->
+                // A new part goes where it belongs (after the one before it in the default order).
+                val before = parts.map { it.id }.let { all -> all.getOrNull(all.indexOf(id) - 1) }
+                val at = out.indexOf(before)
+                if (at >= 0) out.add(at + 1, id) else out += id
+            }
+            return out
         }
         set(v) { Store.prefs.edit().putString("home_order", v.joinToString(",")).apply(); Store.bump() }
     var hidden: Set<String>
