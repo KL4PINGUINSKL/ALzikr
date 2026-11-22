@@ -32,6 +32,9 @@
         <activity android:name=".TasbihDarkActivity" android:exported="false" android:showWhenLocked="true" android:turnScreenOn="true"
             android:excludeFromRecents="true" android:taskAffinity="com.alzikr.app.tasbih" android:launchMode="singleTask"
             android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="com.alzikr.app.files" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
         <receiver android:name=".AlertReceiver" android:exported="false" />
         <receiver android:name=".AlarmReceiver" android:exported="false" />
         <service android:name=".AlarmService" android:exported="false" android:foregroundServiceType="mediaPlayback" />

@@ -87,6 +87,13 @@ object Data {
         if (on) set += p.name else set -= p.name
         edit { putStringSet("log_$date", set) }
     }
+    /** Extra worship of a day: r_<PRAYER> (its rawatib), witr, duha, qiyam, fast. */
+    fun extra(date: LocalDate, key: String) = sp.getStringSet("extra_$date", emptySet())!!.contains(key)
+    fun setExtra(date: LocalDate, key: String, on: Boolean) {
+        val set = sp.getStringSet("extra_$date", emptySet())!!.toMutableSet()
+        if (on) set += key else set -= key
+        edit { putStringSet("extra_$date", set) }
+    }
     /** (prayed, possible) over the last 7 days including today, counting only prayers whose time has come. */
     fun week(): Pair<Int, Int> {
         var done = 0; var total = 0

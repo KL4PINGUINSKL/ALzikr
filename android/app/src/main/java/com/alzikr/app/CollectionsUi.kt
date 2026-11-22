@@ -63,9 +63,10 @@ import kotlinx.coroutines.launch
 fun AdhkarScreen(openCollection: String? = null) {
     var section by rememberSaveable { mutableStateOf(if (openCollection != null) 1 else 0) }
     var reading by rememberSaveable { mutableStateOf(openCollection) }
+    var readAt by rememberSaveable { mutableStateOf(-1) }
     Nav.adhkar?.let { section = it; reading = null; Nav.adhkar = null }
-    Nav.collection?.let { section = 1; reading = it; Nav.collection = null }
-    reading?.let { id -> Content.collection(id)?.let { CollectionReader(it) { reading = null }; return } }
+    Nav.collection?.let { section = 1; reading = it; readAt = -1; Nav.collection = null }
+    reading?.let { id -> Content.collection(id)?.let { CollectionReader(it, readAt) { reading = null; readAt = -1 }; return } }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("أورادي", "الأذكار", "السبحة").forEachIndexed { i, t -> Choice(t, section == i) { section = i } }
@@ -73,7 +74,7 @@ fun AdhkarScreen(openCollection: String? = null) {
         Box(Modifier.weight(1f)) {
             when (section) {
                 0 -> WirdList()
-                1 -> CollectionsList { reading = it }
+                1 -> CollectionsList { id, at -> reading = id; readAt = at }
                 else -> TasbihScreen()
             }
         }
@@ -93,10 +94,32 @@ private fun suggested(): String? {
 }
 
 @Composable
-private fun CollectionsList(open: (String) -> Unit) {
+private fun CollectionsList(openAt: (String, Int) -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val hint = remember { suggested() }
+    val open: (String) -> Unit = { openAt(it, -1) }
+    var q by rememberSaveable { mutableStateOf("") }
+    // Letters only, without marks, so «سبحان» finds «سُبْحَانَ».
+    fun plain(t: String) = t.filter { it.isLetter() || it == ' ' }.replace('أ', 'ا').replace('إ', 'ا').replace('آ', 'ا').replace('ة', 'ه').replace('ى', 'ي')
+    val hits = remember(q) {
+        val words = plain(q).split(' ').filter { it.length > 1 }
+        if (words.isEmpty()) emptyList() else Content.collections.flatMap { c -> c.items.mapIndexedNotNull { i, it -> if (plain(it.text).let { t -> words.all { w -> t.contains(w) } }) Triple(c, i, it) else null } }.take(60)
+    }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item {
+            androidx.compose.material3.OutlinedTextField(q, { q = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("ابحث في كل الأذكار… (مثلًا: سبحان، الكرب، السفر)") }, shape = L.shape(14.dp))
+        }
+        if (q.isNotBlank()) {
+            item { Sub(if (hits.isEmpty()) "لا نتائج" else "${hits.size} نتيجة", size = 12.sp) }
+            itemsIndexed(hits) { _, (c, i, it) ->
+                Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).border(1.dp, P.line, L.shape(14.dp)).clickable { openAt(c.id, i) }.padding(12.dp)) {
+                    Sub(c.title, color = P.gold, size = 12.sp)
+                    Text(it.text, color = P.ink, fontSize = 15.sp, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+            }
+            return@LazyColumn
+        }
         item { Hint("collections", "📖", "اختر مجموعة، ثم اضغط على كل ذكر لتعدّه، فينقلك إلى الذكر التالي حتى تُتمّها. مجموعة الوقت الحالي تظهر أولًا.") }
         itemsIndexed(Content.collections.sortedByDescending { it.id == hint }) { _, c ->
             val counts = Data.colCounts(c.id)
@@ -121,14 +144,14 @@ private fun CollectionsList(open: (String) -> Unit) {
  */
 @OptIn(androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
-private fun CollectionReader(c: Collection, back: () -> Unit) {
+private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val counts = Data.colCounts(c.id)
     fun finished(i: Int) = counts[i] >= c.items[i].count
     val done = c.items.indices.count { finished(it) }
-    var cur by rememberSaveable(c.id) { mutableStateOf(c.items.indices.firstOrNull { counts[it] < c.items[it].count } ?: c.items.size) }
+    var cur by rememberSaveable(c.id) { mutableStateOf(startAt.takeIf { it in c.items.indices } ?: c.items.indices.firstOrNull { counts[it] < c.items[it].count } ?: c.items.size) }
     var whole by rememberSaveable { mutableStateOf(false) }
     fun nextOpen(from: Int) = (from + 1 until c.items.size).firstOrNull { Data.colCounts(c.id)[it] < c.items[it].count }
         ?: (0 until c.items.size).firstOrNull { Data.colCounts(c.id)[it] < c.items[it].count } ?: c.items.size

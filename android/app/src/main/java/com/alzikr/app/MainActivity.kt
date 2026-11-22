@@ -178,7 +178,7 @@ private fun Root() {
     AppTheme {
         run {
             // Back returns to the previous page (inner pages handle back first).
-            androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty()) { Nav.back() }
+            androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != "prayer") { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
                 val inPage = Nav.pages.isNotEmpty()
                 Column(Modifier.fillMaxSize()) {

@@ -51,7 +51,12 @@ object Nav {
         tab = t
     }
     /** Back to the previous tab; false when there is none. */
-    fun back(): Boolean { if (history.isEmpty()) return false; tab = history.removeAt(history.lastIndex); return true }
+    fun back(): Boolean {
+        if (history.isNotEmpty()) { tab = history.removeAt(history.lastIndex); return true }
+        // Nothing before: the home page is the last stop before leaving the app.
+        if (tab != "prayer") { tab = "prayer"; return true }
+        return false
+    }
 
     fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }

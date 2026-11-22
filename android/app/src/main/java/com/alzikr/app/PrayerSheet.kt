@@ -86,6 +86,23 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
                     modifier = Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(if (done) P.accent else P.card).border(1.dp, if (can || done) P.accent else P.line, L.shape(16.dp))
                         .clickable(enabled = can || done) { Data.setPrayed(LocalDate.now(), p, !done); if (!done) Haptics.tap(ctx) }.padding(vertical = 16.dp))
             }
+            // Its sunnah done too (tap again to undo).
+            val extras = when (p) {
+                Prayer.FAJR -> listOf("r_FAJR" to "سنة الفجر")
+                Prayer.SUNRISE -> listOf("duha" to "صلاة الضحى")
+                Prayer.DHUHR -> listOf("r_DHUHR" to "سنة الظهر")
+                Prayer.ASR -> listOf("r_ASR" to "أربع قبل العصر")
+                Prayer.MAGHRIB -> listOf("r_MAGHRIB" to "سنة المغرب")
+                Prayer.ISHA -> listOf("r_ISHA" to "سنة العشاء", "witr" to "الوتر", "qiyam" to "قيام الليل")
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                extras.forEach { (k, label) ->
+                    val on = Data.extra(LocalDate.now(), k)
+                    Text((if (on) "✓ " else "") + label, color = if (on) P.onAccent else P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 1,
+                        modifier = Modifier.weight(1f).clip(L.shape(12.dp)).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, L.shape(12.dp))
+                            .clickable { Data.setExtra(LocalDate.now(), k, !on); if (!on) Haptics.tap(ctx) }.padding(vertical = 10.dp))
+                }
+            }
 
             // Alarm, reminder, adhan.
             Column(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card).padding(horizontal = 12.dp, vertical = 4.dp)) {
