@@ -62,6 +62,7 @@ object Moments {
         val keep = Store.prefs.getStringSet("moment_done", emptySet())!!.filter { it.startsWith(today) || it.startsWith(LocalDate.now().toString()) }.toSet()
         Store.prefs.edit().putStringSet("moment_done", keep + m.key).apply(); Store.bump()
         if (m.title == "سورة الكهف") Data.setExtra(LocalDate.now(), "kahf", true)
+        if (m.title == "سورة الملك") Data.setExtra(if (LocalTime.now().hour < 12) LocalDate.now().minusDays(1) else LocalDate.now(), "mulk", true)
     }
     private fun guide(id: String): () -> Unit = { Nav.morePage = "season:$id"; Nav.go("more") }
 
@@ -103,6 +104,11 @@ object Moments {
             Moment("📣", "بين الأذان والإقامة", "«الدعاء لا يُرد بين الأذان والإقامة». وبعد الأذان قل: «اللهم رب هذه الدعوة التامة…».", "أبو داود والترمذي، وصححه الألباني", "أذكار الأذان", "mosque"))
         if (justPrayed != null) out += (
             Moment("🤲", "أذكار بعد صلاة ${justPrayed.ar}", "«من سبّح الله في دبر كل صلاة ثلاثًا وثلاثين، وحمد الله ثلاثًا وثلاثين، وكبّر الله ثلاثًا وثلاثين… غُفرت خطاياه».", "مسلم", "أذكار بعد ${justPrayed.ar}", "prayer_${justPrayed.name}"))
+        // After Isha until Fajr: Surah al-Mulk, unless read tonight.
+        val night = if (min < fajr) date.minusDays(1) else date
+        if ((min >= isha || min < fajr) && !Data.extra(night, "mulk"))
+            out += Moment("📖", "سورة الملك", "«كان النبي ﷺ لا ينام حتى يقرأ ﴿الم تنزيل﴾ و﴿تبارك الذي بيده الملك﴾». وهي «المانعة من عذاب القبر».",
+                "الترمذي، وصححه الألباني؛ والثاني رواه الحاكم وحسّنه الألباني", "اقرأ سورة الملك") { Data.setExtra(night, "mulk", true); Nav.reading = 67 to 1 }
         if (bigDay) out += season!!
         // Friday.
         if (friday) {
@@ -121,6 +127,7 @@ object Moments {
             else -> Moment("📿", "ذكر الله", "«ألا أنبئكم بخير أعمالكم… ذكر الله». قل: سبحان الله وبحمده، سبحان الله العظيم.", "الترمذي وابن ماجه، وصححه الألباني؛ والتسبيح في البخاري ومسلم", "السبحة") { Nav.adhkar = 2; Nav.go("adhkar") }
         }
         out += daytime
+        if (min >= isha + 60 || min < fajr) out += Moment("📝", "محاسبة اليوم", "انظر في يومك قبل أن تنام: احمد الله على ما أحسنت، واستغفره مما قصّرت.", "", "افتح محاسبة اليوم") { Nav.morePage = "today"; Nav.go("more") }
         if (!bigDay && season != null) out += season
         if (min in sunrise + 15 until dhuhr - 10 && daytime.title == "أذكار الصباح")
             out += Moment("☀", "صلاة الضحى", "«ويُجزئ من ذلك ركعتان يركعهما من الضحى».", "مسلم", "السبحة") { Nav.adhkar = 2; Nav.go("adhkar") }
@@ -171,6 +178,9 @@ object Home {
         Short("hifz", "🧠", "الحفظ") { Nav.morePage = "hifz"; Nav.go("more") },
         Short("duas", "🤲", "أدعيتي") { Nav.adhkar = 3; Nav.go("adhkar") },
         Short("pet", "🐾", "صديقي") { Nav.morePage = "pet"; Nav.go("more") },
+        Short("mulk", "📖", "سورة الملك") { Data.setExtra(LocalDate.now(), "mulk", true); Nav.reading = 67 to 1 },
+        Short("today", "📝", "محاسبة اليوم") { Nav.morePage = "today"; Nav.go("more") },
+        Short("ramadan", "🌙", "رمضان") { Nav.morePage = "ramadan"; Nav.go("more") },
         Short("goals", "🏁", "أهدافي") { Nav.morePage = "goals"; Nav.go("more") },
         Short("sadaqa", "💰", "صدقاتي") { Nav.morePage = "sadaqa"; Nav.go("more") },
         Short("salah", "💧", "صفة الصلاة") { Nav.morePage = "salah"; Nav.go("more") },

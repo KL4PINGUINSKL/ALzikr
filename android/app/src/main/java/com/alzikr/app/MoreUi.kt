@@ -76,7 +76,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     }
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
-        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "sadaqa" -> "صدقاتي"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -94,6 +94,8 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "hifz" -> HifzPage()
                 "pet" -> PetPage()
                 "sadaqa" -> SadaqaPage()
+                "ramadan" -> RamadanPage()
+                "today" -> TodayPage()
                 "goals" -> GoalsPage()
                 "salah" -> SalahGuidePage()
                 "kids" -> KidsPage()
@@ -120,10 +122,10 @@ fun MoreScreen(openSettings: () -> Unit) {
         val activity = LocalContext.current as? android.app.Activity
         MoreGroup("الصلاة", listOf(
             Triple("⏰", "المنبه") { open("alarms") }, Triple("🧭", "القبلة") { open("qibla") },
-            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") }, Triple("🏁", "أهدافي") { open("goals") }, Triple("💰", "صدقاتي") { open("sadaqa") },
+            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") }, Triple("🏁", "أهدافي") { open("goals") }, Triple("📝", "محاسبة اليوم") { open("today") }, Triple("💰", "صدقاتي") { open("sadaqa") },
         ))
         MoreGroup("التقويم والوقت", listOf(
-            Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
+            Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "رمضان") { open("ramadan") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
             Triple("🗓", "أسماء الشهور") { open("months") }, Triple("🔁", "محوّل التاريخ") { open("convert") },
             Triple("🌍", "الساعة العالمية") { open("world") },
         ))

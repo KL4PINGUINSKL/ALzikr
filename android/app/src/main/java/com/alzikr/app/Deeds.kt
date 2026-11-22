@@ -147,6 +147,7 @@ object Goals {
         Goal("evening", "🌇", "أذكار المساء كل يوم", 7) { a, b -> days(a, b).count { Stats.colDoneOn("evening", it) } },
         Goal("quran", "📖", "قراءة القرآن كل يوم", 7) { a, b -> days(a, b).count { d -> runCatching { JSONObject(Store.prefs.getString("khatma_log", "{}")!!).optInt(d.toString()) > 0 }.getOrDefault(false) } },
         Goal("juz", "📗", "جزء في الأسبوع (٢٠ صفحة)", 20) { a, b -> runCatching { val j = JSONObject(Store.prefs.getString("khatma_log", "{}")!!); days(a, b).sumOf { j.optInt(it.toString()) } }.getOrDefault(0) },
+        Goal("mulk", "📖", "سورة الملك كل ليلة", 7) { a, b -> days(a, b).count { Data.extra(it, "mulk") } },
         Goal("sadaqa", "💰", "صدقة مرة على الأقل", 1) { a, b -> Sadaqa.countBetween(a, b) },
         Goal("kahf", "🕌", "سورة الكهف يوم الجمعة", 1) { a, b -> if (Data.extra(b, "kahf") || Data.extra(b.minusDays(1), "kahf")) 1 else 0 },
     )

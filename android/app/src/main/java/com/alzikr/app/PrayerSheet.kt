@@ -151,6 +151,15 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
                     else -> {}
                 }
             }
+            if (p == Prayer.ISHA) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val read = Data.extra(LocalDate.now(), "mulk")
+                    Tile("📖", if (read) "✓ سورة الملك" else "سورة الملك", Modifier.weight(1f), on = read) { close(); Data.setExtra(LocalDate.now(), "mulk", true); Nav.reading = 67 to 1 }
+                    Tile("📖", "سورة السجدة", Modifier.weight(1f)) { close(); Nav.reading = 32 to 1 }
+                    Tile("📝", "محاسبة اليوم", Modifier.weight(1f)) { close(); Nav.morePage = "today"; Nav.go("more") }
+                }
+                Sub("«كان النبي ﷺ لا ينام حتى يقرأ ﴿الم تنزيل﴾ و﴿تبارك الذي بيده الملك﴾» (الترمذي، وصححه الألباني)", size = 11.sp)
+            }
 
             // Its time correction.
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

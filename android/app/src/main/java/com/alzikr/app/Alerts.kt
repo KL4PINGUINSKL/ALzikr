@@ -169,7 +169,9 @@ object Alerts {
             Kind.SLEEP -> Notification.Builder(c, CH_REMIND).setContentTitle("أذكار النوم").setContentText("باسمك اللهم أموت وأحيا").setContentIntent(open(c, "adhkar"))
             Kind.DHIKR -> Content.reminders[(System.currentTimeMillis() / 3_600_000L % Content.reminders.size).toInt()].let { z ->
                 Notification.Builder(c, CH_REMIND).setContentTitle("ذكر").setContentText(z).setContentIntent(open(c, "adhkar")).setTimeoutAfter(50 * 60_000L) }
-            Kind.KAHF -> Notification.Builder(c, CH_REMIND).setContentTitle("يوم الجمعة").setContentText("قراءة سورة الكهف، والإكثار من الصلاة على النبي ﷺ").setContentIntent(open(c, "adhkar"))
+            Kind.KAHF -> Notification.Builder(c, CH_REMIND).setContentTitle("يوم الجمعة المبارك").setContentText("اغتسل وتطيّب وبكّر إلى الصلاة، واقرأ الكهف، وأكثر من الصلاة على النبي ﷺ")
+                .setStyle(Notification.BigTextStyle().bigText("• الغسل والطيب ولبس أحسن الثياب\n• التبكير إلى المسجد والإنصات للخطبة\n• قراءة سورة الكهف\n• الإكثار من الصلاة على النبي ﷺ\n• الدعاء في آخر ساعة بعد العصر"))
+                .setContentIntent(PendingIntent.getActivity(c, 80, Intent(c, MainActivity::class.java).putExtra("day", LocalDate.now().toString()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             Kind.FAST -> {
                 val d = LocalDate.now().plusDays(1)
                 val card = DayInfo.of(d)
