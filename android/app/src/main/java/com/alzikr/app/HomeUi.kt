@@ -34,9 +34,31 @@ import java.time.LocalTime
 
 /** What suits this moment: the adhkar of the time of day, Friday's Kahf, the fasting days, the seasons. Sunni sources only. */
 object Moments {
-    data class Moment(val icon: String, val title: String, val text: String, val src: String, val button: String, val go: () -> Unit)
+    data class Moment(val icon: String, val title: String, val text: String, val src: String, val button: String,
+                      val coll: String? = null, val go: () -> Unit = { Nav.collection = coll; Nav.go("adhkar") }) {
+        /** The day it belongs to (the evening counts with the next day) and its title. */
+        var key: String = ""
+    }
 
-    private fun coll(id: String): () -> Unit = { Nav.collection = id; Nav.go("adhkar") }
+    /** The Islamic day: after maghrib it is already the next day. */
+    private fun day(): LocalDate {
+        val min = LocalTime.now().let { it.hour * 60 + it.minute }
+        val maghrib = if (Store.hasLocation) Store.times().getValue(Prayer.MAGHRIB) else 1080
+        return if (min >= maghrib) LocalDate.now().plusDays(1) else LocalDate.now()
+    }
+
+    /** Marked done by the user, or its adhkar collection finished today. */
+    fun done(m: Moment): Boolean {
+        if (m.key in Store.prefs.getStringSet("moment_done", emptySet())!!) return true
+        val c = m.coll?.let { Content.collection(it) } ?: return false
+        val counts = Data.colCounts(c.id)
+        return c.items.indices.all { counts[it] >= c.items[it].count }
+    }
+    fun markDone(m: Moment) {
+        val today = day().toString()
+        val keep = Store.prefs.getStringSet("moment_done", emptySet())!!.filter { it.startsWith(today) || it.startsWith(LocalDate.now().toString()) }.toSet()
+        Store.prefs.edit().putStringSet("moment_done", keep + m.key).apply(); Store.bump()
+    }
     private fun guide(id: String): () -> Unit = { Nav.morePage = "season:$id"; Nav.go("more") }
 
     /** The moments for now, the most fitting first. */
@@ -57,14 +79,14 @@ object Moments {
 
         // The season, if any (the big days go first, the rest after the time of day).
         val season: Moment? = when {
-            h.month == 9 && h.day >= 21 -> Moment("🌙", "العشر الأواخر من رمضان", "«كان رسول الله ﷺ إذا دخل العشر أحيا الليل، وأيقظ أهله، وجدّ وشدّ المئزر». وتحرَّ ليلة القدر في الوتر منها، وأكثر من: «اللهم إنك عفو تحب العفو فاعفُ عني».", "البخاري ومسلم؛ والدعاء رواه الترمذي وصححه", "دليل العشر الأواخر", guide("lastten"))
-            h.month == 9 -> Moment("🌙", "رمضان", "«من صام رمضان إيمانًا واحتسابًا غُفر له ما تقدم من ذنبه».", "البخاري ومسلم", "دليل رمضان", guide("ramadan"))
-            h.month == 10 && h.day == 1 -> Moment("🎉", "عيد الفطر", "كبّر الله: «الله أكبر، الله أكبر، لا إله إلا الله، والله أكبر، الله أكبر، ولله الحمد»، وأدِّ زكاة الفطر قبل الصلاة.", "التكبير ثابت عن ابن مسعود رضي الله عنه (ابن أبي شيبة)", "دليل العيد", guide("fitr"))
-            h.month == 12 && h.day == 9 -> Moment("🤲", "يوم عرفة", "«خير الدعاء دعاء يوم عرفة، وخير ما قلت أنا والنبيون من قبلي: لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير». وصيامه يكفّر سنتين.", "الترمذي وحسّنه الألباني؛ والصيام رواه مسلم", "دليل يوم عرفة", guide("arafah"))
-            h.month == 12 && h.day in 10..13 -> Moment("🐑", if (h.day == 10) "عيد الأضحى" else "أيام التشريق", "«أيام التشريق أيام أكل وشرب وذكر لله». أكثر من التكبير.", "مسلم", "دليل الأضحى", guide("adha"))
-            h.month == 12 && h.day <= 8 -> Moment("🕋", "عشر ذي الحجة", "«ما من أيام العمل الصالح فيهن أحب إلى الله من هذه الأيام». أكثر من التكبير والتهليل والتحميد والصيام.", "البخاري", "دليل العشر", guide("dhul"))
-            h.month == 1 && h.day in 9..10 -> Moment("📿", "عاشوراء", "«صيام يوم عاشوراء أحتسب على الله أن يكفّر السنة التي قبله»، وصم يومًا قبله.", "مسلم", "دليل محرم", guide("muharram"))
-            h.month != 9 && h.day in 13..15 -> Moment("🌕", "الأيام البيض", "«صوم ثلاثة أيام من كل شهر صوم الدهر كله». هي ١٣ و١٤ و١٥ من الشهر الهجري.", "البخاري ومسلم", "عن الأيام البيض", guide("white"))
+            h.month == 9 && h.day >= 21 -> Moment("🌙", "العشر الأواخر من رمضان", "«كان رسول الله ﷺ إذا دخل العشر أحيا الليل، وأيقظ أهله، وجدّ وشدّ المئزر». وتحرَّ ليلة القدر في الوتر منها، وأكثر من: «اللهم إنك عفو تحب العفو فاعفُ عني».", "البخاري ومسلم؛ والدعاء رواه الترمذي وصححه", "دليل العشر الأواخر", go = guide("lastten"))
+            h.month == 9 -> Moment("🌙", "رمضان", "«من صام رمضان إيمانًا واحتسابًا غُفر له ما تقدم من ذنبه».", "البخاري ومسلم", "دليل رمضان", go = guide("ramadan"))
+            h.month == 10 && h.day == 1 -> Moment("🎉", "عيد الفطر", "كبّر الله: «الله أكبر، الله أكبر، لا إله إلا الله، والله أكبر، الله أكبر، ولله الحمد»، وأدِّ زكاة الفطر قبل الصلاة.", "التكبير ثابت عن ابن مسعود رضي الله عنه (ابن أبي شيبة)", "دليل العيد", go = guide("fitr"))
+            h.month == 12 && h.day == 9 -> Moment("🤲", "يوم عرفة", "«خير الدعاء دعاء يوم عرفة، وخير ما قلت أنا والنبيون من قبلي: لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير». وصيامه يكفّر سنتين.", "الترمذي وحسّنه الألباني؛ والصيام رواه مسلم", "دليل يوم عرفة", go = guide("arafah"))
+            h.month == 12 && h.day in 10..13 -> Moment("🐑", if (h.day == 10) "عيد الأضحى" else "أيام التشريق", "«أيام التشريق أيام أكل وشرب وذكر لله». أكثر من التكبير.", "مسلم", "دليل الأضحى", go = guide("adha"))
+            h.month == 12 && h.day <= 8 -> Moment("🕋", "عشر ذي الحجة", "«ما من أيام العمل الصالح فيهن أحب إلى الله من هذه الأيام». أكثر من التكبير والتهليل والتحميد والصيام.", "البخاري", "دليل العشر", go = guide("dhul"))
+            h.month == 1 && h.day in 9..10 -> Moment("📿", "عاشوراء", "«صيام يوم عاشوراء أحتسب على الله أن يكفّر السنة التي قبله»، وصم يومًا قبله.", "مسلم", "دليل محرم", go = guide("muharram"))
+            h.month != 9 && h.day in 13..15 -> Moment("🌕", "الأيام البيض", "«صوم ثلاثة أيام من كل شهر صوم الدهر كله». هي ١٣ و١٤ و١٥ من الشهر الهجري.", "البخاري ومسلم", "عن الأيام البيض", go = guide("white"))
             else -> null
         }
         val bigDay = season != null && (season.title.startsWith("عيد") || season.title == "يوم عرفة" || season.title == "عاشوراء")
@@ -74,24 +96,24 @@ object Moments {
         val justCalled = prayers.firstOrNull { min - at(it) in 0 until 12 }
         val justPrayed = prayers.firstOrNull { min - at(it) in 12 until 45 }
         if (justCalled != null) out += (
-            Moment("📣", "بين الأذان والإقامة", "«الدعاء لا يُرد بين الأذان والإقامة». وبعد الأذان قل: «اللهم رب هذه الدعوة التامة…».", "أبو داود والترمذي، وصححه الألباني", "أذكار الأذان", coll("mosque")))
+            Moment("📣", "بين الأذان والإقامة", "«الدعاء لا يُرد بين الأذان والإقامة». وبعد الأذان قل: «اللهم رب هذه الدعوة التامة…».", "أبو داود والترمذي، وصححه الألباني", "أذكار الأذان", "mosque"))
         if (justPrayed != null) out += (
-            Moment("🤲", "أذكار بعد صلاة ${justPrayed.ar}", "«من سبّح الله في دبر كل صلاة ثلاثًا وثلاثين، وحمد الله ثلاثًا وثلاثين، وكبّر الله ثلاثًا وثلاثين… غُفرت خطاياه».", "مسلم", "أذكار بعد الصلاة", coll("prayer")))
+            Moment("🤲", "أذكار بعد صلاة ${justPrayed.ar}", "«من سبّح الله في دبر كل صلاة ثلاثًا وثلاثين، وحمد الله ثلاثًا وثلاثين، وكبّر الله ثلاثًا وثلاثين… غُفرت خطاياه».", "مسلم", "أذكار بعد الصلاة", "prayer"))
         if (bigDay) out += season!!
         // Friday.
         if (friday) {
             out += Moment("🕌", "سورة الكهف", "«من قرأ سورة الكهف في يوم الجمعة أضاء له من النور ما بين الجمعتين». وقتها من مغرب الخميس إلى مغرب الجمعة.", "الحاكم والبيهقي، وصححه الألباني", "اقرأ سورة الكهف") { Nav.reading = 18 to 1 }
             if (dow == DayOfWeek.FRIDAY && min in asr until maghrib)
-                out += Moment("🤲", "ساعة الإجابة يوم الجمعة", "«التمسوها آخر ساعة بعد العصر». أكثر من الدعاء قبل المغرب.", "أبو داود والنسائي، وصححه الألباني", "أدعية من السنة", coll("sunnah_duas"))
+                out += Moment("🤲", "ساعة الإجابة يوم الجمعة", "«التمسوها آخر ساعة بعد العصر». أكثر من الدعاء قبل المغرب.", "أبو داود والنسائي، وصححه الألباني", "أدعية من السنة", "sunnah_duas")
             out += Moment("ﷺ", "الصلاة على النبي ﷺ", "«إن من أفضل أيامكم يوم الجمعة… فأكثروا عليّ من الصلاة فيه، فإن صلاتكم معروضة عليّ».", "أبو داود، وصححه الألباني", "السبحة") { Nav.adhkar = 2; Nav.go("adhkar") }
         }
 
         val inLastThird = if (lastThird < fajr) min in lastThird until fajr else (min >= lastThird || min < fajr)
         val daytime = when {
-            min in fajr until dhuhr - 30 -> Moment("🌅", "أذكار الصباح", "﴿وَسَبِّحْ بِحَمْدِ رَبِّكَ قَبْلَ طُلُوعِ الشَّمْسِ وَقَبْلَ غُرُوبِهَا﴾. وقتها من الفجر إلى الضحى.", "طه: ١٣٠", "ابدأ أذكار الصباح", coll("morning"))
-            min in asr until isha -> Moment("🌇", "أذكار المساء", "﴿فَسُبْحَانَ اللَّهِ حِينَ تُمْسُونَ وَحِينَ تُصْبِحُونَ﴾. وقتها من العصر إلى الليل.", "الروم: ١٧", "ابدأ أذكار المساء", coll("evening"))
-            inLastThird -> Moment("✨", "الثلث الأخير من الليل", "«ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر، يقول: من يدعوني فأستجيب له، من يسألني فأعطيه، من يستغفرني فأغفر له».", "البخاري ومسلم", "أذكار الاستيقاظ", coll("wake"))
-            min >= isha + 45 || min < fajr -> Moment("🌙", "أذكار النوم", "«إذا أتيت مضجعك فتوضأ وضوءك للصلاة، ثم اضطجع على شقك الأيمن…».", "البخاري ومسلم", "أذكار النوم", coll("sleep"))
+            min in fajr until dhuhr - 30 -> Moment("🌅", "أذكار الصباح", "﴿وَسَبِّحْ بِحَمْدِ رَبِّكَ قَبْلَ طُلُوعِ الشَّمْسِ وَقَبْلَ غُرُوبِهَا﴾. وقتها من الفجر إلى الضحى.", "طه: ١٣٠", "ابدأ أذكار الصباح", "morning")
+            min in asr until isha -> Moment("🌇", "أذكار المساء", "﴿فَسُبْحَانَ اللَّهِ حِينَ تُمْسُونَ وَحِينَ تُصْبِحُونَ﴾. وقتها من العصر إلى الليل.", "الروم: ١٧", "ابدأ أذكار المساء", "evening")
+            inLastThird -> Moment("✨", "الثلث الأخير من الليل", "«ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر، يقول: من يدعوني فأستجيب له، من يسألني فأعطيه، من يستغفرني فأغفر له».", "البخاري ومسلم", "أذكار الاستيقاظ", "wake")
+            min >= isha + 45 || min < fajr -> Moment("🌙", "أذكار النوم", "«إذا أتيت مضجعك فتوضأ وضوءك للصلاة، ثم اضطجع على شقك الأيمن…».", "البخاري ومسلم", "أذكار النوم", "sleep")
             else -> Moment("📿", "ذكر الله", "«ألا أنبئكم بخير أعمالكم… ذكر الله». قل: سبحان الله وبحمده، سبحان الله العظيم.", "الترمذي وابن ماجه، وصححه الألباني؛ والتسبيح في البخاري ومسلم", "السبحة") { Nav.adhkar = 2; Nav.go("adhkar") }
         }
         out += daytime
@@ -102,8 +124,9 @@ object Moments {
         // Monday and Thursday fasts: on the eve, and on the day.
         val tomorrow = date.plusDays(1).dayOfWeek
         if (h.month != 9 && min >= maghrib && (tomorrow == DayOfWeek.MONDAY || tomorrow == DayOfWeek.THURSDAY))
-            out += Moment("🍽", "غدًا ${if (tomorrow == DayOfWeek.MONDAY) "الاثنين" else "الخميس"}: صيام سنة", "«تُعرض الأعمال يوم الاثنين والخميس، فأحب أن يُعرض عملي وأنا صائم». وتسحّر فإن في السحور بركة.", "الترمذي، وصححه الألباني؛ والسحور في البخاري ومسلم", "أذكار المساء", coll("evening"))
-        return out.distinctBy { it.title }
+            out += Moment("🍽", "غدًا ${if (tomorrow == DayOfWeek.MONDAY) "الاثنين" else "الخميس"}: صيام سنة", "«تُعرض الأعمال يوم الاثنين والخميس، فأحب أن يُعرض عملي وأنا صائم». وتسحّر فإن في السحور بركة.", "الترمذي، وصححه الألباني؛ والسحور في البخاري ومسلم", "أذكار المساء", "evening")
+        val d = day().toString()
+        return out.distinctBy { it.title }.onEach { it.key = d + "|" + it.title }
     }
 }
 
@@ -137,6 +160,8 @@ object Home {
         Short("hadith", "📚", "الحديث") { Nav.library = 3; Nav.go("library") },
         Short("calendar", "📅", "التقويم") { Nav.morePage = "calendar"; Nav.go("more") },
         Short("seasons", "🌙", "المواسم") { Nav.morePage = "seasons"; Nav.go("more") },
+        Short("alarm", "⏰", "المنبه") { Nav.morePage = "alarms"; Nav.go("more") },
+        Short("world", "🌍", "الساعات") { Nav.morePage = "world"; Nav.go("more") },
         Short("tasks", "☑", "المهام") { Nav.daily = 0; Nav.go("daily") },
         Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },
         Short("khatma", "📗", "الختمة") { Nav.daily = 3; Nav.go("daily") },
@@ -174,7 +199,7 @@ fun MomentCard() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     var tick by remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) { while (true) { delay(60_000); tick++ } }
-    val list = remember(tick, v) { Moments.now() }
+    val list = remember(tick, v) { Moments.now().filterNot { Moments.done(it) } }
     val m = list.firstOrNull() ?: return
     Panel(Modifier.clickable { m.go() }, color = P.accent.copy(alpha = .12f), pad = 14.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -189,6 +214,9 @@ fun MomentCard() {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(m.button + " ›", color = P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clip(L.shape(12.dp)).background(P.accent).clickable { m.go() }.padding(horizontal = 14.dp, vertical = 8.dp))
+            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+            Text("✓ أتممته", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clip(L.shape(12.dp)).border(1.dp, P.accent, L.shape(12.dp)).clickable { Moments.markDone(m) }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
         if (list.size > 1) {
             Sub("ويناسب الآن أيضًا:", Modifier.padding(top = 10.dp), size = 12.sp)

@@ -71,7 +71,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     fun close() { if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex); if (stack.isEmpty()) Nav.back() }
     Nav.morePage?.let { open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
-        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -84,6 +84,8 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "quiz" -> QuizPage()
                 "hsearch" -> { HadithSearchPage { close() } }
                 "convert" -> ConvertPage()
+                "alarms" -> AlarmPage()
+                "world" -> WorldClockPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> if (p.startsWith("season:")) {
                     val id = p.removePrefix("season:")
@@ -110,7 +112,9 @@ fun MoreScreen(openSettings: () -> Unit) {
         }
         listOf(
             Triple("themes", "🎨  الثيمات", "${Looks.byId(Data.look).name} · ${Looks.all.size} ثيمًا، ولكل ثيم سبعة ألوان"),
+            Triple("alarms", "⏰  منبه الصلوات", if (PrayerAlarm.anyOn()) "مفعّل: " + Prayer.entries.filter { PrayerAlarm.on(it) }.joinToString("، ") { it.ar } else "منبه حقيقي مثل منبه الهاتف، لكل صلاة"),
             Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
+            Triple("world", "🌍  الساعة العالمية", "الوقت الآن في مكة والقاهرة ولندن ونيويورك وغيرها"),
             Triple("month", "📅  مواقيت الشهر", "جدول الصلوات لكل أيام الشهر"),
             Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
             Triple("seasons", "🌙  مواسم الطاعات", "رمضان وليلة القدر والعيدان وعشر ذي الحجة وعرفة والحج والعمرة وعاشوراء"),

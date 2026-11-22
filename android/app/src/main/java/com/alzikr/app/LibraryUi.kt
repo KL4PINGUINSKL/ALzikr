@@ -367,9 +367,9 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
             Text(a.text, color = P.ink, fontSize = 22.sp, fontFamily = Fonts.quran, lineHeight = 40.sp, modifier = Modifier.padding(vertical = 4.dp))
             // The actions in one short line.
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Choice("▶ هذه الآية", true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); close() }
+                Choice("▶ هذه الآية", true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); if (inContext == null) close() }
                 if (inContext != null) Choice("📖 في سياقها", false) { close(); inContext() }
-                Choice("⏩ من هنا: " + Recitation.rangeText(), false) { Recitation.play(ctx, a.s, a.a); close() }
+                Choice("⏩ من هنا: " + Recitation.rangeText(), false) { Recitation.play(ctx, a.s, a.a); if (inContext == null) close() }
                 Choice(if (Quran.marked(a.s, a.a)) "★ مُعلَّمة" else "☆ علامة", Quran.marked(a.s, a.a)) { Quran.toggleMark(a.s, a.a) }
                 Choice("📍 وصلت هنا", false) {
                     Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString()
@@ -377,7 +377,15 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
                 }
                 Choice("⧉ نسخ", false) { copy(ctx, "${a.text}\n[$ref]") }
                 Choice("↗ مشاركة", false) { share(ctx, "${a.text}\n[$ref]") }
-                Choice("🔁 حفظها ×5", false) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); close() }
+                Choice("🔁 حفظها ×5", false) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); if (inContext == null) close() }
+            }
+            Recitation.now?.takeIf { inContext != null }?.let { (ps, pa) ->
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.accent.copy(alpha = .12f)).padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(if (Recitation.loading) "⏳ جارٍ التحميل…" else "🎙 ${Quran.surahs[ps - 1].name} ${Quran.digits(pa)}", color = P.ink, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                    Choice(if (Recitation.paused) "▶ متابعة" else "⏸ إيقاف مؤقت", false) { if (Recitation.paused) Recitation.resume() else Recitation.pause() }
+                    Choice("■ إنهاء", false) { Recitation.stop() }
+                }
             }
 
             // The tafsir, right under the verse.
@@ -646,9 +654,11 @@ private fun Favorites() {
 fun DailyWords() {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val shiftH = Data.dailyShift("hadith")
     val ayah = if (Quran.ready) Quran.ofTheDay() else null
     // Decided once (explained hadith when its index is on the phone, else one of the Forty), so the card never changes under the finger.
-    val daily by androidx.compose.runtime.produceState<Pair<Sharh.Brief?, Pair<Hadith.Info, Hadith.Item>?>?>(null) {
+    val daily by androidx.compose.runtime.produceState<Pair<Sharh.Brief?, Pair<Hadith.Info, Hadith.Item>?>?>(null, shiftH) {
         value = withContext(Dispatchers.IO) {
             val e = runCatching { HadithSearch.sharhIndex(ctx); HadithSearch.ofTheDay(ctx) }.getOrNull()
             e to (if (e == null) runCatching { Hadith.ofTheDay(ctx) }.getOrNull() else null)
@@ -659,14 +669,20 @@ fun DailyWords() {
     if (ayah != null) Panel(Modifier.clickable { shown = ayah }) {
         Sub("آية اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
         Text(ayah.text, color = P.ink, fontSize = 20.sp, fontFamily = Fonts.quran, lineHeight = 36.sp, modifier = Modifier.padding(top = 4.dp))
-        Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)} · اضغط لتفسيرها وسماعها", size = 12.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Sub("${Quran.surahs[ayah.s - 1].name} ${Quran.digits(ayah.a)} · اضغط لتفسيرها وسماعها", Modifier.weight(1f), size = 12.sp)
+            Choice("🔀 آية أخرى", false) { Data.nextDaily("ayah") }
+        }
     }
     val d = daily ?: return
     d.first?.let { e ->
         Panel(Modifier.clickable { Nav.overlaySharh = e.id }) {
             Sub("حديث اليوم" + if (L.ornament.isNotEmpty()) " ${L.ornament}" else "", color = P.gold)
             Text(e.title, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = 28.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 4.dp))
-            Text("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+            Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("💡 اضغط لقراءة الشرح والدرجة والفوائد", color = P.accent, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Choice("🔀 حديث آخر", false) { Data.nextDaily("hadith") }
+            }
         }
         return
     }
@@ -674,6 +690,7 @@ fun DailyWords() {
         Panel(Modifier.clickable { Nav.overlayHadith = info.id to item.number }) {
             Sub("حديث اليوم · ${info.title}", color = P.gold)
             Text(item.text, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = 26.sp, fontFamily = Fonts.naskh, maxLines = 6, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp)) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)); Choice("🔀 حديث آخر", false) { Data.nextDaily("hadith") } }
         }
     }
 }

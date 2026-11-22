@@ -234,6 +234,15 @@ object Data {
     }
     private fun dayName(d: LocalDate) = if (d.dayOfWeek == DayOfWeek.MONDAY) "الاثنين" else if (d.dayOfWeek == DayOfWeek.THURSDAY) "الخميس" else ""
 
+    /** How many times «آية أخرى» / «حديث آخر» was pressed today (kind = ayah or hadith). */
+    fun dailyShift(kind: String, date: LocalDate = LocalDate.now()) = Store.prefs.getInt("shift_${kind}_$date", 0)
+    fun nextDaily(kind: String) {
+        val today = LocalDate.now().toString()
+        val e = Store.prefs.edit()
+        Store.prefs.all.keys.filter { it.startsWith("shift_${kind}_") && !it.endsWith(today) }.forEach(e::remove)
+        e.putInt("shift_${kind}_$today", dailyShift(kind) + 1).apply(); Store.bump()
+    }
+
     data class Hijri(val year: Int, val month: Int, val day: Int, val monthName: String)
     val months = listOf("محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة")
     fun hijri(date: LocalDate = LocalDate.now()): Hijri = runCatching {

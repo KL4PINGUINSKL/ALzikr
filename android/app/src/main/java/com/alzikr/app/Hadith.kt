@@ -146,9 +146,10 @@ object Hadith {
 
     /** A hadith a day from the two bundled forties. */
     fun ofTheDay(c: Context, date: LocalDate = LocalDate.now()): Pair<Info, Item>? {
-        val id = if (date.toEpochDay() % 2 == 0L) "nawawi40" else "qudsi40"
+        val k = date.toEpochDay() + Data.dailyShift("hadith", date)
+        val id = if (k % 2 == 0L) "nawawi40" else "qudsi40"
         val book = load(c, id) ?: return null
-        return book.info to book.items[Math.floorMod(date.toEpochDay() / 2, book.items.size.toLong()).toInt()]
+        return book.info to book.items[Math.floorMod(k / 2 * 7 + Data.dailyShift("hadith", date), book.items.size.toLong()).toInt()]
     }
 
     fun normalize(t: String) = Quran.normalize(t)

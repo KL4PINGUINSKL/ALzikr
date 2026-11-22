@@ -69,7 +69,7 @@ object Quran {
     fun ofTheDay(date: LocalDate = LocalDate.now()): Ayah? {
         if (!ready) return null
         val short = ayahs.filter { it.plain.length in 40..170 }
-        return short[Math.floorMod(date.toEpochDay() * 7919, short.size.toLong()).toInt()]
+        return short[Math.floorMod(date.toEpochDay() * 7919 + Data.dailyShift("ayah", date) * 104729L, short.size.toLong()).toInt()]
     }
 
     // ----------------------------------------------------------------- reading place and bookmarks
