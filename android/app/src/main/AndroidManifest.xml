@@ -46,6 +46,10 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_tasbih" />
         </receiver>
+        <receiver android:name=".MomentWidget" android:exported="false" android:label="ذكر الوقت">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_moment" />
+        </receiver>
         <receiver android:name=".PrayerWidget" android:exported="false" android:label="الصلاة القادمة">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_prayer" />

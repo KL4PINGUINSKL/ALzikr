@@ -327,6 +327,12 @@ class AlarmActivity : ComponentActivity() {
                         Box(Modifier.height(36.dp))
                         Text("إيقاف", color = P.onAccent, fontSize = 24.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).background(P.accent).clickable { PrayerAlarm.stop(this@AlarmActivity); finish() }.padding(vertical = 20.dp))
+                        if (p == Prayer.FAJR) Text("إيقاف وقراءة أذكار الاستيقاظ", color = P.accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).border(1.dp, P.accent, L.shape(40.dp)).clickable {
+                                PrayerAlarm.stop(this@AlarmActivity)
+                                startActivity(Intent(this@AlarmActivity, MainActivity::class.java).putExtra("coll", "wake").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                                finish()
+                            }.padding(vertical = 14.dp))
                         Text("غفوة ${PrayerAlarm.snooze} دقائق", color = P.ink, fontSize = 18.sp, textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).background(P.card).border(1.dp, P.line, L.shape(40.dp)).clickable { PrayerAlarm.snoozeRinging(this@AlarmActivity); finish() }.padding(vertical = 16.dp))
                     }

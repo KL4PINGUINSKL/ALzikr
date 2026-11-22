@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only RemoteViews-safe classes here (no plain View/Space). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/m_root"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
+    android:background="@drawable/widget_bg" android:padding="14dp" android:layoutDirection="rtl">
+    <TextView android:id="@+id/m_label" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="#FFE7C66B" android:textSize="11sp" />
+    <TextView android:id="@+id/m_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#FFFFFFFF" android:textSize="18sp" android:textStyle="bold" android:singleLine="true" />
+    <TextView android:id="@+id/m_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+        android:textColor="#CCE8F0EC" android:textSize="13sp" android:maxLines="4" android:ellipsize="end" android:lineSpacingExtra="2dp" />
+</LinearLayout>

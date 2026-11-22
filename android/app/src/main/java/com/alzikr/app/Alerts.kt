@@ -76,6 +76,7 @@ object Alerts {
     fun reschedule(c: Context) {
         Store.init(c)
         runCatching { PrayerAlarm.schedule(c) }
+        runCatching { MomentWidget.update(c) }
         val am = c.getSystemService(AlarmManager::class.java)
         val next = upcoming().firstOrNull { it.at > System.currentTimeMillis() + 2_000 }
         val pi = PendingIntent.getBroadcast(c, 1, Intent(c, AlertReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

@@ -76,7 +76,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     }
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
-        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -90,6 +90,7 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "hsearch" -> { HadithSearchPage { close() } }
                 "convert" -> ConvertPage()
                 "alarms" -> AlarmPage()
+                "stats" -> StatsPage()
                 "world" -> WorldClockPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> if (p.startsWith("season:")) {
@@ -113,7 +114,7 @@ fun MoreScreen(openSettings: () -> Unit) {
         val activity = LocalContext.current as? android.app.Activity
         MoreGroup("الصلاة", listOf(
             Triple("⏰", "المنبه") { open("alarms") }, Triple("🧭", "القبلة") { open("qibla") },
-            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") },
+            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") },
         ))
         MoreGroup("التقويم والوقت", listOf(
             Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },

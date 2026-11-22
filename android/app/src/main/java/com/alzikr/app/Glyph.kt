@@ -51,7 +51,7 @@ object Glyphs {
         "💚" to R.drawable.ms_favorite, "🏛" to R.drawable.ms_account_balance, "⛰" to R.drawable.ms_landscape, "ℹ" to R.drawable.ms_info,
         "📝" to R.drawable.ms_edit_note, "💤" to R.drawable.ms_bedtime, "⬆" to R.drawable.ms_system_update, "↗" to R.drawable.ms_share,
         "🔁" to R.drawable.ms_repeat, "🗂" to R.drawable.ms_library_books, "🍃" to R.drawable.ms_eco, "🌤" to R.drawable.ms_sunny,
-        "📋" to R.drawable.ms_checklist, "⏮" to R.drawable.ms_skip_previous, "⏭" to R.drawable.ms_skip_next, "⏩" to R.drawable.ms_fast_forward, "⏬" to R.drawable.ms_download, "▶" to R.drawable.ms_play_arrow, "💬" to R.drawable.ms_format_quote, "🔄" to R.drawable.ms_sync_alt, "🔂" to R.drawable.ms_repeat,
+        "📋" to R.drawable.ms_checklist, "📊" to R.drawable.ms_bar_chart, "⏮" to R.drawable.ms_skip_previous, "⏭" to R.drawable.ms_skip_next, "⏩" to R.drawable.ms_fast_forward, "⏬" to R.drawable.ms_download, "▶" to R.drawable.ms_play_arrow, "💬" to R.drawable.ms_format_quote, "🔄" to R.drawable.ms_sync_alt, "🔂" to R.drawable.ms_repeat,
     )
     private val keys = map.keys.sortedByDescending { it.length }
 
