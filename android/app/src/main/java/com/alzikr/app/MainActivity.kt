@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
         Data.mergeOldKhatma()
         PetOverlay.start(this)
         enableEdgeToEdge()
+        if (savedInstanceState == null) Nav.tab = Nav.home
         intent?.getStringExtra("tab")?.let(::openTab)
         openPlace(intent)
         AppUpdate.onFound = { Store.bump() }
@@ -154,7 +155,10 @@ private fun typography(font: FontFamily?): Typography {
 }
 
 data class Section(val id: String, val label: String, val glyph: String)
-val sections get() = listOf(
+val sections get() = if (Looks.byId(Data.look).kids) listOf(
+    Section("kids", "الأطفال", "⭐"), Section("prayer", Home.name, "🕌"), Section("adhkar", "الأذكار", "📿"),
+    Section("library", "المكتبة", "📖"), Section("more", "المزيد", "☰"),
+) else listOf(
     Section("prayer", Home.name, "🕌"), Section("adhkar", "الأذكار", "📿"), Section("library", "المكتبة", "📖"),
     Section("daily", "يومي", "☑"), Section("more", "المزيد", "☰"),
 )
@@ -168,7 +172,9 @@ fun AppTheme(content: @Composable () -> Unit) {
     val scheme = if (pal.dark) darkColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
         else lightColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
     MaterialTheme(colorScheme = scheme, typography = typography(look.body)) {
-        CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl) { content() }
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val scaled = if (look.kids) androidx.compose.ui.unit.Density(density.density, density.fontScale * 1.12f) else density
+        CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl, androidx.compose.ui.platform.LocalDensity provides scaled) { content() }
     }
 }
 
@@ -184,7 +190,7 @@ private fun Root() {
     AppTheme {
         run {
             // Back returns to the previous page (inner pages handle back first).
-            androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != "prayer") { Nav.back() }
+            androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != Nav.home) { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
                 val inPage = Nav.pages.isNotEmpty()
                 Column(Modifier.fillMaxSize()) {
@@ -197,6 +203,7 @@ private fun Root() {
                             "library" -> LibraryScreen()
                             "daily" -> TasksScreen()
                             "more" -> MoreScreen(openSettings = { settings = true })
+                            "kids" -> KidsHome()
                             else -> PrayerScreen(openSettings = { settings = true })
                         }
                     }

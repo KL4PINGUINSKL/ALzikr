@@ -46,6 +46,8 @@ object Nav {
     /** The tabs visited before this one, newest last: back walks them in reverse. */
     val history = mutableStateListOf<String>()
     /** Go to a tab (from the bar or a shortcut), remembering where we were. */
+    /** The first tab: the kids section in the theme for children, the prayer page otherwise. */
+    val home: String get() = if (Looks.byId(Data.look).kids) "kids" else "prayer"
     fun go(t: String) {
         if (t == tab) return
         history.remove(t); history += tab
@@ -56,7 +58,7 @@ object Nav {
     fun back(): Boolean {
         if (history.isNotEmpty()) { tab = history.removeAt(history.lastIndex); return true }
         // Nothing before: the home page is the last stop before leaving the app.
-        if (tab != "prayer") { tab = "prayer"; return true }
+        if (tab != home) { tab = home; return true }
         return false
     }
 

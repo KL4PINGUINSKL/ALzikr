@@ -76,7 +76,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     }
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
-        Subpage(title = if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -99,10 +99,12 @@ fun MoreScreen(openSettings: () -> Unit) {
                 "goals" -> GoalsPage()
                 "salah" -> SalahGuidePage()
                 "tajweed" -> TajweedPage()
+                "fiqh" -> FiqhHome { open(it) }
+                "kidszone" -> KidsHome()
                 "kids" -> KidsPage()
                 "world" -> WorldClockPage()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
-                else -> if (p.startsWith("season:")) {
+                else -> if (p.startsWith("fiqh:")) FiqhPage(p.removePrefix("fiqh:")) { open(it) } else if (p.startsWith("season:")) {
                     val id = p.removePrefix("season:")
                     if (Seasons.byId(id) == null) SeasonsHome { open("season:$it") } else SeasonPage(id) { open("season:$it") }
                 } else BackupPage()
@@ -121,10 +123,21 @@ fun MoreScreen(openSettings: () -> Unit) {
             Sub("لماذا سُمّي ${h.monthName} بهذا الاسم؟ اضغط هنا ›", size = 12.sp, color = P.accent)
         }
         val activity = LocalContext.current as? android.app.Activity
+        if (!Looks.byId(Data.look).kids) Row(Modifier.fillMaxWidth().clip(L.shape(20.dp)).background(androidx.compose.ui.graphics.Color(0xFFFFF2C4)).clickable { open("kidszone") }.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text("🧒", fontSize = 36.sp)
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                Text("قسم الأطفال", color = androidx.compose.ui.graphics.Color(0xFF1D2B5A), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("الحروف، التجويد للصغار، الوضوء والصلاة، قصار السور، الأذكار والآداب، وألعاب بالنجوم", color = androidx.compose.ui.graphics.Color(0xFF4A5680), fontSize = 12.sp)
+            }
+            Text("›", color = androidx.compose.ui.graphics.Color(0xFF1D2B5A), fontSize = 22.sp)
+        }
         MoreGroup("الصلاة", listOf(
             Triple("⏰", "المنبه") { open("alarms") }, Triple("🧭", "القبلة") { open("qibla") },
             Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") }, Triple("🏁", "أهدافي") { open("goals") }, Triple("📝", "محاسبة اليوم") { open("today") }, Triple("💰", "صدقاتي") { open("sadaqa") },
         ))
+        MoreGroup("الفقه", Fiqh.topics.map { t -> Triple(t.icon, t.title.removePrefix("أحكام ")) { open("fiqh:${t.id}") } } +
+            Triple("🔍", "كل الأحكام والبحث") { open("fiqh") })
         MoreGroup("التقويم والوقت", listOf(
             Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "رمضان") { open("ramadan") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
             Triple("🗓", "أسماء الشهور") { open("months") }, Triple("🔁", "محوّل التاريخ") { open("convert") },

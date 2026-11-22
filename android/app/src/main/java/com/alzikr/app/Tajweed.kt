@@ -337,7 +337,7 @@ private fun TajweedUnit(u: Tajweed.Unit, openQuiz: () -> Unit, pickReciter: () -
 @Composable private fun Spacer1() = androidx.compose.foundation.layout.Spacer(Modifier.height(0.dp))
 
 @Composable
-private fun ExampleRow(e: Tajweed.Ex) {
+internal fun ExampleRow(e: Tajweed.Ex) {
     val ctx = LocalContext.current
     val shown = remember(e) { Tajweed.shown(e) }
     val playing = Recitation.now == (e.s to e.a)

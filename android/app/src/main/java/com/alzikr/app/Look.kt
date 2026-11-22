@@ -34,6 +34,8 @@ data class Look(
     val body: FontFamily?, val head: FontFamily?,
     val nav: NavStyle, val icons: IconStyle, val prayers: PrayerLayout, val counter: CounterStyle,
     val flat: Boolean = false, val ornament: String = "",
+    /** The theme for children: the kids section is the first tab, text is larger, the friend speaks to a child. */
+    val kids: Boolean = false,
 ) {
     fun basePal(systemDark: Boolean, mode: Int): Pal = when {
         day == null -> night!!
@@ -133,6 +135,10 @@ object Looks {
             pal(false, 0xFFEEF5F8, 0xFFFFFFFF, 0xFFDCEBF1, 0xFFC4DCE6, 0xFF0B2A3A, 0xFF4F6E7E, 0xFF0B5E86, 0xFFFFFFFF, 0xFFDB9B2F),
             pal(true, 0xFF06131B, 0xFF0B1D28, 0xFF102735, 0xFF1C3B4E, 0xFFE2F1F8, 0xFF8EAFC0, 0xFF3AB0E6, 0xFF021018, 0xFFF0B755),
             Corners.ROUND, 24.dp, Fonts.changa, Fonts.changa, NavStyle.BAR, IconStyle.SHARP, PrayerLayout.CARDS, CounterStyle.RING),
+        Look("kids", "الأطفال", "سماء وشمس وألوان مرحة، خط كبير، وقسم الأطفال أول الأقسام: الحروف والتجويد والوضوء والصلاة… التطبيق كله للصغار",
+            pal(false, 0xFFEAF6FF, 0xFFFFFFFF, 0xFFFFF2C4, 0xFFBFDFF5, 0xFF1D2B5A, 0xFF56689A, 0xFFF0603F, 0xFFFFFFFF, 0xFF1E9E63),
+            pal(true, 0xFF101634, 0xFF19204A, 0xFF242C5E, 0xFF344080, 0xFFF1F4FF, 0xFFA9B4E0, 0xFFFF8A65, 0xFF2A0A00, 0xFF5EE0A0),
+            Corners.ROUND, 30.dp, Fonts.changa, Fonts.changa, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "⭐", kids = true),
     ) }
 
     fun byId(id: String) = all.firstOrNull { it.id == id } ?: all.first()

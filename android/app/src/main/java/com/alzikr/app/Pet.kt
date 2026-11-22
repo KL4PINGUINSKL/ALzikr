@@ -46,7 +46,7 @@ object Pet {
     fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة"; Species.COW -> "زهرة"; Species.ELEPHANT -> "فيلو"; Species.GIRAFFE -> "طويلة"; Species.BIRD -> "زقزوق" }
     /** For children: encouragement and lessons instead of reminders. */
     var kids: Boolean
-        get() = sp.getBoolean("pet_kids", false)
+        get() = Data.look == "kids" || sp.getBoolean("pet_kids", false)
         set(v) { sp.edit().putBoolean("pet_kids", v).apply(); Store.bump() }
     /** "top" (in the header), "ground" (a strip above the tab bar) or "off". */
     var place: String

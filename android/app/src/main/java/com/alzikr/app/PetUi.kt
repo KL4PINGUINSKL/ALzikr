@@ -273,8 +273,8 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
                         .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(16.dp)).clickable { pick(s) }.padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         PetLottie(s, Modifier.size(78.dp))
-                        Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                        Text(Pet.nameOf(s), color = P.muted, fontSize = 11.sp, maxLines = 1)
+                        Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, textAlign = TextAlign.Center)
+                        Text(Pet.nameOf(s), color = P.muted, fontSize = 11.sp, maxLines = 2, textAlign = TextAlign.Center)
                     }
                 }
                 repeat(3 - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
@@ -322,7 +322,7 @@ fun PetPage() {
                         .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(14.dp)).clickable { PetLooks.choose(sp, lk.id) }.padding(6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         PetLottie(sp, Modifier.size(88.dp), look = lk)
-                        Text(lk.name, color = P.ink, fontSize = 13.sp, maxLines = 1)
+                        Text(lk.name, color = P.ink, fontSize = 13.sp, maxLines = 2, lineHeight = 16.sp, textAlign = TextAlign.Center)
                     }
                 }
             }

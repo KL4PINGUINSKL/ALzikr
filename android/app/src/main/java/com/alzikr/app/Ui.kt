@@ -194,11 +194,13 @@ fun UpdateBanner() {
 @Composable
 fun Tile(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean = false, onClick: () -> Unit) {
     val shape = L.shape(16.dp)
-    Column(modifier.clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally) {
+    // Two lines, centered: a one-line label used to wrap and show only its first word.
+    Column(modifier.heightIn(min = 84.dp).clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
         Glyph(icon, tint = if (on) P.onAccent else P.accent, size = 26.dp)
         androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
-        GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 2, lineHeight = 16.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 

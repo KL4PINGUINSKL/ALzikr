@@ -98,7 +98,7 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 extras.forEach { (k, label) ->
                     val on = Data.extra(LocalDate.now(), k)
-                    Text((if (on) "✓ " else "") + label, color = if (on) P.onAccent else P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 1,
+                    Text((if (on) "✓ " else "") + label, color = if (on) P.onAccent else P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 2, lineHeight = 17.sp,
                         modifier = Modifier.weight(1f).clip(L.shape(12.dp)).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, L.shape(12.dp))
                             .clickable { Data.setExtra(LocalDate.now(), k, !on); if (!on) Haptics.tap(ctx) }.padding(vertical = 10.dp))
                 }

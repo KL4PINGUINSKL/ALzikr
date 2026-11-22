@@ -224,7 +224,7 @@ private fun ExtraTimes(times: Map<Prayer, Int>, open: () -> Unit) {
     Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable(onClick = open).padding(vertical = 8.dp)) {
         items.forEach { (n, m) ->
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(n, color = P.muted, fontSize = 11.sp, maxLines = 1)
+                Text(n, color = P.muted, fontSize = 11.sp, maxLines = 2, lineHeight = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 Text(Alerts.timeText(m), color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
         }
