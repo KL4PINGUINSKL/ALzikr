@@ -88,6 +88,7 @@ class MainActivity : ComponentActivity() {
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
         i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
+        i?.getStringExtra("coll")?.let { Nav.collection = it; Nav.go("adhkar") }
         i?.getStringExtra("psheet")?.let { n -> runCatching { Prayer.valueOf(n) }.getOrNull()?.let { Nav.prayerSheet = it; Nav.tab = "prayer" } }
         i?.getStringExtra("quran")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.openQuran(it[0], it[1]) }
         i?.getStringExtra("hadith")?.split(':')?.takeIf { it.size == 2 }?.let { Nav.openHadith(it[0], it[1].toIntOrNull() ?: 0) }

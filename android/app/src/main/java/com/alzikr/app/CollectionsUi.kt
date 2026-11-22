@@ -1,5 +1,9 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.layout.heightIn
+
+import androidx.compose.animation.togetherWith
+
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.Canvas
@@ -104,16 +108,113 @@ private fun CollectionsList(open: (String) -> Unit) {
     }
 }
 
+/**
+ * One dhikr at a time, in the middle of the screen: the one before it (✓ done) small above, the next one faint below.
+ * Tap the dhikr (or the big button) to count; when its number is reached it moves on by itself.
+ */
+@OptIn(androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
 private fun CollectionReader(c: Collection, back: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val counts = Data.colCounts(c.id)
+    fun finished(i: Int) = counts[i] >= c.items[i].count
+    val done = c.items.indices.count { finished(it) }
+    var cur by rememberSaveable(c.id) { mutableStateOf(c.items.indices.firstOrNull { counts[it] < c.items[it].count } ?: c.items.size) }
+    var whole by rememberSaveable { mutableStateOf(false) }
+    fun nextOpen(from: Int) = (from + 1 until c.items.size).firstOrNull { Data.colCounts(c.id)[it] < c.items[it].count }
+        ?: (0 until c.items.size).firstOrNull { Data.colCounts(c.id)[it] < c.items[it].count } ?: c.items.size
+    fun tap() {
+        if (cur !in c.items.indices || finished(cur)) return
+        val after = Data.colTap(c.id, cur)[cur]
+        val now = after >= c.items[cur].count
+        Haptics.tap(ctx, now)
+        if (now) { val at = cur; scope.launch { kotlinx.coroutines.delay(450); if (cur == at) cur = nextOpen(at) } }
+    }
+    Subpage(c.title, back) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            // Where you are.
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(if (cur < c.items.size) "الذكر ${cur + 1} من ${c.items.size}" else "أتممتها", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Sub("أُنجز $done", size = 12.sp)
+                Choice(if (whole) "ذكر واحد" else "القائمة كاملة", whole, Modifier.padding(start = 8.dp)) { whole = !whole }
+            }
+            Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(5.dp).clip(RoundedCornerShape(3.dp)).background(P.line)) {
+                Box(Modifier.fillMaxWidth(done.toFloat() / c.items.size).height(5.dp).clip(RoundedCornerShape(3.dp)).background(if (done == c.items.size) P.gold else P.accent))
+            }
+            if (whole) { Box(Modifier.weight(1f)) { CollectionList(c, cur) { cur = it } }; return@Column }
+
+            // The one before (done ✓), small.
+            val prev = (cur - 1).takeIf { it >= 0 }
+            Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.BottomCenter) {
+                if (prev != null) Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).clickable { cur = prev }.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (finished(prev)) "✓" else "•", color = if (finished(prev)) P.gold else P.muted, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(c.items[prev].text, color = P.muted, fontSize = 13.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+
+            // The current one, in the middle.
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                androidx.compose.animation.AnimatedContent(cur, transitionSpec = {
+                    (androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn()) togetherWith
+                        (androidx.compose.animation.slideOutVertically { -it / 3 } + androidx.compose.animation.fadeOut())
+                }, label = "dhikr") { i ->
+                    if (i >= c.items.size) Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("✓", color = P.gold, fontSize = 64.sp)
+                        Text("أتممت ${c.title}، تقبّل الله منك", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                        Text("البدء من جديد", color = P.accent, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp).clip(L.shape(10.dp)).clickable { Data.colReset(c.id); cur = 0 }.padding(10.dp))
+                    } else {
+                        val item = c.items[i]; val n = Data.colCounts(c.id)[i]; val fin = n >= item.count
+                        Column(Modifier.fillMaxWidth().heightIn(max = 520.dp).clip(L.shape(22.dp)).background(if (fin) P.surface else P.card)
+                            .border(2.dp, if (fin) P.gold.copy(alpha = .6f) else P.accent.copy(alpha = .7f), L.shape(22.dp))
+                            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) { tap() }
+                            .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 10.dp))
+                            Text(item.text, color = if (fin) P.muted else P.ink, fontSize = (21 * Data.textScale).sp, lineHeight = (36 * Data.textScale).sp,
+                                fontFamily = Fonts.naskh, textAlign = TextAlign.Center)
+                            Sub(if (item.count > 1) "يُقال ${item.count} مرات" else "يُقال مرة واحدة", Modifier.padding(top = 12.dp), size = 12.sp)
+                        }
+                    }
+                }
+            }
+
+            // The next one, faint.
+            val next = (cur + 1).takeIf { it < c.items.size }
+            Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
+                if (next != null) Text("التالي: " + c.items[next].text, color = P.muted.copy(alpha = .7f), fontSize = 13.sp, maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.clip(L.shape(10.dp)).clickable { cur = next }.padding(horizontal = 10.dp, vertical = 6.dp))
+            }
+
+            // Count, and move by hand.
+            if (cur < c.items.size) {
+                val item = c.items[cur]; val n = counts[cur]; val fin = n >= item.count
+                Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.size(52.dp).clip(L.shape(14.dp)).background(P.surface).border(1.dp, P.line, L.shape(14.dp)).clickable(enabled = cur > 0) { cur -= 1 }, contentAlignment = Alignment.Center) {
+                        Text("›", color = if (cur > 0) P.ink else P.line, fontSize = 26.sp)
+                    }
+                    Box(Modifier.weight(1f).height(60.dp).clip(L.shape(18.dp)).background(if (fin) P.gold.copy(alpha = .25f) else P.accent).clickable(enabled = !fin) { tap() }, contentAlignment = Alignment.Center) {
+                        Text(if (fin) "✓ تمّ" else if (item.count > 1) "${n} / ${item.count}" else "اضغط بعد قراءته", color = if (fin) P.gold else P.onAccent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Box(Modifier.size(52.dp).clip(L.shape(14.dp)).background(P.surface).border(1.dp, P.line, L.shape(14.dp)).clickable(enabled = cur < c.items.size - 1) { cur += 1 }, contentAlignment = Alignment.Center) {
+                        Text("‹", color = if (cur < c.items.size - 1) P.ink else P.line, fontSize = 26.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CollectionList(c: Collection, focus: Int, pick: (Int) -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = LocalContext.current
     val vibrator = remember { ctx.getSystemService(Vibrator::class.java) }
-    val list = rememberLazyListState()
+    val list = rememberLazyListState(initialFirstVisibleItemIndex = focus.coerceAtLeast(0))
     val scope = rememberCoroutineScope()
     val counts = Data.colCounts(c.id)
     val done = c.items.indices.count { counts[it] >= c.items[it].count }
-    Subpage(c.title, back) {
+    run {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(5.dp).clip(RoundedCornerShape(3.dp)).background(P.line)) {
                 Box(Modifier.fillMaxWidth(done.toFloat() / c.items.size).height(5.dp).clip(RoundedCornerShape(3.dp)).background(if (done == c.items.size) P.gold else P.accent))
@@ -121,9 +222,10 @@ private fun CollectionReader(c: Collection, back: () -> Unit) {
             LazyColumn(Modifier.weight(1f), state = list, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 itemsIndexed(c.items) { i, item ->
                     val n = counts[i]; val finished = n >= item.count
-                    Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(if (finished) P.surface else P.card)
-                        .border(1.dp, if (finished) P.line else P.accent.copy(alpha = .35f), L.shape(18.dp))
+                    Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(if (finished) P.surface else if (i == focus) P.accent.copy(alpha = .12f) else P.card)
+                        .border(if (i == focus) 2.dp else 1.dp, if (finished) P.line else if (i == focus) P.accent else P.line, L.shape(18.dp))
                         .clickable(enabled = !finished) {
+                            pick(i)
                             val after = Data.colTap(c.id, i)[i]
                             val now = after >= item.count
                             Haptics.tap(ctx, now)
