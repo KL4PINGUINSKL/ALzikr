@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
         i?.getStringExtra("hsearch")?.let { Nav.hadithQuery = it; Nav.tab = "library" }
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
-        i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.tab = "more" }
+        i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
         i?.getStringExtra("psheet")?.let { n -> runCatching { Prayer.valueOf(n) }.getOrNull()?.let { Nav.prayerSheet = it; Nav.tab = "prayer" } }
         i?.getStringExtra("quran")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.openQuran(it[0], it[1]) }
         i?.getStringExtra("hadith")?.split(':')?.takeIf { it.size == 2 }?.let { Nav.openHadith(it[0], it[1].toIntOrNull() ?: 0) }
@@ -144,18 +144,32 @@ val sections get() = listOf(
     Section("daily", "يومي", "☑"), Section("more", "المزيد", "☰"),
 )
 
+/** The applied theme (look, colors, fonts, right-to-left) around any screen: the app, the alarm. */
 @Composable
-private fun Root() {
+fun AppTheme(content: @Composable () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val look = Looks.byId(Data.look)
     val pal = look.pal(isSystemInDarkTheme(), Data.theme)
     val scheme = if (pal.dark) darkColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
         else lightColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
-    var settings by remember { mutableStateOf(false) }
     MaterialTheme(colorScheme = scheme, typography = typography(look.body)) {
-        CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl) {
-            // Back after a shortcut returns to the page it came from (inner pages handle back first).
-            androidx.activity.compose.BackHandler(enabled = Nav.backTo != null) { Nav.back() }
+        CompositionLocalProvider(LocalPal provides pal, LocalLook provides look, LocalLayoutDirection provides LayoutDirection.Rtl) { content() }
+    }
+}
+
+@Composable
+private fun Root() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val look = Looks.byId(Data.look)
+    val pal = look.pal(isSystemInDarkTheme(), Data.theme)
+    var settings by remember { mutableStateOf(false) }
+    // The home-screen widgets follow the theme too.
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx) } }
+    AppTheme {
+        run {
+            // Back returns to the previous page (inner pages handle back first).
+            androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty()) { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
                 val inPage = Nav.pages.isNotEmpty()
                 Column(Modifier.fillMaxSize()) {
@@ -234,7 +248,7 @@ private fun BottomBar() {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceAround) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clip(L.shape(12.dp)).clickable { Nav.backTo = null; Nav.tab = s.id }.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.clip(L.shape(12.dp)).clickable { Nav.go(s.id) }.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 12.dp, vertical = 4.dp)) { SectionIcon(s, on) }
                     Spacer(Modifier.height(2.dp))
                     Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
@@ -252,7 +266,7 @@ private fun WordsBar() {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceAround) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clickable { Nav.backTo = null; Nav.tab = s.id }.padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.clickable { Nav.go(s.id) }.padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.width(22.dp).height(3.dp).background(if (on) P.accent else P.bg))
                     Spacer(Modifier.height(6.dp))
                     Text(s.label, color = if (on) P.ink else P.muted, fontSize = 14.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
@@ -269,7 +283,7 @@ private fun TopTabs() {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clickable { Nav.backTo = null; Nav.tab = s.id }.padding(horizontal = 10.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.clickable { Nav.go(s.id) }.padding(horizontal = 10.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         SectionIcon(s, on, 18); if (L.icons != IconStyle.NONE) Spacer(Modifier.width(4.dp))
                         Text(s.label, color = if (on) P.accent else P.muted, fontSize = 15.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
@@ -290,7 +304,7 @@ private fun Dock() {
         .padding(horizontal = 10.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         sections.forEach { s ->
             val on = Nav.tab == s.id
-            Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.backTo = null; Nav.tab = s.id }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.go(s.id) }, contentAlignment = Alignment.Center) {
                 when (L.icons) {
                     IconStyle.GLYPH, IconStyle.NONE -> Text(s.glyph, fontSize = 20.sp)
                     else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = if (on) P.onAccent else P.muted, modifier = Modifier.size(24.dp))

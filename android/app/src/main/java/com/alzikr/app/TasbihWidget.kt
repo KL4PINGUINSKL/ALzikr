@@ -37,6 +37,9 @@ class TasbihWidget : AppWidgetProvider() {
             if (ids.isEmpty()) return
             val set = Data.tasbihSet; val count = Data.tasbih
             val v = RemoteViews(c.packageName, R.layout.widget_tasbih)
+            val pal = ThemeColors.of(c)
+            ThemeColors.background(v, R.id.t_root, pal.surface)
+            v.setTextColor(R.id.t_count, ThemeColors.argb(pal.ink)); v.setTextColor(R.id.t_round, ThemeColors.argb(pal.gold)); v.setTextColor(R.id.t_reset, ThemeColors.argb(pal.muted))
             v.setTextViewText(R.id.t_count, "${count % set}")
             v.setTextViewText(R.id.t_round, "الدورة ${count / set + 1} من $set · المجموع $count")
             v.setOnClickPendingIntent(R.id.t_root, PendingIntent.getBroadcast(c, 60, Intent(c, TasbihWidget::class.java).setAction(TAP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))

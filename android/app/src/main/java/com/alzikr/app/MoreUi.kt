@@ -162,9 +162,16 @@ fun Subpage(title: String, back: () -> Unit, content: @Composable () -> Unit) {
     // Pages opened inside pages: only the innermost title shows, as one thin line.
     val top = Nav.pages.lastOrNull().let { it == null || it === token }
     Column(Modifier.fillMaxSize().background(P.bg)) {
-        if (top) Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("→", color = P.accent, fontSize = 21.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = back).padding(horizontal = 12.dp, vertical = 4.dp))
-            Text(title, color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        if (top) {
+            Row(Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.clip(L.shape(12.dp)).clickable(onClick = back).padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("→", color = P.accent, fontSize = 20.sp)
+                    Text(" رجوع", color = P.accent, fontSize = 14.sp)
+                }
+                Text(title, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).padding(start = 6.dp))
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(P.line))
         }
         Box(Modifier.weight(1f)) { content() }
     }

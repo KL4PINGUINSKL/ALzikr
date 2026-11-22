@@ -106,7 +106,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
     val w = window()
     val times = Store.times()
     val view = when (Data.prayerView) { 1 -> 1; 2 -> 2; 3 -> 3; 4 -> 4; else -> when (L.prayers) { PrayerLayout.CARDS -> 1; PrayerLayout.LIST -> 2; PrayerLayout.TIMELINE -> 4 } }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         UpdateBanner()
         Hint("prayer3", "🕌", "اضغط على أي صلاة لصفحتها: ✓ صلّيتها، والمنبه، والتذكير، والأذان، وسننها وأذكارها. والموقع وطريقة الحساب في السطر الأخير أسفل الصفحة. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
         Hint("home1", "✎", "«ذكر الوقت» يتغير وحده: الصباح والمساء والنوم، والكهف يوم الجمعة، والمواسم. ورتّب هذه الصفحة كما تحب من «✎ تخصيص هذه الصفحة» في أسفلها.")

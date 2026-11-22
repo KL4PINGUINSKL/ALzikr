@@ -28,6 +28,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -313,23 +314,21 @@ class AlarmActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val p = runCatching { Prayer.valueOf(intent?.getStringExtra("prayer") ?: "") }.getOrNull()
         setContent {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            AppTheme {
                 var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
                 LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
                 val t = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalTime()
-                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0B2A22), Color(0xFF061612)))), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(P.surface, P.bg))), contentAlignment = Alignment.Center) {
                     Column(Modifier.fillMaxWidth().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text("⏰", fontSize = 48.sp)
-                        Text(Alerts.timeText(t.hour * 60 + t.minute), color = Color.White, fontSize = 76.sp, fontWeight = FontWeight.Bold)
-                        Text(PrayerAlarm.title(p), color = Color(0xFFE2C275), fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
-                        Text(PrayerAlarm.line(p), color = Color(0xFFCFE3DB), fontSize = 17.sp, textAlign = TextAlign.Center)
+                        Text(Alerts.timeText(t.hour * 60 + t.minute), color = P.ink, fontSize = 76.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
+                        Text(PrayerAlarm.title(p), color = P.gold, fontSize = 26.sp, fontWeight = FontWeight.SemiBold, fontFamily = L.head ?: L.body)
+                        Text(PrayerAlarm.line(p), color = P.muted, fontSize = 17.sp, textAlign = TextAlign.Center)
                         Box(Modifier.height(36.dp))
-                        Text("إيقاف", color = Color(0xFF062018), fontSize = 24.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(40.dp)).background(Color(0xFF3FBF8F)).clickable { PrayerAlarm.stop(this@AlarmActivity); finish() }.padding(vertical = 20.dp))
-                        Row(Modifier.fillMaxWidth()) {
-                            Text("غفوة ${PrayerAlarm.snooze} دقائق", color = Color.White, fontSize = 18.sp, textAlign = TextAlign.Center,
-                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(40.dp)).background(Color(0x33FFFFFF)).clickable { PrayerAlarm.snoozeRinging(this@AlarmActivity); finish() }.padding(vertical = 16.dp))
-                        }
+                        Text("إيقاف", color = P.onAccent, fontSize = 24.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).background(P.accent).clickable { PrayerAlarm.stop(this@AlarmActivity); finish() }.padding(vertical = 20.dp))
+                        Text("غفوة ${PrayerAlarm.snooze} دقائق", color = P.ink, fontSize = 18.sp, textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).background(P.card).border(1.dp, P.line, L.shape(40.dp)).clickable { PrayerAlarm.snoozeRinging(this@AlarmActivity); finish() }.padding(vertical = 16.dp))
                     }
                 }
             }

@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
 import android.widget.RemoteViews
+import androidx.compose.ui.graphics.toArgb
 
 /**
  * Home-screen widget: the next prayer, a live countdown (drawn by Android, no updates needed in
@@ -32,6 +33,10 @@ class PrayerWidget : AppWidgetProvider() {
             if (widgets.isEmpty()) return
             Store.init(c)
             val v = RemoteViews(c.packageName, R.layout.widget_prayer)
+            val pal = ThemeColors.of(c)
+            ThemeColors.background(v, R.id.w_root, pal.surface)
+            v.setTextColor(R.id.w_name, pal.ink.toArgb()); v.setTextColor(R.id.w_time, pal.gold.toArgb())
+            v.setTextColor(R.id.w_count, pal.accent.toArgb()); v.setTextColor(R.id.w_date, pal.muted.toArgb())
             v.setOnClickPendingIntent(R.id.w_root, PendingIntent.getActivity(c, 7, Intent(c, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             if (!Store.hasLocation) {
                 v.setTextViewText(R.id.w_name, "ALzikr")
@@ -51,12 +56,26 @@ class PrayerWidget : AppWidgetProvider() {
             val times = Store.times()
             Prayer.entries.filter { it.alertable }.forEachIndexed { i, p ->
                 v.setTextViewText(ids[i], "${p.ar}\n${Alerts.timeText(times.getValue(p))}")
-                v.setTextColor(ids[i], if (p == w.next) 0xFFE7C66B.toInt() else 0xCCE8F0EC.toInt())
+                v.setTextColor(ids[i], if (p == w.next) pal.gold.toArgb() else pal.muted.toArgb())
             }
             widgets.forEach { manager.updateAppWidget(it, v) }
             // Move on to the following prayer right after this one (not exact: a minute late is fine).
             c.getSystemService(AlarmManager::class.java).set(AlarmManager.RTC, w.nextAt + 30_000L,
                 PendingIntent.getBroadcast(c, 5, Intent(c, PrayerWidget::class.java).setAction(TICK), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
         }
+    }
+}
+
+/** The applied theme's colors for widgets and other places outside Compose. */
+object ThemeColors {
+    fun of(c: android.content.Context): Pal {
+        Store.init(c)
+        val dark = (c.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        return Looks.byId(Data.look).pal(dark, Data.theme)
+    }
+    fun argb(col: androidx.compose.ui.graphics.Color, alpha: Float = col.alpha) = col.copy(alpha = alpha).toArgb()
+    /** Tints a widget's rounded background (Android 12+; older phones keep the default). */
+    fun background(v: android.widget.RemoteViews, id: Int, col: androidx.compose.ui.graphics.Color) {
+        if (android.os.Build.VERSION.SDK_INT >= 31) v.setColorStateList(id, "setBackgroundTintList", android.content.res.ColorStateList.valueOf(argb(col, .96f)))
     }
 }
