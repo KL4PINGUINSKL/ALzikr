@@ -16,4 +16,4 @@ Material Symbols Rounded by Google (https://github.com/google/material-design-ic
 
 ## Companion animations
 
-The companion pets are free animations from LottieFiles (https://lottiefiles.com), used under the Lottie Simple License. The source page and creator of each file are listed in `design/pet-candidates/chosen.tsv` and `gallery.json` (cow, elephant and giraffe: `design/pet-candidates2/report.json`). Playback: lottie-android (Airbnb), Apache License 2.0.
+The companion pets are free animations from LottieFiles (https://lottiefiles.com), used under the Lottie Simple License. The source page and creator of each file are listed in `design/pet-candidates/chosen.tsv` and `gallery.json` (cow, elephant and giraffe: `design/pet-candidates2/report.json`; the later looks: `design/pet-candidates3/report.json`). Playback: lottie-android (Airbnb), Apache License 2.0.
