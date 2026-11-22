@@ -140,8 +140,8 @@ object Home {
         Part("tiles", "الاختصارات"),
         Part("next", "الصلاة القادمة والعدّ التنازلي"),
         Part("times", "مواقيت اليوم"),
-        Part("extra", "الإمساك والضحى ومنتصف الليل"),
         Part("moment", "ذكر الوقت (الصباح، المساء، النوم، الكهف…)"),
+        Part("extra", "الإمساك والضحى ومنتصف الليل"),
         Part("words", "آية اليوم وحديث اليوم"),
         Part("tomorrow", "المناسبة القادمة (غدًا الجمعة، الاثنين، الأيام البيض…)"),
         Part("stats", "صلوات اليوم والأسبوع والمناسبة القادمة"),
@@ -176,6 +176,14 @@ object Home {
 
     var order: List<String>
         get() {
+            // 1.1.37: «ذكر الوقت» moves right under today's times, once, in a saved layout too (the user asked for it).
+            if (!Store.prefs.getBoolean("home_mig_137", false)) {
+                Store.prefs.getString("home_order", null)?.split(',')?.toMutableList()?.let { l ->
+                    if ("moment" in l && "times" in l) { l.remove("moment"); l.add(l.indexOf("times") + 1, "moment") }
+                    Store.prefs.edit().putString("home_order", l.joinToString(",")).apply()
+                }
+                Store.prefs.edit().putBoolean("home_mig_137", true).apply()
+            }
             val saved = Store.prefs.getString("home_order", null)?.split(',')?.filter { id -> parts.any { it.id == id } } ?: emptyList()
             val out = saved.toMutableList()
             parts.map { it.id }.filter { it !in saved }.forEach { id ->

@@ -438,15 +438,36 @@ private fun PrayerTimeline(w: Window, times: Map<Prayer, Int>, open: (Prayer) ->
 /** All six times in one line; the next is filled, a ✓ under each prayed one. */
 @Composable
 private fun PrayerLine(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        Prayer.entries.forEach { p ->
-            val next = p == w.next
-            Column(Modifier.weight(1f).clip(L.shape(10.dp)).background(if (next) P.accent else androidx.compose.ui.graphics.Color.Transparent).clickable { open(p) }.padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(p.ar, color = if (next) P.onAccent else if (p.alertable) P.muted else P.muted.copy(alpha = .7f), fontSize = 11.sp, maxLines = 1)
-                Text(Alerts.timeText(times.getValue(p)).substringBefore(' '), color = if (next) P.onAccent else P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                Text(if (p.alertable && Data.prayed(LocalDate.now(), p)) "✓" else " ", color = if (next) P.onAccent else P.accent, fontSize = 11.sp)
+    val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+    val shape = L.shape(16.dp)
+    // One bar: six equal columns with thin dividers, the next prayer tinted, and the day's progress along the bottom.
+    Column(Modifier.fillMaxWidth().clip(shape).background(P.surface).border(1.dp, P.line, shape)) {
+        Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+            Prayer.entries.forEachIndexed { i, p ->
+                if (i > 0) Box(Modifier.width(1.dp).fillMaxHeight().padding(vertical = 12.dp).background(P.line))
+                val next = p == w.next
+                val passed = !next && times.getValue(p) <= nowMin
+                val done = p.alertable && Data.prayed(LocalDate.now(), p)
+                val t = Alerts.timeText(times.getValue(p))
+                Column(Modifier.weight(1f).fillMaxHeight().background(if (next) P.accent.copy(alpha = .16f) else androidx.compose.ui.graphics.Color.Transparent)
+                    .clickable { open(p) }.padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(p.ar, color = if (next) P.accent else P.muted, fontSize = 11.sp, fontWeight = if (next) FontWeight.Bold else FontWeight.Normal, maxLines = 1, softWrap = false)
+                    Text(t.substringBefore(' '), color = if (next) P.accent else if (passed) P.ink.copy(alpha = .55f) else P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false,
+                        modifier = Modifier.padding(top = 2.dp))
+                    Text(t.substringAfter(' ', ""), color = P.muted, fontSize = 10.sp, maxLines = 1)
+                    Box(Modifier.height(18.dp), contentAlignment = Alignment.Center) {
+                        when {
+                            done -> Text("✓", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            next -> Box(Modifier.size(6.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.accent))
+                        }
+                    }
+                }
             }
+        }
+        val fajr = times.getValue(Prayer.FAJR); val isha = times.getValue(Prayer.ISHA)
+        val frac = ((nowMin - fajr).toFloat() / (isha - fajr).coerceAtLeast(1)).coerceIn(0f, 1f)
+        Box(Modifier.fillMaxWidth().height(3.dp).background(P.line.copy(alpha = .6f))) {
+            Box(Modifier.fillMaxWidth(frac).height(3.dp).background(P.accent))
         }
     }
 }
