@@ -28,8 +28,12 @@ object Data {
     fun setLookInk(id: String, index: Int) = edit { putInt("look_ink_$id", index) }
 
     /** How the prayer times are shown: 0 the theme's way, 1 cards, 2 list, 3 one line, 4 timeline. */
+    /** The «بطاقات / قائمة / سطر / خط زمني» chips over today's times: hidden until asked for. */
+    var viewChips: Boolean
+        get() = sp.getBoolean("view_chips", false)
+        set(v) = edit { putBoolean("view_chips", v) }
     var prayerView: Int
-        get() = sp.getInt("prayer_view", 0)
+        get() = sp.getInt("prayer_view", 3)
         set(v) = edit { putInt("prayer_view", v) }
 
     /** The chosen theme (see [Looks]). */

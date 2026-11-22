@@ -149,8 +149,12 @@ fun PrayerScreen(openSettings: () -> Unit) {
             // Today's times, in the chosen view.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("مواقيت اليوم", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (Data.viewChips) Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf(1 to "بطاقات", 2 to "قائمة", 3 to "سطر", 4 to "خط زمني").forEach { (n, l) -> Choice(l, view == n) { Data.prayerView = n } }
+                }
+                // A small button shows or hides the view choice.
+                androidx.compose.foundation.layout.Box(Modifier.padding(start = 4.dp).clip(L.shape(10.dp)).clickable { Data.viewChips = !Data.viewChips }.padding(6.dp)) {
+                    Glyph(if (Data.viewChips) "✕" else "🎨", tint = P.muted, size = 20.dp)
                 }
             }
             when (view) {

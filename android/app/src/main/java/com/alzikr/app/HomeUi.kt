@@ -137,16 +137,16 @@ object Moments {
 object Home {
     data class Part(val id: String, val label: String)
     val parts = listOf(
-        Part("next", "الصلاة القادمة والعدّ التنازلي"),
-        Part("moment", "ذكر الوقت (الصباح، المساء، النوم، الكهف…)"),
-        Part("tomorrow", "المناسبة القادمة (غدًا الجمعة، الاثنين، الأيام البيض…)"),
         Part("tiles", "الاختصارات"),
+        Part("next", "الصلاة القادمة والعدّ التنازلي"),
         Part("times", "مواقيت اليوم"),
         Part("extra", "الإمساك والضحى ومنتصف الليل"),
-        Part("stats", "صلوات اليوم والأسبوع والمناسبة القادمة"),
-        Part("notice", "مفتاح الإشعار الدائم"),
+        Part("moment", "ذكر الوقت (الصباح، المساء، النوم، الكهف…)"),
         Part("words", "آية اليوم وحديث اليوم"),
+        Part("tomorrow", "المناسبة القادمة (غدًا الجمعة، الاثنين، الأيام البيض…)"),
+        Part("stats", "صلوات اليوم والأسبوع والمناسبة القادمة"),
         Part("place", "الموقع وطريقة الحساب"),
+        Part("notice", "مفتاح الإشعار الدائم"),
     )
 
     data class Short(val id: String, val icon: String, val label: String, val go: () -> Unit)
@@ -171,7 +171,7 @@ object Home {
         Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },
         Short("khatma", "📗", "الختمة") { Nav.daily = 3; Nav.go("daily") },
     )
-    private val defaultShorts = listOf("qibla", "adhkar", "quran", "tasbih", "wird")
+    private val defaultShorts = listOf("qibla", "adhkar", "quran", "khatma", "tasbih")
     val names = listOf("الصلاة", "الرئيسية", "وقتي", "البداية")
 
     var order: List<String>
@@ -202,7 +202,7 @@ object Home {
         if (i < 0 || j !in l.indices) return
         l.add(j, l.removeAt(i)); order = l
     }
-    fun reset() { Store.prefs.edit().remove("home_order").remove("home_hidden").remove("home_shorts").remove("home_name").apply(); Store.bump() }
+    fun reset() { Store.prefs.edit().remove("home_order").remove("home_hidden").remove("home_shorts").remove("home_name").remove("prayer_view").remove("view_chips").apply(); Store.bump() }
 }
 
 /** «ذكر الوقت»: the main moment, with the others as small chips under it. Refreshes every minute. */
