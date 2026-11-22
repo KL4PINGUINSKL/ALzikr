@@ -7,11 +7,13 @@ android { namespace = "com.alzikr.app"; compileSdk = 35
     kotlinOptions { jvmTarget = "17" }
 }
 
-// Light on purpose: Compose + Material 3 only, no other libraries.
+// Light on purpose: Compose + Material 3, plus Lottie for the companion pets.
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.activity:activity-compose:1.10.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
+    // The companion pets: professional Lottie animations (LottieFiles, Lottie Simple License).
+    implementation("com.airbnb.android:lottie-compose:6.6.0")
     testImplementation("junit:junit:4.13.2")
 }

@@ -141,10 +141,9 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
             if (right && b != null) Box(Modifier.padding(end = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
             Box(Modifier.size(Pet.floatSize.dp).alpha(Pet.floatAlpha)
             ) {
-                PetSprite(species, {
-                    val t = clock() / 1000f
-                    Pose(t = t, blink = (t % 4.4f) < .15f, sleep = Pet.asleep(), happy = Pet.happy(), left = right, flap = if (b != null && (t % 1.2f) < .3f) .6f else 0f)
-                }, Modifier.size(Pet.floatSize.dp), Pet.lineStyle(P.accent, P.surface))
+                @Suppress("UNUSED_VARIABLE") val t0 = clock()
+                // Moves while it speaks; otherwise a still frame, so it costs nothing.
+                PetLottie(species, Modifier.size(Pet.floatSize.dp), playing = b != null)
             }
             if (!right && b != null) Box(Modifier.padding(start = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
         }

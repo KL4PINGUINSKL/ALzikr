@@ -1,5 +1,9 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.layout.width
+
+import androidx.compose.ui.graphics.graphicsLayer
+
 import androidx.compose.ui.graphics.compositeOver
 
 import android.content.Intent
@@ -79,6 +83,8 @@ private class PetSim {
     // the yarn ball
     var ball = false; var bx = 0f; var bv = 0f; var spin = 0f
     var cooldown = 0f
+    /** The yarn ball game (only for drawn friends that can pat it). */
+    var toys = false
 
     fun jump(h: Float = 1f) { if (hop <= 0.001f) { sq = -.55f * h; hopV = 3.2f * h } }
     fun patBall() {
@@ -104,7 +110,7 @@ private class PetSim {
                 r < .72f -> { jump(); timer = 1.5f }
                 r < .80f -> { flapT = .7f; timer = 1.5f }
                 r < .88f -> { faceTo = -faceTo; timer = 1.2f }
-                else -> if (!ball) {
+                else -> if (!ball && toys) {
                     mode = 2; playLeft = 14f + kotlin.random.Random.nextFloat() * 8f; ball = true
                     bx = if (x < .5f) (x + .45f).coerceAtMost(.95f) else (x - .45f).coerceAtLeast(.05f); bv = if (bx > x) -.25f else .25f
                     timer = 1f
@@ -206,7 +212,15 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
         Box(Modifier.offset { IntOffset((sim.x * (widthPx - boxPx)).toInt().also { @Suppress("UNUSED_VARIABLE") val f = frame }, 0) }.size(box)
             .combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
                 onLongClick = { Nav.morePage = "pet"; Nav.go("more") }) { speak() }) {
-            PetSprite(sp, { @Suppress("UNUSED_VARIABLE") val f = frame; sim.pose(happy) }, Modifier.fillMaxSize(), line)
+            // The animation plays inside; the simulation moves it: glide, hop, a soft squash, a lean, and a turn through the middle.
+            PetLottie(sp, Modifier.fillMaxSize().graphicsLayer {
+                @Suppress("UNUSED_VARIABLE") val f = frame
+                val turn = (kotlin.math.abs(sim.face) * .85f + .15f) * (if (sim.face < 0) -1f else 1f)
+                scaleX = turn * (1f + sim.sq * .08f); scaleY = 1f - sim.sq * .1f
+                translationY = -sim.hop * size.height * .18f
+                rotationZ = sim.lean * .4f * (if (sim.face < 0) -1f else 1f)
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, .95f)
+            }, speed = if (sim.asleep) .35f else 1f)
             said?.let { s ->
                 val px = with(LocalDensity.current) { box.roundToPx() }
                 Popup(alignment = if (bubbleBelow) Alignment.TopCenter else Alignment.BottomCenter, offset = IntOffset(0, if (bubbleBelow) px else -px)) {
@@ -258,8 +272,7 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
                     Column(Modifier.weight(1f).clip(L.shape(16.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
                         .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(16.dp)).clickable { pick(s) }.padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
-                        PetSprite(s, { val t = clock() / 1000f + s.ordinal; Pose(t = t, blink = (t % 3.7f) < .12f, flap = if ((t % 5f) < .4f) .8f else 0f, happy = on) }, Modifier.size(78.dp),
-                            if (on) line?.copy(paper = P.accent.copy(alpha = .14f).compositeOver(P.card)) else line)
+                        PetLottie(s, Modifier.size(78.dp))
                         Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                         Text(Pet.nameOf(s), color = P.muted, fontSize = 11.sp, maxLines = 1)
                     }
@@ -298,6 +311,23 @@ fun PetPage() {
         Title("اختر صديقك")
         SpeciesGrid(sp) { Pet.species = it }
         if (sp == null) return@Column
+        val looks = PetLooks.of(sp)
+        if (looks.size > 1) {
+            Title("شكل ${Pet.nameOf(sp)}")
+            val cur = PetLooks.chosen(sp)
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                looks.forEach { lk ->
+                    val on = lk.id == cur?.id
+                    Column(Modifier.width(104.dp).clip(L.shape(14.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
+                        .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(14.dp)).clickable { PetLooks.choose(sp, lk.id) }.padding(6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+                        PetLottie(sp, Modifier.size(88.dp), look = lk)
+                        Text(lk.name, color = P.ink, fontSize = 13.sp, maxLines = 1)
+                    }
+                }
+            }
+        }
+        Sub("الرسوم المتحركة من LottieFiles (رخصة Lottie Simple License).", size = 11.sp)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             var name by remember(sp) { mutableStateOf(Pet.nameOf(sp)) }
             OutlinedTextField(name, { name = it; if (it.isNotBlank()) Pet.setName(sp, it) }, singleLine = true, label = { Text("اسم ${sp.ar}") }, modifier = Modifier.weight(1f))
@@ -379,10 +409,7 @@ fun KidsPage() {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Pet.lessons.forEachIndexed { k, (n, _) -> Choice(n, topic == k) { topic = k } }
         }
-        PetSprite(sp, {
-            val t = clock() / 1000f
-            Pose(t = t, blink = (t % 3.5f) < .12f, hop = hop.value, flap = hop.value, happy = picked == q.answer)
-        }, Modifier.size(150.dp))
+        PetLottie(sp, Modifier.size(170.dp).graphicsLayer { translationY = -hop.value * 60f; val sq = 1f + hop.value * .06f; scaleX = sq; scaleY = sq })
         Text("⭐ ${Pet.stars}", color = P.gold, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Panel(color = P.card, pad = 16.dp) {
             Sub("$name · سؤال ${i % qs.size + 1} من ${qs.size}", color = P.gold, size = 12.sp)
