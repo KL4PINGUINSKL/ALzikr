@@ -31,6 +31,11 @@ object PetLooks {
         Species.RABBIT to listOf(Look("rabbit-6", "منفوش", "LottieFiles"), Look("rabbit-2", "يقفز", "LottieFiles"), Look("rabbit-5", "الساحر", "LottieFiles"), Look("rabbit-10", "أرنبان", "LottieFiles"), Look("rabbit-12", "يلوّح", "LottieFiles"), Look("rabbit-9", "أرنب", "LottieFiles", zoom = 1.4f)),
         Species.SHEEP to listOf(Look("sheep-2", "تعدّ الخراف", "LottieFiles"), Look("sheep-4", "غنمة", "LottieFiles", zoom = 2.0f), Look("sheep-5", "تقفز", "LottieFiles"), Look("sheep-8", "صغيرة", "LottieFiles", zoom = 1.1f)),
         Species.CHICKEN to listOf(Look("chicken-1", "دجاجة", "LottieFiles"), Look("chicken-5", "عصفورة زرقاء", "LottieFiles"), Look("chicken-6", "ترقص", "LottieFiles"), Look("chicken-12", "تركض", "LottieFiles", zoom = 1.3f), Look("chicken-7", "تنقر", "LottieFiles", zoom = 1.3f), Look("chicken-9", "كتكوت", "LottieFiles")),
+        Species.COW to listOf(Look("cow-2", "ترقص", "Betsa"), Look("cow-6", "تأكل العشب", "Bashir Ahmad"), Look("cow-4", "تمضغ", "Stephane Urth"), Look("cow-5", "السوداء", "Phase Media"),
+            Look("cow-7", "وجه البقرة", "balaji madiri"), Look("cow-1", "صغيرة", "Sheikh Sohel", zoom = 2.4f), Look("cow-13", "غاضبة", "Anna Mazurkevich")),
+        Species.ELEPHANT to listOf(Look("elephant-2", "يمشي", "Bashir Ahmad"), Look("elephant-3", "على التل", "Porag Gogoi"), Look("elephant-5", "يفكّر", "Noah Wise")),
+        Species.GIRAFFE to listOf(Look("giraffe-3", "سعيدة", "Tarryn Myburgh"), Look("giraffe-1", "تمشي", "Bashir Ahmad"), Look("giraffe-4", "صغيرة جالسة", "Tom Fabre"),
+            Look("giraffe-13", "تطلّ", "Sam Fry"), Look("giraffe-9", "تبتسم", "Sam Fry"), Look("giraffe-2", "على الدراجة", "Doug Fuchs", zoom = 2.4f), Look("giraffe-7", "مع الحوت", "Qrious Studio")),
     )
     fun of(s: Species) = looks[s].orEmpty()
     /** The look chosen for this friend (each friend keeps its own). */

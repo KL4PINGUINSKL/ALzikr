@@ -35,6 +35,9 @@ enum class Species(val ar: String, val about: String) {
     RABBIT("أرنب", "يقفز ويحرّك أذنيه"),
     SHEEP("غنمة", "صوفها كالغيمة"),
     CHICKEN("دجاجة", "تنقر الأرض بلطف"),
+    COW("بقرة", "هادئة تمضغ العشب"),
+    ELEPHANT("فيل", "يحرّك خرطومه وأذنيه الكبيرتين"),
+    GIRAFFE("زرافة", "عنقها طويل تطلّ من فوق"),
 }
 
 /** How the friend stands right now. Everything is continuous, so motion can be smooth. */
@@ -107,6 +110,8 @@ fun DrawScope.drawPet(s: Species, p: Pose, line: PetLine? = null) {
                         Species.RABBIT -> rabbit(u, p, stride)
                         Species.SHEEP -> sheep(u, p, stride)
                         Species.CHICKEN -> chicken(u, p, stride)
+                        // These three are drawn only by their Lottie looks.
+                        Species.COW, Species.ELEPHANT, Species.GIRAFFE -> sheep(u, p, stride)
                     }
                 }
             }
