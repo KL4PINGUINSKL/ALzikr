@@ -56,92 +56,157 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 /**
- * The friend living in the app: it walks gently left and right, stops, looks around, hops now and then,
- * sleeps at night and is happy when the prayers are marked. A tap makes it speak; it also speaks by itself
- * every few minutes (if allowed). A long press opens its page.
+ * The friend's little world, simulated smoothly every frame: it eases into a walk and out of it, leans as it goes,
+ * turns gradually, its tail and ears trail behind, it squashes on landing, and now and then a yarn ball rolls in —
+ * it chases it and pats it with a paw, and the ball rolls and slows by itself.
  */
+private class PetSim {
+    var t = 0f
+    var x = .5f; var v = 0f; var target = .5f
+    var face = 1f; var faceTo = 1f
+    var walk = 0f
+    var hop = 0f; var hopV = 0f
+    var sq = 0f; var sqV = 0f
+    var lean = 0f
+    var paw = 0f; var pawT = 0f
+    var flap = 0f; var flapT = 0f
+    var look = 0f; var lookTo = 0f
+    var tilt = 0f
+    var timer = 2f
+    var mode = 0           // 0 idle, 1 wander, 2 play
+    var playLeft = 0f
+    var asleep = false
+    // the yarn ball
+    var ball = false; var bx = 0f; var bv = 0f; var spin = 0f
+    var cooldown = 0f
+
+    fun jump(h: Float = 1f) { if (hop <= 0.001f) { sq = -.55f * h; hopV = 3.2f * h } }
+    fun patBall() {
+        if (cooldown > 0f) return
+        pawT = .38f; cooldown = .9f
+        val dir = if (bx >= x) 1f else -1f
+        bv += dir * (0.35f + kotlin.random.Random.nextFloat() * .35f)
+        if (kotlin.random.Random.nextInt(3) == 0) jump(.45f)
+    }
+
+    fun step(dt: Float) {
+        t += dt
+        cooldown = (cooldown - dt).coerceAtLeast(0f)
+        // ---- choose what to do
+        timer -= dt
+        if (asleep) { mode = 0; target = x }
+        else if (timer <= 0f) {
+            val r = kotlin.random.Random.nextFloat()
+            when {
+                mode == 2 && playLeft > 0f -> {}
+                r < .42f -> { mode = 1; target = kotlin.random.Random.nextFloat() * .86f + .07f; timer = 3f + kotlin.random.Random.nextFloat() * 3f }
+                r < .62f -> { mode = 0; timer = 2f + kotlin.random.Random.nextFloat() * 3f; lookTo = kotlin.random.Random.nextFloat() * 1.4f - .7f }
+                r < .72f -> { jump(); timer = 1.5f }
+                r < .80f -> { flapT = .7f; timer = 1.5f }
+                r < .88f -> { faceTo = -faceTo; timer = 1.2f }
+                else -> if (!ball) {
+                    mode = 2; playLeft = 14f + kotlin.random.Random.nextFloat() * 8f; ball = true
+                    bx = if (x < .5f) (x + .45f).coerceAtMost(.95f) else (x - .45f).coerceAtLeast(.05f); bv = if (bx > x) -.25f else .25f
+                    timer = 1f
+                } else timer = 1f
+            }
+        }
+        // ---- play: run to the ball and pat it
+        if (mode == 2) {
+            playLeft -= dt
+            val side = if (bx >= x) -1f else 1f
+            target = (bx + side * .09f).coerceIn(.03f, .97f)
+            if (kotlin.math.abs(x - target) < .03f && kotlin.math.abs(bv) < .25f) { faceTo = if (bx >= x) 1f else -1f; patBall() }
+            if (playLeft <= 0f) { mode = 0; timer = 2f; bv = if (bx > .5f) .5f else -.5f }
+        }
+        // ---- motion: a soft spring toward the target, capped speed
+        val d = target - x
+        val a = (d * 7f - v * 4.2f).coerceIn(-1.6f, 1.6f)
+        v = (v + a * dt).coerceIn(-.38f, .38f)
+        if (kotlin.math.abs(d) < .004f && kotlin.math.abs(v) < .01f) v = 0f
+        x = (x + v * dt).coerceIn(0f, 1f)
+        if (kotlin.math.abs(v) > .025f) faceTo = if (v > 0) 1f else -1f
+        face += (faceTo - face) * (dt * 7f).coerceAtMost(1f)
+        val speed = (kotlin.math.abs(v) / .3f).coerceIn(0f, 1f)
+        walk += dt * (1.1f + speed * 1.6f) * speed.coerceAtLeast(.0f)
+        lean += ((speed * 7f) - lean) * (dt * 5f).coerceAtMost(1f)
+        // ---- hop with gravity; squash and stretch on a damped spring
+        if (hopV != 0f || hop > 0f) {
+            hop += hopV * dt; hopV -= 11f * dt
+            if (hop <= 0f) { hop = 0f; if (hopV < -.5f) sqV += -hopV * 2.4f; hopV = 0f }
+        }
+        val sqA = -170f * sq - 11f * sqV
+        sqV += sqA * dt; sq += sqV * dt
+        // ---- paw, wings, head
+        if (pawT > 0f) { pawT -= dt; paw = kotlin.math.sin((1f - (pawT / .38f).coerceIn(0f, 1f)) * Math.PI.toFloat()) } else paw = 0f
+        if (flapT > 0f) { flapT -= dt; flap = (kotlin.math.sin(flapT * 14f) * .5f + .5f) * (flapT / .7f).coerceIn(0f, 1f) } else flap = 0f
+        if (kotlin.random.Random.nextFloat() < dt * .25f) lookTo = kotlin.random.Random.nextFloat() * 1.2f - .6f
+        if (mode == 2) lookTo = -.35f   // eyes on the ball
+        look += (lookTo - look) * (dt * 3f).coerceAtMost(1f)
+        // ---- the ball rolls and slows; it bounces softly at the edges, and leaves when play is over
+        if (ball) {
+            bx += bv * dt; bv *= kotlin.math.exp(-1.1f * dt); spin += bv * dt * 40f
+            if (mode == 2) { if (bx < .02f) { bx = .02f; bv = -bv * .55f }; if (bx > .98f) { bx = .98f; bv = -bv * .55f } }
+            else if (bx < -.15f || bx > 1.15f || kotlin.math.abs(bv) < .02f) ball = false
+        }
+    }
+    fun pose(happy: Boolean) = Pose(t = t, blink = !asleep && (t % 4.3f) < .13f, walk = walk, speed = (kotlin.math.abs(v) / .3f).coerceIn(0f, 1f),
+        hop = hop, flap = flap, sleep = asleep, happy = happy, face = face, lean = lean, squash = sq, paw = paw, look = look, tilt = tilt)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, paper: androidx.compose.ui.graphics.Color = P.bg) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val sp = Pet.species ?: return
-    val clock = rememberPetClock()
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    val x = remember { Animatable(0.5f) }
-    var left by remember { mutableStateOf(false) }
-    var walking by remember { mutableStateOf(false) }
-    val hop = remember { Animatable(0f) }
-    val flap = remember { Animatable(0f) }
-    val squash = remember { Animatable(0f) }
-    val tilt = remember { Animatable(0f) }
     val line = Pet.lineStyle(P.accent, paper)
-    suspend fun jump(h: Float = 1f) {
-        squash.animateTo(.7f, tween(90)); squash.animateTo(0f, tween(90))
-        hop.animateTo(h, tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing))
-        hop.animateTo(0f, tween(230, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
-        squash.animateTo(1f, tween(70)); squash.animateTo(0f, androidx.compose.animation.core.spring(dampingRatio = .4f))
-    }
+    val sim = remember { PetSim() }
+    var frame by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     var said by remember { mutableStateOf<Pet.Say?>(null) }
     var n by remember { mutableIntStateOf(Random.nextInt(100)) }
-    val asleep = Pet.asleep(); val happy = Pet.happy() || said != null && Pet.kids
-    // A tap: it speaks, with a different little move each time.
+    val happy = Pet.happy()
+    // One smooth simulation, stepped every frame (paused by Android when the app is not on screen).
+    LaunchedEffect(sp) {
+        var last = 0L
+        while (true) {
+            androidx.compose.runtime.withFrameMillis { now ->
+                val dt = if (last == 0L) .016f else ((now - last) / 1000f).coerceIn(0f, .05f)
+                last = now; sim.step(dt); frame = now
+            }
+        }
+    }
+    LaunchedEffect(Unit) { while (true) { sim.asleep = Pet.asleep(); delay(30_000) } }
     fun speak() {
         said = Pet.say(n++)
-        scope.launch {
-            when (n % 4) {
-                0 -> jump()
-                1 -> { flap.animateTo(1f, tween(150)); flap.animateTo(0f, tween(150)); flap.animateTo(1f, tween(150)); flap.animateTo(0f, tween(220)) }
-                2 -> { tilt.animateTo(-10f, tween(160)); tilt.animateTo(10f, tween(240)); tilt.animateTo(0f, androidx.compose.animation.core.spring(dampingRatio = .5f)) }
-                else -> { left = !left; delay(220); left = !left; jump(.6f) }
-            }
-        }
+        when (n % 3) { 0 -> sim.jump(); 1 -> sim.flapT = .7f; else -> { sim.faceTo = -sim.faceTo; sim.timer = 1f } }
     }
-    // Something good was just done: it celebrates.
-    val cheer = Pet.cheerNow()
-    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); jump(); delay(120); jump(.7f) } }
-
-    // A gentle life: walk somewhere, rest, sometimes hop or flap; asleep at night it stays put.
-    LaunchedEffect(sp, asleep) {
-        while (true) {
-            if (asleep) { walking = false; delay(4000); continue }
-            delay(Random.nextLong(2500, 6500))
-            when (Random.nextInt(7)) {
-                0, 1, 2 -> {
-                    val to = Random.nextFloat() * .9f + .05f
-                    val turn = (to < x.value) != left
-                    if (turn) { left = !left; delay(180) }
-                    walking = true
-                    x.animateTo(to, tween((kotlin.math.abs(to - x.value) * 9000).toInt().coerceAtLeast(700), easing = androidx.compose.animation.core.FastOutSlowInEasing))
-                    walking = false
-                    squash.animateTo(.4f, tween(90)); squash.animateTo(0f, tween(160))
-                }
-                3 -> jump()
-                4 -> { flap.animateTo(1f, tween(200)); flap.animateTo(0f, tween(300)) }
-                5 -> { left = !left; delay(700); left = !left }   // looks around
-                else -> { tilt.animateTo(-6f, tween(500)); delay(400); tilt.animateTo(0f, tween(500)) }   // a lazy stretch
-            }
-        }
-    }
-    // Speaks by itself now and then.
-    LaunchedEffect(sp) {
+    LaunchedEffect(Unit) {
         while (true) {
             delay(Random.nextLong(150_000, 300_000))
             if (Pet.talks && !Pet.asleep()) speak()
         }
     }
+    val cheer = Pet.cheerNow()
+    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); sim.jump(); delay(650); sim.jump(.7f) } }
     LaunchedEffect(said) { if (said != null) { delay(7000); said = null } }
 
     BoxWithConstraints(modifier.height(height.dp)) {
         val box = height.dp
-        val maxX = maxWidth - box
-        Box(Modifier.offset(x = maxX * x.value).size(box)
+        val boxPx = with(LocalDensity.current) { box.toPx() }
+        val widthPx = with(LocalDensity.current) { maxWidth.toPx() }
+        // The yarn ball, on the same ground line.
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            @Suppress("UNUSED_VARIABLE") val f = frame
+            if (sim.ball) {
+                val r = boxPx * .13f
+                val cx = r + sim.bx * (size.width - 2 * r)
+                drawYarn(cx, size.height * .93f - r, r, sim.spin, line)
+            }
+        }
+        Box(Modifier.offset { IntOffset((sim.x * (widthPx - boxPx)).toInt().also { @Suppress("UNUSED_VARIABLE") val f = frame }, 0) }.size(box)
             .combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
                 onLongClick = { Nav.morePage = "pet"; Nav.go("more") }) { speak() }) {
-            PetSprite(sp, {
-                val t = clock() / 1000f
-                Pose(t = t, blink = !asleep && (t % 4.2f) < .13f, walk = if (walking) t * 1.8f else 0f, hop = hop.value, flap = flap.value, sleep = asleep, happy = happy, left = left,
-                    tilt = tilt.value, squash = squash.value)
-            }, Modifier.fillMaxSize(), line)
+            PetSprite(sp, { @Suppress("UNUSED_VARIABLE") val f = frame; sim.pose(happy) }, Modifier.fillMaxSize(), line)
             said?.let { s ->
                 val px = with(LocalDensity.current) { box.roundToPx() }
                 Popup(alignment = if (bubbleBelow) Alignment.TopCenter else Alignment.BottomCenter, offset = IntOffset(0, if (bubbleBelow) px else -px)) {
