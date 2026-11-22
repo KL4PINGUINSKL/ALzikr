@@ -200,6 +200,7 @@ object Home {
         Short("goals", "🏁", "أهدافي") { Nav.morePage = "goals"; Nav.go("more") },
         Short("sadaqa", "💰", "صدقاتي") { Nav.morePage = "sadaqa"; Nav.go("more") },
         Short("salah", "💧", "صفة الصلاة") { Nav.morePage = "salah"; Nav.go("more") },
+        Short("tajweed", "🎙", "التجويد") { Nav.morePage = "tajweed"; Nav.go("more") },
         Short("stats", "📊", "إحصائياتي") { Nav.morePage = "stats"; Nav.go("more") },
         Short("tasks", "☑", "المهام") { Nav.daily = 0; Nav.go("daily") },
         Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },
