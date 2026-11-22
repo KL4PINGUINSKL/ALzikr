@@ -1,5 +1,9 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.verticalScroll
+
+import androidx.compose.foundation.layout.heightIn
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -196,4 +200,48 @@ fun Tile(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean
         androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
         GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
     }
+}
+
+/** «تحديث متوفر» in the app's own theme: your version and the new one, what is new in each version since yours, then the download. */
+@Composable
+fun UpdateDialog() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val activity = ctx as? android.app.Activity
+    AppUpdate.progress?.let { f ->
+        androidx.compose.material3.AlertDialog(onDismissRequest = {}, containerColor = P.surface,
+            title = { Text("تحديث ALzikr", color = P.ink, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(AppUpdate.stage, color = P.ink, fontSize = 15.sp)
+                    androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
+                    if (f < 0f) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth(), color = P.accent, trackColor = P.line)
+                    else androidx.compose.material3.LinearProgressIndicator(progress = { f }, modifier = Modifier.fillMaxWidth(), color = P.accent, trackColor = P.line)
+                }
+            }, confirmButton = {})
+        return
+    }
+    val o = AppUpdate.offer ?: return
+    androidx.compose.material3.AlertDialog(onDismissRequest = { AppUpdate.later(ctx) }, containerColor = P.surface,
+        title = {
+            Column {
+                Text("تحديث متوفر", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
+                Text("ALzikr ${o.version} · لديك ${o.current}", color = P.gold, fontSize = 14.sp)
+            }
+        },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                Text("ما الجديد", color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                o.news.forEach { (ver, items) ->
+                    Text(ver, color = P.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
+                    items.forEach { line ->
+                        Row(Modifier.padding(top = 4.dp)) {
+                            Text("•", color = P.accent, fontSize = 15.sp, modifier = Modifier.padding(end = 6.dp))
+                            Text(line, color = P.ink, fontSize = 14.sp, lineHeight = 22.sp)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { Action("تحديث الآن") { activity?.let { AppUpdate.accept(it) } } },
+        dismissButton = { androidx.compose.material3.TextButton({ AppUpdate.later(ctx) }) { Text("لاحقًا", color = P.muted) } })
 }

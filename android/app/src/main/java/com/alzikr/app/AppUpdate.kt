@@ -1,7 +1,6 @@
 package com.alzikr.app
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -14,11 +13,10 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONArray
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -39,6 +37,30 @@ object AppUpdate {
     @Volatile private var busy = false
 
     private data class Release(val version: String, val url: String, val size: Long, val notes: String)
+
+    /** The offer on screen (drawn in the app's theme by UpdateDialog): your version, the new one, and what is new in each version since yours. */
+    data class Offer(val current: String, val version: String, val news: List<Pair<String, List<String>>>)
+    var offer by androidx.compose.runtime.mutableStateOf<Offer?>(null)
+        private set
+    /** While updating: null = not updating, -1 = waiting, 0..1 = downloaded part. */
+    var progress by androidx.compose.runtime.mutableStateOf<Float?>(null)
+        private set
+    var stage by androidx.compose.runtime.mutableStateOf("")
+        private set
+    private var pending: Release? = null
+    /** Every release of this app seen in the last check, newest first (for «ما الجديد»). */
+    private var seen: List<Release> = emptyList()
+
+    /** A release's notes as short lines (links and empty lines left out). */
+    private fun lines(body: String): List<String> = body.lines().map { it.trim().trimStart('-', '•', '*', ' ') }
+        .filter { it.isNotBlank() && !it.contains("http") && !it.startsWith("رابط") }
+
+    fun accept(activity: Activity) { val r = pending ?: return; offer = null; start(activity, r) }
+    fun later(context: Context) {
+        val r = pending ?: return
+        context.getSharedPreferences("app_update", Context.MODE_PRIVATE).edit().putString("later_version", r.version).putLong("later_at", System.currentTimeMillis()).apply()
+        offer = null
+    }
 
     /** Call from the main activity's onResume. Quiet when offline, up to date, or checked recently. */
     fun check(activity: Activity) = doCheck(activity, force = false)
@@ -90,13 +112,16 @@ object AppUpdate {
     /** The newest release of this app across every page of ALapps releases. */
     private fun latest(): Release? {
         var best: Release? = null
+        all.clear()
         for (page in 1..10) {
             val (found, count) = latestOn(page) ?: return best
             if (found != null && (best == null || compare(found.version, best.version) > 0)) best = found
             if (count < 100) break
         }
+        seen = all.sortedWith { a, b -> compare(b.version, a.version) }
         return best
     }
+    private val all = ArrayList<Release>()
 
     /** One page: the best release on it and how many releases the page held; null on a network error. */
     private fun latestOn(page: Int): Pair<Release?, Int>? {
@@ -115,8 +140,9 @@ object AppUpdate {
                 for (j in 0 until assets.length()) {
                     val a = assets.getJSONObject(j)
                     val v = pattern.find(a.optString("name"))?.groupValues?.get(1) ?: continue
-                    if (best == null || compare(v, best.version) > 0)
-                        best = Release(v, a.optString("browser_download_url"), a.optLong("size"), r.optString("body").trim().take(600))
+                    val rel = Release(v, a.optString("browser_download_url"), a.optLong("size"), r.optString("body").trim().take(1500))
+                    all += rel
+                    if (best == null || compare(v, best.version) > 0) best = rel
                 }
             }
             return best to list.length()
@@ -135,16 +161,9 @@ object AppUpdate {
 
     private fun ask(activity: Activity, current: String, release: Release) {
         if (activity.isFinishing || activity.isDestroyed) return
-        val notes = if (release.notes.isNotEmpty()) "\n\n${release.notes}" else ""
-        AlertDialog.Builder(activity)
-            .setTitle("تحديث متوفر")
-            .setMessage("$APP ${release.version} متوفر (لديك $current).$notes")
-            .setPositiveButton("تحديث") { _, _ -> start(activity, release) }
-            .setNegativeButton("لاحقاً") { _, _ ->
-                activity.getSharedPreferences("app_update", Context.MODE_PRIVATE).edit()
-                    .putString("later_version", release.version).putLong("later_at", System.currentTimeMillis()).apply()
-            }
-            .show()
+        pending = release
+        val news = seen.filter { compare(it.version, current) > 0 }.distinctBy { it.version }.take(8).map { it.version to lines(it.notes) }.filter { it.second.isNotEmpty() }
+        offer = Offer(current, release.version, news.ifEmpty { listOf(release.version to lines(release.notes)) })
     }
 
     private fun start(activity: Activity, release: Release) {
@@ -155,22 +174,18 @@ object AppUpdate {
             runCatching { activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${activity.packageName}"))) }
             return
         }
-        val pad = (20 * activity.resources.displayMetrics.density).toInt()
-        val bar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply { max = 100; isIndeterminate = true }
-        val label = TextView(activity).apply { text = "جارٍ تنزيل ${release.version}…" }
-        val box = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, pad, pad, pad / 2); addView(label); addView(bar) }
-        val dialog = AlertDialog.Builder(activity).setTitle("تحديث $APP").setView(box).setCancelable(false).show()
+        stage = "جارٍ تنزيل ${release.version}…"; progress = -1f
         val app = activity.applicationContext
         Thread {
             try {
-                val file = download(app, release) { f -> main.post { bar.isIndeterminate = false; bar.progress = (f * 100).toInt() } }
-                main.post { label.text = "جارٍ التثبيت…" }
+                val file = download(app, release) { f -> main.post { progress = f } }
+                main.post { stage = "جارٍ التثبيت…"; progress = -1f }
                 commit(app, file)
-                main.post { runCatching { dialog.dismiss() } }
+                main.post { progress = null }
             } catch (e: Exception) {
                 Log.w(TAG, "update failed", e)
                 main.post {
-                    runCatching { dialog.dismiss() }
+                    progress = null
                     Toast.makeText(app, "تعذّر التحديث: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
                 }
             }

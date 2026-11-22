@@ -57,7 +57,7 @@ import java.util.Locale
 
 /** Touch each object that holds Compose state, so it is created on the main thread. */
 fun warmStates() {
-    Store.version; Nav.tab; Quran.ready; Recitation.now; Tafsir.version; Hadith.version; Books.version; Adhan.downloading
+    Store.version; Nav.tab; Quran.ready; Recitation.now; AppUpdate.offer; AppUpdate.progress; Tafsir.version; Hadith.version; Books.version; Adhan.downloading
 }
 
 class MainActivity : ComponentActivity() {
@@ -209,6 +209,7 @@ private fun Root() {
                 Overlays()
             }
             Nav.daySheet?.let { d -> DaySheet(d) { Nav.daySheet = null } }
+            UpdateDialog()
             if (settings) SettingsSheet { settings = false }
         }
     }
