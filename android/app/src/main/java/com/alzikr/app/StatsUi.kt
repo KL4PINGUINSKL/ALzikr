@@ -51,6 +51,10 @@ object Stats {
     }
     /** A collection finished on [d]. */
     fun colDoneOn(id: String, d: LocalDate): Boolean {
+        if (id == "prayer") return Content.afterPrayer.any { colDoneOn(it.id, d) } || colDoneOn0("prayer", d)
+        return colDoneOn0(id, d)
+    }
+    private fun colDoneOn0(id: String, d: LocalDate): Boolean {
         val items = Content.collection(id)?.items ?: return false
         val a = Store.prefs.getString("col_${id}_$d", null)?.let { runCatching { org.json.JSONArray(it) }.getOrNull() } ?: return false
         return items.indices.all { a.optInt(it) >= items[it].count }

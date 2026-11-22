@@ -38,7 +38,7 @@ object Alerts {
     private const val ID_REMIND = 11
     const val ID_FOCUS = 12
 
-    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR, KHATMA, DUA }
+    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR, KHATMA, DUA, SADAQA }
     data class Event(val at: Long, val kind: Kind, val prayer: Prayer)
 
     fun timeText(minutes: Int): String {
@@ -68,6 +68,7 @@ object Alerts {
             if (Data.salawatEvery > 0) for (m in 9 * 60..21 * 60 step Data.salawatEvery * 60) list += Event(epoch(date, m), Kind.DHIKR, Prayer.DHUHR)
             if (Data.kahf && date.dayOfWeek == java.time.DayOfWeek.FRIDAY) list += Event(epoch(date, 10 * 60), Kind.KAHF, Prayer.DHUHR)
             if (Data.fastReminder && DayInfo.of(date.plusDays(1)) != null) list += Event(epoch(date, DayInfo.eveAt), Kind.FAST, Prayer.ISHA)
+            if (Sadaqa.remindsOn(date)) list += Event(epoch(date, Sadaqa.remindAt), Kind.SADAQA, Prayer.ASR)
             Duas.events(date, t).forEach { m -> list += Event(epoch(date, m), Kind.DUA, Prayer.ISHA) }
             if (Data.suhoorBefore > 0 && Data.hijri(date).month == 9) list += Event(epoch(date, t.getValue(Prayer.FAJR) - Data.suhoorBefore), Kind.SUHOOR, Prayer.FAJR)
         }
@@ -178,6 +179,8 @@ object Alerts {
                 Notification.Builder(c, CH_REMIND).setContentTitle("غدًا " + (card?.title ?: "")).setContentText((card?.let { DayInfo.line(it) } ?: "") + " · اضغط لفضله وسننه")
                     .setStyle(Notification.BigTextStyle().bigText(body + "\nاضغط لفضله وسننه كاملة")).setContentIntent(tap)
             }
+            Kind.SADAQA -> Notification.Builder(c, CH_REMIND).setContentTitle("صدقة اليوم").setContentText(Sadaqa.virtues[LocalDate.now().dayOfYear % Sadaqa.virtues.size])
+                .setContentIntent(PendingIntent.getActivity(c, 79, Intent(c, MainActivity::class.java).putExtra("page", "sadaqa").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             Kind.DUA -> Notification.Builder(c, CH_REMIND).setContentTitle("وقت إجابة: " + Duas.whichTime()).setContentText(Duas.reminderText())
                 .setStyle(Notification.BigTextStyle().bigText(Duas.reminderText())).setTimeoutAfter(60 * 60_000L)
                 .setContentIntent(PendingIntent.getActivity(c, 78, Intent(c, MainActivity::class.java).putExtra("adhkarsec", 3).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))

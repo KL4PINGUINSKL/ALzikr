@@ -61,6 +61,7 @@ object Moments {
         val today = day().toString()
         val keep = Store.prefs.getStringSet("moment_done", emptySet())!!.filter { it.startsWith(today) || it.startsWith(LocalDate.now().toString()) }.toSet()
         Store.prefs.edit().putStringSet("moment_done", keep + m.key).apply(); Store.bump()
+        if (m.title == "سورة الكهف") Data.setExtra(LocalDate.now(), "kahf", true)
     }
     private fun guide(id: String): () -> Unit = { Nav.morePage = "season:$id"; Nav.go("more") }
 
@@ -101,7 +102,7 @@ object Moments {
         if (justCalled != null) out += (
             Moment("📣", "بين الأذان والإقامة", "«الدعاء لا يُرد بين الأذان والإقامة». وبعد الأذان قل: «اللهم رب هذه الدعوة التامة…».", "أبو داود والترمذي، وصححه الألباني", "أذكار الأذان", "mosque"))
         if (justPrayed != null) out += (
-            Moment("🤲", "أذكار بعد صلاة ${justPrayed.ar}", "«من سبّح الله في دبر كل صلاة ثلاثًا وثلاثين، وحمد الله ثلاثًا وثلاثين، وكبّر الله ثلاثًا وثلاثين… غُفرت خطاياه».", "مسلم", "أذكار بعد الصلاة", "prayer"))
+            Moment("🤲", "أذكار بعد صلاة ${justPrayed.ar}", "«من سبّح الله في دبر كل صلاة ثلاثًا وثلاثين، وحمد الله ثلاثًا وثلاثين، وكبّر الله ثلاثًا وثلاثين… غُفرت خطاياه».", "مسلم", "أذكار بعد ${justPrayed.ar}", "prayer_${justPrayed.name}"))
         if (bigDay) out += season!!
         // Friday.
         if (friday) {
@@ -170,6 +171,9 @@ object Home {
         Short("hifz", "🧠", "الحفظ") { Nav.morePage = "hifz"; Nav.go("more") },
         Short("duas", "🤲", "أدعيتي") { Nav.adhkar = 3; Nav.go("adhkar") },
         Short("pet", "🐾", "صديقي") { Nav.morePage = "pet"; Nav.go("more") },
+        Short("goals", "🏁", "أهدافي") { Nav.morePage = "goals"; Nav.go("more") },
+        Short("sadaqa", "💰", "صدقاتي") { Nav.morePage = "sadaqa"; Nav.go("more") },
+        Short("salah", "💧", "صفة الصلاة") { Nav.morePage = "salah"; Nav.go("more") },
         Short("stats", "📊", "إحصائياتي") { Nav.morePage = "stats"; Nav.go("more") },
         Short("tasks", "☑", "المهام") { Nav.daily = 0; Nav.go("daily") },
         Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },

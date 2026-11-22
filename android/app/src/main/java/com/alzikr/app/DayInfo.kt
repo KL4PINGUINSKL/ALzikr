@@ -154,7 +154,7 @@ fun DaySheet(date: LocalDate, close: () -> Unit) {
                     part.sunan.forEach { g -> Said(g) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (part.kahf) Tile("📖", "سورة الكهف", Modifier.weight(1f)) { close(); Nav.reading = 18 to 1 }
+                    if (part.kahf) Tile("📖", "سورة الكهف", Modifier.weight(1f)) { close(); Data.setExtra(LocalDate.now(), "kahf", true); Nav.reading = 18 to 1 }
                     if (part.kahf) Tile("📿", "الصلاة على النبي ﷺ", Modifier.weight(1f)) { close(); Nav.adhkar = 2; Nav.go("adhkar") }
                     part.guide?.let { g -> Tile("🌙", "الدليل كاملًا", Modifier.weight(1f)) { close(); Nav.morePage = "season:$g"; Nav.go("more") } }
                 }

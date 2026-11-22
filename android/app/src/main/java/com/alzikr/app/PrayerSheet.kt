@@ -141,7 +141,7 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
             // Its adhkar.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (p.alertable) {
-                    Tile("🤲", "أذكار بعد الصلاة", Modifier.weight(1f)) { close(); Nav.collection = "prayer"; Nav.go("adhkar") }
+                    Tile("🤲", "أذكار بعد ${p.ar}", Modifier.weight(1f)) { close(); Nav.collection = "prayer_${p.name}"; Nav.go("adhkar") }
                     Tile("📣", "أذكار الأذان", Modifier.weight(1f)) { close(); Nav.collection = "mosque"; Nav.go("adhkar") }
                 }
                 when (p) {

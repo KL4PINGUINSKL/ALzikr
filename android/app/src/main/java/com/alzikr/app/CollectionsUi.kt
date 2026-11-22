@@ -122,7 +122,7 @@ private fun CollectionsList(openAt: (String, Int) -> Unit) {
             return@LazyColumn
         }
         item { Hint("collections", "📖", "اختر مجموعة، ثم اضغط على كل ذكر لتعدّه، فينقلك إلى الذكر التالي حتى تُتمّها. مجموعة الوقت الحالي تظهر أولًا.") }
-        itemsIndexed(Content.collections.sortedByDescending { it.id == hint }) { _, c ->
+        itemsIndexed(Content.collections.flatMap { if (it.id == "prayer") Content.afterPrayer else listOf(it) }.sortedByDescending { it.id == hint }) { _, c ->
             val counts = Data.colCounts(c.id)
             val done = c.items.indices.count { counts[it] >= c.items[it].count }
             val complete = done == c.items.size
