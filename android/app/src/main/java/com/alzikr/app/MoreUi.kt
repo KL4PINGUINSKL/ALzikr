@@ -98,7 +98,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
-        Hint("more", "☰", "هنا القبلة والتقويم وأسماء الله الحسنى والثيمات والنسخ الاحتياطي. الإعدادات في آخر القائمة.")
+        Hint("more2", "☰", "الأدوات مرتبة في أربع مجموعات: الصلاة، والتقويم والوقت، والعلم، والتطبيق (وفيه الإعدادات والثيمات).")
         Panel(Modifier.clickable { open("months") }, color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -106,31 +106,42 @@ fun MoreScreen(openSettings: () -> Unit) {
             Sub("لماذا سُمّي ${h.monthName} بهذا الاسم؟ اضغط هنا ›", size = 12.sp, color = P.accent)
         }
         val activity = LocalContext.current as? android.app.Activity
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Tile("⬆", "تحديث التطبيق", Modifier.weight(1f)) { activity?.let { AppUpdate.checkNow(it) } }
-            Tile("↗", "مشاركة التطبيق", Modifier.weight(1f)) { activity?.let { shareApp(it) } }
-        }
-        listOf(
-            Triple("themes", "🎨  الثيمات", "${Looks.byId(Data.look).name} · ${Looks.all.size} ثيمًا، ولكل ثيم سبعة ألوان"),
-            Triple("alarms", "⏰  منبه الصلوات", if (PrayerAlarm.anyOn()) "مفعّل: " + Prayer.entries.filter { PrayerAlarm.on(it) }.joinToString("، ") { it.ar } else "منبه حقيقي مثل منبه الهاتف، لكل صلاة"),
-            Triple("qibla", "🧭  القبلة", "بوصلة حية باتجاه الكعبة"),
-            Triple("world", "🌍  الساعة العالمية", "الوقت الآن في مكة والقاهرة ولندن ونيويورك وغيرها"),
-            Triple("month", "📅  مواقيت الشهر", "جدول الصلوات لكل أيام الشهر"),
-            Triple("calendar", "🌙  التقويم والمناسبات", "رمضان والعيدان وعرفة وعاشوراء والأيام البيض"),
-            Triple("seasons", "🌙  مواسم الطاعات", "رمضان وليلة القدر والعيدان وعشر ذي الحجة وعرفة والحج والعمرة وعاشوراء"),
-            Triple("months", "🗓  أسماء الشهور ومعانيها", "لماذا سُمّيت الشهور الهجرية والميلادية بأسمائها"),
-            Triple("names", "✨  أسماء الله الحسنى", "التسعة والتسعون اسمًا"),
-            Triple("qada", "🕌  قضاء الصلوات", "عدّ ما فاتك وما قضيت"),
-            Triple("hsearch", "🔍  البحث عن حديث", "في الأحاديث المشروحة وكل كتب الحديث"),
-            Triple("quiz", "🎯  مسابقة القرآن", "من أي سورة هذه الآية؟ وأكمل الآية"),
-            Triple("zakat", "💰  حاسبة الزكاة", "زكاة المال والذهب والفضة بالنصاب"),
-            Triple("convert", "🔁  محوّل التاريخ", "من الهجري إلى الميلادي وبالعكس"),
-            Triple("backup", "💾  نسخ احتياطي", "حفظ كل بياناتك في ملف واستعادتها"),
-        ).forEach { (id, title, sub) -> MenuRow(title, sub) { open(id) } }
-        MenuRow("⚙️  الإعدادات", "الموقع والحساب والتنبيهات والمظهر", openSettings)
+        MoreGroup("الصلاة", listOf(
+            Triple("⏰", "المنبه") { open("alarms") }, Triple("🧭", "القبلة") { open("qibla") },
+            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") },
+        ))
+        MoreGroup("التقويم والوقت", listOf(
+            Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
+            Triple("🗓", "أسماء الشهور") { open("months") }, Triple("🔁", "محوّل التاريخ") { open("convert") },
+            Triple("🌍", "الساعة العالمية") { open("world") },
+        ))
+        MoreGroup("العلم", listOf(
+            Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("🔍", "البحث عن حديث") { open("hsearch") },
+            Triple("🎯", "مسابقة القرآن") { open("quiz") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
+        ))
+        MoreGroup("التطبيق", listOf(
+            Triple("⚙️", "الإعدادات") { openSettings() }, Triple("🎨", "الثيمات") { open("themes") },
+            Triple("💾", "نسخ احتياطي") { open("backup") }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
+            Triple("↗", "مشاركة التطبيق") { activity?.let { shareApp(it) } },
+        ))
     }
 }
 
+/** A titled group of big tiles, three to a row. */
+@Composable
+private fun MoreGroup(title: String, items: List<Triple<String, String, () -> Unit>>) {
+    Text(title, color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp, start = 4.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { (icon, label, go) -> Tile(icon, label, Modifier.weight(1f), onClick = go) }
+                repeat(3 - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Suppress("unused")
 @Composable
 private fun MenuRow(title: String, sub: String, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.surface).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {

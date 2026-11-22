@@ -100,12 +100,15 @@ fun PrayerScreen(openSettings: () -> Unit) {
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
     var options by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
+    var sheetFor by remember { mutableStateOf<Prayer?>(null) }
+    val pick: (Prayer) -> Unit = { sheetFor = it }
+    Nav.prayerSheet?.let { sheetFor = it; Nav.prayerSheet = null }
     val w = window()
     val times = Store.times()
     val view = when (Data.prayerView) { 1 -> 1; 2 -> 2; 3 -> 3; 4 -> 4; else -> when (L.prayers) { PrayerLayout.CARDS -> 1; PrayerLayout.LIST -> 2; PrayerLayout.TIMELINE -> 4 } }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
-        Hint("prayer2", "🕌", "اضغط على أي وقت لخيارات الحساب والموقع والتعديل. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
+        Hint("prayer3", "🕌", "اضغط على أي صلاة لصفحتها: ✓ صلّيتها، والمنبه، والتذكير، والأذان، وسننها وأذكارها. والموقع وطريقة الحساب في السطر الأخير أسفل الصفحة. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
         Hint("home1", "✎", "«ذكر الوقت» يتغير وحده: الصباح والمساء والنوم، والكهف يوم الجمعة، والمواسم. ورتّب هذه الصفحة كما تحب من «✎ تخصيص هذه الصفحة» في أسفلها.")
         val hijri = Data.hijri()
         if (hijri.month == 9) Panel(color = P.gold.copy(alpha = .16f), pad = 12.dp) {
@@ -118,7 +121,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
         val parts = mapOf<String, @Composable () -> Unit>(
             "next" to {
             // The next prayer, the countdown, and how far the current time has gone.
-            Panel(Modifier.clickable { options = true }, color = P.card, pad = 14.dp) {
+            Panel(Modifier.clickable { sheetFor = w.next }, color = P.card, pad = 14.dp) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Sub(if (w.next == Prayer.SUNRISE) "الشروق" else "الصلاة القادمة", size = 12.sp)
@@ -150,10 +153,10 @@ fun PrayerScreen(openSettings: () -> Unit) {
                 }
             }
             when (view) {
-                1 -> PrayerCards(w, times, open)
-                3 -> PrayerLine(w, times, open)
-                4 -> PrayerTimeline(w, times, open)
-                else -> Panel(pad = 6.dp) { Prayer.entries.forEach { p -> PrayerRow(p, p == w.next, times, open) } }
+                1 -> PrayerCards(w, times, pick)
+                3 -> PrayerLine(w, times, pick)
+                4 -> PrayerTimeline(w, times, pick)
+                else -> Panel(pad = 6.dp) { Prayer.entries.forEach { p -> PrayerRow(p, p == w.next, times, pick) } }
             }
             },
             "extra" to { ExtraTimes(times, open) },
@@ -201,6 +204,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
     }
     if (options) TimesOptions(openSettings) { options = false }
     if (editing) HomeEditor { editing = false }
+    sheetFor?.let { p -> PrayerSheet(p, { options = true }, openSettings) { sheetFor = null } }
 }
 
 /** Other useful times: imsak, duha, the middle of the night and its last third. */
@@ -359,8 +363,8 @@ private fun Bell(p: Prayer) {
 }
 
 @Composable
-private fun PrayerRow(p: Prayer, isNext: Boolean, times: Map<Prayer, Int>, open: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(if (isNext) P.accent.copy(alpha = .12f) else P.surface).clickable(onClick = open)
+private fun PrayerRow(p: Prayer, isNext: Boolean, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(if (isNext) P.accent.copy(alpha = .12f) else P.surface).clickable { open(p) }
         .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         PrayedBox(p, times)
         Spacer(Modifier.size(12.dp))
@@ -372,13 +376,13 @@ private fun PrayerRow(p: Prayer, isNext: Boolean, times: Map<Prayer, Int>, open:
 
 /** Two columns of cards; the next prayer's card is filled with the accent. */
 @Composable
-private fun PrayerCards(w: Window, times: Map<Prayer, Int>, open: () -> Unit) {
+private fun PrayerCards(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
     Prayer.entries.chunked(2).forEach { row ->
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             row.forEach { p ->
                 val next = p == w.next
                 Column(Modifier.weight(1f).clip(L.shape()).background(if (next) P.accent else P.card).border(1.dp, if (next) P.accent else P.line, L.shape())
-                    .clickable(onClick = open).padding(12.dp)) {
+                    .clickable { open(p) }.padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(p.ar, color = if (next) P.onAccent else if (p.alertable) P.ink else P.muted, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = L.head ?: L.body, modifier = Modifier.weight(1f))
                         if (!next) Bell(p)
@@ -395,14 +399,14 @@ private fun PrayerCards(w: Window, times: Map<Prayer, Int>, open: () -> Unit) {
 
 /** A vertical line through the day; passed prayers are filled dots, the next one glows. */
 @Composable
-private fun PrayerTimeline(w: Window, times: Map<Prayer, Int>, open: () -> Unit) {
+private fun PrayerTimeline(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
     val now = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
     val line = P.line; val accent = P.accent
     Panel(pad = 10.dp) {
         Prayer.entries.forEachIndexed { i, p ->
             val passed = times.getValue(p) <= now
             val next = p == w.next
-            Row(Modifier.fillMaxWidth().height(52.dp).clickable(onClick = open), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().height(52.dp).clickable { open(p) }, verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(28.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
                         val x = size.width / 2
@@ -428,11 +432,11 @@ private fun PrayerTimeline(w: Window, times: Map<Prayer, Int>, open: () -> Unit)
 
 /** All six times in one line; the next is filled, a ✓ under each prayed one. */
 @Composable
-private fun PrayerLine(w: Window, times: Map<Prayer, Int>, open: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable(onClick = open).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+private fun PrayerLine(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         Prayer.entries.forEach { p ->
             val next = p == w.next
-            Column(Modifier.weight(1f).clip(L.shape(10.dp)).background(if (next) P.accent else androidx.compose.ui.graphics.Color.Transparent).padding(vertical = 8.dp),
+            Column(Modifier.weight(1f).clip(L.shape(10.dp)).background(if (next) P.accent else androidx.compose.ui.graphics.Color.Transparent).clickable { open(p) }.padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(p.ar, color = if (next) P.onAccent else if (p.alertable) P.muted else P.muted.copy(alpha = .7f), fontSize = 11.sp, maxLines = 1)
                 Text(Alerts.timeText(times.getValue(p)).substringBefore(' '), color = if (next) P.onAccent else P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)

@@ -56,6 +56,10 @@ object Adhan {
         get() = Store.prefs.getBoolean("adhan_respect_silent", false)
         set(v) { Store.prefs.edit().putBoolean("adhan_respect_silent", v).apply(); Store.bump() }
 
+    /** This prayer has no adhan (the others keep theirs). */
+    fun skip(p: Prayer) = Store.prefs.getBoolean("adhan_skip_${p.name}", false)
+    fun setSkip(p: Prayer, v: Boolean) { Store.prefs.edit().putBoolean("adhan_skip_${p.name}", v).apply(); Store.bump() }
+
     fun voice() = voices.firstOrNull { it.id == voiceId } ?: voices.first()
     fun file(c: Context, v: Voice) = File(File(c.filesDir, "adhan").apply { mkdirs() }, "${v.id}.mp3")
     fun has(c: Context, v: Voice) = file(c, v).let { it.exists() && it.length() == v.bytes }
@@ -91,7 +95,7 @@ object Adhan {
 
     /** Will the adhan sound for this prayer now? (Not during a call, not when muted if asked.) */
     fun willPlay(c: Context, p: Prayer): Boolean {
-        if (mode == 0 || !p.alertable || !has(c, voice())) return false
+        if (mode == 0 || !p.alertable || skip(p) || !has(c, voice())) return false
         val am = c.getSystemService(AudioManager::class.java)
         if (am.mode != AudioManager.MODE_NORMAL) return false
         if (respectSilent && am.ringerMode != AudioManager.RINGER_MODE_NORMAL) return false

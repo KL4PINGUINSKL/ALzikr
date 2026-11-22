@@ -26,6 +26,8 @@ object Nav {
     var adhkar by mutableStateOf<Int?>(null)
     /** Open one adhkar collection by id (morning, evening, sleep…). */
     var collection by mutableStateOf<String?>(null)
+    /** Open one prayer's own page on the prayer tab. */
+    var prayerSheet by mutableStateOf<Prayer?>(null)
     /** Inner pages open now (innermost last). While any is open the app header and the tab bar hide. */
     val pages = mutableStateListOf<Any>()
     /** Pages opened on top of the current tab (back returns to it): an explained hadith, a book hadith, a verse. */
