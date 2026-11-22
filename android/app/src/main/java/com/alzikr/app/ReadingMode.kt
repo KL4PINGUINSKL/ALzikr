@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -448,8 +450,7 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
 
 /** One mushaf page: its surah and juz on top, surah banners, the verses as one flowing text, the page number. */
 @Composable
-private fun QuranPage(p: Int, starts: IntArray, toggle: () -> Unit, long: (Quran.Ayah) -> Unit) {
-    val paper = Reading.paper
+private fun QuranPage(p: Int, starts: IntArray, toggle: () -> Unit, long: (Quran.Ayah) -> Unit, paper: Reading.Paper = Reading.paper) {
     val muted = Color(paper.muted)
     val ayahs = Quran.ayahs.subList(starts[p - 1], starts[p].coerceAtLeast(starts[p - 1]))
     if (ayahs.isEmpty()) return
@@ -465,16 +466,15 @@ private fun QuranPage(p: Int, starts: IntArray, toggle: () -> Unit, long: (Quran
             Text("الجزء ${Quran.digits(ayahs.first().juz)}", color = muted, fontSize = 12.sp)
         }
         runs.forEach { run ->
-            if (run.first().a == 1) SurahBanner(run.first().s)
-            AyahRun(run, toggle, long)
+            if (run.first().a == 1) SurahBanner(run.first().s, paper)
+            AyahRun(run, toggle, long, paper)
         }
         Text(Quran.digits(p), color = muted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
     }
 }
 
 @Composable
-private fun SurahBanner(s: Int) {
-    val paper = Reading.paper
+private fun SurahBanner(s: Int, paper: Reading.Paper = Reading.paper) {
     val acc = Color(paper.accent)
     val info = Quran.surahs[s - 1]
     Column(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 6.dp).clip(RoundedCornerShape(14.dp)).background(acc.copy(alpha = .08f))
@@ -488,9 +488,8 @@ private fun SurahBanner(s: Int) {
 
 /** The verses of one surah on a page as one justified text; a long press on a verse opens its options. */
 @Composable
-private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah) -> Unit) {
+private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah) -> Unit, paper: Reading.Paper = Reading.paper) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    val paper = Reading.paper
     val acc = Color(paper.accent)
     val now = Recitation.now
     val haptic = LocalHapticFeedback.current
@@ -516,6 +515,83 @@ private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah
                 ranges.firstOrNull { o in it.first }?.second?.let { haptic.performHapticFeedback(HapticFeedbackType.LongPress); long(it) }
             })
         })
+}
+
+/**
+ * Today's wird alone: only its mushaf pages, on black, turned like a mushaf. A page counts once you turn past it
+ * (the last one after ten seconds), and a last page says the wird is done.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun WirdReader(back: () -> Unit) {
+    val ctx = LocalContext.current
+    LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
+    androidx.activity.compose.BackHandler { back() }
+    val black = Reading.Paper.NIGHT
+    if (!Quran.ready) { Box(Modifier.fillMaxSize().background(Color.Black)); return }
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val starts = remember { pageStarts() }
+    // Fixed when opened, so the pages do not move while reading.
+    val plan = remember {
+        val read = Data.pagesToday(); val wird = Data.wirdToday(); val page = Data.khatmaPage
+        if (page >= Data.PAGES) null else {
+            val from = if (read >= wird) (page - read + 1).coerceAtLeast(1) else page + 1
+            val to = if (read >= wird) page else (page - read + wird).coerceIn(from, Data.PAGES)
+            from to to
+        }
+    }
+    val view = (ctx as? Activity)?.window
+    DisposableEffect(Unit) {
+        view?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose { view?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+    }
+    val muted = Color(black.muted); val acc = Color(black.accent)
+    Column(Modifier.fillMaxSize().background(Color.Black).windowInsetsPadding(WindowInsets.systemBars)) {
+        val (from, to) = plan ?: (0 to -1)
+        val count = (to - from + 1).coerceAtLeast(0)
+        val pager = rememberPagerState { count + 1 }
+        // Header: back, where you are in the wird, and a thin progress line.
+        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("→ رجوع", color = muted, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { back() }.padding(10.dp))
+            Text(if (plan == null) "ختمت القرآن" else if (pager.currentPage < count) "ورد اليوم · ${Quran.digits(pager.currentPage + 1)} من ${Quran.digits(count)}" else "ورد اليوم",
+                color = Color(black.ink), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+            Text(if (plan != null && pager.currentPage < count) "ص ${Quran.digits(from + pager.currentPage)}" else "", color = muted, fontSize = 13.sp, modifier = Modifier.padding(10.dp))
+        }
+        Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(muted.copy(alpha = .25f))) {
+            Box(Modifier.fillMaxWidth(if (count == 0) 1f else (pager.currentPage.coerceAtMost(count)).toFloat() / count).height(3.dp).background(acc))
+        }
+        if (plan == null) {
+            Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("ختمت القرآن، تقبّل الله منك 🌙", color = acc, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text("ابدأ ختمة جديدة من صفحة الختمة في «يومي».", color = muted, fontSize = 15.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+            }
+            return@Column
+        }
+        // Turning past a page counts it; the last page counts after ten seconds on it.
+        LaunchedEffect(pager) {
+            snapshotFlow { pager.currentPage }.collect { i ->
+                val done = from + i - 1
+                if (done > Data.khatmaPage && done <= to) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = done }
+            }
+        }
+        LaunchedEffect(pager.currentPage) {
+            if (pager.currentPage == count - 1) { delay(10_000); if (to > Data.khatmaPage) Data.khatmaPage = to }
+            if (pager.currentPage == count && to > Data.khatmaPage) Data.khatmaPage = to
+        }
+        var chosen by remember { mutableStateOf<Quran.Ayah?>(null) }
+        HorizontalPager(pager, Modifier.fillMaxSize(), key = { it }) { i ->
+            if (i < count) Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = 24.dp)) {
+                QuranPage(from + i, starts, {}, { chosen = it }, black)
+            } else Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("✓", color = acc, fontSize = 64.sp)
+                Text("أتممت ورد اليوم، تقبّل الله منك", color = Color(black.ink), fontSize = 21.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text("قرأت من الصفحة ${Quran.digits(from)} إلى ${Quran.digits(to)} · ختمتك ${Quran.digits(Data.khatmaPage * 100 / Data.PAGES)}٪", color = muted, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+                Text("رجوع", color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(acc).clickable { back() }.padding(vertical = 14.dp))
+            }
+        }
+        chosen?.let { a -> AyahSheet(a) { chosen = null } }
+    }
 }
 
 // =============================================================================== books

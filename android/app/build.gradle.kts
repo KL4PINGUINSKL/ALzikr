@@ -1,7 +1,7 @@
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.plugin.compose") }
 
 android { namespace = "com.alzikr.app"; compileSdk = 35
-    defaultConfig { applicationId = "com.alzikr.app"; minSdk = 26; targetSdk = 35; versionCode = 29; versionName = "1.1.26" }
+    defaultConfig { applicationId = "com.alzikr.app"; minSdk = 26; targetSdk = 35; versionCode = 30; versionName = "1.1.27" }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }

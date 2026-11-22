@@ -118,16 +118,14 @@ fun KhatmaPage() {
     val end = Data.khatmaEnd()
     fun start() { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("khatma2", "📗", "وردك هو نصيبك اليومي من ختمتك: عدد الصفحات التي تقرؤها اليوم لتختم في الموعد الذي تختاره. يُحسب وحده إذا قرأت في وضع القراءة، أو سجّله بالأزرار. وزر «وردي» في الصفحة الرئيسية يفتح المصحف على صفحتك التالية.")
+        Hint("khatma2", "📗", "وردك هو نصيبك اليومي من ختمتك: عدد الصفحات التي تقرؤها اليوم لتختم في الموعد الذي تختاره. اضغط «اقرأ وردك» (أو «وردي» في الصفحة الرئيسية) فتظهر صفحات وردك فقط من المصحف على خلفية سوداء، وتُحسب كل صفحة تقلبها. أو سجّل ما قرأته من مصحف ورقي بالأزرار.")
 
         // Today's wird.
         if (page < Data.PAGES) Panel(color = P.accent.copy(alpha = .12f), pad = 14.dp) {
             Sub("ورد اليوم", color = P.gold, size = 12.sp)
             Text("من الصفحة $from إلى $to", color = P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Sub("$wird صفحة (${"%.1f".format(wird / 20.0)} جزء) · قرأت منها ${read.coerceAtMost(wird)}" + if (read >= wird) " ✓ أتممت وردك، تقبّل الله" else "", color = if (read >= wird) P.accent else P.ink)
-            if (Quran.ready) Action("📖 اقرأ وردك من الصفحة ${page + 1}", Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                val a = Quran.firstOfPage(page + 1); Nav.reading = a.s to a.a
-            }
+            Action(if (read >= wird) "📖 راجع ورد اليوم" else "📖 اقرأ وردك (${wird - read.coerceAtMost(wird)} صفحة)", Modifier.fillMaxWidth().padding(top = 8.dp)) { Nav.wird = true }
         }
 
         // The whole khatma.

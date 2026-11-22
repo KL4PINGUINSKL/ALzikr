@@ -99,6 +99,7 @@ class MainActivity : ComponentActivity() {
             "focus" -> { Nav.tab = "daily"; Nav.daily = 2 }
             "tasks" -> { Nav.tab = "daily"; Nav.daily = 0 }
             "khatma" -> { Nav.tab = "daily"; Nav.daily = 3 }
+            "wird" -> Nav.wird = true
             else -> Nav.tab = t
         }
     }
@@ -189,6 +190,7 @@ private fun Root() {
 /** Pages opened over the current tab; back closes them and you are where you were. */
 @Composable
 private fun Overlays() {
+    if (Nav.wird) { WirdReader { Nav.wird = false }; return }
     Nav.reading?.let { (s, a) -> QuranReading(s, a) { Nav.reading = null }; return }
     val sharh = Nav.overlaySharh; val hadith = Nav.overlayHadith; val quran = Nav.overlayQuran
     if (sharh == null && hadith == null && quran == null) return

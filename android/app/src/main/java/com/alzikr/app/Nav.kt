@@ -28,6 +28,8 @@ object Nav {
     var collection by mutableStateOf<String?>(null)
     /** Open one prayer's own page on the prayer tab. */
     var prayerSheet by mutableStateOf<Prayer?>(null)
+    /** Today's wird: its mushaf pages on black, full screen. */
+    var wird by mutableStateOf(false)
     /** Inner pages open now (innermost last). While any is open the app header and the tab bar hide. */
     val pages = mutableStateListOf<Any>()
     /** Pages opened on top of the current tab (back returns to it): an explained hadith, a book hadith, a verse. */

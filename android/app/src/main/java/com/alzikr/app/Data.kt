@@ -196,7 +196,7 @@ object Data {
             val old = khatmaPage
             val n = v.coerceIn(0, PAGES)
             val log = JSONObject(sp.getString("khatma_log", "{}")!!)
-            if (n > old) log.put(today(), log.optInt(today()) + (n - old))
+            log.put(today(), (log.optInt(today()) + (n - old)).coerceAtLeast(0))
             edit { putInt("khatma_page", n).putString("khatma_log", log.toString()) }
         }
     /** Days to finish the khatma (30 = a juz a day). */
@@ -213,9 +213,9 @@ object Data {
     var khatmaRemindAt: Int
         get() = sp.getInt("khatma_remind", -1)
         set(v) = edit { putInt("khatma_remind", v) }
-    fun pagesToday() = JSONObject(sp.getString("khatma_log", "{}")!!).optInt(today())
+    fun pagesToday() = JSONObject(sp.getString("khatma_log", "{}")!!).optInt(today()).coerceIn(0, khatmaPage)
     fun juzOf(page: Int) = if (page <= 1) 1 else ((page - 2) / 20 + 1).coerceIn(1, 30)
-    fun newKhatma() { khatmaCount = khatmaCount + if (khatmaPage >= PAGES) 1 else 0; edit { putInt("khatma_page", 0).putString("khatma_started", today()) } }
+    fun newKhatma() { khatmaCount = khatmaCount + if (khatmaPage >= PAGES) 1 else 0; edit { putInt("khatma_page", 0).putString("khatma_started", today()).putString("khatma_log", "{}") } }
 
     /** Reading mode used to keep its own khatma place; take it over once, so there is one khatma. */
     fun mergeOldKhatma() {
