@@ -57,6 +57,54 @@ object Quran {
         .replace('ى', 'ي').replace('ی', 'ي').replace('ة', 'ه').replace('ک', 'ك')
         .replace(Regex("\\s+"), " ").trim()
 
+    /** Western digits for Arabic-Indic and Persian ones. */
+    fun latinDigits(t: String) = t.map { c -> when (c) { in '٠'..'٩' -> '0' + (c - '٠'); in '۰'..'۹' -> '0' + (c - '۰'); else -> c } }.joinToString("")
+
+    /** A place a query names: a surah, a verse or a juz. */
+    data class Jump(val label: String, val s: Int, val a: Int, val surahOnly: Boolean)
+    private val fillers = setOf("سوره", "سورت", "سور", "السوره", "ايه", "الايه", "ايات", "الايات", "رقم", "اقرا", "افتح", "قراءه", "من")
+
+    /**
+     * Reads what people type: «سورة الكهف», «الكهف 10», «سورة البقرة آية 255», «2:255», «١٨»,
+     * «آية الكرسي», «خواتيم البقرة», «جزء عم», «الجزء 30». The «ال» and the letter forms are optional.
+     */
+    fun jumps(q: String): List<Jump> {
+        if (!ready) return emptyList()
+        val n = normalize(latinDigits(q)).replace(Regex("[«»\"'()،,.؟?!]"), " ").replace(Regex("\\s+"), " ").trim()
+        if (n.isEmpty()) return emptyList()
+        val out = mutableListOf<Jump>()
+        fun verse(s: Int, a: Int, label: String? = null) {
+            val sur = surahs.getOrNull(s - 1) ?: return
+            if (a in 1..sur.count) out += Jump(label ?: "سورة ${sur.name} · الآية ${digits(a)}", s, a, false)
+        }
+        Regex("^(\\d{1,3})\\s*[:/\\-]\\s*(\\d{1,3})$").find(n)?.let { m -> verse(m.groupValues[1].toInt(), m.groupValues[2].toInt()); return out }
+        if (n.contains("الكرسي")) verse(2, 255, "آية الكرسي · البقرة ٢٥٥")
+        if (n.contains("البقره") && (n.contains("خواتيم") || n.contains("اخر") || n.contains("خاتمه"))) verse(2, 285, "خواتيم سورة البقرة · ٢٨٥")
+        Regex("(?:^|\\s)(?:ال)?جزء\\s*(\\d{1,2}|عم|تبارك)(?:\\s|$)").find(n)?.let { m ->
+            val j = when (val g = m.groupValues[1]) { "عم" -> 30; "تبارك" -> 29; else -> g.toInt() }
+            if (j in 1..30) firstOfJuz(j).let { a -> out += Jump("الجزء ${digits(j)} · ${surahs[a.s - 1].name} ${digits(a.a)}", a.s, a.a, false) }
+            return out
+        }
+        val tokens = n.split(' ').filter { it !in fillers }
+        val nums = tokens.mapNotNull { it.toIntOrNull() }
+        val name = tokens.filter { it.toIntOrNull() == null }.joinToString(" ")
+        fun bare(t: String) = t.removePrefix("ال").replace(" ", "")
+        val found = when {
+            name.isEmpty() -> nums.firstOrNull()?.takeIf { it in 1..114 }?.let { listOf(surahs[it - 1]) }.orEmpty()
+            else -> {
+                val b = bare(name)
+                surahs.filter { bare(normalize(it.name)) == b }.ifEmpty {
+                    if (b.length >= 2) surahs.filter { bare(normalize(it.name)).startsWith(b) } else emptyList()
+                }
+            }
+        }
+        val ayah = if (name.isEmpty()) nums.getOrNull(1) else nums.firstOrNull()
+        for (s in found.take(6)) {
+            if (ayah != null) verse(s.n, ayah) else out += Jump("سورة ${s.name}", s.n, 1, true)
+        }
+        return out.distinctBy { it.s to it.a }
+    }
+
     fun search(q: String, limit: Int = 300): List<Ayah> {
         val n = normalize(q)
         if (n.length < 2) return emptyList()

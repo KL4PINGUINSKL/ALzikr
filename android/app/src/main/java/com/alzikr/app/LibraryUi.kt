@@ -105,7 +105,9 @@ private fun QuranHome() {
     var query by rememberSaveable { mutableStateOf("") }
     var byJuz by rememberSaveable { mutableStateOf(false) }
     val q = Quran.normalize(query)
-    val surahs = if (q.isEmpty()) Quran.surahs else Quran.surahs.filter { Quran.normalize(it.name).contains(q) || it.n.toString() == q }
+    val jumps = remember(q) { Quran.jumps(query) }
+    val named = jumps.filter { it.surahOnly }.map { it.s }.toSet()
+    val surahs = if (q.isEmpty()) Quran.surahs else Quran.surahs.filter { it.n in named || Quran.normalize(it.name).contains(q) || it.n.toString() == Quran.latinDigits(q) }
     val hits = remember(q) { if (q.length >= 3) Quran.search(q) else emptyList() }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         item { Hint("quran", "📖", "اضغط «متابعة القراءة» لتكمل من حيث توقفت، أو اختر سورة أو جزءًا، أو ابحث بكلمة من آية.") }
@@ -126,11 +128,20 @@ private fun QuranHome() {
             }
         }
         item {
-            OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث عن سورة أو كلمة في القرآن") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(query, { query = it }, placeholder = { Text("سورة الكهف، الكهف 10، آية الكرسي، أو كلمة…") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Choice("السور", !byJuz) { byJuz = false }; Choice("الأجزاء", byJuz) { byJuz = true }
             }
         }
+        // A verse or a juz the query names: «الكهف 10», «2:255», «آية الكرسي», «جزء عم».
+        items(jumps.filter { !it.surahOnly }) { j ->
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.accent.copy(alpha = .12f)).clickable { Nav.openQuran(j.s, j.a) }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(j.label, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = Fonts.naskh, modifier = Modifier.weight(1f))
+                Text("انتقل ›", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        if (q.isNotEmpty() && surahs.isEmpty() && hits.isEmpty() && jumps.isEmpty() && q.length >= 2)
+            item { Sub("لا نتائج. اكتب اسم السورة (مثل: الكهف، يس) أو رقمها، أو «الكهف 10»، أو كلمة من آية.", Modifier.padding(8.dp)) }
         if (byJuz && q.isEmpty()) items((1..30).toList()) { j ->
             val a = Quran.firstOfJuz(j)
             Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { Nav.openQuran(a.s, a.a) }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -556,7 +567,7 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
         val q = Hadith.normalize(query)
         val manyChapters = b.chapters.size > 1
         val shown = when {
-            q.length >= 2 -> remember(q, b) { b.items.filter { Hadith.normalize(it.text).contains(q) }.take(300) }
+            q.length >= 2 -> remember(q, b) { val m = HadithSearch.matcher(query); b.items.filter { m(it.text) }.take(300) }
             focus != null && chapter == null && !manyChapters -> b.items
             chapter != null -> b.items.filter { it.chapter == chapter }
             !manyChapters -> b.items

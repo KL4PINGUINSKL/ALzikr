@@ -78,10 +78,30 @@ object HadithSearch {
         val a = JSONArray(f.readText()); (0 until a.length()).map { a.getJSONArray(it).let { x -> Sharh.Brief(x.getString(0), x.getString(1)) } }
     }.getOrDefault(emptyList())
 
+    /** Words people add around what they look for: «حديث إنما الأعمال», «ابحث عن …». */
+    private val fillers = setOf("حديث", "الحديث", "احاديث", "الاحاديث", "ابحث", "عن", "نص", "شرح", "رقم")
+    /** The words that matter in a query: no fillers, quotes or punctuation; marks and letter forms ignored. */
+    fun words(q: String): List<String> {
+        val all = Quran.normalize(Quran.latinDigits(q)).replace(Regex("[«»\"'()،,.؟?!:]"), " ").split(' ').filter { it.length >= 2 }
+        return all.filter { it !in fillers }.ifEmpty { all }
+    }
     /** Every word of the query must appear (in any order), marks and letter forms ignored. */
-    private fun matcher(q: String): (String) -> Boolean {
-        val words = Quran.normalize(q).split(' ').filter { it.length >= 2 }
+    fun matcher(q: String): (String) -> Boolean {
+        val words = words(q)
         return { text -> val n = Quran.normalize(text); words.isNotEmpty() && words.all { n.contains(it) } }
+    }
+
+    /** A book the query names, with a hadith number if one is given: «صحيح البخاري», «مسلم 8», «الأربعين النووية». */
+    fun books(c: Context, q: String): List<Pair<Hadith.Info, String?>> {
+        val w = words(q)
+        val num = w.firstOrNull { it.toIntOrNull() != null }
+        val name = w.filter { it.toIntOrNull() == null && it !in setOf("صحيح", "سنن", "كتاب", "جامع") }
+        if (name.isEmpty()) return emptyList()
+        fun bare(t: String) = t.removePrefix("ال").replace("ين", "ون")
+        return Hadith.books.filter { Hadith.available(c, it.id) }.filter { b ->
+            val t = Quran.normalize(b.title + " " + b.author).split(' ').map { bare(it) }
+            name.all { n -> t.any { it.startsWith(bare(n)) && bare(n).length >= 2 } }
+        }.map { it to num }
     }
 
     /** Letters and spaces only (no marks, no punctuation), one form of alef / ya / ta marbuta. */
@@ -152,16 +172,20 @@ fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
     var where by rememberSaveable { mutableStateOf(0) }       // 0 everywhere, 1 explained, 2 my books
     var busy by remember { mutableStateOf(false) }
     var sharh by remember { mutableStateOf<List<HadithSearch.Hit>>(emptyList()) }
+    var named by remember { mutableStateOf<List<Pair<Hadith.Info, String?>>>(emptyList()) }
+    var openBook by rememberSaveable { mutableStateOf<String?>(null) }
     var books by remember { mutableStateOf<List<HadithSearch.Hit>>(emptyList()) }
     var searched by remember { mutableStateOf(false) }
     var openSharh by rememberSaveable { mutableStateOf<String?>(null) }
     var openAt by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
     openSharh?.let { SharhOpen(it) { openSharh = null }; return }
     openAt?.let { (b, n) -> HadithReader(b, 0, { openAt = null }, focus = n); return }
+    openBook?.let { b -> HadithReader(b, 0, { openBook = null }); return }
     fun run() {
         if (query.isBlank() || busy) return
         keyboard?.hide()
         busy = true; searched = true
+        named = HadithSearch.books(ctx, query)
         scope.launch {
             sharh = if (where != 2) withContext(Dispatchers.IO) { HadithSearch.searchSharh(ctx, query) } else emptyList()
             books = if (where != 1) withContext(Dispatchers.IO) { HadithSearch.searchBooks(ctx, query) } else emptyList()
@@ -172,7 +196,7 @@ fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
     val onPhone = Hadith.books.filter { Hadith.available(ctx, it.id) }
     Subpage("البحث عن حديث", back) {
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { Hint("hsearch", "🔍", "اكتب كلمات من الحديث (مثل: إنما الأعمال) ثم اضغط «ابحث». يبحث في موسوعة الأحاديث المشروحة وفي كل كتب الحديث على هاتفك، ولا يهم التشكيل.") }
+            item { Hint("hsearch", "🔍", "اكتب كلمات من الحديث (مثل: إنما الأعمال) أو اسم كتاب (مثل: صحيح مسلم، أو مسلم 8) ثم اضغط «ابحث». يبحث في موسوعة الأحاديث المشروحة وفي كل كتب الحديث على هاتفك، ولا يهم التشكيل.") }
             item {
                 OutlinedTextField(query, { query = it }, placeholder = { Text("كلمات من الحديث…") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { run() }))
@@ -185,7 +209,17 @@ fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
                 Sub("الكتب التي يبحث فيها: " + onPhone.joinToString("، ") { it.title } + ". نزّل كتبًا أخرى من قسم «الحديث» لتشملها.", Modifier.padding(top = 6.dp), size = 11.sp)
             }
             if (busy) item { Box(Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = P.accent) } }
-            if (!busy && searched && sharh.isEmpty() && books.isEmpty()) item { Sub("لا نتائج. جرّب كلمات أقل أو أقصر، أو تأكد من الإملاء.", Modifier.padding(8.dp)) }
+            if (named.isNotEmpty()) items(named, key = { "k" + it.first.id }) { (b, n) ->
+                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.accent.copy(alpha = .12f))
+                    .clickable { if (n != null) openAt = b.id to n else openBook = b.id }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(if (n != null) "${b.title} · رقم ${Quran.digits(n.toInt())}" else b.title, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFamily = Fonts.naskh)
+                        Sub(b.author, size = 12.sp)
+                    }
+                    Text("افتح ›", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            if (!busy && searched && sharh.isEmpty() && books.isEmpty() && named.isEmpty()) item { Sub("لا نتائج. جرّب كلمات أقل أو أقصر، أو تأكد من الإملاء.", Modifier.padding(8.dp)) }
             if (sharh.isNotEmpty()) {
                 item { Title("في موسوعة الأحاديث المشروحة (${sharh.size})", Modifier.padding(top = 8.dp)) }
                 items(sharh, key = { "s" + it.sharhId }) { h ->
