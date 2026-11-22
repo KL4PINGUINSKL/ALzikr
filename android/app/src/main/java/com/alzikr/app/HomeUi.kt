@@ -62,8 +62,17 @@ object Moments {
         val keep = Store.prefs.getStringSet("moment_done", emptySet())!!.filter { it.startsWith(today) || it.startsWith(LocalDate.now().toString()) }.toSet()
         Store.prefs.edit().putStringSet("moment_done", keep + m.key).apply(); Store.bump()
         if (m.title == "سورة الكهف") Data.setExtra(LocalDate.now(), "kahf", true)
-        if (m.title == "سورة الملك") Data.setExtra(if (LocalTime.now().hour < 12) LocalDate.now().minusDays(1) else LocalDate.now(), "mulk", true)
+        if (m.title == "سورة الملك") Data.setExtra(night(), "mulk", true)
+        if (m.title == "خواتيم سورة البقرة") Data.setExtra(night(), "baqarah", true)
     }
+    /** The night a late reading belongs to: before Fajr it is still last night. */
+    fun night(): LocalDate {
+        val min = LocalTime.now().let { it.hour * 60 + it.minute }
+        val fajr = if (Store.hasLocation) Store.times().getValue(Prayer.FAJR) else 300
+        return if (min < fajr) LocalDate.now().minusDays(1) else LocalDate.now()
+    }
+    fun readMulk() { Data.setExtra(night(), "mulk", true); Nav.reading = 67 to 1 }
+    fun readBaqarah() { Data.setExtra(night(), "baqarah", true); Nav.reading = 2 to 285 }
     private fun guide(id: String): () -> Unit = { Nav.morePage = "season:$id"; Nav.go("more") }
 
     /** The moments for now, the most fitting first. */
@@ -102,13 +111,19 @@ object Moments {
         val justPrayed = prayers.firstOrNull { min - at(it) in 12 until 45 }
         if (justCalled != null) out += (
             Moment("📣", "بين الأذان والإقامة", "«الدعاء لا يُرد بين الأذان والإقامة». وبعد الأذان قل: «اللهم رب هذه الدعوة التامة…».", "أبو داود والترمذي، وصححه الألباني", "أذكار الأذان", "mosque"))
+        // After Isha until Fajr: Surah al-Mulk and the end of al-Baqarah, unless read tonight.
+        // They lead the card as soon as the adhan window is over (the after-Isha adhkar follow as a chip).
+        val night = if (min < fajr) date.minusDays(1) else date
+        if (min >= isha || min < fajr) {
+            if (!Data.extra(night, "mulk"))
+                out += Moment("📖", "سورة الملك", "«كان النبي ﷺ لا ينام حتى يقرأ ﴿الم تنزيل﴾ و﴿تبارك الذي بيده الملك﴾». وهي «المانعة من عذاب القبر».",
+                    "الترمذي، وصححه الألباني؛ والثاني رواه الحاكم وحسّنه الألباني", "اقرأ سورة الملك") { readMulk() }
+            if (!Data.extra(night, "baqarah"))
+                out += Moment("📗", "خواتيم سورة البقرة", "«من قرأ بالآيتين من آخر سورة البقرة في ليلة كفتاه». ﴿آمن الرسول بما أنزل إليه من ربه…﴾ إلى آخر السورة.",
+                    "البخاري ومسلم", "اقرأ آخر آيتين من البقرة") { readBaqarah() }
+        }
         if (justPrayed != null) out += (
             Moment("🤲", "أذكار بعد صلاة ${justPrayed.ar}", "«من سبّح الله في دبر كل صلاة ثلاثًا وثلاثين، وحمد الله ثلاثًا وثلاثين، وكبّر الله ثلاثًا وثلاثين… غُفرت خطاياه».", "مسلم", "أذكار بعد ${justPrayed.ar}", "prayer_${justPrayed.name}"))
-        // After Isha until Fajr: Surah al-Mulk, unless read tonight.
-        val night = if (min < fajr) date.minusDays(1) else date
-        if ((min >= isha || min < fajr) && !Data.extra(night, "mulk"))
-            out += Moment("📖", "سورة الملك", "«كان النبي ﷺ لا ينام حتى يقرأ ﴿الم تنزيل﴾ و﴿تبارك الذي بيده الملك﴾». وهي «المانعة من عذاب القبر».",
-                "الترمذي، وصححه الألباني؛ والثاني رواه الحاكم وحسّنه الألباني", "اقرأ سورة الملك") { Data.setExtra(night, "mulk", true); Nav.reading = 67 to 1 }
         if (bigDay) out += season!!
         // Friday.
         if (friday) {
@@ -178,7 +193,8 @@ object Home {
         Short("hifz", "🧠", "الحفظ") { Nav.morePage = "hifz"; Nav.go("more") },
         Short("duas", "🤲", "أدعيتي") { Nav.adhkar = 3; Nav.go("adhkar") },
         Short("pet", "🐾", "صديقي") { Nav.morePage = "pet"; Nav.go("more") },
-        Short("mulk", "📖", "سورة الملك") { Data.setExtra(LocalDate.now(), "mulk", true); Nav.reading = 67 to 1 },
+        Short("mulk", "📖", "سورة الملك") { Moments.readMulk() },
+        Short("baqarah", "📗", "خواتيم البقرة") { Moments.readBaqarah() },
         Short("today", "📝", "محاسبة اليوم") { Nav.morePage = "today"; Nav.go("more") },
         Short("ramadan", "🌙", "رمضان") { Nav.morePage = "ramadan"; Nav.go("more") },
         Short("goals", "🏁", "أهدافي") { Nav.morePage = "goals"; Nav.go("more") },

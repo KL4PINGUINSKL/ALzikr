@@ -168,6 +168,7 @@ fun TodayPage() {
         items += Triple("🌇", "أذكار المساء", Stats.colDoneOn("evening", today))
         items += Triple("📖", "وردك من القرآن: ${Data.pagesToday()} صفحة" + if (Data.wirdToday() > 0) " من ${Data.wirdToday()}" else "", Data.wirdToday() > 0 && Data.pagesToday() >= Data.wirdToday())
         items += Triple("📖", "سورة الملك", Data.extra(today, "mulk"))
+        items += Triple("📗", "خواتيم سورة البقرة", Data.extra(today, "baqarah"))
         items += Triple("📿", "التسبيح: ${Data.tasbihHistory(1).firstOrNull()?.second ?: 0}", (Data.tasbihHistory(1).firstOrNull()?.second ?: 0) >= 33)
         items += Triple("💰", "صدقة", Sadaqa.countBetween(today, today) > 0)
         if (Data.extra(today, "fast")) items += Triple("🍽", "صيام", true)
@@ -187,7 +188,8 @@ fun TodayPage() {
             Sub("أبو داود والنسائي، وصححه الألباني", size = 11.sp)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Tile("📖", "سورة الملك", Modifier.weight(1f)) { Data.setExtra(today, "mulk", true); Nav.reading = 67 to 1 }
+            Tile("📖", "سورة الملك", Modifier.weight(1f)) { Moments.readMulk() }
+            Tile("📗", "خواتيم البقرة", Modifier.weight(1f)) { Moments.readBaqarah() }
             Tile("🌙", "أذكار النوم", Modifier.weight(1f)) { Nav.collection = "sleep"; Nav.go("adhkar") }
         }
     }
