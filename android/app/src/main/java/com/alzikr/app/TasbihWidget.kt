@@ -28,7 +28,7 @@ class TasbihWidget : AppWidgetProvider() {
 
     companion object {
         const val TAP = "com.alzikr.app.TASBIH_TAP"
-        private const val RESET = "com.alzikr.app.TASBIH_RESET"
+        const val RESET = "com.alzikr.app.TASBIH_RESET"
 
         fun update(c: Context) {
             TasbihNotice.update(c)

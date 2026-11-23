@@ -124,31 +124,69 @@ object TasbihNotice {
         return Prayer.FAJR to now
     }
 
+    /** Both lasting notifications: the next prayer (this one) and the tasbih ([CounterNotice]). */
     fun update(c: Context) {
         Store.init(c)
+        CounterNotice.update(c)
         val nm = c.getSystemService(NotificationManager::class.java)
         if (!on || !Alerts.canPost(c) || !Store.hasLocation) { nm.cancel(ID); return }
-        nm.createNotificationChannel(NotificationChannel(CH, "إشعار ALzikr الدائم", NotificationManager.IMPORTANCE_LOW).apply {
+        nm.createNotificationChannel(NotificationChannel(CH, "الصلاة القادمة (إشعار دائم)", NotificationManager.IMPORTANCE_LOW).apply {
             setShowBadge(false); lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         })
-        val set = Data.tasbihSet; val n = Data.tasbih
         val (p, at) = next()
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        val tap = PendingIntent.getBroadcast(c, 62, Intent(c, TasbihWidget::class.java).setAction(TasbihWidget.TAP), flags)
-        val dark = PendingIntent.getActivity(c, 63, Intent(c, TasbihDarkActivity::class.java), flags)
         val hide = PendingIntent.getBroadcast(c, 64, Intent(c, AlertReceiver::class.java).setAction(HIDE), flags)
         val back = PendingIntent.getBroadcast(c, 65, Intent(c, AlertReceiver::class.java).setAction(BACK), flags)
         val open = PendingIntent.getActivity(c, 66, Intent(c, MainActivity::class.java).putExtra("tab", "prayer").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), flags)
         val time = Alerts.timeText(java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault()).let { it.hour * 60 + it.minute })
         val notice = Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
             .setContentTitle("${p.ar} $time")
-            .setContentText("السبحة: ${n % set} من $set · المجموع $n")
+            .setContentText("الصلاة القادمة · العدّ التنازلي")
             .setWhen(at).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
             .setOngoing(true).setOnlyAlertOnce(true).setVisibility(Notification.VISIBILITY_PUBLIC).setColor(0xFF1F7A5A.toInt())
             .setContentIntent(open).setDeleteIntent(back)
-            .addAction(Notification.Action.Builder(null, "سبّح +١", tap).build())
-            .addAction(Notification.Action.Builder(null, "الشاشة المظلمة", dark).build())
             .addAction(Notification.Action.Builder(null, "إخفاء", hide).build())
+            .setGroup("alzikr_next_prayer")
+            .build()
+        nm.notify(ID, notice)
+    }
+}
+
+/** The tasbih in its own lasting notification: the count with a bar, «سبّح +١» (works on the lock screen), reset, hide (Android shows three buttons). */
+object CounterNotice {
+    private const val CH = "tasbih_counter"
+    private const val ID = 42
+    const val BACK = "com.alzikr.app.COUNTER_BACK"
+    const val HIDE = "com.alzikr.app.COUNTER_HIDE"
+    var on: Boolean
+        get() = Store.prefs.getBoolean("counter_notice", false)
+        set(v) { Store.prefs.edit().putBoolean("counter_notice", v).apply(); Store.bump() }
+
+    fun update(c: Context) {
+        Store.init(c)
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (!on || !Alerts.canPost(c)) { nm.cancel(ID); return }
+        nm.createNotificationChannel(NotificationChannel(CH, "السبحة (إشعار دائم)", NotificationManager.IMPORTANCE_LOW).apply {
+            setShowBadge(false); lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        })
+        val set = Data.tasbihSet; val n = Data.tasbih
+        val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val tap = PendingIntent.getBroadcast(c, 62, Intent(c, TasbihWidget::class.java).setAction(TasbihWidget.TAP), flags)
+        val reset = PendingIntent.getBroadcast(c, 67, Intent(c, TasbihWidget::class.java).setAction(TasbihWidget.RESET), flags)
+        val hide = PendingIntent.getBroadcast(c, 68, Intent(c, AlertReceiver::class.java).setAction(HIDE), flags)
+        val back = PendingIntent.getBroadcast(c, 69, Intent(c, AlertReceiver::class.java).setAction(BACK), flags)
+        val open = PendingIntent.getActivity(c, 70, Intent(c, MainActivity::class.java).putExtra("adhkarsec", 2).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), flags)
+        val notice = Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
+            .setContentTitle("السبحة: ${n % set} من $set")
+            .setContentText("المجموع $n · اضغط «سبّح +١» حتى وهاتفك مقفل")
+            .setProgress(set, n % set, false)
+            .setOngoing(true).setOnlyAlertOnce(true).setShowWhen(false).setVisibility(Notification.VISIBILITY_PUBLIC).setColor(0xFF1F7A5A.toInt())
+            .setContentIntent(open).setDeleteIntent(back)
+            .addAction(Notification.Action.Builder(null, "سبّح +١", tap).build())
+            .addAction(Notification.Action.Builder(null, "تصفير", reset).build())
+            .addAction(Notification.Action.Builder(null, "إخفاء", hide).build())
+            // Its own group: Android would otherwise bundle it with the prayer notification.
+            .setGroup("alzikr_tasbih")
             .build()
         nm.notify(ID, notice)
     }

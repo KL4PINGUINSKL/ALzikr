@@ -71,6 +71,10 @@ object Data {
     var fastReminder: Boolean
         get() = sp.getBoolean("fast_reminder", true)
         set(v) = edit { putBoolean("fast_reminder", v) }
+    /** A reminder on the occasion's own day, after Fajr. */
+    var dayReminder: Boolean
+        get() = sp.getBoolean("day_reminder", true)
+        set(v) = edit { putBoolean("day_reminder", v) }
     /** Minutes of Do Not Disturb after the adhan (0 = off). */
     var silentAfterAdhan: Int
         get() = sp.getInt("silent_after", 0)

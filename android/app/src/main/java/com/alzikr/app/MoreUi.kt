@@ -115,7 +115,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
-        Hint("more2", "☰", "الأدوات مرتبة في أربع مجموعات: الصلاة، والتقويم والوقت، والعلم، والتطبيق (وفيه الإعدادات والثيمات).")
+        Hint("more3", "☰", "خمس مجموعات: عباداتي، وتعلّم، والتقويم والمواسم، وأدوات، والتطبيق (وفيه الإعدادات والثيمات). وأسماء الشهور من بطاقة التاريخ.")
         Panel(Modifier.clickable { open("months") }, color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -132,20 +132,21 @@ fun MoreScreen(openSettings: () -> Unit) {
             }
             Text("›", color = androidx.compose.ui.graphics.Color(0xFF1D2B5A), fontSize = 22.sp)
         }
-        MoreGroup("الصلاة", listOf(
-            Triple("⏰", "المنبه") { open("alarms") }, Triple("🧭", "القبلة") { open("qibla") },
-            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") }, Triple("🏁", "أهدافي") { open("goals") }, Triple("📝", "محاسبة اليوم") { open("today") }, Triple("💰", "صدقاتي") { open("sadaqa") },
+        // Five groups, three to a row, every row full.
+        MoreGroup("عباداتي", listOf(
+            Triple("⏰", "المنبه") { open("alarms") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") },
+            Triple("🏁", "أهدافي") { open("goals") }, Triple("📝", "محاسبة اليوم") { open("today") }, Triple("💰", "صدقاتي") { open("sadaqa") },
         ))
-        MoreGroup("الفقه", Fiqh.topics.map { t -> Triple(t.icon, t.title.removePrefix("أحكام ")) { open("fiqh:${t.id}") } } +
-            Triple("🔍", "كل الأحكام والبحث") { open("fiqh") })
-        MoreGroup("التقويم والوقت", listOf(
+        MoreGroup("تعلّم", listOf(
+            Triple("🎙", "تعلّم التجويد") { open("tajweed") }, Triple("🧠", "حفظ القرآن") { open("hifz") }, Triple("💧", "صفة الوضوء والصلاة") { open("salah") },
+            Triple("⚖", "الأحكام الفقهية") { open("fiqh") }, Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("🎯", "مسابقة القرآن") { open("quiz") },
+        ))
+        MoreGroup("التقويم والمواسم", listOf(
             Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "رمضان") { open("ramadan") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
-            Triple("🗓", "أسماء الشهور") { open("months") }, Triple("🔁", "محوّل التاريخ") { open("convert") },
-            Triple("🌍", "الساعة العالمية") { open("world") },
         ))
-        MoreGroup("العلم", listOf(
-            Triple("🎙", "تعلّم التجويد") { open("tajweed") }, Triple("🧠", "حفظ القرآن") { open("hifz") }, Triple("💧", "صفة الصلاة") { open("salah") }, Triple("🎓", "تعلّم مع صديقي") { open("kids") }, Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("🔍", "البحث عن حديث") { open("hsearch") },
-            Triple("🎯", "مسابقة القرآن") { open("quiz") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
+        MoreGroup("أدوات", listOf(
+            Triple("🧭", "القبلة") { open("qibla") }, Triple("📅", "مواقيت الشهر") { open("month") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
+            Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث عن حديث") { open("hsearch") },
         ))
         MoreGroup("التطبيق", listOf(
             Triple("🐾", "صديقي") { open("pet") }, Triple("⚙️", "الإعدادات") { openSettings() }, Triple("🎨", "الثيمات") { open("themes") },

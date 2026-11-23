@@ -192,8 +192,8 @@ fun PrayerScreen(openSettings: () -> Unit) {
             Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
                 .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    GText("📌 إشعار دائم في قائمة الإشعارات", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                    Sub("الصلاة القادمة بعدّ تنازلي وزر «سبّح +١»، يبقى حتى تضغط «إخفاء»", size = 11.sp)
+                    GText("📌 إشعار دائم للصلاة القادمة", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Sub("الصلاة القادمة بعدّ تنازلي، يبقى حتى تضغط «إخفاء». وللسبحة إشعار مستقل من صفحة السبحة", size = 11.sp)
                 }
                 androidx.compose.material3.Switch(TasbihNotice.on, { TasbihNotice.on = it; TasbihNotice.update(ctx) })
             }

@@ -327,9 +327,9 @@ private fun TasbihScreen() {
         Sub("اضغط على الدائرة للتسبيح", size = 12.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Tile("🌙", "سبحة الشاشة المظلمة", Modifier.weight(1f)) { TasbihDarkActivity.open(ctx) }
-            Tile("🔒", if (TasbihNotice.on) "إزالتها من القفل" else "على شاشة القفل", Modifier.weight(1f), on = TasbihNotice.on) { TasbihNotice.on = !TasbihNotice.on; TasbihNotice.update(ctx) }
+            Tile("🔔", if (CounterNotice.on) "إزالتها من الإشعارات" else "في الإشعارات وعلى القفل", Modifier.weight(1f), on = CounterNotice.on) { CounterNotice.on = !CounterNotice.on; CounterNotice.update(ctx) }
         }
-        Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «على شاشة القفل»: زر «سبّح +١» في الإشعار يعمل دون فتح القفل.", size = 11.sp)
+        Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «في الإشعارات»: إشعار مستقل للسبحة بعدّادها وزر «سبّح +١» يعمل دون فتح القفل، منفصل عن إشعار الصلاة القادمة.", size = 11.sp)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             GText("📳", fontSize = 16.sp)
             Haptics.names.forEachIndexed { i, n -> Choice(n, Haptics.level == i) { Haptics.level = i; Haptics.tap(ctx) } }

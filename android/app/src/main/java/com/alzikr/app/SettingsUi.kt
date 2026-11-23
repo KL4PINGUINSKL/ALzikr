@@ -182,7 +182,8 @@ fun SettingsSheet(close: () -> Unit) {
                         listOf(0 to "إيقاف", 1 to "كل ساعة", 2 to "كل ساعتين", 3 to "كل 3 ساعات").forEach { (n, l) -> Choice(l, Data.salawatEvery == n) { Data.salawatEvery = n; reschedule() } }
                     }
                     SettingRow("سورة الكهف يوم الجمعة", "تذكير الساعة 10 صباحًا") { Switch(Data.kahf, { Data.kahf = it; reschedule() }) }
-                    SettingRow("تنبيه المناسبة القادمة", "مساء قبل الجمعة والاثنين والخميس والأيام البيض وعرفة والعيدين وعاشوراء ورمضان…") { Switch(Data.fastReminder, { Data.fastReminder = it; reschedule() }) }
+                    SettingRow("تنبيه المناسبة القادمة", "مساء قبل الجمعة والاثنين والخميس والأيام البيض وعرفة والعيدين وعاشوراء ورمضان… وإذا اجتمع فضلان في يوم قيل لك") { Switch(Data.fastReminder, { Data.fastReminder = it; reschedule() }) }
+                    SettingRow("تنبيه يوم المناسبة", "صباح اليوم نفسه بعد الفجر بعشرين دقيقة") { Switch(Data.dayReminder, { Data.dayReminder = it; reschedule() }) }
                     if (Data.fastReminder) Row(Modifier.padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Sub("وقته:")
                         Choice("⏰ " + Alerts.timeText(DayInfo.eveAt), true) {

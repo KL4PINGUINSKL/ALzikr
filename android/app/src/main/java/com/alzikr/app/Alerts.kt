@@ -36,9 +36,13 @@ object Alerts {
     private const val CH_FOCUS_DONE = "focus_done"
     private const val ID_PRAYER = 10
     private const val ID_REMIND = 11
+    /** Occasions have their own channel and slots, so a later reminder does not replace them. */
+    private const val CH_OCCASION = "occasions"
+    private const val ID_EVE = 12
+    private const val ID_DAY = 13
     const val ID_FOCUS = 12
 
-    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR, KHATMA, DUA, SADAQA }
+    enum class Kind { PRAYER, BEFORE, MORNING, EVENING, SLEEP, DHIKR, KAHF, FAST, SUHOOR, KHATMA, DUA, SADAQA, OCCASION }
     data class Event(val at: Long, val kind: Kind, val prayer: Prayer)
 
     fun timeText(minutes: Int): String {
@@ -68,6 +72,8 @@ object Alerts {
             if (Data.salawatEvery > 0) for (m in 9 * 60..21 * 60 step Data.salawatEvery * 60) list += Event(epoch(date, m), Kind.DHIKR, Prayer.DHUHR)
             if (Data.kahf && date.dayOfWeek == java.time.DayOfWeek.FRIDAY) list += Event(epoch(date, 10 * 60), Kind.KAHF, Prayer.DHUHR)
             if (Data.fastReminder && DayInfo.of(date.plusDays(1)) != null) list += Event(epoch(date, DayInfo.eveAt), Kind.FAST, Prayer.ISHA)
+            // The day itself, after Fajr (Friday alone has its own reminder).
+            if (Data.dayReminder && DayInfo.of(date)?.parts?.any { !it.kahf } == true) list += Event(epoch(date, t.getValue(Prayer.FAJR) + 20), Kind.OCCASION, Prayer.FAJR)
             if (Sadaqa.remindsOn(date)) list += Event(epoch(date, Sadaqa.remindAt), Kind.SADAQA, Prayer.ASR)
             Duas.events(date, t).forEach { m -> list += Event(epoch(date, m), Kind.DUA, Prayer.ISHA) }
             if (Data.suhoorBefore > 0 && Data.hijri(date).month == 9) list += Event(epoch(date, t.getValue(Prayer.FAJR) - Data.suhoorBefore), Kind.SUHOOR, Prayer.FAJR)
@@ -172,14 +178,26 @@ object Alerts {
             Kind.KAHF -> Notification.Builder(c, CH_REMIND).setContentTitle("يوم الجمعة المبارك").setContentText("اغتسل وتطيّب وبكّر إلى الصلاة، واقرأ الكهف، وأكثر من الصلاة على النبي ﷺ")
                 .setStyle(Notification.BigTextStyle().bigText("• الغسل والطيب ولبس أحسن الثياب\n• التبكير إلى المسجد والإنصات للخطبة\n• قراءة سورة الكهف\n• الإكثار من الصلاة على النبي ﷺ\n• الدعاء في آخر ساعة بعد العصر"))
                 .setContentIntent(PendingIntent.getActivity(c, 80, Intent(c, MainActivity::class.java).putExtra("day", LocalDate.now().toString()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
-            Kind.FAST -> {
-                val d = LocalDate.now().plusDays(1)
+            Kind.FAST, Kind.OCCASION -> {
+                val today = kind == Kind.OCCASION
+                val d = if (today) LocalDate.now() else LocalDate.now().plusDays(1)
                 val card = DayInfo.of(d)
-                val body = card?.parts?.joinToString("\n") { p -> "• " + p.name + ": " + (p.sunan.firstOrNull()?.text ?: "") } ?: ""
-                val tap = PendingIntent.getActivity(c, 77, Intent(c, MainActivity::class.java).putExtra("tab", "prayer").putExtra("day", d.toString()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                val parts = card?.parts.orEmpty()
+                // When two or more meet (a Monday that is a white day, Arafah on a Thursday…), say so.
+                val title = (if (today) "اليوم " else "غدًا ") + when {
+                    parts.size >= 2 -> "يجتمع فضلان: " + parts.joinToString(" + ") { it.name }
+                    else -> card?.title ?: ""
+                }
+                val text = when {
+                    parts.size >= 2 && parts.any { it.sunan.any { s -> "صيام" in s.text || "صوم" in s.text } } -> "صيام واحد يجمع الفضلين، فانوِه من الليل"
+                    else -> card?.let { DayInfo.line(it) } ?: ""
+                }
+                val body = parts.joinToString("\n\n") { p -> p.icon + " " + p.name + "\n" + (p.virtue.firstOrNull()?.text ?: "") + "\n• " + (p.sunan.firstOrNull()?.text ?: "") }
+                val tap = PendingIntent.getActivity(c, if (today) 76 else 77, Intent(c, MainActivity::class.java).putExtra("tab", "prayer").putExtra("day", d.toString()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-                Notification.Builder(c, CH_REMIND).setContentTitle("غدًا " + (card?.title ?: "")).setContentText((card?.let { DayInfo.line(it) } ?: "") + " · اضغط لفضله وسننه")
-                    .setStyle(Notification.BigTextStyle().bigText(body + "\nاضغط لفضله وسننه كاملة")).setContentIntent(tap)
+                nm.createNotificationChannel(NotificationChannel(CH_OCCASION, "المناسبات (قبلها بليلة ويومها)", NotificationManager.IMPORTANCE_DEFAULT))
+                Notification.Builder(c, CH_OCCASION).setContentTitle(title).setContentText("$text · اضغط لفضله وسننه")
+                    .setStyle(Notification.BigTextStyle().bigText(body + "\n\nاضغط لفضله وسننه كاملة")).setContentIntent(tap)
             }
             Kind.SADAQA -> Notification.Builder(c, CH_REMIND).setContentTitle("صدقة اليوم").setContentText(Sadaqa.virtues[LocalDate.now().dayOfYear % Sadaqa.virtues.size])
                 .setContentIntent(PendingIntent.getActivity(c, 79, Intent(c, MainActivity::class.java).putExtra("page", "sadaqa").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
@@ -189,7 +207,7 @@ object Alerts {
             Kind.SUHOOR -> Notification.Builder(c, CH_REMIND).setContentTitle("السحور").setContentText("الفجر بعد ${Data.suhoorBefore} دقيقة · تسحروا فإن في السحور بركة").setContentIntent(open(c, "prayer"))
         }
         b.setSmallIcon(R.drawable.ic_stat_zikr).setAutoCancel(true).setColor(0xFF1F7A5A.toInt())
-        nm.notify(if (kind == Kind.PRAYER) ID_PRAYER else ID_REMIND, b.build())
+        nm.notify(when (kind) { Kind.PRAYER -> ID_PRAYER; Kind.FAST -> ID_EVE; Kind.OCCASION -> ID_DAY; else -> ID_REMIND }, b.build())
     }
 
     /** Do Not Disturb for a few minutes after the adhan, when the user asked for it and allowed ALzikr to. */
@@ -323,7 +341,12 @@ class AlertReceiver : BroadcastReceiver() {
             }
             UNSILENCE -> { Alerts.unsilence(c); return }
             // Swiped away: back it comes. «إخفاء»: switched off until turned on again.
-            TasbihNotice.BACK -> { TasbihNotice.update(c); return }
+            TasbihNotice.BACK, CounterNotice.BACK -> { TasbihNotice.update(c); return }
+            CounterNotice.HIDE -> {
+                CounterNotice.on = false; CounterNotice.update(c)
+                android.widget.Toast.makeText(c, "أُخفيت السبحة من الإشعارات. تعيدها من صفحة السبحة", android.widget.Toast.LENGTH_LONG).show()
+                return
+            }
             TasbihNotice.HIDE -> {
                 TasbihNotice.on = false; TasbihNotice.update(c)
                 android.widget.Toast.makeText(c, "أُخفي الإشعار. تعيده من صفحة الصلاة", android.widget.Toast.LENGTH_LONG).show()
