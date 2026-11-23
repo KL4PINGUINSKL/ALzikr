@@ -4,18 +4,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.sharp.CheckCircle
 import androidx.compose.material.icons.sharp.Favorite
 import androidx.compose.material.icons.sharp.Menu
+import androidx.compose.material.icons.sharp.Star
 import androidx.compose.material.icons.sharp.Notifications
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -49,6 +53,7 @@ object AppIcons {
             "adhkar" -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.FavoriteBorder; IconStyle.ROUNDED -> Icons.Rounded.Favorite; IconStyle.SHARP -> Icons.Sharp.Favorite; else -> Icons.Filled.Favorite }
             "library" -> book(outlined = style == IconStyle.OUTLINED, rounded = style == IconStyle.ROUNDED)
             "daily" -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.CheckCircle; IconStyle.ROUNDED -> Icons.Rounded.CheckCircle; IconStyle.SHARP -> Icons.Sharp.CheckCircle; else -> Icons.Filled.CheckCircle }
+            "kids" -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.Star; IconStyle.ROUNDED -> Icons.Rounded.Star; IconStyle.SHARP -> Icons.Sharp.Star; else -> Icons.Filled.Star }
             else -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.Menu; IconStyle.ROUNDED -> Icons.Rounded.Menu; IconStyle.SHARP -> Icons.Sharp.Menu; else -> Icons.Filled.Menu }
         }
     }
