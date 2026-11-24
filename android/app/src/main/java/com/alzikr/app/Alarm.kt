@@ -79,10 +79,25 @@ object PrayerAlarm {
     fun days(p: Prayer): Set<Int> = Store.prefs.getStringSet("alarm_days_${p.name}", null)?.mapNotNull { it.toIntOrNull() }?.toSet() ?: (1..7).toSet()
     fun setDays(c: Context, p: Prayer, v: Set<Int>) { Store.prefs.edit().putStringSet("alarm_days_${p.name}", v.map { it.toString() }.toSet()).apply(); Store.bump(); schedule(c) }
 
-    /** 0 = the phone's alarm tone, 1 = the adhan (then the tone), 2 = vibration only. */
+    /**
+     * 0 = the phone's alarm tone, 1 = an adhan of the app (then the tone), 2 = vibration only,
+     * 3 = a tone chosen from the phone (alarm, ringtone or notification), 4 = an audio file from the phone.
+     */
     var sound: Int
         get() = Store.prefs.getInt("alarm_sound", 0)
         set(v) { Store.prefs.edit().putInt("alarm_sound", v).apply(); Store.bump() }
+    /** The chosen tone or file (sound 3 or 4) and its name. A file keeps a lasting read permission. */
+    var uri: String
+        get() = Store.prefs.getString("alarm_uri", "") ?: ""
+        set(v) { Store.prefs.edit().putString("alarm_uri", v).apply(); Store.bump() }
+    var uriName: String
+        get() = Store.prefs.getString("alarm_uri_name", "") ?: ""
+        set(v) { Store.prefs.edit().putString("alarm_uri_name", v).apply(); Store.bump() }
+    /** The alarm's own adhan voice (the adhan settings keep theirs). */
+    var adhanVoice: String
+        get() = Store.prefs.getString("alarm_adhan_voice", null) ?: Adhan.voiceId
+        set(v) { Store.prefs.edit().putString("alarm_adhan_voice", v).apply(); Store.bump() }
+    fun adhan() = Adhan.voices.firstOrNull { it.id == adhanVoice } ?: Adhan.voice()
     var snooze: Int
         get() = Store.prefs.getInt("alarm_snooze", 10)
         set(v) { Store.prefs.edit().putInt("alarm_snooze", v).apply(); Store.bump() }
@@ -246,9 +261,13 @@ class AlarmService : Service() {
         Log.i(TAG, "ring: sound=${PrayerAlarm.sound} mode=${am.mode} alarmVolume=${am.getStreamVolume(AudioManager.STREAM_ALARM)}/${am.getStreamMaxVolume(AudioManager.STREAM_ALARM)}")
         val req = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).setAudioAttributes(attrs()).build()
         focus = req; runCatching { am.requestAudioFocus(req) }
-        val adhan = Adhan.voice().takeIf { PrayerAlarm.sound == 1 && Adhan.has(this, it) }
-        if (adhan != null) play(Uri.fromFile(Adhan.file(this, adhan)), loop = false) { playTone() }
-        else playTone()
+        val adhan = PrayerAlarm.adhan().takeIf { PrayerAlarm.sound == 1 && Adhan.has(this, it) }
+        val own = PrayerAlarm.uri.takeIf { PrayerAlarm.sound in 3..4 && it.isNotEmpty() }?.let { Uri.parse(it) }
+        when {
+            adhan != null -> play(Uri.fromFile(Adhan.file(this, adhan)), loop = false) { playTone() }
+            own != null -> if (!play(own, loop = true)) playTone()   // the chosen tone or file; if it is gone, the alarm tone
+            else -> playTone()
+        }
         if (inCall && PrayerAlarm.inCall == 1) { runCatching { player?.setVolume(.18f, .18f) }; ringtone?.let { r -> if (Build.VERSION.SDK_INT >= 28) r.volume = .18f }; return }
         if (PrayerAlarm.ramp) {
             var vol = .12f

@@ -1,5 +1,6 @@
 package com.alzikr.app
 
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -114,13 +115,50 @@ fun AlarmPage() {
 
         Title("الصوت والغفوة")
         Sub("الصوت")
+        // A tone from the phone (its own picker) or any audio file (kept with a lasting permission).
+        val tonePicker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { r ->
+            @Suppress("DEPRECATION") val u = r.data?.getParcelableExtra<android.net.Uri>(android.media.RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            if (u != null) {
+                PrayerAlarm.uri = u.toString(); PrayerAlarm.sound = 3
+                PrayerAlarm.uriName = runCatching { android.media.RingtoneManager.getRingtone(ctx, u)?.getTitle(ctx) }.getOrNull() ?: "نغمة من الهاتف"
+            }
+        }
+        val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { u ->
+            if (u != null) {
+                runCatching { ctx.contentResolver.takePersistableUriPermission(u, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+                PrayerAlarm.uri = u.toString(); PrayerAlarm.sound = 4
+                PrayerAlarm.uriName = runCatching { ctx.contentResolver.query(u, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null } }.getOrNull() ?: "ملف صوتي"
+            }
+        }
+        fun pickTone() = tonePicker.launch(android.content.Intent(android.media.RingtoneManager.ACTION_RINGTONE_PICKER)
+            .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TYPE, android.media.RingtoneManager.TYPE_ALL)
+            .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TITLE, "نغمة منبه الصلوات")
+            .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+            .putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, PrayerAlarm.uri.takeIf { PrayerAlarm.sound == 3 && it.isNotEmpty() }?.let { android.net.Uri.parse(it) }))
         Wrap(gap = 6.dp) {
             Choice("نغمة منبه الهاتف", PrayerAlarm.sound == 0) { PrayerAlarm.sound = 0 }
-            Choice("الأذان ثم النغمة", PrayerAlarm.sound == 1) { PrayerAlarm.sound = 1 }
+            Choice("أذان من التطبيق", PrayerAlarm.sound == 1) { PrayerAlarm.sound = 1 }
+            Choice("نغمة أو رنين من الهاتف", PrayerAlarm.sound == 3) { if (PrayerAlarm.sound == 3 || PrayerAlarm.uri.isEmpty()) pickTone() else PrayerAlarm.sound = 3 }
+            Choice("ملف صوتي من الهاتف", PrayerAlarm.sound == 4) { filePicker.launch(arrayOf("audio/*")) }
             Choice("اهتزاز فقط", PrayerAlarm.sound == 2) { PrayerAlarm.sound = 2 }
         }
-        if (PrayerAlarm.sound == 1 && !Adhan.has(ctx, Adhan.voice()))
-            Sub("لم يُنزَّل صوت الأذان بعد (الإعدادات › الأذان)، فستُستخدم نغمة المنبه.", color = P.danger, size = 12.sp)
+        if (PrayerAlarm.sound in 3..4) Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Sub("🎵 ${PrayerAlarm.uriName.ifEmpty { "لم تُختر بعد" }}", Modifier.weight(1f), size = 13.sp, color = P.ink)
+            Action("تغيير", filled = false) { if (PrayerAlarm.sound == 3) pickTone() else filePicker.launch(arrayOf("audio/*")) }
+        }
+        if (PrayerAlarm.sound == 1) {
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+            Sub("صوت الأذان للمنبه (ثم نغمة المنبه حتى تُوقفه)", size = 12.sp)
+            Adhan.voices.forEach { av ->
+                val has = Adhan.has(ctx, av)
+                Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Choice(av.name, PrayerAlarm.adhanVoice == av.id, Modifier.weight(1f)) { PrayerAlarm.adhanVoice = av.id }
+                    if (Adhan.downloading == av.id) Sub(" ${(Adhan.progress * 100).toInt()}٪", size = 12.sp)
+                    else if (!has) Action("تنزيل", filled = false) { kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch { Adhan.download(ctx, av); Store.bump() } }
+                }
+            }
+            if (!Adhan.has(ctx, PrayerAlarm.adhan())) Sub("لم يُنزَّل هذا الأذان بعد، فستُستخدم نغمة المنبه حتى تنزّله.", color = P.danger, size = 12.sp)
+        }
         Sub("مدة الغفوة")
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { PrayerAlarm.snoozes.forEach { m -> Choice("$m د", PrayerAlarm.snooze == m) { PrayerAlarm.snooze = m } } }
         SettingRow("اهتزاز مع الصوت", null) { Switch(PrayerAlarm.vibrate, { PrayerAlarm.vibrate = it }) }
