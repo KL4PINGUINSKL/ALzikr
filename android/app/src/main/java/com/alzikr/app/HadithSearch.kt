@@ -133,6 +133,8 @@ object HadithSearch {
         if (!hasIndex(c)) return null
         val all = sharhIndex(c).filter { it.title.length in 25..160 }
         if (all.isEmpty()) return null
+        // Each person's own random order, none repeating until all have come (DailyBag).
+        if (date == java.time.LocalDate.now()) runCatching { return all[DailyBag.index("hadith", all.size)] }
         return all[Math.floorMod(date.toEpochDay() * 31 + Data.dailyShift("hadith", date) * 7919L, all.size.toLong()).toInt()]
     }
 

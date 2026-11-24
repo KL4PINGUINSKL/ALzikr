@@ -296,7 +296,9 @@ object Data {
         val today = LocalDate.now().toString()
         val e = Store.prefs.edit()
         Store.prefs.all.keys.filter { it.startsWith("shift_${kind}_") && !it.endsWith(today) }.forEach(e::remove)
-        e.putInt("shift_${kind}_$today", dailyShift(kind) + 1).apply(); Store.bump()
+        e.putInt("shift_${kind}_$today", dailyShift(kind) + 1).apply()
+        if (kind == "hadith") { DailyBag.next("hadith"); DailyBag.next("hadith40") } else DailyBag.next(kind)
+        Store.bump()
     }
 
     data class Hijri(val year: Int, val month: Int, val day: Int, val monthName: String)

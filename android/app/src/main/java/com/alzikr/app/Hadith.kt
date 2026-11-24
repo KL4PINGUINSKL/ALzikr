@@ -146,6 +146,11 @@ object Hadith {
 
     /** A hadith a day from the two bundled forties. */
     fun ofTheDay(c: Context, date: LocalDate = LocalDate.now()): Pair<Info, Item>? {
+        if (date == LocalDate.now()) runCatching {
+            // Both forties as one list, in each person's own random order (DailyBag).
+            val all = listOf("nawawi40", "qudsi40").mapNotNull { load(c, it) }.flatMap { b -> b.items.map { b.info to it } }
+            if (all.isNotEmpty()) return all[DailyBag.index("hadith40", all.size)]
+        }
         val k = date.toEpochDay() + Data.dailyShift("hadith", date)
         val id = if (k % 2 == 0L) "nawawi40" else "qudsi40"
         val book = load(c, id) ?: return null

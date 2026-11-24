@@ -120,10 +120,12 @@ object Quran {
     fun numerals(t: String): String = if (easternDigits) { if (t.none { it in '0'..'9' }) t else String(CharArray(t.length) { i -> t[i].let { c -> if (c in '0'..'9') '٠' + (c - '0') else c } }) }
         else { if (t.none { it in '٠'..'٩' }) t else String(CharArray(t.length) { i -> t[i].let { c -> if (c in '٠'..'٩') '0' + (c - '٠') else c } }) }
 
-    /** One short verse per day, the same for everyone on that date. */
+    private val shortAyahs: List<Ayah> by lazy { ayahs.filter { it.plain.length in 40..170 } }
+    /** One short verse a day, in each person's own random order: none repeats until all of them have come (DailyBag). */
     fun ofTheDay(date: LocalDate = LocalDate.now()): Ayah? {
         if (!ready) return null
-        val short = ayahs.filter { it.plain.length in 40..170 }
+        val short = shortAyahs
+        if (date == LocalDate.now()) runCatching { return short[DailyBag.index("ayah", short.size)] }
         return short[Math.floorMod(date.toEpochDay() * 7919 + Data.dailyShift("ayah", date) * 104729L, short.size.toLong()).toInt()]
     }
 
