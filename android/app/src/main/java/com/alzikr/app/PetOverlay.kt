@@ -165,7 +165,9 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     // Keeps moving (unless turned off or asleep); always while it speaks or strolls.
                     PetLottie(species, Modifier.size(Pet.floatSize.dp).hopping { hop.value }, look = look,
                         playing = b != null || walking.value || hop.isRunning || (Pet.floatMove && !asleep),
-                        speed = if (asleep) .45f else if (walking.value) 1.4f else 1f)
+                        speed = if (asleep) .45f else if (walking.value) 1.4f else 1f, place = com.alzikr.app.pets.Place.OVERLAY,
+                        // The engine's states: a skin with its own walk/sleep/talk animation uses it; others fall back to idle.
+                        state = when { asleep -> com.alzikr.app.pets.PetState.SLEEP; walking.value -> com.alzikr.app.pets.PetState.WALK; b != null -> com.alzikr.app.pets.PetState.TALK; else -> com.alzikr.app.pets.PetState.IDLE })
                 }
                 if (asleep && b == null) androidx.compose.material3.Text("💤", fontSize = 14.sp, modifier = Modifier.align(if (right) Alignment.TopStart else Alignment.TopEnd))
                 if (h > 0) FloatingHearts(h, Modifier.align(Alignment.TopCenter))
@@ -383,6 +385,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         /** ALzikr on screen: the floating twin steps aside (the one in the app is there). Same process, so no service start from the background. */
         fun appVisible(c: Context, visible: Boolean) { instance?.get()?.let { s -> s.handler.post {
             s.appOpen = visible
+            com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.OVERLAY, !visible)
             if (visible) { s.stopStroll(); s.view?.visibility = android.view.View.GONE }
             // Back from ALzikr: if the friend, its look or its size changed there, build it anew.
             else if (s.view != null && s.shown != s.key()) { s.removeView(); s.show() }

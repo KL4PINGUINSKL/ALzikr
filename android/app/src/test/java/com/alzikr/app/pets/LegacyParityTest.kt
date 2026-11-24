@@ -20,6 +20,7 @@ class LegacyParityTest {
                 assertEquals(l.id, s.id); assertEquals(l.name, s.name); assertEquals(l.by, s.by)
                 assertEquals(l.zoom, s.fit.zoom, 1e-4f); assertEquals(l.lift, s.fit.lift, 1e-4f); assertEquals(l.darkLines, s.fit.darkLines)
                 assertEquals("level of ${l.id}", Progress.lookLevel(i), s.unlock.level)
+                assertEquals("pack level of ${l.id}", Progress.lookLevel(sp, i), l.level)
             }
             assertEquals("species level ${sp.name}", Progress.speciesLevel(sp), core.species.first { it.id == sp.name }.unlock.level)
         }

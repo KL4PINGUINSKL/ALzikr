@@ -173,13 +173,28 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
     var n by remember { mutableIntStateOf(Random.nextInt(100)) }
     val happy = Pet.happy()
     // One smooth simulation, stepped every frame (paused by Android when the app is not on screen).
+    // Paused under reduced motion; fewer steps when saving battery (Performance Manager).
     LaunchedEffect(sp) {
         var last = 0L
         while (true) {
+            if (!com.alzikr.app.pets.PetPerf.codeMotion(com.alzikr.app.pets.Place.APP)) { last = 0L; delay(500); continue }
             androidx.compose.runtime.withFrameMillis { now ->
                 val dt = if (last == 0L) .016f else ((now - last) / 1000f).coerceIn(0f, .05f)
                 last = now; sim.step(dt); frame = now
             }
+            // At most the place's frame budget (30 fps, 15 when saving), instead of every display frame (up to 120 Hz).
+            delay((1000L / com.alzikr.app.pets.PetPerf.fps(com.alzikr.app.pets.Place.APP) - 4).coerceAtLeast(1))
+        }
+    }
+    // Behaviour engine: what the friend does by itself (personality, time of day, the day's mood, its evolution stage).
+    val def = com.alzikr.app.pets.PetPacks.registry().species(sp.name)
+    val stage = com.alzikr.app.pets.Evolution.stage(def, Progress.level())
+    var act by remember { mutableStateOf(com.alzikr.app.pets.PetState.APPEAR) }
+    LaunchedEffect(sp, stage.id) {
+        delay(800)
+        while (true) {
+            val pick = com.alzikr.app.pets.Behavior.next(def?.personality ?: com.alzikr.app.pets.Personality(), java.time.LocalTime.now().hour, Pet.mood(), Pet.asleep(), stage)
+            act = pick.state; delay(pick.durationMs)
         }
     }
     LaunchedEffect(Unit) { while (true) { sim.asleep = Pet.asleep(); delay(30_000) } }
@@ -194,7 +209,7 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
         }
     }
     val cheer = Pet.cheerNow()
-    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); sim.jump(); delay(650); sim.jump(.7f) } }
+    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); act = com.alzikr.app.pets.PetState.CELEBRATE; sim.jump(); delay(650); sim.jump(.7f) } }
     LaunchedEffect(said) { if (said != null) { delay(7000); said = null } }
 
     BoxWithConstraints(modifier.height(height.dp)) {
@@ -221,7 +236,7 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
                 translationY = -sim.hop * size.height * .18f
                 rotationZ = sim.lean * .4f * (if (sim.face < 0) -1f else 1f)
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, .95f)
-            }, speed = if (sim.asleep) .35f else 1f)
+            }, speed = if (sim.asleep) .35f else 1f, state = if (sim.asleep) com.alzikr.app.pets.PetState.SLEEP else act, scale = stage.scale)
             said?.let { s ->
                 val px = with(LocalDensity.current) { box.roundToPx() }
                 Popup(alignment = if (bubbleBelow) Alignment.TopCenter else Alignment.BottomCenter, offset = IntOffset(0, if (bubbleBelow) px else -px)) {
@@ -278,7 +293,7 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
                         }.padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(contentAlignment = Alignment.Center) {
-                            PetLottie(s, Modifier.size(78.dp).alpha(if (open) 1f else .22f), playing = open)
+                            PetLottie(s, Modifier.size(78.dp).alpha(if (open) 1f else .22f), playing = open, place = com.alzikr.app.pets.Place.GRID)
                             if (!open) Text("🔒 ${Quran.digits(Progress.speciesLevel(s))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, textAlign = TextAlign.Center)
@@ -319,6 +334,13 @@ fun PetPage() {
         if (sp != null) Panel(pad = 14.dp) {
             LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
             Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
+            // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
+            run {
+                val st = com.alzikr.app.pets.Evolution.stages(com.alzikr.app.pets.PetPacks.registry().species(sp.name))
+                val cur = com.alzikr.app.pets.Evolution.stage(com.alzikr.app.pets.PetPacks.registry().species(sp.name), Progress.level())
+                val next = st.firstOrNull { it.fromLevel > Progress.level() }
+                Sub("🌱 مرحلته: ${cur.name}" + (next?.let { " · يصير «${it.name}» في المستوى ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
+            }
             if (Progress.showLevels) {
                 // ✨ experience: Quran, hadith, learning and the day's worship
                 val lv = Progress.level(); val x = Progress.xp
@@ -379,12 +401,12 @@ fun PetPage() {
                     Column(Modifier.width(104.dp).clip(L.shape(14.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
                         .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(14.dp)).clickable {
                             if (open) PetLooks.choose(sp, lk.id)
-                            else android.widget.Toast.makeText(ctx, "يُفتح هذا الشكل في المستوى ${Progress.lookLevel(i)}", android.widget.Toast.LENGTH_SHORT).show()
+                            else android.widget.Toast.makeText(ctx, "يُفتح هذا الشكل في المستوى ${Progress.lookLevel(sp, i)}", android.widget.Toast.LENGTH_SHORT).show()
                         }.padding(6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(contentAlignment = Alignment.Center) {
-                            PetLottie(sp, Modifier.size(88.dp).alpha(if (open) 1f else .25f), look = lk, playing = open)
-                            if (!open) Text("🔒 ${Quran.digits(Progress.lookLevel(i))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            PetLottie(sp, Modifier.size(88.dp).alpha(if (open) 1f else .25f), look = lk, playing = open, place = com.alzikr.app.pets.Place.GRID)
+                            if (!open) Text("🔒 ${Quran.digits(Progress.lookLevel(sp, i))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(lk.name, color = P.ink, fontSize = 13.sp, maxLines = 2, lineHeight = 16.sp, textAlign = TextAlign.Center)
                     }
@@ -392,6 +414,10 @@ fun PetPage() {
             }
         }
         Sub("الرسوم المتحركة من LottieFiles (رخصة Lottie Simple License).", size = 11.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Action("معاينة وحالات", Modifier.weight(1f), filled = false) { Nav.morePage = "petpreview"; Nav.go("more") }
+            Action("الحزم والحركة", Modifier.weight(1f), filled = false) { Nav.morePage = "petpacks"; Nav.go("more") }
+        }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             var name by remember(sp) { mutableStateOf(Pet.nameOf(sp)) }
             OutlinedTextField(name, { name = it; if (it.isNotBlank()) Pet.setName(sp, it) }, singleLine = true, label = { Text("اسم ${sp.ar}") }, modifier = Modifier.weight(1f))
@@ -479,7 +505,7 @@ fun KidsPage() {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Pet.lessons.forEachIndexed { k, (n, _) -> Choice(n, topic == k) { topic = k } }
         }
-        PetLottie(sp, Modifier.size(170.dp).graphicsLayer { translationY = -hop.value * 60f; val sq = 1f + hop.value * .06f; scaleX = sq; scaleY = sq })
+        PetLottie(sp, place = com.alzikr.app.pets.Place.KIDS, modifier = Modifier.size(170.dp).graphicsLayer { translationY = -hop.value * 60f; val sq = 1f + hop.value * .06f; scaleX = sq; scaleY = sq })
         Text("⭐ ${Pet.stars}", color = P.gold, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Panel(color = P.card, pad = 16.dp) {
             Sub("$name · سؤال ${i % qs.size + 1} من ${qs.size}", color = P.gold, size = 12.sp)

@@ -97,7 +97,14 @@ class MainActivity : ComponentActivity() {
         i?.getStringExtra("hsearch")?.let { Nav.hadithQuery = it; Nav.tab = "library" }
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
+        i?.getStringExtra("petskin")?.let { com.alzikr.app.pets.PetPreview.start = it }
         i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
+        // Pet packs placed in the app's private files/incoming/ (by adb run-as, for testing): install them through the
+        // same checks as a download. Other apps cannot write there, so the name alone is not a risk.
+        i?.getStringExtra("petinstall")?.let { name ->
+            Thread { val r = com.alzikr.app.pets.PetPacks.installLocal(name)
+                runOnUiThread { android.widget.Toast.makeText(this, r.fold({ "ثُبّتت حزمة «${it.title}»" }, { "لم تُثبَّت الحزمة: ${it.message}" }), android.widget.Toast.LENGTH_LONG).show(); Store.bump() } }.start()
+        }
         i?.getStringExtra("coll")?.let { Nav.collection = it; Nav.go("adhkar") }
         i?.getIntExtra("adhkarsec", -1)?.takeIf { it >= 0 }?.let { Nav.adhkar = it; Nav.go("adhkar") }
         i?.getStringExtra("day")?.let { d -> runCatching { java.time.LocalDate.parse(d) }.getOrNull()?.let { Nav.daySheet = it } }
@@ -123,10 +130,11 @@ class MainActivity : ComponentActivity() {
         openPlace(intent)
     }
 
-    override fun onPause() { super.onPause(); PetOverlay.appVisible(this, false); val app = applicationContext; Thread { runCatching { PetWidget.update(app) } }.start() }
+    override fun onPause() { super.onPause(); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.APP, false); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.KIDS, false); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.GRID, false); PetOverlay.appVisible(this, false); val app = applicationContext; Thread { runCatching { PetWidget.update(app) } }.start() }
 
     override fun onResume() {
         PetOverlay.appVisible(this, true)
+        listOf(com.alzikr.app.pets.Place.APP, com.alzikr.app.pets.Place.KIDS, com.alzikr.app.pets.Place.GRID, com.alzikr.app.pets.Place.PREVIEW).forEach { com.alzikr.app.pets.PetPerf.setVisible(it, true) }
         super.onResume()
         Alerts.reschedule(this)
         Alerts.focusNotification(this)

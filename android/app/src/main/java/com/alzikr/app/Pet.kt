@@ -153,6 +153,32 @@ object Pet {
         if (d in set) return
         val keep = LocalDate.now().minusDays(400).toString()
         sp.edit().putStringSet("pet_good_days", (set.filter { it >= keep } + d).toSet()).apply()
+        streak().takeIf { it in setOf(3, 7, 14, 30, 60, 100) }?.let { remember("streak", it) }
+    }
+
+    // ---- the friend's memory (Pet Engine): real events only, kept on the phone
+    fun remember(kind: String, value: Int = 0) {
+        val list = com.alzikr.app.pets.PetMemory.decode(sp.getString("pet_memory", null)) + com.alzikr.app.pets.PetMemory.Event(kind, System.currentTimeMillis(), value)
+        sp.edit().putString("pet_memory", com.alzikr.app.pets.PetMemory.encode(list)).apply()
+    }
+    /** The hour of the first page read each day (last 30 days), for «you like reading in the morning». */
+    fun readingHour() {
+        val d = LocalDate.now().toString()
+        val o = runCatching { org.json.JSONObject(sp.getString("pet_read_hours", "{}")!!) }.getOrDefault(org.json.JSONObject())
+        if (o.has(d)) return
+        o.put(d, LocalTime.now().hour)
+        val keep = LocalDate.now().minusDays(30).toString()
+        o.keys().asSequence().toList().filter { it < keep }.forEach { o.remove(it) }
+        sp.edit().putString("pet_read_hours", o.toString()).apply()
+    }
+    /** A memory worth saying today (once a day). */
+    fun memoryLine(): String? {
+        val d = LocalDate.now().toString()
+        if (sp.getString("pet_memory_said", "") == d) return null
+        val o = runCatching { org.json.JSONObject(sp.getString("pet_read_hours", "{}")!!) }.getOrDefault(org.json.JSONObject())
+        val hours = o.keys().asSequence().map { o.getInt(it) }.toList()
+        return com.alzikr.app.pets.PetMemory.line(com.alzikr.app.pets.PetMemory.decode(sp.getString("pet_memory", null)), daysTogether(), name, System.currentTimeMillis(), hours)
+            ?.also { sp.edit().putString("pet_memory_said", d).apply() }
     }
     /** Consecutive good days up to today (or up to yesterday, if today is not good yet). */
     fun streak(): Int {
@@ -234,6 +260,7 @@ object Pet {
 
     /** Something fitting for now, the most useful first, otherwise a gentle reminder. */
     fun say(n: Int = 0): Say {
+        if (n % 4 == 1) memoryLine()?.let { return Say(it) }
         if (kids) {
             if (n % 3 == 0) return Say("هيا نتعلم معًا! عندك ${stars} نجمة ⭐") { Nav.morePage = "kids"; Nav.go("more") }
             return Say(kidsWords[(n + LocalTime.now().minute) % kidsWords.size])

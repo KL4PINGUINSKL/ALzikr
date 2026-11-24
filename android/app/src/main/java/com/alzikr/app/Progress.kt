@@ -41,6 +41,8 @@ object Progress {
         e.apply()
         if (Pet.since == 0L && Pet.species != null) Pet.since = System.currentTimeMillis()
         if (level() > oldLevel) levelUp(level())
+        if (add > 0 && kind == Kind.KHATMA) Pet.remember("khatma", maxOf(Data.khatmaCount, total(Kind.KHATMA)))
+        if (kind == Kind.PAGE) Pet.readingHour()
         checkBadges()
         Store.bump()
         return add
@@ -62,7 +64,7 @@ object Progress {
         set(v) { sp.edit().putBoolean("prog_show", v).apply(); Store.bump() }
 
     // ------------------------------------------------------------ level-up
-    private fun levelUp(l: Int) { sp.edit().putInt("prog_levelup", l).apply() }
+    private fun levelUp(l: Int) { sp.edit().putInt("prog_levelup", l).apply(); Pet.remember("level", l) }
     /** A level reached and not yet celebrated. */
     fun pendingLevelUp(): Int? = sp.getInt("prog_levelup", 0).takeIf { it > 1 && showLevels }
     fun celebrated() { sp.edit().remove("prog_levelup").apply(); Store.bump() }
@@ -99,12 +101,9 @@ object Progress {
         Reward(10, "🌟", "إطار «الفجر» للأداة"),
         Reward(12, "👑", "لقب «صديق العمر»"),
     ) + speciesLevels.filter { it.value > 1 }.map { (s, l) -> Reward(l, "🐾", "صديق جديد: ${s.ar}") }.sortedBy { it.level }
-    /** Animals open with the level too: the cat, the penguin and the sheep from the start. */
-    val speciesLevels: Map<Species, Int> = mapOf(
-        Species.CAT to 1, Species.PENGUIN to 1, Species.SHEEP to 1, Species.RABBIT to 2, Species.CHICKEN to 3, Species.BIRD to 4,
-        Species.SWALLOW to 5, Species.BEAR to 6, Species.PANDA to 7, Species.COW to 8, Species.GIRAFFE to 9, Species.ELEPHANT to 10, Species.ALBATROSS to 11,
-    )
-    fun speciesLevel(s: Species) = speciesLevels[s] ?: 1
+    /** Animals open with the level too (the cat, the penguin and the sheep from the start): the levels are in the pack data. */
+    val speciesLevels: Map<Species, Int> get() = Species.entries.associateWith { speciesLevel(it) }
+    fun speciesLevel(s: Species) = com.alzikr.app.pets.PetPacks.registry().species(s.name)?.unlock?.level ?: 1
     /** The friend someone already had before the locks stays theirs. */
     fun speciesOpen(s: Species) = level() >= speciesLevel(s) || s.name == kept("species")
     fun has(levelNeeded: Int) = level() >= levelNeeded
@@ -122,9 +121,23 @@ object Progress {
         }
         return sp.getString("prog_keep_$what", null)
     }
-    /** The level that opens look number [i] (0-based) of an animal: three at the start, then one more every level, without end. */
+    /** The rule the core pack's look levels were made with: three at the start, then one more every level, without end. */
     fun lookLevel(i: Int) = if (i < 3) 1 else i - 1
-    fun lookOpen(s: Species, i: Int) = level() >= lookLevel(i) || PetLooks.of(s).getOrNull(i)?.id == kept("look_${s.name}")
+    /** The level that opens look [i] of [s], from the pack data. */
+    fun lookLevel(s: Species, i: Int) = PetLooks.of(s).getOrNull(i)?.level ?: lookLevel(i)
+    /**
+     * Open when the level is reached and, for a seasonal look, during its Hijri season. What someone had already
+     * chosen stays theirs.
+     */
+    fun lookOpen(s: Species, i: Int): Boolean {
+        val l = PetLooks.of(s).getOrNull(i) ?: return false
+        if (l.id == kept("look_${s.name}")) return true
+        if (level() < l.level) return false
+        val season = l.season ?: return true
+        // A seasonal look already chosen stays with its friend after the season.
+        if (l.id == sp.getString("pet_look_${s.name}", null)) return true
+        val h = Data.hijri(); return season.contains(h.month, h.day)
+    }
 
     // ------------------------------------------------------------ widget frames
     data class Frame(val id: String, val name: String, val level: Int, val res: Int?)

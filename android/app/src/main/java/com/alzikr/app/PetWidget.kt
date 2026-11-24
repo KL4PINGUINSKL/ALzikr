@@ -140,31 +140,24 @@ class PetWidget : AppWidgetProvider() {
         @Volatile private var cache: Pair<String, List<Bitmap>>? = null
         private fun frames(c: Context, sp: Species, asleep: Boolean): List<Bitmap> {
             val look = PetLooks.chosen(sp) ?: return emptyList()
-            val key = "${look.id}|$asleep"
+            val skin = com.alzikr.app.pets.PetPacks.registry().skin(look.id) ?: return emptyList()
+            val key = "${look.id}|$asleep|${com.alzikr.app.pets.PetPacks.revision}"
             cache?.takeIf { it.first == key }?.let { return it.second }
-            val comp = LottieCompositionFactory.fromAssetSync(c, "pets/${look.id}.json").value ?: return emptyList()
-            val n = if (asleep) 1 else (comp.duration / 90f).toInt().coerceIn(8, 18)
+            // Reduced motion or no animation in the source: one still frame.
+            val still = asleep || com.alzikr.app.pets.PetPerf.reduceMotion || !com.alzikr.app.pets.PetFrames.animated(skin)
+            val n = if (still) 1 else (com.alzikr.app.pets.PetFrames.durationMs(c, skin) / 90f).toInt().coerceIn(8, 18)
             val px = (120 * c.resources.displayMetrics.density).toInt().coerceIn(200, 300)
-            val list = (0 until n).mapNotNull { i -> frameBitmap(c, sp, if (n == 1) 0f else i.toFloat() / n, px) }
+            val list = (0 until n).mapNotNull { i -> com.alzikr.app.pets.PetFrames.frame(c, skin, if (n == 1) 0f else i.toFloat() / n, px) }
             cache = key to list
             return list
         }
 
-        /** One frame of the chosen look, drawn into a small bitmap (widgets cannot play animations). */
+        /** One frame of the chosen look (the certificate and the still fallback). */
         internal fun frameBitmap(c: Context, sp: Species, at: Float, size: Int = 0): Bitmap? {
             val look = PetLooks.chosen(sp) ?: return null
-            val comp = LottieCompositionFactory.fromAssetSync(c, "pets/${look.id}.json").value ?: return null
+            val skin = com.alzikr.app.pets.PetPacks.registry().skin(look.id) ?: return null
             val px = if (size > 0) size else (150 * c.resources.displayMetrics.density).toInt().coerceAtMost(460)
-            val d = LottieDrawable().apply { composition = comp; progress = at }
-            val b = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
-            val cv = Canvas(b)
-            val w = comp.bounds.width().toFloat().coerceAtLeast(1f); val h = comp.bounds.height().toFloat().coerceAtLeast(1f)
-            val s = minOf(px / w, px / h) * look.zoom
-            cv.translate((px - w * s) / 2f, (px - h * s) / 2f - look.lift * px)
-            cv.scale(s, s)
-            d.setBounds(0, 0, w.toInt(), h.toInt())
-            d.draw(cv)
-            return b
+            return com.alzikr.app.pets.PetFrames.frame(c, skin, at, px)
         }
     }
 }

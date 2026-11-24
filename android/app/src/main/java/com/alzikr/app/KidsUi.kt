@@ -217,7 +217,7 @@ fun KidsHome() {
     val sp = Pet.species
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(P.accent.copy(alpha = .12f)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (sp != null) PetLottie(sp, Modifier.size(84.dp)) else Text("🌟", fontSize = 54.sp)
+            if (sp != null) PetLottie(sp, Modifier.size(84.dp), place = com.alzikr.app.pets.Place.KIDS) else Text("🌟", fontSize = 54.sp)
             Column(Modifier.weight(1f).padding(start = 10.dp)) {
                 Text("أهلًا يا بطل! 👋", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 Text("ماذا نتعلّم اليوم؟", color = P.muted, fontSize = 15.sp)

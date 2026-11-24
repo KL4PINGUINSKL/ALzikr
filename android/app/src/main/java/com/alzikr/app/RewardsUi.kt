@@ -131,7 +131,7 @@ fun ProgressCelebration() {
     val badge = if (l == null) Progress.newBadge() else null
     if (l == null && badge == null) return
     val opened = if (l != null) Progress.rewards().filter { it.level == l } else emptyList()
-    val looks = if (l != null) PetLooks.of(sp).indices.count { Progress.lookLevel(it) == l } else 0
+    val looks = if (l != null) PetLooks.of(sp).indices.count { Progress.lookLevel(sp, it) == l } else 0
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { if (l != null) Progress.celebrated() else Progress.badgeSeen() },
         containerColor = P.surface,

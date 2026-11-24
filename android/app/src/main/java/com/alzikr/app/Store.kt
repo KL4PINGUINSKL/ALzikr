@@ -19,7 +19,13 @@ object Store {
     var version by mutableIntStateOf(0)
         private set
 
-    fun init(c: Context) { if (!::sp.isInitialized) sp = c.applicationContext.getSharedPreferences("alzikr", Context.MODE_PRIVATE) }
+    fun init(c: Context) {
+        if (!::sp.isInitialized) sp = c.applicationContext.getSharedPreferences("alzikr", Context.MODE_PRIVATE)
+        // The Pet Engine: packs and the performance policy (both idempotent).
+        com.alzikr.app.pets.PetPacks.init(c); com.alzikr.app.pets.PetPerf.init(c)
+        com.alzikr.app.pets.PetPerf.userReduceMotion = sp.getBoolean("pet_reduce_motion", false)
+        com.alzikr.app.pets.PetPerf.userSaveBattery = sp.getBoolean("pet_save_battery", false)
+    }
     private fun changed() { version++ }
     /** For the other stores that share this file (Data.kt). */
     internal val prefs: SharedPreferences get() = sp
