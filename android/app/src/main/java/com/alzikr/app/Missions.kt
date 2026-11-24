@@ -69,13 +69,22 @@ object Missions {
             "rawatib" -> Task(id, "🕌", "صلِّ سنة راتبة واحدة وعلّمها", { Stats.rawatibOn(today()) >= 1 }) { Nav.go("prayer") }
             "sadaqa" -> Task(id, "💝", "تصدّق ولو بقليل، وسجّل صدقتك", { runCatching { Sadaqa.all().any { it.date == today().toString() } }.getOrDefault(false) }) { Nav.morePage = "sadaqa"; Nav.go("more") }
             "prayers" -> Task(id, "🕌", "علّم صلواتك الخمس ✓", { five.all { Data.prayed(today(), it) } }) { Nav.go("prayer") }
+            "qiyam" -> Task(id, "🌌", "صلِّ من الليل ولو ركعتين، وعلّمها", { Data.extra(today(), "qiyam") }) { Nav.go("prayer") }
+            "mulk" -> Task(id, "🛡", "اقرأ سورة الملك وعلّمها", { Data.extra(today(), "mulk") }) { Nav.openQuran(67, 1) }
+            "baqarah" -> Task(id, "🌙", "اقرأ خواتيم سورة البقرة وعلّمها", { Data.extra(today(), "baqarah") }) { Nav.overlayQuran = 2 to 285 }
+            "quranduas" -> Task(id, "🤲", "اقرأ «أدعية من القرآن»", { Data.colDone("quran_duas") }, go = adhkar("quran_duas"))
+            "sunnahduas" -> Task(id, "🤲", "اقرأ «أدعية من السنة»", { Data.colDone("sunnah_duas") }, go = adhkar("sunnah_duas"))
+            "learn" -> Task(id, "📚", "تعلّم معلومات اليوم الثلاث", { Learn.learned() }) { }
+            "question" -> Task(id, "💡", "أجب عن سؤال اليوم", { answered() }) { }
             else -> null
         }
     }
     /** Every simple task with its amounts: tiny ones too (one tasbih, one verse, one page). */
     private val simpleIds: List<String> =
-        listOf(1, 3, 7, 10, 33, 66, 99, 100).map { "tasbih:$it" } + listOf(1, 2, 3, 5).map { "pages:$it" } + listOf(1, 3, 5, 7, 10, 15, 20).map { "listen:$it" } + listOf(1, 2, 3).map { "hadith:$it" } +
-        listOf("sharh", "study", "wird", "morning", "evening", "sleep", "wake", "afterprayer", "duha", "witr", "rawatib", "sadaqa", "prayers")
+        listOf(1, 3, 5, 7, 10, 20, 33, 50, 66, 99, 100, 200).map { "tasbih:$it" } + listOf(1, 2, 3, 4, 5, 7).map { "pages:$it" } +
+        listOf(1, 2, 3, 5, 7, 10, 15, 20, 25).map { "listen:$it" } + listOf(1, 2, 3, 4, 5).map { "hadith:$it" } +
+        listOf("sharh", "study", "wird", "morning", "evening", "sleep", "wake", "afterprayer", "duha", "witr", "rawatib", "sadaqa", "prayers",
+            "qiyam", "mulk", "baqarah", "quranduas", "sunnahduas", "learn", "question")
 
     // ---- what the friend noticed: the thing missed most in the last days, to make up for today
     private class Gap(val id: String, val misses: Int, val yesterday: Boolean, val task: Task)
@@ -188,6 +197,22 @@ object Missions {
         "تصدّق سرًّا", "ضع مالًا في صندوق صدقة أو تبرّع لمحتاج", "علّم طفلًا ذكرًا أو سورة قصيرة",
         "شارك آية أو حديثًا نافعًا مع أهلك", "حدّث أهلك بنعمة أنعم الله بها عليك", "اسأل الله الجنة واستعذ به من النار ثلاثًا",
         "صلِّ على النبي ﷺ عشر مرات صباحًا وعشرًا مساءً", "اذكر الله بعد كل صلاة قبل أن تقوم", "تأمّل في خلق الله خمس دقائق وسبّحه",
+        "قل «سبحان الله» ثلاثًا وثلاثين، و«الحمد لله» ثلاثًا وثلاثين، و«الله أكبر» أربعًا وثلاثين قبل النوم", "قل «أستغفر الله وأتوب إليه» سبعين مرة",
+        "قل «لا إله إلا الله» مئة مرة", "قل «الحمد لله» كلما رأيت نعمة اليوم", "قل «بسم الله» قبل كل عمل اليوم",
+        "قل «سبحان الله وبحمده عدد خلقه…» ثلاثًا بعد الفجر", "ادعُ لعشرة من المسلمين بأسمائهم", "ادعُ لمن أساء إليك بالهداية",
+        "اسأل الله العافية في الدنيا والآخرة", "قل دعاء الكرب: «لا إله إلا الله العظيم الحليم…»", "صلِّ على النبي ﷺ مئة مرة يوم الجمعة أو اليوم",
+        "اقرأ سورة الرحمن بتدبّر", "اقرأ سورة يس", "اقرأ جزء عمّ أو ما تيسّر منه", "اقرأ آيات من سورة النور عن آداب البيوت",
+        "اقرأ قصة نبي من القرآن", "احفظ دعاءً جديدًا من القرآن", "استمع إلى تلاوة وأنت تتبّع في المصحف", "اقرأ معنى كلمة لا تعرفها من القرآن",
+        "صلِّ صلاة الإشراق بعد طلوع الشمس", "صلِّ تحية المسجد إذا دخلته", "توضّأ وضوءًا كاملًا كما توضّأ النبي ﷺ",
+        "صلِّ الفجر في وقتها أول الوقت", "صلِّ الصلوات الخمس في أول وقتها", "اجلس بعد صلاة من الصلوات تذكر الله خمس دقائق",
+        "اكتب وصية أو جدّدها", "أنفِق في سبيل الله شيئًا تحبه", "اشترِ طعامًا لعامل أو محتاج", "ادفع فاتورة أو دينًا لأحد إن استطعت",
+        "ازرع نبتة أو اسقِ زرعًا", "أطعم حيوانًا أو طائرًا", "تبرّع بملابس لا تحتاجها", "ساعد زميلًا في عمله أو دراسته",
+        "اتصل بصديق قديم وتفقّد حاله", "اكتب رسالة شكر لمعلّم أو شيخ", "اسأل والديك عن دعاء يحبانه وادعُ لهما به", "اجلس مع أهلك بلا هاتف وتحدّثوا",
+        "احكِ لطفل قصة من قصص الأنبياء", "علّم أحدًا أدب الطعام أو النوم", "اعتذر لمن أخطأت في حقه", "ادخل السرور على قلب مسلم",
+        "لا تؤجّل عملًا اليوم إلى غد", "رتّب يومك وابدأه بذكر الله", "نم على وضوء واقرأ آية الكرسي", "خفّف من الطعام والشراب اليوم",
+        "تجنّب الإسراف في الماء عند الوضوء", "لا تقاطع أحدًا وهو يتكلم", "أنصت جيدًا لمن يحدّثك", "اترك شيئًا لا يعنيك",
+        "حاسب نفسك قبل النوم: ماذا فعلت اليوم؟", "اكتب هدفًا صالحًا للأسبوع", "تذكّر الموت والآخرة دقائق بخشوع",
+        "قل «اللهم أعنّي على ذكرك وشكرك وحسن عبادتك» بعد كل صلاة", "قل «يا مقلّب القلوب ثبّت قلبي على دينك» مرات", "سل الله الفردوس الأعلى",
     )
     fun challenges(): List<String> = bag("ch", challengeList.distinct(), 3)
     const val CHALLENGE_BOND = 5
@@ -326,7 +351,7 @@ object Missions {
     const val CHEST_BOND = 20
     private fun weekStart() = today().with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY))
     /** A full day: every task, every challenge and the question. */
-    fun fullToday() = tasks().all { runCatching { it.done() }.getOrDefault(false) } && (0..2).all { challengeDone(it) } && answered()
+    fun fullToday() = tasks().all { runCatching { it.done() }.getOrDefault(false) } && (0..2).all { challengeDone(it) } && answered() && Learn.learned()
     fun fullDays(): Int { val ws = weekStart(); return (sp.getStringSet("miss_full", emptySet()) ?: emptySet()).count { runCatching { !LocalDate.parse(it).isBefore(ws) }.getOrDefault(false) } }
     fun checkFullDay() {
         if (!fullToday()) return
@@ -395,12 +420,14 @@ fun MissionsPanel() {
         }
     }
 
+    LearnSection()
+
     val n = Missions.fullDays()
     Row(Modifier.fillMaxWidth().padding(top = 12.dp).clip(L.shape(12.dp)).background(if (Missions.chestOpened()) P.gold.copy(alpha = .14f) else P.card).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(if (Missions.chestOpened()) "🎁" else "🧰", fontSize = 24.sp, modifier = Modifier.padding(end = 8.dp))
         Column(Modifier.weight(1f)) {
             Text("صندوق الأسبوع · +${Quran.digits(Missions.CHEST_BOND)} ❤", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-            Sub(if (Missions.chestOpened()) "فُتح هذا الأسبوع ✓" else "أتمم يومك كاملًا (الوظائف والتحديات والسؤال) خمسة أيام في الأسبوع: ${Quran.digits(n.coerceAtMost(5))} من ٥", size = 11.sp)
+            Sub(if (Missions.chestOpened()) "فُتح هذا الأسبوع ✓" else "أتمم يومك كاملًا (الوظائف والتحديات والسؤال وتعلّم اليوم) خمسة أيام في الأسبوع: ${Quran.digits(n.coerceAtMost(5))} من ٥", size = 11.sp)
         }
     }
 }

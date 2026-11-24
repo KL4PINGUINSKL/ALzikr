@@ -615,7 +615,7 @@ fun FriendshipPanel() {
     if (how) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         listOf("زيارة صفحة صديقك" to "+٢ مرة في اليوم", "لمسه أو الحديث معه (في التطبيق أو العائم أو الأداة)" to "+١ كل نصف ساعة",
             "اللعب معه: كلّمني، العب معي، تمشَّ، نم" to "+١ كل نصف ساعة", "كل وظيفة يومية" to "+٤", "كل تحدٍّ (ثلاثة كل يوم)" to "+٥",
-            "سؤال اليوم: تقرأ جوابه في التطبيق" to "+٦", "صندوق الأسبوع: خمسة أيام كاملة" to "+٢٠ فوق الحد").forEach { (a, b) ->
+            "سؤال اليوم: تقرأ جوابه في التطبيق" to "+٦", "تعلّم اليوم: ثلاث معلومات" to "+٥", "صندوق الأسبوع: خمسة أيام كاملة" to "+٢٠ فوق الحد").forEach { (a, b) ->
             Row(Modifier.fillMaxWidth()) { Sub(a, Modifier.weight(1f), size = 12.sp); Text(b, color = P.accent, fontSize = 12.sp) }
         }
         Sub("الحد اليومي ${Quran.digits(Progress.BOND_DAY)} ❤، وصندوق الأسبوع فوقه.", size = 11.sp)

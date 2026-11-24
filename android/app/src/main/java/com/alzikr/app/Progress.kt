@@ -160,6 +160,7 @@ object Progress {
             k.startsWith("now_") -> "«الآن»"
             k == "question" -> "سؤال اليوم"
             k == "chest" -> "صندوق الأسبوع"
+            k == "learn" -> "تعلّم اليوم"
             else -> "أخرى"
         }
         val m = LinkedHashMap<String, Int>()
@@ -258,6 +259,7 @@ object Progress {
         Badge("bond1000", "💛", "صفاء الودّ", "اجمع ٢٥٠٠ ❤", 2500) { bondPoints },
         Badge("chest4", "🎁", "أسابيع مكتملة", "افتح صندوق الأسبوع أربع مرات", 4) { sp.getInt("miss_chests", 0) },
         Badge("questions30", "💡", "الباحث", "أجب عن ثلاثين سؤالًا من أسئلة اليوم", 30) { sp.getInt("q_count", 0) },
+        Badge("learn30", "📚", "طالب العلم", "أتمم «تعلّم اليوم» ثلاثين يومًا", 30) { sp.getInt("learn_count", 0) },
     )
     fun earned(): Map<String, String> = JSONObject(sp.getString(pk("prog_badges"), "{}")!!).let { o -> o.keys().asSequence().associateWith { o.getString(it) } }
     fun checkBadges() {
