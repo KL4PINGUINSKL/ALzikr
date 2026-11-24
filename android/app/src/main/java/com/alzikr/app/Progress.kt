@@ -52,7 +52,8 @@ object Progress {
         val dayTotal = Kind.entries.sumOf { got.optInt(it.name) }
         val add = minOf(kind.xp, kind.cap - before, DAY_MAX - dayTotal).coerceAtLeast(0)
         got.put(kind.name, before + add)
-        day.put("seen", seen).put("xp", got)
+        val amt = day.optJSONObject("amt") ?: JSONObject(); amt.put(id, add)
+        day.put("seen", seen).put("xp", got).put("amt", amt)
         val e = sp.edit().putString(pk("prog_day"), d).putString(pk("prog_today"), day.toString())
         count(e, kind)
         val oldLevel = level()
@@ -65,6 +66,20 @@ object Progress {
         checkBadges()
         Store.bump()
         return add
+    }
+    /** Takes back what [record] gave today for this thing (it was undone: a prayer unmarked…). */
+    fun unrecord(kind: Kind, key: String) {
+        val d = today(); if (sp.getString(pk("prog_day"), "") != d) return
+        val day = JSONObject(sp.getString(pk("prog_today"), "{}")!!)
+        val seen = day.optJSONObject("seen") ?: return
+        val id = "${kind.name}:$key"; if (!seen.has(id)) return
+        seen.remove(id)
+        val amt = day.optJSONObject("amt") ?: JSONObject(); val back = amt.optInt(id, 0); amt.remove(id)
+        val got = day.optJSONObject("xp") ?: JSONObject(); got.put(kind.name, (got.optInt(kind.name) - back).coerceAtLeast(0))
+        day.put("seen", seen).put("xp", got).put("amt", amt)
+        sp.edit().putString(pk("prog_today"), day.toString()).putInt(pk("pet_xp"), (xp - back).coerceAtLeast(0))
+            .putInt(pk("prog_n_${kind.name}"), (total(kind) - 1).coerceAtLeast(0)).apply()
+        Store.bump()
     }
     /** Lifetime counters behind the badges. */
     private fun count(e: android.content.SharedPreferences.Editor, k: Kind) { e.putInt(pk("prog_n_${k.name}"), total(k) + 1) }
@@ -112,10 +127,24 @@ object Progress {
         if (!keys.add(key) || (capped && got >= BOND_DAY)) return
         val add = if (capped) amount.coerceAtMost(BOND_DAY - got) else amount
         val before = bondPoints
-        sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), before + add).apply()
+        val amt = runCatching { JSONObject(sp.getString(pk("bond_amt"), "{}")!!) }.getOrDefault(JSONObject()).let { if (sp.getString(pk("bond_day"), "") == d) it else JSONObject() }
+        amt.put(key, add)
+        sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), before + add)
+            .putString(pk("bond_amt"), amt.toString()).apply()
         if (!Pet.kids) Friendship.crossed(before, before + add)
         checkBadges(); Store.bump()
     }
+    /** Takes back the friendship points [bond] gave today for [key] (the thing was undone). */
+    fun unbond(key: String) {
+        val d = today(); if (sp.getString(pk("bond_day"), "") != d) return
+        val keys = sp.getStringSet(pk("bond_keys"), emptySet())!!.toMutableSet(); if (!keys.remove(key)) return
+        val amt = runCatching { JSONObject(sp.getString(pk("bond_amt"), "{}")!!) }.getOrDefault(JSONObject())
+        val back = amt.optInt(key, 0); amt.remove(key)
+        sp.edit().putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), (sp.getInt(pk("bond_today"), 0) - back).coerceAtLeast(0))
+            .putInt(pk("bond"), (bondPoints - back).coerceAtLeast(0)).putString(pk("bond_amt"), amt.toString()).apply()
+        Store.bump()
+    }
+    fun bonded(key: String) = sp.getString(pk("bond_day"), "") == today() && key in (sp.getStringSet(pk("bond_keys"), emptySet()) ?: emptySet())
     val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
     private val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ")
     fun bondName(b: Int = bondPoints) = bondSteps.last { b >= it.first }.second

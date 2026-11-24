@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -142,12 +144,16 @@ object Missions {
         val d = today().toString()
         val asked = (if (sp.getString("now_day", "") == d) sp.getStringSet("now_asked", emptySet()) ?: emptySet() else emptySet()).toMutableSet()
         now()?.let { asked += it.key }
-        asked.filter { nowDone(it) }.forEach { Progress.bond("now_$it", NOW_BOND) }
+        asked.forEach { if (nowDone(it)) Progress.bond("now_$it", NOW_BOND) else Progress.unbond("now_$it") }
         sp.edit().putString("now_day", d).putStringSet("now_asked", asked).apply()
     }
 
     /** Gives the friendship points of what is done (once a day each). Called whenever the panel shows. */
-    fun collectTasks() { tasks().filter { runCatching { it.done() }.getOrDefault(false) }.forEach { Progress.bond("task_${it.id}", TASK_BOND) }; collectNow() }
+    fun collectTasks() {
+        // Done gives its ❤; undone (a prayer unmarked, a count reset) takes them back.
+        tasks().forEach { t -> if (runCatching { t.done() }.getOrDefault(false)) Progress.bond("task_${t.id}", TASK_BOND) else { Progress.unbond("task_${t.id}"); unmarkFullDay() } }
+        collectNow()
+    }
 
     // ------------------------------------------------------------ challenges (marked by you)
     private val challengeList = listOf(
@@ -195,9 +201,19 @@ object Missions {
         checkFullDay()
     }
 
+    /** Undo a challenge marked by mistake: its ❤ go back. */
+    fun undoChallenge(i: Int) {
+        if (!challengeDone(i)) return
+        sp.edit().remove("pet_ch${i}_done").putInt("pet_ch_count", (sp.getInt("pet_ch_count", 0) - 1).coerceAtLeast(0)).apply()
+        if (i == 0) sp.edit().remove("pet_ch_done").apply()
+        Progress.unbond("challenge$i")
+        unmarkFullDay()
+        Store.bump()
+    }
+
     // ------------------------------------------------------------ the question of the day (the answer is in the app)
     class Question(val id: String, val q: String, val a: String, val where: String, val open: () -> Unit)
-    private fun ayah(s: Int, a: Int): () -> Unit = { Nav.openQuran(s, a) }
+    private fun ayah(s: Int, a: Int): () -> Unit = { Nav.overlayQuran = s to a }
     private fun page(p: String): () -> Unit = { Nav.morePage = p; Nav.go("more") }
     val questions: List<Question> = listOf(
         Question("kursi", "ما أعظم آية في كتاب الله؟", "آية الكرسي: ﴿اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ﴾ (البقرة ٢٥٥)", "سورة البقرة، الآية ٢٥٥", ayah(2, 255)),
@@ -278,8 +294,8 @@ object Missions {
         Question("ibada", "لماذا خلق الله الجن والإنس؟", "﴿وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ﴾ (الذاريات ٥٦)", "سورة الذاريات، الآية ٥٦", ayah(51, 56)),
         Question("saba", "في أي سورة قصة ملكة سبأ مع سليمان عليه السلام؟", "سورة النمل (٢٣ وما بعدها)", "سورة النمل، الآية ٢٣", ayah(27, 23)),
         Question("sajda_last", "في أي سورة آخر سجدة تلاوة في المصحف؟", "سورة العلق: ﴿وَاسْجُدْ وَاقْتَرِب﴾ (١٩)", "سورة العلق، الآية ١٩", ayah(96, 19)),
-        Question("samad", "ما معنى «الصمد» في سورة الإخلاص؟", "السيّد الذي يُقصد في الحوائج كلها (من كتب التفسير)", "تفسير سورة الإخلاص، الآية ٢", { Nav.openQuran(112, 2, sheet = true) }),
-        Question("kawthar_mean", "ما «الكوثر» الذي أُعطيه النبي ﷺ؟", "نهر في الجنة وعده الله نبيه ﷺ، كما في صحيح مسلم (من كتب التفسير)", "تفسير سورة الكوثر، الآية ١", { Nav.openQuran(108, 1, sheet = true) }),
+        Question("samad", "ما معنى «الصمد» في سورة الإخلاص؟", "السيّد الذي يُقصد في الحوائج كلها (من كتب التفسير)", "تفسير سورة الإخلاص، الآية ٢ (اضغط الآية لتفسيرها)", ayah(112, 2)),
+        Question("kawthar_mean", "ما «الكوثر» الذي أُعطيه النبي ﷺ؟", "نهر في الجنة وعده الله نبيه ﷺ، كما في صحيح مسلم (من كتب التفسير)", "تفسير سورة الكوثر، الآية ١ (اضغط الآية لتفسيرها)", ayah(108, 1)),
         Question("meem_ba", "ما حكم الميم الساكنة إذا جاء بعدها باء؟", "الإخفاء الشفوي", "تعلّم التجويد: أحكام الميم الساكنة", page("tajweed")),
         Question("qalqala", "ما حروف القلقلة؟", "خمسة يجمعها «قطب جد»", "تعلّم التجويد: القلقلة", page("tajweed")),
         Question("halq", "ما حروف الإظهار الحلقي؟", "ستة: الهمزة والهاء والعين والحاء والغين والخاء", "تعلّم التجويد: النون الساكنة والتنوين", page("tajweed")),
@@ -324,6 +340,11 @@ object Missions {
         Store.bump()
     }
     fun chestOpened() = sp.getString("miss_chest", "") == weekStart().toString()
+    /** Today is no longer complete (something was undone). The chest, once opened, stays. */
+    private fun unmarkFullDay() {
+        val s = (sp.getStringSet("miss_full", emptySet()) ?: emptySet()).toMutableSet()
+        if (s.remove(today().toString())) sp.edit().putStringSet("miss_full", s).apply()
+    }
 }
 
 /** «يومي مع صديقي»: the daily tasks, the challenges, the question and the week's chest (❤ only). */
@@ -339,16 +360,24 @@ fun MissionsPanel() {
         MissionRow(w.icon, w.text, false, "اذهب ←") { w.go() }
     }
     Text("الوظائف اليومية · +${Quran.digits(Missions.TASK_BOND)} ❤ لكل واحدة", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
-    Sub("يتحقق منها التطبيق بنفسه، ويعرف ما فاتك ليعينك عليه.", size = 11.sp)
+    Sub("يتحقق منها التطبيق بنفسه، ويعرف ما فاتك ليعينك عليه. وإن ألغيت الأصل (كإلغاء علامة صلاة) عادت الوظيفة وعادت نقاطها.", size = 11.sp)
     Missions.tasks().forEach { t ->
         val done = runCatching { t.done() }.getOrDefault(false)
         MissionRow(t.icon, t.text, done, if (done) "✓" else "اذهب ←", t.why) { if (!done) t.go() }
     }
 
     Text("التحديات · +${Quran.digits(Missions.CHALLENGE_BOND)} ❤ لكل تحدٍّ", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
+    var undo by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
     Missions.challenges().forEachIndexed { i, c ->
         val done = Missions.challengeDone(i)
-        MissionRow("🎯", c, done, if (done) "✓" else "فعلتُه") { Missions.doChallenge(i) }
+        MissionRow("🎯", c, done, if (done) "✓ إلغاء" else "فعلتُه", clickableDone = true) { if (done) undo = i else Missions.doChallenge(i) }
+    }
+    undo?.let { i ->
+        androidx.compose.material3.AlertDialog(onDismissRequest = { undo = null }, containerColor = P.surface,
+            title = { Text("إلغاء الإنجاز؟", color = P.ink) },
+            text = { Text("«${Missions.challenges().getOrNull(i) ?: ""}» يعود غير منجز، وتُسترجع نقاطه (${Quran.digits(Missions.CHALLENGE_BOND)} ❤).", color = P.ink) },
+            confirmButton = { androidx.compose.material3.TextButton({ Missions.undoChallenge(i); undo = null }) { Text("إلغاء الإنجاز", color = P.danger) } },
+            dismissButton = { androidx.compose.material3.TextButton({ undo = null }) { Text("لا", color = P.accent) } })
     }
 
     val q = Missions.question()
@@ -375,9 +404,9 @@ fun MissionsPanel() {
 }
 
 @Composable
-private fun MissionRow(icon: String, text: String, done: Boolean, action: String, why: String? = null, onClick: () -> Unit) {
+private fun MissionRow(icon: String, text: String, done: Boolean, action: String, why: String? = null, clickableDone: Boolean = false, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 6.dp).clip(L.shape(12.dp)).background(if (done) P.accent.copy(alpha = .10f) else P.card)
-        .clickable(enabled = !done, onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically,
+        .clickable(enabled = !done || clickableDone, onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(icon, fontSize = 18.sp)
         Column(Modifier.weight(1f)) {

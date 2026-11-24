@@ -216,6 +216,13 @@ object Pet {
         Progress.bond("challenge", 5)
     }
 
+    fun undoChallenge() {
+        if (!challengeDone) return
+        sp.edit().remove("pet_ch_done").putInt("pet_ch_count", (sp.getInt("pet_ch_count", 0) - 1).coerceAtLeast(0)).apply()
+        if (kids) stars = (stars - 2).coerceAtLeast(0)
+        Progress.unbond("challenge"); Store.bump()
+    }
+
     // ---- mood and sleep
     /** Puts the friend to sleep now, or wakes it (for an hour, even at night). */
     fun setNap(sleep: Boolean) {

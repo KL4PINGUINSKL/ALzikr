@@ -407,7 +407,10 @@ fun PetPage() {
         if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-            if (Pet.challengeDone) Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", size = 12.sp)
+            if (Pet.challengeDone) Row(verticalAlignment = Alignment.CenterVertically) {
+                Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", Modifier.weight(1f), size = 12.sp)
+                Action("إلغاء", filled = false) { Pet.undoChallenge() }
+            }
             else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
         }
         if (tab == "settings" && sp != null) Panel(pad = 14.dp) {

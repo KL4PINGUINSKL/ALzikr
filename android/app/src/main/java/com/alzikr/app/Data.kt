@@ -95,6 +95,7 @@ object Data {
         if (on) set += p.name else set -= p.name
         edit { putStringSet("log_$date", set) }
         if (on) Pet.cheer("تقبّل الله صلاتك 🌙", key = "prayer_${date}_${p.name}")
+        else runCatching { Progress.unrecord(Progress.Kind.DEED, "prayer_${date}_${p.name}") }
     }
     /** Extra worship of a day: r_<PRAYER> (its rawatib), witr, duha, qiyam, fast. */
     fun extra(date: LocalDate, key: String) = sp.getStringSet("extra_$date", emptySet())!!.contains(key)
