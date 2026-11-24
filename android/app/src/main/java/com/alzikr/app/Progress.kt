@@ -74,7 +74,7 @@ object Progress {
     fun stepGrowth(n: Int): Int = when { n <= 25 -> 75; n <= 50 -> 125; else -> 150 }
     fun step(n: Int): Int = when {
         n <= 1 -> 0
-        n <= 25 -> 75 * (n + 1)
+        n <= 25 -> 75 * n
         n <= 50 -> 1875 + 125 * (n - 25)
         else -> 5000 + 150 * (n - 50)
     }
