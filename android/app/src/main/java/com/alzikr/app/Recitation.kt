@@ -155,6 +155,8 @@ object Recitation {
     private fun advance() {
         val (s, a) = now ?: return
         if (basmalaFirst) { basmalaFirst = false; load(); return }
+        // The verse was heard to its end: a point for the friend (once a day per verse).
+        if (played == 0) runCatching { Progress.record(Progress.Kind.LISTEN, "$s:$a") }
         played++
         if (played < repeat) { player?.seekTo(0); player?.start(); return }
         played = 0
