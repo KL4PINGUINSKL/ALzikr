@@ -32,6 +32,10 @@ class OriginalsTest {
         (3..120).forEach { n -> assertEquals(if (n <= 25) 75 else if (n <= 50) 125 else 150, Progress.step(n) - Progress.step(n - 1)) }
         assertEquals(24_300, Progress.need(25)); assertEquals(111_800, Progress.need(50)); assertEquals(553_050, Progress.need(100))
         assertEquals(49, Progress.level(111_799)); assertEquals(50, Progress.level(111_800))
+        // Every level from 2 to 125 opens a friend or a look (levels.json), and each friend's looks open in order.
+        val opened = Species.entries.flatMap { s -> listOf(Progress.speciesLevel(s)) + PetLooks.of(s).filter { !it.hidden }.map { it.level } }.toSet()
+        (2..125).forEach { l -> assertTrue("level $l opens nothing", l in opened) }
+        Species.entries.forEach { s -> PetLooks.of(s).filter { !it.hidden }.map { it.level }.let { assertEquals("${s.name} in order", it.sorted(), it) } }
     }
 
     @Test fun filesAreValid() {
