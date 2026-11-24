@@ -22,17 +22,17 @@ object Progress {
         HADITH(2, 30, "قراءة الأحاديث"), SHARH(3, 15, "شروح الأحاديث"), STUDY(5, 20, "الحفظ والتجويد"),
         DEED(10, 60, "الصلوات والأذكار والصدقة"), LISTEN(1, DAY_MAX, "الاستماع للتلاوة"),
     }
-    /** All experience of one day together never passes this; a finished khatma (+200) comes on top of it. */
+    /** All experience of one day together never passes this; a finished khatma fills what is left of it (up to 200). */
     const val DAY_MAX = 300
-    /** Experience earned today toward [DAY_MAX] (everything but the khatma). */
-    fun todayTotal(): Int = Kind.entries.filter { it != Kind.KHATMA }.sumOf { todayXp(it) }
+    /** Experience earned today, all kinds together (at most [DAY_MAX]). */
+    fun todayTotal(): Int = Kind.entries.sumOf { todayXp(it) }
 
     /** How each kind is earned, in plain words (shown under «كيف أكسب النقاط؟»). */
     fun how(k: Kind): String = when (k) {
         Kind.PAGE -> "كل صفحة قرآن تقرؤها، من وردك أو خارجه: تبقى عليها ٢٠ ثانية في المصحف، أو تقلّبها في وضع القراءة أو في «اقرأ وردك»"
         Kind.LISTEN -> "كل آية تسمعها حتى آخرها بصوت أي قارئ"
         Kind.WIRD -> "إتمام ورد اليوم من ختمتك (يُحسب عند آخر صفحة منه، أينما قرأته بالترتيب)"
-        Kind.KHATMA -> "ختم القرآن كاملًا"
+        Kind.KHATMA -> "ختم القرآن كاملًا (يكمّل نقاط يومك حتى ٣٠٠ ولا يتجاوزها)"
         Kind.HADITH -> "كل حديث تقرؤه ١٥ ثانية"
         Kind.SHARH -> "كل شرح حديث تبقى عليه دقيقة"
         Kind.STUDY -> "كل درس تجويد تتمّه، وكل مقطع تحفظه أو تراجعه"
@@ -49,8 +49,8 @@ object Progress {
         seen.put(id, 1)
         val got = day.optJSONObject("xp") ?: JSONObject()
         val before = got.optInt(kind.name)
-        val dayTotal = Kind.entries.filter { it != Kind.KHATMA }.sumOf { got.optInt(it.name) }
-        val add = (if (kind == Kind.KHATMA) minOf(kind.xp, kind.cap - before) else minOf(kind.xp, kind.cap - before, DAY_MAX - dayTotal)).coerceAtLeast(0)
+        val dayTotal = Kind.entries.sumOf { got.optInt(it.name) }
+        val add = minOf(kind.xp, kind.cap - before, DAY_MAX - dayTotal).coerceAtLeast(0)
         got.put(kind.name, before + add)
         day.put("seen", seen).put("xp", got)
         val e = sp.edit().putString(pk("prog_day"), d).putString(pk("prog_today"), day.toString())

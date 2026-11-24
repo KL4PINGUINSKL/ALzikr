@@ -389,7 +389,7 @@ fun PetPage() {
                             }
                         }
                     }
-                    Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا؛ وختم القرآن +٢٠٠ فوقه)",
+                    Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، والختمة تكمّل إليه ولا تتجاوزه)",
                         color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
                 }
