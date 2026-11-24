@@ -125,7 +125,13 @@ fun AlarmPage() {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { PrayerAlarm.snoozes.forEach { m -> Choice("$m د", PrayerAlarm.snooze == m) { PrayerAlarm.snooze = m } } }
         SettingRow("اهتزاز مع الصوت", null) { Switch(PrayerAlarm.vibrate, { PrayerAlarm.vibrate = it }) }
         SettingRow("يبدأ هادئًا ثم يعلو", "يرتفع الصوت تدريجيًا خلال نصف دقيقة") { Switch(PrayerAlarm.ramp, { PrayerAlarm.ramp = it }) }
-        Sub("يتوقف وحده بعد ${PrayerAlarm.RING_MIN} دقائق إن لم تُجب. وأثناء المكالمة يهتز فقط.", size = 12.sp)
+        Sub("أثناء المكالمة")
+        Wrap(gap = 6.dp) {
+            Choice("اهتزاز فقط", PrayerAlarm.inCall == 0) { PrayerAlarm.inCall = 0 }
+            Choice("نغمة خافتة", PrayerAlarm.inCall == 1) { PrayerAlarm.inCall = 1 }
+            Choice("نغمة كاملة", PrayerAlarm.inCall == 2) { PrayerAlarm.inCall = 2 }
+        }
+        Sub("يتوقف وحده بعد ${PrayerAlarm.RING_MIN} دقائق إن لم تُجب.", size = 12.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Tile("🔔", "جرّب المنبه الآن", Modifier.weight(1f)) { PrayerAlarm.ring(ctx, null, test = true) }
         }

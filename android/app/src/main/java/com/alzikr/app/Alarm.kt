@@ -15,6 +15,7 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
+import android.util.Log
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -89,6 +90,10 @@ object PrayerAlarm {
         get() = Store.prefs.getBoolean("alarm_vibrate", true)
         set(v) { Store.prefs.edit().putBoolean("alarm_vibrate", v).apply(); Store.bump() }
     /** Start softly and grow louder over half a minute. */
+    /** During a call (or a call the phone still thinks is open): 0 = vibrate only, 1 = a quiet tone, 2 = the full tone. */
+    var inCall: Int
+        get() = Store.prefs.getInt("alarm_in_call", 1)
+        set(v) { Store.prefs.edit().putInt("alarm_in_call", v).apply(); Store.bump() }
     var ramp: Boolean
         get() = Store.prefs.getBoolean("alarm_ramp", true)
         set(v) { Store.prefs.edit().putBoolean("alarm_ramp", v).apply(); Store.bump() }
@@ -234,13 +239,17 @@ class AlarmService : Service() {
         player?.release(); player = null
         if (PrayerAlarm.sound == 2) return
         val am = getSystemService(AudioManager::class.java)
-        // In a call the alarm only vibrates, as the phone's own alarm stays out of the way.
-        if (am.mode != AudioManager.MODE_NORMAL) return
+        // In a call (or when the phone thinks one is still going: a VoIP call can leave the audio mode stuck), the alarm
+        // still sounds, quietly, like the phone's own alarm does during a call; it used to stay silent and only vibrate.
+        inCall = am.mode != AudioManager.MODE_NORMAL
+        if (inCall && PrayerAlarm.inCall == 0) return
+        Log.i(TAG, "ring: sound=${PrayerAlarm.sound} mode=${am.mode} alarmVolume=${am.getStreamVolume(AudioManager.STREAM_ALARM)}/${am.getStreamMaxVolume(AudioManager.STREAM_ALARM)}")
         val req = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).setAudioAttributes(attrs()).build()
-        focus = req; am.requestAudioFocus(req)
+        focus = req; runCatching { am.requestAudioFocus(req) }
         val adhan = Adhan.voice().takeIf { PrayerAlarm.sound == 1 && Adhan.has(this, it) }
-        if (adhan != null) play(Uri.fromFile(Adhan.file(this, adhan)), loop = false) { play(tone(), loop = true) }
-        else play(tone(), loop = true)
+        if (adhan != null) play(Uri.fromFile(Adhan.file(this, adhan)), loop = false) { playTone() }
+        else playTone()
+        if (inCall && PrayerAlarm.inCall == 1) { runCatching { player?.setVolume(.18f, .18f) }; ringtone?.let { r -> if (Build.VERSION.SDK_INT >= 28) r.volume = .18f }; return }
         if (PrayerAlarm.ramp) {
             var vol = .12f
             val up = object : Runnable { override fun run() { vol = (vol + .04f).coerceAtMost(1f); runCatching { player?.setVolume(vol, vol) }; if (vol < 1f) handler.postDelayed(this, 1_000) } }
@@ -249,11 +258,33 @@ class AlarmService : Service() {
         }
     }
 
-    private fun tone(): Uri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM)
-        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+    private var inCall = false
+    private var ringtone: android.media.Ringtone? = null
 
-    private fun play(uri: Uri, loop: Boolean, then: (() -> Unit)? = null) {
-        val old = player?.let { runCatching { it.stop() }; it.release(); null }
+    /**
+     * The tones to try, in order. The settings links (content://settings/system/…) come first: the system opens the file
+     * for us, while the tone's own file may be in storage the app is not allowed to read (then nothing played at all).
+     */
+    private fun tones(): List<Uri> = listOfNotNull(
+        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+        runCatching { RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM) }.getOrNull(),
+        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
+        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+    ).distinct()
+
+    /** The alarm tone, looping: the first that plays; if none does, Android's own ringtone player. */
+    private fun playTone() {
+        for (u in tones()) if (play(u, loop = true)) return
+        ringtone = tones().firstNotNullOfOrNull { u -> runCatching { RingtoneManager.getRingtone(this, u) }.getOrNull() }?.apply {
+            audioAttributes = attrs(); if (Build.VERSION.SDK_INT >= 28) isLooping = true
+            runCatching { play() }.onFailure { Log.w(TAG, "ringtone failed", it) }
+        }
+        if (ringtone == null) Log.w(TAG, "no tone could play")
+    }
+
+    /** Plays [uri]; false (and logged) when it cannot. */
+    private fun play(uri: Uri, loop: Boolean, then: (() -> Unit)? = null): Boolean {
+        player?.let { runCatching { it.stop() }; it.release() }; player = null
         player = runCatching {
             MediaPlayer().apply {
                 setAudioAttributes(attrs())
@@ -262,9 +293,8 @@ class AlarmService : Service() {
                 if (then != null) setOnCompletionListener { then() }
                 prepare(); start()
             }
-        }.getOrNull() ?: old
-        // A tone that cannot play (a deleted file): fall back to the built-in alarm.
-        if (player == null && uri != RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)) play(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), true)
+        }.onFailure { Log.w(TAG, "cannot play $uri", it) }.getOrNull()
+        return player != null
     }
 
     private fun startVibration() {
@@ -278,6 +308,7 @@ class AlarmService : Service() {
     private fun quit() {
         handler.removeCallbacksAndMessages(null)
         runCatching { player?.stop() }; player?.release(); player = null
+        runCatching { ringtone?.stop() }; ringtone = null
         getSystemService(Vibrator::class.java)?.cancel()
         focus?.let { getSystemService(AudioManager::class.java).abandonAudioFocusRequest(it) }; focus = null
         AlarmActivity.current?.get()?.finish()
@@ -288,6 +319,7 @@ class AlarmService : Service() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         runCatching { player?.stop() }; player?.release(); player = null
+        runCatching { ringtone?.stop() }; ringtone = null
         getSystemService(Vibrator::class.java)?.cancel()
         super.onDestroy()
     }
@@ -296,6 +328,7 @@ class AlarmService : Service() {
         const val STOP = "com.alzikr.app.ALARM_STOP"
         const val SNOOZE = "com.alzikr.app.ALARM_SNOOZE"
         private const val CH = "prayer_alarm"
+        private const val TAG = "ALzikrAlarm"
         private const val ID = 44
     }
 }
