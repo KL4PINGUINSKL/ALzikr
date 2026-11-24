@@ -31,33 +31,123 @@ object Missions {
     private fun bag(kind: String, ids: List<String>, n: Int) = DailyBag.pick(kind, ids, n)
 
     // ------------------------------------------------------------ daily tasks (checked by the app)
-    class Task(val id: String, val icon: String, val text: String, val done: () -> Boolean, val go: () -> Unit)
+    /** [why]: what the friend noticed (for a task that makes up for something missed). */
+    class Task(val id: String, val icon: String, val text: String, val done: () -> Boolean, val why: String? = null, val go: () -> Unit)
     private fun xp(k: Progress.Kind) = Progress.todayXp(k)
     private val five = listOf(Prayer.FAJR, Prayer.DHUHR, Prayer.ASR, Prayer.MAGHRIB, Prayer.ISHA)
-    val allTasks: List<Task> = listOf(
-        Task("prayers", "🕌", "علّم صلواتك الخمس ✓", { five.all { Data.prayed(today(), it) } }) { Nav.go("prayer") },
-        Task("morning", "🌅", "أتمّ أذكار الصباح", { Data.colDone("morning") }) { Nav.collection = "morning"; Nav.go("adhkar") },
-        Task("evening", "🌇", "أتمّ أذكار المساء", { Data.colDone("evening") }) { Nav.collection = "evening"; Nav.go("adhkar") },
-        Task("wird", "📖", "اقرأ ورد اليوم", { xp(Progress.Kind.WIRD) > 0 }) { Nav.wird = true },
-        Task("pages", "📄", "اقرأ خمس صفحات من القرآن", { xp(Progress.Kind.PAGE) >= 10 }) { Nav.go("library") },
-        Task("listen", "🎧", "استمع إلى عشر آيات", { xp(Progress.Kind.LISTEN) >= 10 }) { Nav.go("library") },
-        Task("hadith", "📜", "اقرأ حديثًا", { xp(Progress.Kind.HADITH) > 0 }) { Nav.go("library") },
-        Task("sharh", "🔎", "اقرأ شرح حديث", { xp(Progress.Kind.SHARH) > 0 }) { Nav.go("library") },
-        Task("tasbih", "📿", "سبّح مئة تسبيحة", { (Data.tasbihHistory(1).firstOrNull()?.second ?: 0) >= 100 }) { Nav.go("adhkar") },
-        Task("study", "🎓", "ادرس درسًا في التجويد أو راجع حفظك", { xp(Progress.Kind.STUDY) > 0 }) { Nav.morePage = "tajweed"; Nav.go("more") },
-        Task("sleep", "🌙", "اقرأ أذكار النوم", { Data.colDone("sleep") }) { Nav.collection = "sleep"; Nav.go("adhkar") },
-        Task("duha", "☀", "صلِّ الضحى وعلّمها", { Data.extra(today(), "duha") }) { Nav.go("prayer") },
-        Task("witr", "✨", "صلِّ الوتر وعلّمه", { Data.extra(today(), "witr") }) { Nav.go("prayer") },
-        Task("pages10", "📚", "اقرأ عشر صفحات من القرآن", { xp(Progress.Kind.PAGE) >= 20 }) { Nav.go("library") },
-        Task("listen30", "🎧", "استمع إلى ثلاثين آية", { xp(Progress.Kind.LISTEN) >= 30 }) { Nav.go("library") },
-        Task("hadith3", "📜", "اقرأ ثلاثة أحاديث", { xp(Progress.Kind.HADITH) >= 6 }) { Nav.go("library") },
-        Task("sadaqa", "🤲", "تصدّق وسجّل صدقتك", { runCatching { Sadaqa.all().any { it.date == today().toString() } }.getOrDefault(false) }) { Nav.morePage = "sadaqa"; Nav.go("more") },
-        Task("tasbih300", "📿", "سبّح ثلاثمئة تسبيحة", { (Data.tasbihHistory(1).firstOrNull()?.second ?: 0) >= 300 }) { Nav.go("adhkar") },
-    )
-    fun tasks(): List<Task> = bag("task", allTasks.map { it.id }, 3).mapNotNull { id -> allTasks.firstOrNull { it.id == id } }
+    private fun tasbihToday() = Data.tasbihHistory(1).firstOrNull()?.second ?: 0
+    private fun n(k: Int) = Quran.digits(k)
+    private fun pagesWord(k: Int) = when (k) { 1 -> "صفحة واحدة"; 2 -> "صفحتين"; in 3..10 -> "${n(k)} صفحات"; else -> "${n(k)} صفحة" }
+    private fun ayatWord(k: Int) = when (k) { 1 -> "آية واحدة"; 2 -> "آيتين"; in 3..10 -> "${n(k)} آيات"; else -> "${n(k)} آية" }
+    private fun tasbihWord(k: Int) = when (k) { 1 -> "تسبيحة واحدة"; 2 -> "تسبيحتين"; in 3..10 -> "${n(k)} تسبيحات"; else -> "${n(k)} تسبيحة" }
+    private fun hadithWord(k: Int) = when (k) { 1 -> "حديثًا واحدًا"; 2 -> "حديثين"; else -> "${n(k)} أحاديث" }
+    private fun adhkar(coll: String): () -> Unit = { Nav.collection = coll; Nav.go("adhkar") }
+
+    /**
+     * Small, varied tasks, by id ("family:amount"), so a day may ask for one tasbih and another for 99, one page or five.
+     * All of them are things the app can see by itself.
+     */
+    private fun simple(id: String): Task? {
+        val fam = id.substringBefore(':'); val k = id.substringAfter(':', "1").toIntOrNull() ?: 1
+        return when (fam) {
+            "tasbih" -> Task(id, "📿", "سبّح ${tasbihWord(k)} في السبحة", { tasbihToday() >= k }) { Nav.go("adhkar") }
+            "pages" -> Task(id, "📄", "اقرأ ${pagesWord(k)} من القرآن", { xp(Progress.Kind.PAGE) >= 2 * k }) { Nav.go("library") }
+            "listen" -> Task(id, "🎧", "استمع إلى ${ayatWord(k)} بصوت قارئ", { xp(Progress.Kind.LISTEN) >= k }) { Nav.go("library") }
+            "hadith" -> Task(id, "📜", "اقرأ ${hadithWord(k)}", { xp(Progress.Kind.HADITH) >= 2 * k }) { Nav.go("library") }
+            "sharh" -> Task(id, "🔎", "اقرأ شرح حديث", { xp(Progress.Kind.SHARH) > 0 }) { Nav.go("library") }
+            "study" -> Task(id, "🎓", "ادرس درسًا في التجويد أو راجع شيئًا من حفظك", { xp(Progress.Kind.STUDY) > 0 }) { Nav.morePage = "tajweed"; Nav.go("more") }
+            "wird" -> Task(id, "📖", "أتمّ ورد اليوم", { xp(Progress.Kind.WIRD) > 0 }) { Nav.wird = true }
+            "morning" -> Task(id, "🌅", "اقرأ أذكار الصباح", { Data.colDone("morning") }, go = adhkar("morning"))
+            "evening" -> Task(id, "🌇", "اقرأ أذكار المساء", { Data.colDone("evening") }, go = adhkar("evening"))
+            "sleep" -> Task(id, "🌙", "اقرأ أذكار النوم", { Data.colDone("sleep") }, go = adhkar("sleep"))
+            "wake" -> Task(id, "🌤", "اقرأ أذكار الاستيقاظ", { Data.colDone("wake") }, go = adhkar("wake"))
+            "afterprayer" -> Task(id, "🤲", "اقرأ الأذكار بعد صلاة واحدة", { Stats.colDoneOn("prayer", today()) }, go = adhkar("prayer"))
+            "duha" -> Task(id, "☀", "صلِّ الضحى ولو ركعتين، وعلّمها", { Data.extra(today(), "duha") }) { Nav.go("prayer") }
+            "witr" -> Task(id, "✨", "صلِّ الوتر ولو ركعة، وعلّمه", { Data.extra(today(), "witr") }) { Nav.go("prayer") }
+            "rawatib" -> Task(id, "🕌", "صلِّ سنة راتبة واحدة وعلّمها", { Stats.rawatibOn(today()) >= 1 }) { Nav.go("prayer") }
+            "sadaqa" -> Task(id, "💝", "تصدّق ولو بقليل، وسجّل صدقتك", { runCatching { Sadaqa.all().any { it.date == today().toString() } }.getOrDefault(false) }) { Nav.morePage = "sadaqa"; Nav.go("more") }
+            "prayers" -> Task(id, "🕌", "علّم صلواتك الخمس ✓", { five.all { Data.prayed(today(), it) } }) { Nav.go("prayer") }
+            else -> null
+        }
+    }
+    /** Every simple task with its amounts: tiny ones too (one tasbih, one verse, one page). */
+    private val simpleIds: List<String> =
+        listOf(1, 3, 7, 10, 33, 66, 99, 100).map { "tasbih:$it" } + listOf(1, 2, 3, 5).map { "pages:$it" } + listOf(1, 3, 5, 7, 10, 15, 20).map { "listen:$it" } + listOf(1, 2, 3).map { "hadith:$it" } +
+        listOf("sharh", "study", "wird", "morning", "evening", "sleep", "wake", "afterprayer", "duha", "witr", "rawatib", "sadaqa", "prayers")
+
+    // ---- what the friend noticed: the thing missed most in the last days, to make up for today
+    private class Gap(val id: String, val misses: Int, val yesterday: Boolean, val task: Task)
+    private fun gaps(): List<Gap> {
+        val days = (1..7).map { today().minusDays(it.toLong()) }
+        val y = days.first()
+        val out = mutableListOf<Gap>()
+        // Prayers: only on days when some prayer was marked (so someone who never marks is not told off for all five).
+        val markDays = days.filter { d -> five.any { Data.prayed(d, it) } }
+        if (markDays.isNotEmpty()) five.forEach { p ->
+            val m = markDays.count { !Data.prayed(it, p) }
+            if (m > 0) out += Gap("p:${p.name}", m, y in markDays && !Data.prayed(y, p),
+                Task("catch:p:${p.name}", "🕌", "علّم صلاة ${p.ar} اليوم ✓", { Data.prayed(today(), p) }, go = { Nav.prayerSheet = p; Nav.go("prayer") }))
+        }
+        // Adhkar of the morning and the evening.
+        listOf("morning" to "أذكار الصباح", "evening" to "أذكار المساء", "sleep" to "أذكار النوم").forEach { (c, name) ->
+            val m = days.count { !Stats.colDoneOn(c, it) }
+            if (m in 1..6 || (m == 7 && c != "sleep")) out += Gap("c:$c", m, !Stats.colDoneOn(c, y),
+                Task("catch:c:$c", if (c == "morning") "🌅" else if (c == "evening") "🌇" else "🌙", "اقرأ $name اليوم", { Data.colDone(c) }, go = adhkar(c)))
+        }
+        return out
+    }
+    /** Today's make-up task: chosen once in the morning from what was missed (yesterday first, then the most missed). */
+    private fun catchUp(): Task? {
+        val d = today().toString()
+        if (sp.getString("catch_day", "") != d) {
+            val g = gaps().sortedWith(compareByDescending<Gap> { it.yesterday }.thenByDescending { it.misses }).firstOrNull()
+            val why = g?.let { if (it.yesterday) "لاحظ ${Pet.name} أنها فاتتك أمس" else "فاتتك ${n(it.misses)} ${if (it.misses in 3..10) "مرات" else "مرة"} هذا الأسبوع" }
+            sp.edit().putString("catch_day", d).putString("catch_id", g?.id ?: "").putString("catch_why", why ?: "").apply()
+        }
+        val id = sp.getString("catch_id", "") ?: ""; if (id.isEmpty()) return null
+        val t = gaps().firstOrNull { it.id == id }?.task ?: return null
+        return Task(t.id, t.icon, t.text, t.done, sp.getString("catch_why", null)?.ifEmpty { null }, t.go)
+    }
+
+    /** Today's three: the make-up one (if anything was missed) and simple ones of different kinds. */
+    fun tasks(): List<Task> {
+        val c = catchUp()
+        val picks = bag("task2", simpleIds, 6).mapNotNull { simple(it) }
+        val out = mutableListOf<Task>(); c?.let { out += it }
+        for (t in picks) if (out.size < 3 && out.none { it.id.substringBefore(':') == t.id.substringBefore(':') || it.text == t.text }) out += t
+        return out
+    }
     const val TASK_BOND = 4
-    /** Gives the friendship points of the tasks done (once a day each). Called whenever the panel shows. */
-    fun collectTasks() { tasks().filter { runCatching { it.done() }.getOrDefault(false) }.forEach { Progress.bond("task_${it.id}", TASK_BOND) } }
+
+    // ---- «الآن»: what is due right now and not done yet (the time's adhkar, a prayer not marked)
+    const val NOW_BOND = 2
+    class Now(val key: String, val icon: String, val text: String, val go: () -> Unit)
+    fun now(): Now? {
+        Moments.now().firstOrNull { !Moments.done(it) && it.coll != null }?.let { m -> return Now("m:${m.coll}", m.icon, "حان وقت ${m.title}", m.go) }
+        if (Store.hasLocation) {
+            val t = Store.times(); val min = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+            five.lastOrNull { min - t.getValue(it) in 20..240 }?.takeIf { !Data.prayed(today(), it) }?.let { p ->
+                return Now("p:${p.name}", "🕌", "هل صلّيت ${p.ar}؟ علّمها ✓") { Nav.prayerSheet = p; Nav.go("prayer") }
+            }
+        }
+        return null
+    }
+    private fun nowDone(key: String): Boolean = when {
+        key.startsWith("m:") -> Data.colDone(key.removePrefix("m:"))
+        key.startsWith("p:") -> runCatching { Data.prayed(today(), Prayer.valueOf(key.removePrefix("p:"))) }.getOrDefault(false)
+        else -> false
+    }
+    /** Remembers what was asked now, and gives its points once it is done. */
+    private fun collectNow() {
+        val d = today().toString()
+        val asked = (if (sp.getString("now_day", "") == d) sp.getStringSet("now_asked", emptySet()) ?: emptySet() else emptySet()).toMutableSet()
+        now()?.let { asked += it.key }
+        asked.filter { nowDone(it) }.forEach { Progress.bond("now_$it", NOW_BOND) }
+        sp.edit().putString("now_day", d).putStringSet("now_asked", asked).apply()
+    }
+
+    /** Gives the friendship points of what is done (once a day each). Called whenever the panel shows. */
+    fun collectTasks() { tasks().filter { runCatching { it.done() }.getOrDefault(false) }.forEach { Progress.bond("task_${it.id}", TASK_BOND) }; collectNow() }
 
     // ------------------------------------------------------------ challenges (marked by you)
     private val challengeList = listOf(
@@ -244,11 +334,15 @@ fun MissionsPanel() {
     Text("${Friendship.heart} يومي مع ${Pet.name}", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     Sub("كلها تزيد نقاط الصداقة فقط. تتجدّد كل يوم.", size = 11.sp)
 
+    Missions.now()?.let { w ->
+        Text("الآن · +${Quran.digits(Missions.NOW_BOND)} ❤", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
+        MissionRow(w.icon, w.text, false, "اذهب ←") { w.go() }
+    }
     Text("الوظائف اليومية · +${Quran.digits(Missions.TASK_BOND)} ❤ لكل واحدة", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
-    Sub("يتحقق منها التطبيق بنفسه.", size = 11.sp)
+    Sub("يتحقق منها التطبيق بنفسه، ويعرف ما فاتك ليعينك عليه.", size = 11.sp)
     Missions.tasks().forEach { t ->
         val done = runCatching { t.done() }.getOrDefault(false)
-        MissionRow(t.icon, t.text, done, if (done) "✓" else "اذهب ←") { if (!done) t.go() }
+        MissionRow(t.icon, t.text, done, if (done) "✓" else "اذهب ←", t.why) { if (!done) t.go() }
     }
 
     Text("التحديات · +${Quran.digits(Missions.CHALLENGE_BOND)} ❤ لكل تحدٍّ", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
@@ -281,12 +375,15 @@ fun MissionsPanel() {
 }
 
 @Composable
-private fun MissionRow(icon: String, text: String, done: Boolean, action: String, onClick: () -> Unit) {
+private fun MissionRow(icon: String, text: String, done: Boolean, action: String, why: String? = null, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 6.dp).clip(L.shape(12.dp)).background(if (done) P.accent.copy(alpha = .10f) else P.card)
         .clickable(enabled = !done, onClick = onClick).padding(horizontal = 10.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(icon, fontSize = 18.sp)
-        Text(text, color = if (done) P.muted else P.ink, fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Column(Modifier.weight(1f)) {
+            Text(text, color = if (done) P.muted else P.ink, fontSize = 14.sp)
+            if (why != null && !done) Text("💭 $why", color = P.gold, fontSize = 11.sp)
+        }
         Text(action, color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
     }
 }
