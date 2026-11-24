@@ -200,19 +200,12 @@ object Pet {
     }
 
     // ---- the day's small challenge: one good deed suggested each day
-    private val challenges = listOf(
-        "صلِّ ركعتي الضحى", "تصدّق اليوم ولو بشيء قليل", "صِل أحد أرحامك واسأل عن حاله", "اقرأ صفحة زائدة على وردك",
-        "قل «سبحان الله وبحمده» مئة مرة", "استغفر الله مئة مرة", "صلِّ على النبي ﷺ أكثر من عادتك", "صلِّ السنن الرواتب كلها",
-        "صلِّ الوتر قبل أن تنام", "ابدأ من تلقاه بالسلام وابتسم في وجهه", "ادعُ لأخ لك بظهر الغيب", "احفظ حديثًا جديدًا من «حديث اليوم»",
-        "سبّح وحمّد وكبّر ثلاثًا وثلاثين بعد كل صلاة", "أمِط أذى عن الطريق أو أعِن أحدًا في حاجته", "احفظ لسانك اليوم من الغيبة",
-        "اقرأ أذكار الصباح والمساء كاملة", "تعلّم مسألة فقهية جديدة من «الأحكام الفقهية»", "اقرأ تفسير آية من وردك",
-    )
     private val kidsChallenges = listOf(
         "ساعد أمك أو أباك في شيء", "قل «بسم الله» قبل الأكل و«الحمد لله» بعده", "رتّب غرفتك وحدك", "قل «السلام عليكم» لأهل البيت",
         "احفظ آية جديدة", "صلِّ الصلوات الخمس في وقتها", "قل «جزاك الله خيرًا» لمن يساعدك", "اقرأ أذكار النوم قبل أن تنام",
         "ابتسم لإخوتك وشاركهم ألعابك", "تعلّم حرفًا جديدًا في قسم الأطفال",
     )
-    fun challenge(): String = LocalDate.now().let { d -> if (kids) kidsChallenges[d.dayOfYear % kidsChallenges.size] else challenges[(d.dayOfYear * 7 + d.year) % challenges.size] }
+    fun challenge(): String = LocalDate.now().let { d -> if (kids) kidsChallenges[d.dayOfYear % kidsChallenges.size] else Missions.challenges().first() }
     val challengeDone: Boolean get() = sp.getString("pet_ch_done", "") == LocalDate.now().toString()
     fun doChallenge() {
         sp.edit().putString("pet_ch_done", LocalDate.now().toString()).apply()

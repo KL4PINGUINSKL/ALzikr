@@ -17,20 +17,20 @@ object Friendship {
     data class Gift(val id: String, val bond: Int, val icon: String, val kind: Kind, val name: String, val about: String)
 
     val gifts: List<Gift> = listOf(
-        Gift("frame_night", 20, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لأداة صديقك على الشاشة الرئيسية"),
-        Gift("greet", 40, "🌅", Kind.PERK, "تحية الصباح باسمك", "يحيّيك صديقك صباحًا باسمك ويذكّرك بأذكار الصباح"),
-        Gift("theme_breeze", 60, "🎨", Kind.THEME, "ثيم «نسيم»", "نعناعي وسماوي هادئ"),
-        Gift("frame_gold", 90, "🖼", Kind.FRAME, "إطار «الذهبي»", "لأداة صديقك"),
-        Gift("joy", 120, "😊", Kind.PERK, "الفرح فوق التطبيقات", "يقفز صديقك العائم وتطير القلوب حين تمتلئ قلوب يومك"),
-        Gift("certificate", 150, "📜", Kind.PERK, "شهادة الصداقة", "صورة باسم صديقك وأيامكما تشاركها إن شئت"),
-        Gift("theme_dusk", 200, "🎨", Kind.THEME, "ثيم «غسق»", "بنفسجي المغيب وذهب خافت"),
-        Gift("frame_pattern", 250, "🖼", Kind.FRAME, "إطار «الزخرفة»", "لأداة صديقك"),
-        Gift("letter", 300, "💌", Kind.PERK, "رسالة الجمعة", "كل جمعة يكتب لك صديقك كلمة عن أسبوعكما معًا"),
-        Gift("frame_dawn", 400, "🖼", Kind.FRAME, "إطار «الفجر»", "لأداة صديقك"),
-        Gift("anniversary", 500, "🎂", Kind.PERK, "ذكرى صداقتكما", "يحتفل صديقك بكل شهر يمرّ على صداقتكما"),
-        Gift("theme_moon", 600, "🎨", Kind.THEME, "ثيم «ضوء القمر»", "فضّي ليلي وذهب القمر"),
-        Gift("nick", 800, "🏷", Kind.PERK, "لقب من اختيارك", "تكتب لصديقك لقبًا يظهر مكان لقبه في الأداة وصفحته"),
-        Gift("golden", 1000, "💛", Kind.PERK, "القلوب الذهبية", "قلوب صديقك في الأداة وصفحته تصير ذهبية"),
+        Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لأداة صديقك على الشاشة الرئيسية"),
+        Gift("greet", 100, "🌅", Kind.PERK, "تحية الصباح باسمك", "يحيّيك صديقك صباحًا باسمك ويذكّرك بأذكار الصباح"),
+        Gift("theme_breeze", 150, "🎨", Kind.THEME, "ثيم «نسيم»", "نعناعي وسماوي هادئ"),
+        Gift("frame_gold", 225, "🖼", Kind.FRAME, "إطار «الذهبي»", "لأداة صديقك"),
+        Gift("joy", 300, "😊", Kind.PERK, "الفرح فوق التطبيقات", "يقفز صديقك العائم وتطير القلوب حين تمتلئ قلوب يومك"),
+        Gift("certificate", 375, "📜", Kind.PERK, "شهادة الصداقة", "صورة باسم صديقك وأيامكما تشاركها إن شئت"),
+        Gift("theme_dusk", 500, "🎨", Kind.THEME, "ثيم «غسق»", "بنفسجي المغيب وذهب خافت"),
+        Gift("frame_pattern", 625, "🖼", Kind.FRAME, "إطار «الزخرفة»", "لأداة صديقك"),
+        Gift("letter", 750, "💌", Kind.PERK, "رسالة الجمعة", "كل جمعة يكتب لك صديقك كلمة عن أسبوعكما معًا"),
+        Gift("frame_dawn", 1000, "🖼", Kind.FRAME, "إطار «الفجر»", "لأداة صديقك"),
+        Gift("anniversary", 1250, "🎂", Kind.PERK, "ذكرى صداقتكما", "يحتفل صديقك بكل شهر يمرّ على صداقتكما"),
+        Gift("theme_moon", 1500, "🎨", Kind.THEME, "ثيم «ضوء القمر»", "فضّي ليلي وذهب القمر"),
+        Gift("nick", 2000, "🏷", Kind.PERK, "لقب من اختيارك", "تكتب لصديقك لقبًا يظهر مكان لقبه في الأداة وصفحته"),
+        Gift("golden", 2500, "💛", Kind.PERK, "القلوب الذهبية", "قلوب صديقك في الأداة وصفحته تصير ذهبية"),
     )
     fun gift(id: String) = gifts.firstOrNull { it.id == id }
     /** Is this gift open? (Unknown ids are open, so nothing breaks.) */

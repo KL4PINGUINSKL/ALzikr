@@ -403,7 +403,8 @@ fun PetPage() {
             Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
         }
         if (tab == "friend" && sp != null && Progress.showLevels) Panel(pad = 14.dp) { FriendshipPanel() }
-        if (tab == "friend" && sp != null) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
+        if (tab == "friend" && sp != null && !Pet.kids) Panel(pad = 14.dp) { MissionsPanel() }
+        if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
             if (Pet.challengeDone) Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", size = 12.sp)
@@ -610,10 +611,11 @@ fun FriendshipPanel() {
         modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
     if (how) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         listOf("زيارة صفحة صديقك" to "+٢ مرة في اليوم", "لمسه أو الحديث معه (في التطبيق أو العائم أو الأداة)" to "+١ كل نصف ساعة",
-            "اللعب معه: كلّمني، العب معي، تمشَّ، نم" to "+١ كل نصف ساعة", "إتمام تحدي اليوم" to "+٥").forEach { (a, b) ->
+            "اللعب معه: كلّمني، العب معي، تمشَّ، نم" to "+١ كل نصف ساعة", "كل وظيفة يومية" to "+٤", "كل تحدٍّ (ثلاثة كل يوم)" to "+٥",
+            "سؤال اليوم: تقرأ جوابه في التطبيق" to "+٦", "صندوق الأسبوع: خمسة أيام كاملة" to "+٢٠ فوق الحد").forEach { (a, b) ->
             Row(Modifier.fillMaxWidth()) { Sub(a, Modifier.weight(1f), size = 12.sp); Text(b, color = P.accent, fontSize = 12.sp) }
         }
-        Sub("الحد اليومي ١٥ ❤.", size = 11.sp)
+        Sub("الحد اليومي ${Quran.digits(Progress.BOND_DAY)} ❤، وصندوق الأسبوع فوقه.", size = 11.sp)
     }
     if (Friendship.has("nick")) {
         var edit by remember { mutableStateOf(false) }

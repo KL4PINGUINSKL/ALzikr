@@ -102,20 +102,22 @@ object Progress {
     fun celebrated() { sp.edit().remove(pk("prog_levelup")).apply(); Store.bump() }
 
     // ------------------------------------------------------------ friendship (❤), separate from experience
-    /** Time spent with the friend: [amount] once per [key] a day, at most 15 a day. */
-    fun bond(key: String, amount: Int = 1) {
+    /** Friendship points a day at most (the week's chest comes on top). */
+    const val BOND_DAY = 40
+    /** Time spent with the friend: [amount] once per [key] a day, at most [BOND_DAY] a day ([capped] = false: on top). */
+    fun bond(key: String, amount: Int = 1, capped: Boolean = true) {
         val d = today()
         val keys = if (sp.getString(pk("bond_day"), "") == d) sp.getStringSet(pk("bond_keys"), emptySet())!!.toMutableSet() else mutableSetOf()
         val got = if (sp.getString(pk("bond_day"), "") == d) sp.getInt(pk("bond_today"), 0) else 0
-        if (!keys.add(key) || got >= 15) return
-        val add = amount.coerceAtMost(15 - got)
+        if (!keys.add(key) || (capped && got >= BOND_DAY)) return
+        val add = if (capped) amount.coerceAtMost(BOND_DAY - got) else amount
         val before = bondPoints
         sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), before + add).apply()
         if (!Pet.kids) Friendship.crossed(before, before + add)
         checkBadges(); Store.bump()
     }
     val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
-    private val bondSteps = listOf(0 to "تعارف", 20 to "ألفة", 60 to "مودّة", 150 to "صحبة", 300 to "أخوّة", 600 to "رفقة العمر", 1000 to "صفاء الودّ")
+    private val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ")
     fun bondName(b: Int = bondPoints) = bondSteps.last { b >= it.first }.second
     fun bondStage(b: Int = bondPoints) = bondSteps.indexOfLast { b >= it.first }
     /** (from, to) of the current friendship stage, for its bar; to = -1 at the last stage. */
@@ -197,10 +199,12 @@ object Progress {
         Badge("challenges30", "🎯", "صاحب التحديات", "أتمّ ثلاثين تحديًا يوميًا", 30) { sp.getInt("pet_ch_count", 0) },
         Badge("level10", "⭐", "المستوى العاشر", "بلغ صديقك المستوى ١٠", 10) { level() },
         // Friendship badges (time together, not worship).
-        Badge("bond20", "🤝", "أول ألفة", "اجمع ٢٠ ❤ من وقتك مع صديقك", 20) { bondPoints },
-        Badge("bond150", "💞", "صحبة", "اجمع ١٥٠ ❤", 150) { bondPoints },
-        Badge("bond600", "🫶", "رفقة العمر", "اجمع ٦٠٠ ❤", 600) { bondPoints },
-        Badge("bond1000", "💛", "صفاء الودّ", "اجمع ١٠٠٠ ❤", 1000) { bondPoints },
+        Badge("bond20", "🤝", "أول ألفة", "اجمع ٥٠ ❤ من وقتك مع صديقك", 50) { bondPoints },
+        Badge("bond150", "💞", "صحبة", "اجمع ٣٧٥ ❤", 375) { bondPoints },
+        Badge("bond600", "🫶", "رفقة العمر", "اجمع ١٥٠٠ ❤", 1500) { bondPoints },
+        Badge("bond1000", "💛", "صفاء الودّ", "اجمع ٢٥٠٠ ❤", 2500) { bondPoints },
+        Badge("chest4", "🎁", "أسابيع مكتملة", "افتح صندوق الأسبوع أربع مرات", 4) { sp.getInt("miss_chests", 0) },
+        Badge("questions30", "💡", "الباحث", "أجب عن ثلاثين سؤالًا من أسئلة اليوم", 30) { sp.getInt("q_count", 0) },
     )
     fun earned(): Map<String, String> = JSONObject(sp.getString(pk("prog_badges"), "{}")!!).let { o -> o.keys().asSequence().associateWith { o.getString(it) } }
     fun checkBadges() {
