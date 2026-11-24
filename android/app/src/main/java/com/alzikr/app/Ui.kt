@@ -223,7 +223,8 @@ fun UpdateDialog() {
         return
     }
     val o = AppUpdate.offer ?: return
-    androidx.compose.material3.AlertDialog(onDismissRequest = { AppUpdate.later(ctx) }, containerColor = P.surface,
+    androidx.compose.material3.AlertDialog(onDismissRequest = { if (!o.required) AppUpdate.later(ctx) }, containerColor = P.surface,
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnBackPress = !o.required, dismissOnClickOutside = !o.required),
         title = {
             Column {
                 Text("تحديث متوفر", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
@@ -232,6 +233,7 @@ fun UpdateDialog() {
         },
         text = {
             Column(Modifier.heightIn(max = 420.dp).verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                if (o.required) Text("هذا التحديث ضروري لمتابعة استخدام التطبيق.", color = P.danger, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
                 Text("ما الجديد", color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 o.news.forEach { (ver, items) ->
                     Text(ver, color = P.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
@@ -245,5 +247,5 @@ fun UpdateDialog() {
             }
         },
         confirmButton = { Action("تحديث الآن") { activity?.let { AppUpdate.accept(it) } } },
-        dismissButton = { androidx.compose.material3.TextButton({ AppUpdate.later(ctx) }) { Text("لاحقًا", color = P.muted) } })
+        dismissButton = if (o.required) null else ({ androidx.compose.material3.TextButton({ AppUpdate.later(ctx) }) { Text("لاحقًا", color = P.muted) } }))
 }

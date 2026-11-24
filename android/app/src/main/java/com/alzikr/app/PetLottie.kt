@@ -51,7 +51,7 @@ object PetLooks {
         val id = Store.prefs.getString("pet_look_${s.name}", null)
         // A look not opened yet (a new friend's rare look) falls back to the first one.
         val all = of(s); val i = all.indexOfFirst { it.id == id }
-        return if (i >= 0 && Progress.lookOpen(i)) all[i] else all.firstOrNull()
+        return if (i >= 0 && Progress.lookOpen(s, i)) all[i] else all.firstOrNull()
     }
     fun choose(s: Species, id: String) { Store.prefs.edit().putString("pet_look_${s.name}", id).apply(); Store.bump() }
 }

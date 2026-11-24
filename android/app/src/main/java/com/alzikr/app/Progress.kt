@@ -88,8 +88,8 @@ object Progress {
     // ------------------------------------------------------------ rewards opened by level (looks for new friends, widget frames, the certificate)
     data class Reward(val level: Int, val icon: String, val name: String)
     fun rewards(): List<Reward> = listOf(
-        Reward(1, "🐾", "شكلان لكل حيوان"),
-        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وأشكال جديدة لكل حيوان"),
+        Reward(1, "🐾", "القطة والبطريق والغنمة، وثلاثة أشكال لكل حيوان"),
+        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وشكل جديد لكل حيوان مع كل مستوى بلا حدّ"),
         Reward(3, "🖼", "إطار «الليل المرصّع بالنجوم» للأداة"),
         Reward(4, "🌅", "يحيّيك صديقك باسمك صباحًا، ويقول «تقبّل الله» حين تتم وردك"),
         Reward(5, "✨", "إطار «الذهبي» للأداة"),
@@ -97,18 +97,34 @@ object Progress {
         Reward(8, "🕌", "إطار «الزخرفة» للأداة"),
         Reward(9, "📜", "شهادة الصداقة: صورة تشاركها باسمك ومستوى صديقك وأيامكما"),
         Reward(10, "🌟", "إطار «الفجر» للأداة"),
-        Reward(12, "👑", "لقب «صديق العمر» وكل الأشكال"),
+        Reward(12, "👑", "لقب «صديق العمر»"),
+    ) + speciesLevels.filter { it.value > 1 }.map { (s, l) -> Reward(l, "🐾", "صديق جديد: ${s.ar}") }.sortedBy { it.level }
+    /** Animals open with the level too: the cat, the penguin and the sheep from the start. */
+    val speciesLevels: Map<Species, Int> = mapOf(
+        Species.CAT to 1, Species.PENGUIN to 1, Species.SHEEP to 1, Species.RABBIT to 2, Species.CHICKEN to 3, Species.BIRD to 4,
+        Species.SWALLOW to 5, Species.BEAR to 6, Species.PANDA to 7, Species.COW to 8, Species.GIRAFFE to 9, Species.ELEPHANT to 10, Species.ALBATROSS to 11,
     )
+    fun speciesLevel(s: Species) = speciesLevels[s] ?: 1
+    /** The friend someone already had before the locks stays theirs. */
+    fun speciesOpen(s: Species) = level() >= speciesLevel(s) || s.name == kept("species")
     fun has(levelNeeded: Int) = level() >= levelNeeded
 
-    /** Friends chosen before this system keep every look; new friends open more looks as the level rises. */
-    val legacy: Boolean get() {
-        if (!sp.contains("prog_legacy")) sp.edit().putBoolean("prog_legacy", Pet.species != null || Pet.since > 0L).apply()
-        return sp.getBoolean("prog_legacy", false)
+    /**
+     * What someone had chosen before the locks (their friend and the look of each friend) stays open for them.
+     * Recorded once, the first time the locks are seen.
+     */
+    private fun kept(what: String): String? {
+        if (!sp.getBoolean("prog_kept", false)) {
+            val e = sp.edit().putBoolean("prog_kept", true)
+            Pet.species?.let { e.putString("prog_keep_species", it.name) }
+            Species.entries.forEach { s -> sp.getString("pet_look_${s.name}", null)?.let { e.putString("prog_keep_look_${s.name}", it) } }
+            e.apply()
+        }
+        return sp.getString("prog_keep_$what", null)
     }
-    /** The level that opens look number [i] (0-based) of an animal: two at the start, then two more every level. */
-    fun lookLevel(i: Int) = if (legacy) 1 else if (i < 2) 1 else 2 + (i - 2) / 2
-    fun lookOpen(i: Int) = level() >= lookLevel(i) || level() >= 12
+    /** The level that opens look number [i] (0-based) of an animal: three at the start, then one more every level, without end. */
+    fun lookLevel(i: Int) = if (i < 3) 1 else i - 1
+    fun lookOpen(s: Species, i: Int) = level() >= lookLevel(i) || PetLooks.of(s).getOrNull(i)?.id == kept("look_${s.name}")
 
     // ------------------------------------------------------------ widget frames
     data class Frame(val id: String, val name: String, val level: Int, val res: Int?)

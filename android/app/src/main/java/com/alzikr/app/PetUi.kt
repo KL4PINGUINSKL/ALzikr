@@ -270,10 +270,17 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { s ->
                     val on = s == chosen
+                    val open = Progress.speciesOpen(s)
+                    val ctx = LocalContext.current
                     Column(Modifier.weight(1f).clip(L.shape(16.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
-                        .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(16.dp)).clickable { pick(s) }.padding(8.dp),
+                        .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(16.dp)).clickable {
+                            if (open) pick(s) else android.widget.Toast.makeText(ctx, "يُفتح ${s.ar} في المستوى ${Progress.speciesLevel(s)}", android.widget.Toast.LENGTH_SHORT).show()
+                        }.padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
-                        PetLottie(s, Modifier.size(78.dp))
+                        Box(contentAlignment = Alignment.Center) {
+                            PetLottie(s, Modifier.size(78.dp).alpha(if (open) 1f else .22f), playing = open)
+                            if (!open) Text("🔒 ${Quran.digits(Progress.speciesLevel(s))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        }
                         Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, textAlign = TextAlign.Center)
                         Text(Pet.nameOf(s), color = P.muted, fontSize = 11.sp, maxLines = 2, textAlign = TextAlign.Center)
                     }
@@ -368,7 +375,7 @@ fun PetPage() {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 looks.forEachIndexed { i, lk ->
                     val on = lk.id == cur?.id
-                    val open = Progress.lookOpen(i)
+                    val open = Progress.lookOpen(sp, i)
                     Column(Modifier.width(104.dp).clip(L.shape(14.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
                         .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(14.dp)).clickable {
                             if (open) PetLooks.choose(sp, lk.id)

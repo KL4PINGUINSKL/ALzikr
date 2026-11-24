@@ -71,7 +71,7 @@ fun RewardsPage() {
                     }
                 }
             }
-            if (Progress.legacy) Sub("أشكال صديقك كلها مفتوحة لك لأنك رافقته قبل نظام المكافآت.", Modifier.padding(top = 8.dp), size = 11.sp)
+            Sub("ومع كل مستوى بعد ذلك يُفتح شكل جديد لكل حيوان، بلا حدّ للمستويات. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
         }
         Panel(pad = 14.dp) {
             Title("إطار أداة «صديقي»")
@@ -131,7 +131,7 @@ fun ProgressCelebration() {
     val badge = if (l == null) Progress.newBadge() else null
     if (l == null && badge == null) return
     val opened = if (l != null) Progress.rewards().filter { it.level == l } else emptyList()
-    val looks = if (l != null && !Progress.legacy) PetLooks.of(sp).indices.count { Progress.lookLevel(it) == l } else 0
+    val looks = if (l != null) PetLooks.of(sp).indices.count { Progress.lookLevel(it) == l } else 0
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { if (l != null) Progress.celebrated() else Progress.badgeSeen() },
         containerColor = P.surface,

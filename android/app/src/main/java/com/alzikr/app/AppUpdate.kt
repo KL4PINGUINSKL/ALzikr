@@ -39,7 +39,7 @@ object AppUpdate {
     private data class Release(val version: String, val url: String, val size: Long, val notes: String)
 
     /** The offer on screen (drawn in the app's theme by UpdateDialog): your version, the new one, and what is new in each version since yours. */
-    data class Offer(val current: String, val version: String, val news: List<Pair<String, List<String>>>)
+    data class Offer(val current: String, val version: String, val news: List<Pair<String, List<String>>>, val required: Boolean = false)
     var offer by androidx.compose.runtime.mutableStateOf<Offer?>(null)
         private set
     /** While updating: null = not updating, -1 = waiting, 0..1 = downloaded part. */
@@ -53,11 +53,15 @@ object AppUpdate {
 
     /** A release's notes as short lines (links and empty lines left out). */
     private fun lines(body: String): List<String> = body.lines().map { it.trim().trimStart('-', '•', '*', ' ') }
-        .filter { it.isNotBlank() && !it.contains("http") && !it.startsWith("رابط") }
+        .filter { it.isNotBlank() && !it.contains("http") && !it.startsWith("رابط") && !isRequiredMark(it) }
+    /** A release whose notes hold «[إلزامي]» (or "[required]") cannot be put off: everyone moves past the versions before it. */
+    private fun isRequiredMark(s: String) = s.contains("[إلزامي]") || s.contains("[required]", ignoreCase = true)
+    private fun required(r: Release) = r.notes.lines().any { isRequiredMark(it) }
 
     fun accept(activity: Activity) { val r = pending ?: return; offer = null; start(activity, r) }
     fun later(context: Context) {
         val r = pending ?: return
+        if (offer?.required == true) return
         context.getSharedPreferences("app_update", Context.MODE_PRIVATE).edit().putString("later_version", r.version).putLong("later_at", System.currentTimeMillis()).apply()
         offer = null
     }
@@ -94,7 +98,8 @@ object AppUpdate {
                 main.post { onFound?.invoke() }
                 val current = installedVersion(activity) ?: return@Thread
                 if (compare(latest.version, current) <= 0) { say("لديك أحدث إصدار ($current)"); return@Thread }
-                if (!force && prefs.getString("later_version", null) == latest.version && now - prefs.getLong("later_at", 0) < LATER_MS) return@Thread
+                val must = seen.any { compare(it.version, current) > 0 && required(it) }
+                if (!must && !force && prefs.getString("later_version", null) == latest.version && now - prefs.getLong("later_at", 0) < LATER_MS) return@Thread
                 main.post { ask(activity, current, latest) }
             } catch (e: Exception) {
                 Log.i(TAG, "check failed: $e"); say("تعذّر البحث عن تحديث")
@@ -163,7 +168,8 @@ object AppUpdate {
         if (activity.isFinishing || activity.isDestroyed) return
         pending = release
         val news = seen.filter { compare(it.version, current) > 0 }.distinctBy { it.version }.take(8).map { it.version to lines(it.notes) }.filter { it.second.isNotEmpty() }
-        offer = Offer(current, release.version, news.ifEmpty { listOf(release.version to lines(release.notes)) })
+        val must = seen.any { compare(it.version, current) > 0 && required(it) } || required(release)
+        offer = Offer(current, release.version, news.ifEmpty { listOf(release.version to lines(release.notes)) }, must)
     }
 
     private fun start(activity: Activity, release: Release) {
