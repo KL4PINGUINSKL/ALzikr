@@ -183,7 +183,8 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
                 last = now; sim.step(dt); frame = now
             }
             // At most the place's frame budget (30 fps, 15 when saving), instead of every display frame (up to 120 Hz).
-            delay((1000L / com.alzikr.app.pets.PetPerf.fps(com.alzikr.app.pets.Place.APP) - 4).coerceAtLeast(1))
+            val step = 1000L / com.alzikr.app.pets.PetPerf.fps(com.alzikr.app.pets.Place.APP)
+            delay((step - frame % step - 2).coerceAtLeast(1))   // the same shared boundaries as the friends' clocks
         }
     }
     // Behaviour engine: what the friend does by itself (personality, time of day, the day's mood, its evolution stage).
@@ -315,7 +316,7 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
                         }.padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(contentAlignment = Alignment.Center) {
-                            PetLottie(s, Modifier.size(78.dp).alpha(if (open) 1f else .22f), playing = open, place = com.alzikr.app.pets.Place.GRID)
+                            PetLottie(s, Modifier.size(78.dp).alpha(if (open) 1f else .22f), playing = on, place = com.alzikr.app.pets.Place.GRID)  // only the chosen one moves
                             if (!open) Text("🔒 ${Quran.digits(Progress.speciesLevel(s))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(s.ar, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, textAlign = TextAlign.Center)
@@ -447,7 +448,7 @@ fun PetPage() {
                         }.padding(6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(contentAlignment = Alignment.Center) {
-                            PetLottie(sp, Modifier.size(88.dp).alpha(if (open) 1f else .25f), look = lk, playing = open, place = com.alzikr.app.pets.Place.GRID)
+                            PetLottie(sp, Modifier.size(88.dp).alpha(if (open) 1f else .25f), look = lk, playing = on, place = com.alzikr.app.pets.Place.GRID)  // only the chosen look moves
                             if (!open) Text("🔒 ${Quran.digits(Progress.lookLevel(sp, i))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(lk.name, color = P.ink, fontSize = 13.sp, maxLines = 2, lineHeight = 16.sp, textAlign = TextAlign.Center)

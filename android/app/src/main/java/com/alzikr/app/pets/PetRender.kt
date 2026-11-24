@@ -34,6 +34,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /*
@@ -77,17 +78,34 @@ object DotLottie {
     }
 }
 
-/** A clock that ticks at [fps] while [running]; returns elapsed milliseconds. Stops producing frames when not running. */
+/**
+ * One shared clock per frame rate: every friend on screen reads the same value, so they all advance in the same frame
+ * (one redraw per tick instead of one per friend). A clock runs only while something uses it.
+ */
+object PetClock {
+    class Clock(val fps: Int) { val t = androidx.compose.runtime.mutableLongStateOf(0L); var users = 0; var job: kotlinx.coroutines.Job? = null }
+    private val clocks = HashMap<Int, Clock>()
+    private val scope = kotlinx.coroutines.CoroutineScope(androidx.compose.ui.platform.AndroidUiDispatcher.Main + kotlinx.coroutines.SupervisorJob())
+    fun acquire(fps: Int): Clock {
+        val c = clocks.getOrPut(fps) { Clock(fps) }
+        if (c.users++ == 0) c.job = scope.launch {
+            val start = withFrameMillis { it } - c.t.longValue
+            val step = 1000L / fps.coerceAtLeast(1)
+            while (true) { c.t.longValue = withFrameMillis { it } - start; delay((step - 4).coerceAtLeast(1)) }
+        }
+        return c
+    }
+    fun release(c: Clock) { if (--c.users <= 0) { c.users = 0; c.job?.cancel(); c.job = null } }
+}
+
+/** Elapsed milliseconds of the shared clock for [fps] while [running]; frozen (and no clock held) otherwise. */
 @Composable
 private fun rememberTicker(running: Boolean, fps: Int): () -> Long {
-    var t by remember { mutableLongStateOf(0L) }
-    LaunchedEffect(running, fps) {
-        if (!running) return@LaunchedEffect
-        val start = withFrameMillis { it } - t
-        val step = 1000L / fps.coerceAtLeast(1)
-        while (true) { t = withFrameMillis { it } - start; delay((step - 4).coerceAtLeast(1)) }
-    }
-    return { t }
+    var frozen by remember { mutableLongStateOf(0L) }
+    if (!running) return { frozen }
+    val c = remember(fps) { PetClock.acquire(fps) }
+    androidx.compose.runtime.DisposableEffect(c) { onDispose { frozen = c.t.longValue; PetClock.release(c) } }
+    return { c.t.longValue }
 }
 
 /**

@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /** Where a friend is drawn; each place has its own frame-rate budget. */
-enum class Place(val fps: Int) { APP(30), OVERLAY(24), KIDS(30), PREVIEW(15), GRID(12) }
+enum class Place(val fps: Int) { APP(60), OVERLAY(30), KIDS(60), PREVIEW(30), GRID(12) }
 
 /**
  * Performance Manager: how much motion is allowed right now.

@@ -352,6 +352,10 @@ object Data {
                 else -> e.putString(k, x.getString("v"))
             }
         }
-        e.commit(); Store.bump(); true
+        e.commit()
+        // Settings the Pet Engine keeps in memory follow the restored values at once.
+        com.alzikr.app.pets.PetPerf.userReduceMotion = sp.getBoolean("pet_reduce_motion", false)
+        com.alzikr.app.pets.PetPerf.userSaveBattery = sp.getBoolean("pet_save_battery", false)
+        Store.bump(); true
     }.getOrDefault(false)
 }
