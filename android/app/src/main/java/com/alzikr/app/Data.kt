@@ -220,6 +220,7 @@ object Data {
             val log = JSONObject(sp.getString("khatma_log", "{}")!!)
             log.put(today(), (log.optInt(today()) + (n - old)).coerceAtLeast(0))
             edit { putInt("khatma_page", n).putString("khatma_log", log.toString()) }
+            runCatching { Progress.khatmaMoved(old, n) }
         }
     /** Days to finish the khatma (30 = a juz a day). */
     var khatmaDays: Int

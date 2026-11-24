@@ -226,6 +226,7 @@ private fun Root() {
             Nav.daySheet?.let { d -> DaySheet(d) { Nav.daySheet = null } }
             UpdateDialog()
             PetIntro()
+            ProgressCelebration()
             if (settings) SettingsSheet { settings = false }
         }
     }

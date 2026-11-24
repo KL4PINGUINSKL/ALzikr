@@ -108,6 +108,7 @@ object Hifz {
     /** Reviewed: [good] moves it to a longer gap; otherwise back to tomorrow. */
     fun review(c: Chunk, good: Boolean) {
         val lvl = if (good) (c.level + 1).coerceAtMost(gaps.size - 1) else 0
+        runCatching { Progress.record(Progress.Kind.STUDY, "hz:${c.id}") }
         save(chunks().map { if (it.id == c.id) it.copy(level = lvl, due = LocalDate.now().plusDays(gaps[lvl].toLong()).toString()) else it })
     }
     /** Surahs whose every verse is in a learned portion. */

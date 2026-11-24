@@ -208,6 +208,7 @@ object Tajweed {
         val set = (Store.prefs.getStringSet("tajweed_done", emptySet()) ?: emptySet()).toMutableSet()
         if (on) set += id else set -= id
         Store.prefs.edit().putStringSet("tajweed_done", set).apply(); Store.bump()
+        if (on) runCatching { Progress.record(Progress.Kind.STUDY, "tj:$id") }
     }
     fun doneCount() = lessons.count { done(it.id) }
     fun best(unit: String) = Store.prefs.getInt("tajweed_best_$unit", -1)
@@ -323,7 +324,7 @@ private fun TajweedUnit(u: Tajweed.Unit, openQuiz: () -> Unit, pickReciter: () -
                     Text(if (ok) "✓ فهمت هذا الدرس (اضغط للتراجع)" else "فهمت هذا الدرس ✓", color = if (ok) P.accent else P.onAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clip(L.shape(12.dp)).background(if (ok) P.accent.copy(alpha = .12f) else P.accent).clickable {
                             Tajweed.setDone(l.id, !ok)
-                            if (!ok) { Pet.cheer("أحسنت! درس جديد في التجويد"); u.lessons.dropWhile { it.id != l.id }.drop(1).firstOrNull { !Tajweed.done(it.id) }?.let { open = it.id } }
+                            if (!ok) { Pet.cheer("أحسنت! درس جديد في التجويد", xp = false); u.lessons.dropWhile { it.id != l.id }.drop(1).firstOrNull { !Tajweed.done(it.id) }?.let { open = it.id } }
                         }.padding(horizontal = 14.dp, vertical = 8.dp))
                 }
             }
@@ -364,7 +365,7 @@ private fun TajweedQuiz(u: Tajweed.Unit, back: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹ ${u.title}", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable(onClick = back).padding(6.dp))
         if (i >= qs.size) {
-            LaunchedEffect(Unit) { Tajweed.setBest(u.id, score * 10 / qs.size.coerceAtLeast(1)); if (score * 10 >= qs.size * 8) Pet.cheer("ما شاء الله! أتقنت ${u.title}") }
+            LaunchedEffect(Unit) { Tajweed.setBest(u.id, score * 10 / qs.size.coerceAtLeast(1)); if (score * 10 >= qs.size * 8) Pet.cheer("ما شاء الله! أتقنت ${u.title}", xp = false) }
             Panel(color = P.accent.copy(alpha = .10f)) {
                 Title("نتيجتك: ${Quran.digits(score)} من ${Quran.digits(qs.size)}")
                 Sub(when { score == qs.size -> "ممتاز! أتقنت هذا الباب."; score * 10 >= qs.size * 7 -> "أحسنت! راجع ما أخطأت فيه."; else -> "راجع دروس الباب ثم أعد الاختبار." })

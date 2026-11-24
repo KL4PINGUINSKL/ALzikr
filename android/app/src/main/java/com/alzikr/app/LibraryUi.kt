@@ -198,6 +198,9 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
     val size = Quran.fontSize
     val header = if (s != 1 && s != 9) 1 else 0
     fun visibleAyah() = list.getOrNull((state.firstVisibleItemIndex - header).coerceAtLeast(0)) ?: list.first()
+    // A mushaf page counts for the friend after twenty seconds on it (once a day).
+    val readPage = visibleAyah().page
+    LaunchedEffect(s, readPage) { kotlinx.coroutines.delay(20_000); Progress.record(Progress.Kind.PAGE, "p$readPage") }
     LaunchedEffect(s) { snapshotFlow { state.firstVisibleItemIndex }.collect { i -> list.getOrNull((i - header).coerceAtLeast(0))?.let { Quran.last = it.s to it.a } } }
     LaunchedEffect(Recitation.now) {
         val (rs, ra) = Recitation.now ?: return@LaunchedEffect
@@ -544,6 +547,8 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
     var chapter by rememberSaveable(bookId) { mutableStateOf<String?>(null) }
     var query by rememberSaveable(bookId) { mutableStateOf("") }
     var sharhId by rememberSaveable(bookId) { mutableStateOf<String?>(null) }
+    // A hadith opened by itself counts after fifteen seconds on it.
+    LaunchedEffect(bookId, focus) { if (focus != null) { kotlinx.coroutines.delay(15_000); Progress.record(Progress.Kind.HADITH, "$bookId:$focus") } }
     sharhId?.let { id -> SharhOpen(id) { sharhId = null }; return }
     val b = book
     var readMode by rememberSaveable(bookId) { mutableStateOf(false) }

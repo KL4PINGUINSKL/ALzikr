@@ -175,6 +175,8 @@ private fun SharhPage(id: String, back: () -> Unit) {
     var h by remember(id) { mutableStateOf<Sharh.Hadith?>(null) }
     var failed by remember(id) { mutableStateOf(false) }
     LaunchedEffect(id) { h = withContext(Dispatchers.IO) { Sharh.hadith(ctx, id) }; failed = h == null }
+    // The hadith counts after fifteen seconds, its explanation after a minute.
+    LaunchedEffect(id) { kotlinx.coroutines.delay(15_000); Progress.record(Progress.Kind.HADITH, "s:$id"); kotlinx.coroutines.delay(45_000); Progress.record(Progress.Kind.SHARH, "s:$id") }
     var readMode by remember(id) { mutableStateOf(false) }
     h?.takeIf { readMode }?.let { x ->
         val blocks = ArrayList<RBlock>()

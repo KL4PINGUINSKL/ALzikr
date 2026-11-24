@@ -183,7 +183,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var downAt = 0L; var dragging = false; var mine = false
         var lastTap = 0L
         /** One tap waits a moment: a second tap makes it a tasbih instead of a word. */
-        val single = Runnable { hearts.value++; speak(force = true) }
+        val single = Runnable { hearts.value++; Progress.bond("ftap" + System.currentTimeMillis() / 1_800_000L); speak(force = true) }
         val slop = android.view.ViewConfiguration.get(this@PetOverlay).scaledTouchSlop
         val long = Runnable { if (!dragging && mine) { mine = false; openApp(null) } }
         @android.annotation.SuppressLint("ClickableViewAccessibility")
@@ -300,7 +300,15 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private val hideCount = Runnable { count.value = null }
 
     /** Every half minute: a word before the prayer (once for each prayer). */
-    private val minute = object : Runnable { override fun run() { nudge(); handler.postDelayed(this, 30_000L) } }
+    private val minute = object : Runnable { override fun run() { nudge(); joy(); handler.postDelayed(this, 30_000L) } }
+    /** From level 6: when the day's hearts are full it hops and hearts fly, at most once an hour. */
+    private var joyAt = 0L
+    private fun joy() {
+        if (view == null || appOpen || bubble.value != null || !Progress.has(6) || Pet.asleep()) return
+        if (System.currentTimeMillis() - joyAt < 3_600_000L || Pet.mood() < 80) return
+        if (!getSystemService(PowerManager::class.java).isInteractive) return
+        joyAt = System.currentTimeMillis(); hearts.value++
+    }
     private fun nudge() {
         if (!Pet.prayerNudge || !Store.hasLocation || view == null || appOpen || Pet.kids) return
         val w = runCatching { window() }.getOrNull() ?: return

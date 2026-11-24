@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -211,7 +212,7 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
         }
         Box(Modifier.offset { IntOffset((sim.x * (widthPx - boxPx)).toInt().also { @Suppress("UNUSED_VARIABLE") val f = frame }, 0) }.size(box)
             .combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
-                onLongClick = { Nav.morePage = "pet"; Nav.go("more") }) { speak() }) {
+                onLongClick = { Nav.morePage = "pet"; Nav.go("more") }) { Progress.bond("tap" + System.currentTimeMillis() / 1_800_000L); speak() }) {
             // The animation plays inside; the simulation moves it: glide, hop, a soft squash, a lean, and a turn through the middle.
             PetLottie(sp, Modifier.fillMaxSize().graphicsLayer {
                 @Suppress("UNUSED_VARIABLE") val f = frame
@@ -309,20 +310,30 @@ fun PetPage() {
             Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
         }
         if (sp != null) Panel(pad = 14.dp) {
-            // Friendship grows with the good deeds of each day.
-            val lv = Pet.level(); val x = Pet.xp
-            val from = Pet.levelStart(lv); val to = Pet.levelStart(lv + 1)
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("${Pet.title(lv)} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                    Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
+            LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
+            Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
+            if (Progress.showLevels) {
+                // ✨ experience: Quran, hadith, learning and the day's worship
+                val lv = Progress.level(); val x = Progress.xp
+                val from = Progress.need(lv); val to = Progress.need(lv + 1)
+                Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("✨ ${Progress.title(lv)} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 }
-                Text("${Quran.digits(x)} ✨", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
+                Sub("بقي ${Quran.digits(to - x)} ✨ للمستوى ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
+                // ❤ friendship: time spent together, separate from the experience
+                val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
+                Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("❤ الصداقة: ${Progress.bondName()}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    Text(Quran.digits(bp), color = P.accent, fontSize = 14.sp)
+                }
+                if (bt > 0) androidx.compose.material3.LinearProgressIndicator(progress = { ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(6.dp).clip(L.shape(3.dp)), color = P.accent, trackColor = P.line)
+                Sub("تكبر بوقتك معه: زيارته، واللعب والحديث معه، وتحدياته اليومية.", size = 11.sp)
+                Action("🎁 مكافآتي وأوسمتي", Modifier.fillMaxWidth().padding(top = 10.dp)) { Nav.morePage = "rewards"; Nav.go("more") }
             }
-            androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).clip(L.shape(4.dp)), color = P.accent, trackColor = P.line)
-            Sub("بقي ${Quran.digits(to - x)} ✨ لـ«${Pet.title(lv + 1)}» المستوى ${Quran.digits(lv + 1)}. كل صلاة تعلّمها، وكل أذكار تتمها، وكل صدقة ودرس وكل ٣٣ تسبيحة تزيد صداقتكما (مرة في اليوم لكل عمل).", size = 11.sp)
-            LaunchedEffect(Unit) { Pet.noteGoodDay() }
             val st = Pet.streak()
             Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
                 (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
@@ -355,12 +366,19 @@ fun PetPage() {
             Title("شكل ${Pet.nameOf(sp)}")
             val cur = PetLooks.chosen(sp)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                looks.forEach { lk ->
+                looks.forEachIndexed { i, lk ->
                     val on = lk.id == cur?.id
+                    val open = Progress.lookOpen(i)
                     Column(Modifier.width(104.dp).clip(L.shape(14.dp)).background(if (on) P.accent.copy(alpha = .14f) else P.card)
-                        .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(14.dp)).clickable { PetLooks.choose(sp, lk.id) }.padding(6.dp),
+                        .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(14.dp)).clickable {
+                            if (open) PetLooks.choose(sp, lk.id)
+                            else android.widget.Toast.makeText(ctx, "يُفتح هذا الشكل في المستوى ${Progress.lookLevel(i)}", android.widget.Toast.LENGTH_SHORT).show()
+                        }.padding(6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
-                        PetLottie(sp, Modifier.size(88.dp), look = lk)
+                        Box(contentAlignment = Alignment.Center) {
+                            PetLottie(sp, Modifier.size(88.dp).alpha(if (open) 1f else .25f), look = lk, playing = open)
+                            if (!open) Text("🔒 ${Quran.digits(Progress.lookLevel(i))}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        }
                         Text(lk.name, color = P.ink, fontSize = 13.sp, maxLines = 2, lineHeight = 16.sp, textAlign = TextAlign.Center)
                     }
                 }
@@ -370,6 +388,8 @@ fun PetPage() {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             var name by remember(sp) { mutableStateOf(Pet.nameOf(sp)) }
             OutlinedTextField(name, { name = it; if (it.isNotBlank()) Pet.setName(sp, it) }, singleLine = true, label = { Text("اسم ${sp.ar}") }, modifier = Modifier.weight(1f))
+            var me by remember { mutableStateOf(Pet.userName) }
+            OutlinedTextField(me, { me = it; Pet.userName = it }, singleLine = true, label = { Text("بماذا يناديك؟") }, modifier = Modifier.weight(1f))
         }
 
         Panel(pad = 14.dp) {

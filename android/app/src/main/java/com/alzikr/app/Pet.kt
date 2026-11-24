@@ -41,29 +41,26 @@ object Pet {
         return m.coerceIn(0, 100)
     }
     /** Something good was just done: the friend hops and says so. */
-    fun cheer(text: String = "ما شاء الله، أحسنت!", key: String = text) {
+    fun cheer(text: String = "ما شاء الله، أحسنت!", key: String = text, xp: Boolean = true) {
         sp.edit().putLong("pet_cheer_at", System.currentTimeMillis()).putString("pet_cheer", text).apply()
-        gain(key, 10)
+        if (xp) gain(key, 10)
         runCatching { noteGoodDay() }
         Store.bump()
     }
 
     // ---- friendship: experience from good deeds (each deed counts once a day), levels and titles
-    var xp: Int
-        get() = sp.getInt("pet_xp", 0)
-        private set(v) { sp.edit().putInt("pet_xp", v).apply() }
+    val xp: Int get() = Progress.xp
     /** Adds [amount] once per day for each [key], so marking and unmarking a prayer does not count twice. */
-    fun gain(key: String, amount: Int) {
-        val day = LocalDate.now().toString()
-        val keys = if (sp.getString("pet_xp_day", "") == day) sp.getStringSet("pet_xp_keys", emptySet())!!.toMutableSet() else mutableSetOf()
-        if (!keys.add(key)) return
-        sp.edit().putString("pet_xp_day", day).putStringSet("pet_xp_keys", keys).putInt("pet_xp", xp + amount).apply()
-        if (since == 0L) since = System.currentTimeMillis()
-    }
-    fun level(x: Int = xp) = 1 + kotlin.math.sqrt(x / 30.0).toInt()
+    @Suppress("UNUSED_PARAMETER")
+    fun gain(key: String, amount: Int) { Progress.record(Progress.Kind.DEED, key) }
+    fun level(x: Int = xp) = Progress.level(x)
     /** Experience where a level starts. */
-    fun levelStart(l: Int) = 30 * (l - 1) * (l - 1)
-    fun title(l: Int = level()) = when { l >= 12 -> "صديق العمر"; l >= 9 -> "رفيق الدرب"; l >= 7 -> "الخِلّ الوفيّ"; l >= 5 -> "الصاحب"; l >= 3 -> "الرفيق"; else -> "صديق جديد" }
+    fun levelStart(l: Int) = Progress.need(l)
+    fun title(l: Int = level()) = Progress.title(l)
+    /** What the friend calls the user (optional; used in its morning greeting from level 4). */
+    var userName: String
+        get() = sp.getString("pet_user_name", "") ?: ""
+        set(v) { sp.edit().putString("pet_user_name", v.trim().take(20)).apply(); Store.bump() }
     /** When the friendship began (the first friend chosen). */
     var since: Long
         get() = sp.getLong("pet_since", 0L)
@@ -190,8 +187,10 @@ object Pet {
     fun doChallenge() {
         sp.edit().putString("pet_ch_done", LocalDate.now().toString()).apply()
         if (kids) stars += 2
-        cheer("ما شاء الله! أتممت تحدي اليوم", key = "challenge")
-        gain("challenge_bonus", 10)
+        sp.edit().putInt("pet_ch_count", sp.getInt("pet_ch_count", 0) + 1).apply()
+        // A challenge grows the friendship (❤), not the experience.
+        cheer("ما شاء الله! أتممت تحدي اليوم", key = "challenge", xp = false)
+        Progress.bond("challenge", 5)
     }
 
     // ---- mood and sleep
@@ -238,6 +237,11 @@ object Pet {
         if (kids) {
             if (n % 3 == 0) return Say("هيا نتعلم معًا! عندك ${stars} نجمة ⭐") { Nav.morePage = "kids"; Nav.go("more") }
             return Say(kidsWords[(n + LocalTime.now().minute) % kidsWords.size])
+        }
+        val hm = LocalTime.now().let { it.hour * 60 + it.minute }
+        if (n % 4 == 0 && Progress.has(4) && hm in 300..600 && sp.getString("pet_greet_day", "") != LocalDate.now().toString()) {
+            sp.edit().putString("pet_greet_day", LocalDate.now().toString()).apply()
+            return Say("صباح الخير${userName.takeIf { it.isNotBlank() }?.let { " يا $it" } ?: ""} ☀ يوم مبارك، ابدأه بأذكار الصباح") { Nav.collection = "morning"; Nav.go("adhkar") }
         }
         if (asleep()) return Say("تصبح على خير… لا تنسَ أذكار النوم") { Nav.collection = "sleep"; Nav.go("adhkar") }
         val opts = ArrayList<Say>()
