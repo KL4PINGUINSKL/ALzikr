@@ -66,11 +66,11 @@ class PetWidget : AppWidgetProvider() {
                 else { ink = 0xFFFFFFFF.toInt(); gold = 0xFFF3D27A.toInt(); acc = 0xFFFFFFFF.toInt() }
             }
             v.setTextColor(R.id.p_name, ink); v.setTextColor(R.id.p_title, gold)
-            v.setTextColor(R.id.p_hearts, acc); v.setTextColor(R.id.p_say, ink)
+            v.setTextColor(R.id.p_hearts, acc); v.setTextColor(R.id.p_say, ink); v.setTextColor(R.id.p_extra, (ink and 0x00FFFFFF) or 0xB3000000.toInt())
             v.setTextColor(R.id.p_talk, acc); v.setTextColor(R.id.p_tasbih, acc)
             // The buttons' pill takes the accent, faintly, so it shows on light and dark backgrounds alike.
             if (android.os.Build.VERSION.SDK_INT >= 31) listOf(R.id.p_talk, R.id.p_tasbih).forEach {
-                v.setColorStateList(it, "setBackgroundTintList", android.content.res.ColorStateList.valueOf((acc and 0x00FFFFFF) or 0x38000000))
+                v.setColorStateList(it, "setBackgroundTintList", android.content.res.ColorStateList.valueOf((acc and 0x00FFFFFF) or 0x55000000))
             }
             runCatching { Pet.noteGoodDay() }
             val sp = Pet.species
@@ -78,7 +78,7 @@ class PetWidget : AppWidgetProvider() {
             if (sp == null) {
                 v.setTextViewText(R.id.p_name, "صديقي"); v.setTextViewText(R.id.p_title, "")
                 v.setTextViewText(R.id.p_hearts, ""); v.setTextViewText(R.id.p_say, "اضغط لتختار صديقك 🐾")
-                v.setImageViewBitmap(R.id.p_img, null)
+                v.setImageViewBitmap(R.id.p_img, null); v.setTextViewText(R.id.p_extra, "")
             } else {
                 v.setTextViewText(R.id.p_name, Pet.name)
                 v.setTextViewText(R.id.p_title, if (Progress.showLevels) "${Pet.title()} · المستوى ${Quran.digits(Pet.level())}" else "")
@@ -89,6 +89,13 @@ class PetWidget : AppWidgetProvider() {
                 if (said != null) Store.prefs.edit().remove("pet_wsay").apply()
                 val text = said ?: if (Pet.asleep()) "💤 نائم… لا تنسَ أذكار النوم" else runCatching { Pet.say(n).text }.getOrDefault("لا تنسَ ذكر الله")
                 v.setTextViewText(R.id.p_say, text)
+                // The rest of the space: today's challenge until it is done, then the good days in a row.
+                val st = Pet.streak()
+                v.setTextViewText(R.id.p_extra, when {
+                    !Pet.challengeDone -> "🎯 تحدي اليوم: ${Pet.challenge()}"
+                    st > 0 -> "🔥 ${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية · ✓ أتممت تحدي اليوم"
+                    else -> "✓ أتممت تحدي اليوم، تقبّل الله منك"
+                })
                 runCatching { frameBitmap(c, sp, if (Pet.asleep()) 0f else (n * 0.37f) % 1f) }.getOrNull()?.let { v.setImageViewBitmap(R.id.p_img, it) }
             }
             val open = PendingIntent.getActivity(c, 98, Intent(c, MainActivity::class.java).putExtra("page", "pet").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
@@ -102,7 +109,7 @@ class PetWidget : AppWidgetProvider() {
         internal fun frameBitmap(c: Context, sp: Species, at: Float, size: Int = 0): Bitmap? {
             val look = PetLooks.chosen(sp) ?: return null
             val comp = LottieCompositionFactory.fromAssetSync(c, "pets/${look.id}.json").value ?: return null
-            val px = if (size > 0) size else (110 * c.resources.displayMetrics.density).toInt().coerceAtMost(330)
+            val px = if (size > 0) size else (150 * c.resources.displayMetrics.density).toInt().coerceAtMost(460)
             val d = LottieDrawable().apply { composition = comp; progress = at }
             val b = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
             val cv = Canvas(b)
