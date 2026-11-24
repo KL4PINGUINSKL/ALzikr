@@ -144,6 +144,30 @@ object Progress {
             .putInt(pk("bond"), (bondPoints - back).coerceAtLeast(0)).putString(pk("bond_amt"), amt.toString()).apply()
         Store.bump()
     }
+    /** What [bond] really gave today for [key] (less than asked when the day's limit was near), or null if nothing. */
+    fun bondGot(key: String): Int? = if (!bonded(key)) null else runCatching { JSONObject(sp.getString(pk("bond_amt"), "{}")!!) }.getOrNull()?.takeIf { it.has(key) }?.optInt(key)
+    fun bondToday(): Int = if (sp.getString(pk("bond_day"), "") == today()) sp.getInt(pk("bond_today"), 0) else 0
+    /** Today's friendship points by where they came from (label → points), largest first. */
+    fun bondSources(): List<Pair<String, Int>> {
+        if (sp.getString(pk("bond_day"), "") != today()) return emptyList()
+        val amt = runCatching { JSONObject(sp.getString(pk("bond_amt"), "{}")!!) }.getOrDefault(JSONObject())
+        fun label(k: String) = when {
+            k == "visit" -> "زيارة صفحة صديقك"
+            k.startsWith("tap") || k.startsWith("ftap") || k.startsWith("wtalk") -> "لمسه والحديث معه"
+            k.startsWith("act_") -> "اللعب معه"
+            k.startsWith("challenge") -> "التحديات"
+            k.startsWith("task_") -> "الوظائف اليومية"
+            k.startsWith("now_") -> "«الآن»"
+            k == "question" -> "سؤال اليوم"
+            k == "chest" -> "صندوق الأسبوع"
+            else -> "أخرى"
+        }
+        val m = LinkedHashMap<String, Int>()
+        amt.keys().forEach { k -> val v = amt.optInt(k); if (v > 0) m[label(k)] = (m[label(k)] ?: 0) + v }
+        val known = m.values.sum(); val all = bondToday()
+        if (all > known) m["قبل هذا التحديث"] = all - known
+        return m.entries.map { it.key to it.value }.sortedByDescending { it.second }
+    }
     fun bonded(key: String) = sp.getString(pk("bond_day"), "") == today() && key in (sp.getStringSet(pk("bond_keys"), emptySet()) ?: emptySet())
     val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
     private val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ")

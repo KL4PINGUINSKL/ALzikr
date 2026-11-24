@@ -353,7 +353,8 @@ fun MissionsPanel() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     LaunchedEffect(v) { Missions.collectTasks(); Missions.checkAnswer(); Missions.checkFullDay() }
     Text("${Friendship.heart} يومي مع ${Pet.name}", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-    Sub("كلها تزيد نقاط الصداقة فقط. تتجدّد كل يوم.", size = 11.sp)
+    Sub("كلها تزيد نقاط الصداقة فقط. تتجدّد كل يوم. اليوم: ${Quran.digits(Progress.bondToday())} من ${Quran.digits(Progress.BOND_DAY)} ❤.", size = 11.sp)
+    if (Progress.bondToday() >= Progress.BOND_DAY) Sub("بلغت حد الصداقة اليوم (${Quran.digits(Progress.BOND_DAY)} ❤): ما تنجزه الآن يُكتب لك ✓ ولا يزيد النقاط حتى الغد.", size = 11.sp, color = P.gold)
 
     Missions.now()?.let { w ->
         Text("الآن · +${Quran.digits(Missions.NOW_BOND)} ❤", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
@@ -363,19 +364,19 @@ fun MissionsPanel() {
     Sub("يتحقق منها التطبيق بنفسه، ويعرف ما فاتك ليعينك عليه. وإن ألغيت الأصل (كإلغاء علامة صلاة) عادت الوظيفة وعادت نقاطها.", size = 11.sp)
     Missions.tasks().forEach { t ->
         val done = runCatching { t.done() }.getOrDefault(false)
-        MissionRow(t.icon, t.text, done, if (done) "✓" else "اذهب ←", t.why) { if (!done) t.go() }
+        MissionRow(t.icon, t.text, done, if (done) got("task_${t.id}") else "اذهب ←", t.why) { if (!done) t.go() }
     }
 
     Text("التحديات · +${Quran.digits(Missions.CHALLENGE_BOND)} ❤ لكل تحدٍّ", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
     var undo by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
     Missions.challenges().forEachIndexed { i, c ->
         val done = Missions.challengeDone(i)
-        MissionRow("🎯", c, done, if (done) "✓ إلغاء" else "فعلتُه", clickableDone = true) { if (done) undo = i else Missions.doChallenge(i) }
+        MissionRow("🎯", c, done, if (done) got("challenge$i") + " · إلغاء" else "فعلتُه", clickableDone = true) { if (done) undo = i else Missions.doChallenge(i) }
     }
     undo?.let { i ->
         androidx.compose.material3.AlertDialog(onDismissRequest = { undo = null }, containerColor = P.surface,
             title = { Text("إلغاء الإنجاز؟", color = P.ink) },
-            text = { Text("«${Missions.challenges().getOrNull(i) ?: ""}» يعود غير منجز، وتُسترجع نقاطه (${Quran.digits(Missions.CHALLENGE_BOND)} ❤).", color = P.ink) },
+            text = { Text("«${Missions.challenges().getOrNull(i) ?: ""}» يعود غير منجز، وتُسترجع نقاطه (${Quran.digits(Progress.bondGot("challenge$i") ?: 0)} ❤، وهي ما أُعطي له فعلًا).", color = P.ink) },
             confirmButton = { androidx.compose.material3.TextButton({ Missions.undoChallenge(i); undo = null }) { Text("إلغاء الإنجاز", color = P.danger) } },
             dismissButton = { androidx.compose.material3.TextButton({ undo = null }) { Text("لا", color = P.accent) } })
     }
@@ -385,9 +386,10 @@ fun MissionsPanel() {
     Column(Modifier.fillMaxWidth().padding(top = 4.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp)) {
         Text("💡 ${q.q}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         if (Missions.answered()) {
-            Text(q.a, color = P.accent, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
+            Text(q.a, color = P.accent, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { q.open() })
+            Sub("📖 اضغط الجواب لتراه في موضعه: ${q.where}", size = 11.sp)
         } else {
-            Sub("ابحث عن الجواب في: ${q.where}. اقرأه هناك ربع دقيقة ثم ارجع هنا.", size = 12.sp)
+            Sub("ابحث عن الجواب في: ${q.where}. اقرأه هناك ربع دقيقة ثم ارجع هنا.", Modifier.clip(L.shape(8.dp)).clickable { Missions.seek() }, size = 12.sp)
             if (Missions.lookedTooShort()) Sub("لم تكمل ربع دقيقة هناك؛ ارجع واقرأ قليلًا.", size = 11.sp, color = P.danger)
             Action("🔎 ابحث عن الجواب", Modifier.fillMaxWidth().padding(top = 8.dp)) { Missions.seek() }
         }
@@ -402,6 +404,9 @@ fun MissionsPanel() {
         }
     }
 }
+
+/** «✓ +n ❤» with what was really given (it can be less than the task's value near the day's limit). */
+private fun got(key: String): String = Progress.bondGot(key)?.let { "✓ +${Quran.digits(it)} ❤" } ?: "✓"
 
 @Composable
 private fun MissionRow(icon: String, text: String, done: Boolean, action: String, why: String? = null, clickableDone: Boolean = false, onClick: () -> Unit) {

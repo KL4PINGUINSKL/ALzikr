@@ -619,6 +619,11 @@ fun FriendshipPanel() {
             Row(Modifier.fillMaxWidth()) { Sub(a, Modifier.weight(1f), size = 12.sp); Text(b, color = P.accent, fontSize = 12.sp) }
         }
         Sub("الحد اليومي ${Quran.digits(Progress.BOND_DAY)} ❤، وصندوق الأسبوع فوقه.", size = 11.sp)
+        Text("نقاط اليوم: ${Quran.digits(Progress.bondToday())} من ${Quran.digits(Progress.BOND_DAY)} ❤", color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
+        val src = Progress.bondSources()
+        if (src.isEmpty()) Sub("لا شيء بعد اليوم.", size = 11.sp)
+        src.forEach { (what, pts) -> Row(Modifier.fillMaxWidth()) { Sub(what, Modifier.weight(1f), size = 12.sp); Text("+${Quran.digits(pts)} ❤", color = P.accent, fontSize = 12.sp) } }
+        if (Progress.bondToday() >= Progress.BOND_DAY) Sub("بلغت حد اليوم: ما تفعله بعده لا يزيد الصداقة حتى الغد (إلا صندوق الأسبوع).", size = 11.sp, color = P.gold)
     }
     if (Friendship.has("nick")) {
         var edit by remember { mutableStateOf(false) }
