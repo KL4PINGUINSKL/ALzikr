@@ -111,7 +111,14 @@ object Quran {
         return ayahs.asSequence().filter { it.plain.contains(n) }.take(limit).toList()
     }
 
-    fun digits(n: Int) = n.toString().map { "٠١٢٣٤٥٦٧٨٩"[it - '0'] }.joinToString("")
+    /** The app's digits: ١٢٣ (Arabic-Indic, the default) or 123, chosen in Settings → Appearance. */
+    var easternDigits: Boolean
+        get() = Store.prefs.getBoolean("digits_eastern", true)
+        set(v) { Store.prefs.edit().putBoolean("digits_eastern", v).apply(); Store.bump() }
+    fun digits(n: Int) = if (easternDigits) n.toString().map { if (it in '0'..'9') "٠١٢٣٤٥٦٧٨٩"[it - '0'] else it }.joinToString("") else n.toString()
+    /** Any text's digits in the chosen style. */
+    fun numerals(t: String): String = if (easternDigits) { if (t.none { it in '0'..'9' }) t else String(CharArray(t.length) { i -> t[i].let { c -> if (c in '0'..'9') '٠' + (c - '0') else c } }) }
+        else { if (t.none { it in '٠'..'٩' }) t else String(CharArray(t.length) { i -> t[i].let { c -> if (c in '٠'..'٩') '0' + (c - '٠') else c } }) }
 
     /** One short verse per day, the same for everyone on that date. */
     fun ofTheDay(date: LocalDate = LocalDate.now()): Ayah? {

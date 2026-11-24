@@ -126,7 +126,7 @@ fun SettingsSheet(close: () -> Unit) {
                 Panel {
                     Title("التنبيهات")
                     Sub("تنبيه قبل الصلاة", Modifier.padding(top = 6.dp, bottom = 6.dp))
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Wrap(gap = 6.dp) {
                         listOf(0, 5, 10, 15, 20, 30).forEach { m -> Choice(if (m == 0) "بدون" else "$m د", Store.before == m) { Store.before = m; reschedule() } }
                     }
                     AdhanChoice()
@@ -136,7 +136,7 @@ fun SettingsSheet(close: () -> Unit) {
                             else -> runCatching { RingtoneManager.getRingtone(ctx, Uri.parse(Store.sound)).getTitle(ctx) }.getOrDefault("صوت مختار") }
                     }
                     Text(soundName, color = P.ink, fontSize = 15.sp)
-                    Row(Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Wrap(Modifier.padding(top = 8.dp), gap = 6.dp) {
                         Choice("اختيار صوت…", false) {
                             pickSound.launch(Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
                                 .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALL)
@@ -172,11 +172,8 @@ fun SettingsSheet(close: () -> Unit) {
                 Panel {
                     Title("تذكيرات أخرى")
                     Sub("أذكار النوم", Modifier.padding(top = 6.dp, bottom = 6.dp))
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(-1, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60, 23 * 60 + 30, 0).forEach { m ->
-                            Choice(if (m < 0) "إيقاف" else Alerts.timeText(m), Data.sleepAt == m) { Data.sleepAt = m; reschedule() }
-                        }
-                    }
+                    PickOne(listOf(-1, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60, 23 * 60 + 30, 0).map { m -> m.toString() to (if (m < 0) "إيقاف" else Alerts.timeText(m)) },
+                        Data.sleepAt.toString(), "وقت النوم", shown = 3) { Data.sleepAt = it.toInt(); reschedule() }
                     Sub("ذكر خلال اليوم (من 9 صباحًا إلى 9 مساءً)", Modifier.padding(top = 10.dp, bottom = 6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(0 to "إيقاف", 1 to "كل ساعة", 2 to "كل ساعتين", 3 to "كل 3 ساعات").forEach { (n, l) -> Choice(l, Data.salawatEvery == n) { Data.salawatEvery = n; reschedule() } }
@@ -224,6 +221,13 @@ fun SettingsSheet(close: () -> Unit) {
                     ModeChoice()
                     Box(Modifier.padding(top = 10.dp)) { ColorChoice() }
                     Box(Modifier.padding(top = 10.dp)) { ThemeGallery() }
+                    Sub("الأرقام في التطبيق", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        // Labels without digits: every digit on screen follows this very choice.
+                        Choice("هندية (المشرق)", Quran.easternDigits) { Quran.easternDigits = true }
+                        Choice("عربية (المغرب)", !Quran.easternDigits) { Quran.easternDigits = false }
+                    }
+                    Sub("مثال: " + Quran.digits(1234567890), size = 12.sp)
                     Sub("حجم خط الأذكار", Modifier.padding(top = 10.dp, bottom = 6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(0 to "عادي", 1 to "كبير", 2 to "أكبر").forEach { (n, l) -> Choice(l, Data.textSize == n) { Data.textSize = n } }
@@ -293,7 +297,7 @@ fun AdhanChoice() {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     Sub("الأذان عند دخول الوقت", Modifier.padding(top = 12.dp, bottom = 6.dp))
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Wrap(gap = 6.dp) {
         listOf(0 to "تنبيه فقط", 1 to "الأذان كاملًا", 2 to "التكبيرات فقط").forEach { (m, l) -> Choice(l, Adhan.mode == m) { Adhan.mode = m } }
     }
     if (Adhan.mode == 0) return

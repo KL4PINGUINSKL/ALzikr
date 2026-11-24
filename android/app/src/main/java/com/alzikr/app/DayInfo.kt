@@ -144,7 +144,7 @@ fun DaySheet(date: LocalDate, close: () -> Unit) {
     val state = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val rel = when (date) { LocalDate.now() -> "اليوم"; LocalDate.now().plusDays(1) -> "غدًا"; else -> "" }
     val h = Data.hijri(date)
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, sheetState = state, containerColor = P.surface) {
+    AppSheet(onDismissRequest = close) {
         Column(Modifier.fillMaxWidth().quickDismiss(state, close).verticalScroll(rememberScrollState()).padding(start = 18.dp, end = 18.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Sub("$rel ${DayInfo.dayName(date)} ${h.day} ${h.monthName} ${h.year} هـ".trim(), color = P.gold)

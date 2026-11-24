@@ -204,7 +204,8 @@ private fun Root() {
             // Back returns to the previous page (inner pages handle back first).
             androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != Nav.home) { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
-                val inPage = Nav.pages.isNotEmpty()
+                // While a reading screen is open the app's header, tabs, bar and friend step aside (full screen).
+                val inPage = Nav.pages.isNotEmpty() || Reading.open > 0
                 Column(Modifier.fillMaxSize()) {
                     if (inPage) Spacer(Modifier.statusBarsPadding())
                     else Header { settings = true }
@@ -265,11 +266,12 @@ private fun Overlays() {
 private fun Header(openSettings: () -> Unit) {
     Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         val pet = Pet.species != null && Pet.place == "top"
-        Column(if (pet) Modifier else Modifier.weight(1f)) {
+        // The friend gets its own fixed space (it used to get only what the date line left, a few dp on long dates).
+        Column(Modifier.weight(1f)) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
-        if (pet) PetStage(Modifier.weight(1f).padding(horizontal = 6.dp), height = 58)
+        if (pet) PetStage(Modifier.width(124.dp).padding(horizontal = 4.dp), height = 72)
         Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("⚙", tint = P.muted, size = 22.dp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
         }
@@ -294,10 +296,11 @@ private fun BottomBar() {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 4.dp, vertical = 6.dp), horizontalArrangement = Arrangement.SpaceAround) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clip(L.shape(12.dp)).clickable { Nav.go(s.id) }.padding(horizontal = 4.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(Modifier.clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 12.dp, vertical = 4.dp)) { SectionIcon(s, on) }
+                // Equal shares of the width: every section fits, none is cut at the edge.
+                Column(Modifier.weight(1f).clip(L.shape(12.dp)).clickable { Nav.go(s.id) }.padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 10.dp, vertical = 4.dp)) { SectionIcon(s, on) }
                     Spacer(Modifier.height(2.dp))
-                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal)
+                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
                 }
             }
         }
@@ -312,7 +315,7 @@ private fun WordsBar() {
         Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceAround) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clickable { Nav.go(s.id) }.padding(horizontal = 8.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.weight(1f).clickable { Nav.go(s.id) }.padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.width(22.dp).height(3.dp).background(if (on) P.accent else P.bg))
                     Spacer(Modifier.height(6.dp))
                     Text(s.label, color = if (on) P.ink else P.muted, fontSize = 14.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
@@ -326,14 +329,13 @@ private fun WordsBar() {
 @Composable
 private fun TopTabs() {
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Every section in one even row (no hidden sideways scrolling).
+        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
             sections.forEach { s ->
                 val on = Nav.tab == s.id
-                Column(Modifier.clickable { Nav.go(s.id) }.padding(horizontal = 10.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        SectionIcon(s, on, 18); if (L.icons != IconStyle.NONE) Spacer(Modifier.width(4.dp))
-                        Text(s.label, color = if (on) P.accent else P.muted, fontSize = 15.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
-                    }
+                Column(Modifier.weight(1f).clickable { Nav.go(s.id) }.padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    SectionIcon(s, on, 18)
+                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                     Spacer(Modifier.height(4.dp))
                     Box(Modifier.width(36.dp).height(2.dp).background(if (on) P.accent else P.bg))
                 }

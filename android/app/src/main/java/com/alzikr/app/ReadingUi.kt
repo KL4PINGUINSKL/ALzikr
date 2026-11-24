@@ -289,7 +289,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
         val cs = cats
         if (cs == null) item { Box(Modifier.fillMaxWidth().padding(12.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = P.accent) } }
         else if (cs.isNotEmpty()) item {
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Wrap(gap = 8.dp) {
                 cs.forEach { c -> Choice(c.title, false) { path = path + c.id; titles = titles + c.title } }
             }
         }
@@ -353,7 +353,7 @@ private fun PdfReader(id: String, title: String, back: () -> Unit) {
         if (renderer == null) { Sub("تعذّر فتح الملف. احذفه ونزّله من جديد.", Modifier.padding(16.dp)); return@Subpage }
         val count = renderer.pageCount
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 10.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Wrap(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 2.dp), gap = 6.dp) {
                 Choice("📜 وضع القراءة", false) { readMode = true }
                 Choice("ص ${state.firstVisibleItemIndex + 1} / $count", false) { goTo = true }
                 Choice("−", false) { zoom = (zoom - .25f).coerceAtLeast(1f) }
@@ -468,6 +468,7 @@ private fun PdfReading(renderer: PdfRenderer, id: String, title: String, back: (
     var goTo by remember { mutableStateOf(false) }
     val paper = Reading.paper
     val bg = androidx.compose.ui.graphics.Color(paper.bg)
+    Reading.scope = "books"
     ReadingShell(title, "صفحة ${state.firstVisibleItemIndex + 1} من $count", back, progress = (state.firstVisibleItemIndex + 1f) / count, scroll = state, textual = false,
         tiles = { Tile("📑", "انتقل إلى", Modifier.weight(1f)) { goTo = true } }) { toggle ->
         BoxWithConstraints(Modifier.fillMaxSize()) {

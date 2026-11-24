@@ -14,29 +14,13 @@ import org.json.JSONObject
 /** Manifest schema this app understands. A pack with a higher schema is refused (the app must be updated first). */
 const val PET_SCHEMA = 1
 
-/** The standard animation states. [fallback] is used when a skin has no source for a state; [motion] is the movement the
+/** The four states, the same as ALzikr Pet Studio's (other names in a pack are ignored). [fallback] is used when a skin has no source for a state; [motion] is the movement the
  *  engine adds by code when it falls back (so "jump" on a skin without a jump still hops). idle is the root. */
 enum class PetState(val id: String, private val fallbackId: String?, val motion: Motion, val ar: String) {
-    IDLE("idle", null, Motion.NONE, "خمول"),
+    IDLE("idle", null, Motion.NONE, "هدوء"),
     WALK("walk", "idle", Motion.BOB, "مشي"),
-    RUN("run", "walk", Motion.FAST, "جري"),
-    SLEEP("sleep", "idle", Motion.SLOW, "نوم"),
-    WAKE_UP("wake_up", "stretch", Motion.TILT, "استيقاظ"),
     HAPPY("happy", "idle", Motion.HOP, "فرح"),
-    LAUGH("laugh", "happy", Motion.HOP, "ضحك"),
-    JUMP("jump", "happy", Motion.HOP, "قفز"),
-    WAVE("wave", "happy", Motion.SWAY, "تلويح"),
-    SIT("sit", "idle", Motion.NONE, "جلوس"),
-    PLAY("play", "happy", Motion.HOP, "لعب"),
-    TALK("talk", "idle", Motion.BOB, "كلام"),
-    CELEBRATE("celebrate", "jump", Motion.HOP, "احتفال"),
-    CURIOUS("curious", "idle", Motion.TILT, "فضول"),
-    YAWN("yawn", "sleep", Motion.SLOW, "تثاؤب"),
-    STRETCH("stretch", "idle", Motion.TILT, "تمطّي"),
-    THINKING("thinking", "curious", Motion.TILT, "تفكير"),
-    APPEAR("appear", "idle", Motion.FADE_IN, "ظهور"),
-    DISAPPEAR("disappear", "idle", Motion.FADE_OUT, "اختفاء"),
-    READING("reading", "sit", Motion.SLOW, "قراءة");
+    SLEEP("sleep", "idle", Motion.SLOW, "نوم");
 
     companion object {
         fun of(id: String): PetState? = entries.firstOrNull { it.id == id }
@@ -56,7 +40,9 @@ enum class Rarity(val ar: String) { COMMON("عادي"), RARE("نادر"), EPIC("
 /** How a picture is stored. RIVE is reserved: refused until its renderer passes the performance benchmark. */
 enum class SourceKind(val ext: Set<String>) {
     LOTTIE(setOf("json")), DOTLOTTIE(setOf("lottie")), SPRITE(setOf("png", "webp")), FRAMES(setOf("png", "webp")),
-    WEBP(setOf("webp")), PNG(setOf("png", "webp")), RIVE(setOf("riv"));
+    WEBP(setOf("webp")), PNG(setOf("png", "webp")), RIVE(setOf("riv")),
+    /** A painting animated by the app (mesh warp around landmarks): [Source.path] is the rig JSON, [Source.anim] the motion. */
+    RIG(setOf("json"));
     companion object { fun of(s: String) = entries.firstOrNull { it.name.equals(s, true) } }
 }
 
@@ -65,11 +51,12 @@ enum class SourceKind(val ext: Set<String>) {
  * SPRITE: one sheet [path] with [cols]×[rows] cells, [frames] used, played at [fps].
  * FRAMES: [paths] played in order at [fps].
  * LOTTIE/DOTLOTTIE: optional [from]..[to] segment (0..1) of the timeline.
+ * RIG: [path] is the rig (pictures + landmarks), [anim] one of idle, walk, happy, sleep.
  */
 data class Source(
     val kind: SourceKind, val path: String = "", val paths: List<String> = emptyList(),
     val fps: Int = 12, val frames: Int = 0, val cols: Int = 1, val rows: Int = 1,
-    val from: Float = 0f, val to: Float = 1f, val speed: Float = 1f, val loop: Boolean = true, val motion: Motion? = null,
+    val from: Float = 0f, val to: Float = 1f, val speed: Float = 1f, val loop: Boolean = true, val motion: Motion? = null, val anim: String = "",
 ) { fun files(): List<String> = if (kind == SourceKind.FRAMES) paths else listOf(path) }
 
 data class Fit(val zoom: Float = 1f, val lift: Float = 0f, val darkLines: Boolean = false)
@@ -158,7 +145,7 @@ object PackParser {
         val src = Source(kind, s.optString("path"), s.optJSONArray("paths")?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList(),
             s.optInt("fps", 12).coerceIn(1, 60), s.optInt("frames", 0), s.optInt("cols", 1).coerceAtLeast(1), s.optInt("rows", 1).coerceAtLeast(1),
             s.optDouble("from", 0.0).toFloat().coerceIn(0f, 1f), s.optDouble("to", 1.0).toFloat().coerceIn(0f, 1f), s.optDouble("speed", 1.0).toFloat(),
-            s.optBoolean("loop", true), s.optString("motion").takeIf { it.isNotEmpty() }?.let { m -> Motion.entries.firstOrNull { it.name.equals(m, true) } })
+            s.optBoolean("loop", true), s.optString("motion").takeIf { it.isNotEmpty() }?.let { m -> Motion.entries.firstOrNull { it.name.equals(m, true) } }, s.optString("anim"))
         src.files().forEach { p -> checkPath(p, kind) }
         if (kind == SourceKind.FRAMES && src.paths.isEmpty()) throw PackFormatException("FRAMES without paths")
         return src

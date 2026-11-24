@@ -121,18 +121,30 @@ object Reading {
     }
 
     private val p get() = Store.prefs
+    /**
+     * Which card is being read: "quran", "story", "hadith", "sharh", "books"… Each keeps its own paper, size and spacing
+     * (falling back to the shared ones it had before).
+     */
+    var scope by mutableStateOf("quran")
+    /** Reading screens open now: while > 0 the app's header, tabs, bar and friend step aside (full screen). */
+    var open by mutableIntStateOf(0)
+    private fun k(base: String) = "${base}_$scope"
     var paper: Paper
-        get() = runCatching { Paper.valueOf(p.getString("read_paper", null) ?: "") }.getOrDefault(Paper.CREAM)
-        set(v) { p.edit().putString("read_paper", v.name).apply(); Store.bump() }
+        get() = runCatching { Paper.valueOf(p.getString(k("read_paper"), null) ?: p.getString("read_paper", null) ?: "") }.getOrDefault(Paper.CREAM)
+        set(v) { p.edit().putString(k("read_paper"), v.name).apply(); Store.bump() }
     var quranSize: Int
         get() = p.getInt("read_qsize", 26)
-        set(v) { p.edit().putInt("read_qsize", v.coerceIn(18, 48)).apply(); Store.bump() }
+        set(v) { p.edit().putInt("read_qsize", v.coerceIn(14, 48)).putBoolean("read_fit", false).apply(); Store.bump() }
+    /** Mushaf pages: the size that shows the whole page on the screen (on until the reader changes the size). */
+    var fitPage: Boolean
+        get() = p.getBoolean("read_fit", true)
+        set(v) { p.edit().putBoolean("read_fit", v).apply(); Store.bump() }
     var textSize: Int
-        get() = p.getInt("read_tsize", 19)
-        set(v) { p.edit().putInt("read_tsize", v.coerceIn(14, 34)).apply(); Store.bump() }
+        get() = p.getInt(k("read_tsize"), p.getInt("read_tsize", 19))
+        set(v) { p.edit().putInt(k("read_tsize"), v.coerceIn(14, 34)).apply(); Store.bump() }
     var line: Float
-        get() = p.getFloat("read_line", 1f)
-        set(v) { p.edit().putFloat("read_line", v.coerceIn(.8f, 1.5f)).apply(); Store.bump() }
+        get() = p.getFloat(k("read_line"), p.getFloat("read_line", 1f))
+        set(v) { p.edit().putFloat(k("read_line"), v.coerceIn(.8f, 1.5f)).apply(); Store.bump() }
     /** Screen light while reading: -1 = the phone's own. */
     var bright: Float
         get() = p.getFloat("read_bright", -1f)
@@ -205,6 +217,7 @@ fun ReadingShell(
     content: @Composable (toggle: () -> Unit) -> Unit,
 ) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
+    androidx.compose.runtime.DisposableEffect(Unit) { Reading.open++; onDispose { Reading.open = (Reading.open - 1).coerceAtLeast(0) } }
     val paper = Reading.paper
     val view = LocalView.current
     val window = remember(view) { view.context.findActivity()?.window }
@@ -286,11 +299,11 @@ fun ReadingShell(
             GText("⏸", color = ink, fontSize = 16.sp, modifier = Modifier.clip(RoundedCornerShape(50)).clickable { auto = false }.padding(horizontal = 12.dp, vertical = 6.dp))
         }
     }
-    if (sheet) ModalBottomSheet(onDismissRequest = { sheet = false }, containerColor = P.surface) {
+    if (sheet) AppSheet(onDismissRequest = { sheet = false }) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Title("المظهر وراحة القراءة")
             Sub("لون الورق")
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Wrap(gap = 10.dp) {
                 Reading.Paper.entries.forEach { pp ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clip(L.shape(12.dp)).clickable { Reading.paper = pp }.padding(4.dp)) {
                         Box(Modifier.size(54.dp).clip(RoundedCornerShape(14.dp)).background(Color(pp.bg))
@@ -320,7 +333,7 @@ fun ReadingShell(
             }
             if (scroll != null) {
                 Sub("سرعة التمرير التلقائي")
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Wrap(gap = 6.dp) {
                     (1..8).forEach { n -> Choice(Quran.digits(n), speed == n) { Reading.speed = n } }
                 }
             }
@@ -343,6 +356,7 @@ private fun pageStarts(): IntArray {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
+    Reading.scope = "quran"
     QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
@@ -387,6 +401,8 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
             if (Recitation.now == null) Tile("▶", "استماع", Modifier.weight(1f)) { Recitation.play(ctx, top.s, top.a) }
             else Tile("⏹", "إيقاف", Modifier.weight(1f), on = true) { Recitation.stop() }
             Tile("📑", "الفهرس", Modifier.weight(1f)) { index = true }
+            // One tap between continuous scrolling and mushaf pages (same page kept, cross-faded).
+            Tile(if (paged) "📜" else "📄", if (paged) "تمرير" else "صفحات", Modifier.weight(1f)) { Reading.pages = !paged }
             Tile("🔖", if (mark) "مُعلَّمة" else "علامة", Modifier.weight(1f), on = mark) { Quran.toggleMark(top.s, top.a) }
         },
         settings = {
@@ -395,8 +411,13 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
                 Choice("تمرير متصل", !paged) { Reading.pages = false }
                 Choice("صفحات كالمصحف", paged) { Reading.pages = true }
             }
+            if (paged) SettingRow("الصفحة كاملة على الشاشة", "يُضبط الخط ليظهر كل الصفحة؛ تكبير الخط يلغيه") {
+                androidx.compose.material3.Switch(Reading.fitPage, { Reading.fitPage = it })
+            }
+            // Back to the verses view (tafsir, hifz, notes) at the verse at the top of this page.
+            Choice("📖 آيات وتفسير من هذه الصفحة", false) { back(); Nav.openQuran(top.s, top.a) }
             Sub("الورد اليومي", Modifier.padding(top = 8.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Wrap(gap = 6.dp) {
                 listOf(2, 4, 5, 10, 20).forEach { n -> Choice(if (n == 20) "جزء (٢٠ صفحة)" else "${Quran.digits(n)} صفحات", Reading.goal == n) { Reading.goal = n } }
             }
             val left = 604 - Reading.far
@@ -410,14 +431,20 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
         },
     ) { toggle ->
         val long: (Quran.Ayah) -> Unit = { chosen = it }
-        if (paged) HorizontalPager(pager, Modifier.fillMaxSize(), key = { it }) { i ->
-            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 34.dp, bottom = 40.dp)) { QuranPage(i + 1, starts, toggle, long) }
+        androidx.compose.animation.Crossfade(paged, label = "view", animationSpec = androidx.compose.animation.core.tween(280)) { asPages ->
+        if (asPages) HorizontalPager(pager, Modifier.fillMaxSize(), key = { it }) { i ->
+            androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+                // By default the whole page fits on the screen; a size chosen by the reader wins (the page then scrolls).
+                val size = if (Reading.fitPage) fitPageSize(i + 1, starts, maxWidth, maxHeight - 74.dp) else Reading.quranSize
+                Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 34.dp, bottom = 40.dp)) { QuranPage(i + 1, starts, toggle, long, size = size) }
+            }
         }
         else LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = PaddingValues(top = 34.dp, bottom = 80.dp)) {
             items(604, key = { it }) { i ->
                 QuranPage(i + 1, starts, toggle, long)
                 if (i < 603) Box(Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 6.dp).height(1.dp).background(Color(Reading.paper.muted).copy(alpha = .3f)))
             }
+        }
         }
     }
     chosen?.let { a -> AyahSheet(a) { chosen = null } }
@@ -428,7 +455,7 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
                 Column {
                     OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, placeholder = { Text("رقم الصفحة ١ – ٦٠٤") }, modifier = Modifier.fillMaxWidth())
                     Sub("الأجزاء", Modifier.padding(top = 8.dp, bottom = 4.dp))
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Wrap(gap = 6.dp) {
                         (1..30).forEach { j -> Choice(Quran.digits(j), top.juz == j) { go(Quran.firstOfJuz(j).page); index = false } }
                     }
                     Sub("السور", Modifier.padding(top = 8.dp, bottom = 4.dp))
@@ -449,9 +476,44 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
     }
 }
 
+/**
+ * The largest mushaf size (14…40) at which page [p] fits in [w]×[h]: the verses measured as they are drawn, plus the
+ * surah banners, the basmala and the page's header and number.
+ */
+@Composable
+private fun fitPageSize(p: Int, starts: IntArray, w: androidx.compose.ui.unit.Dp, h: androidx.compose.ui.unit.Dp): Int {
+    val tm = androidx.compose.ui.text.rememberTextMeasurer()
+    val d = androidx.compose.ui.platform.LocalDensity.current
+    val line = Reading.line
+    return remember(p, w, h, line) {
+        val ayahs = Quran.ayahs.subList(starts[p - 1], starts[p].coerceAtLeast(starts[p - 1]))
+        val runs = ArrayList<List<Quran.Ayah>>(); var cur = ArrayList<Quran.Ayah>()
+        ayahs.forEach { a -> if (a.a == 1 && cur.isNotEmpty()) { runs += cur; cur = ArrayList() }; cur += a }
+        if (cur.isNotEmpty()) runs += cur
+        val wPx = with(d) { (w - 36.dp).roundToPx() }.coerceAtLeast(100)
+        val hPx = with(d) { (h - 60.dp).toPx() }
+        val banner = with(d) { 84.dp.toPx() }
+        fun height(sz: Int): Float = runs.sumOf { run ->
+            val text = buildString { run.forEach { a -> append(a.text); if (a.sajda) append(" ۩"); append(" ﴿${Quran.digits(a.a)}﴾ ") } }
+            val st = androidx.compose.ui.text.TextStyle(fontSize = sz.sp, lineHeight = (sz * 1.95f * line).sp, fontFamily = Fonts.quran, textAlign = TextAlign.Justify)
+            var hh = tm.measure(text, st, constraints = androidx.compose.ui.unit.Constraints(maxWidth = wPx)).size.height.toFloat()
+            val first = run.first()
+            if (first.a == 1) {
+                hh += banner
+                if (first.s != 1 && first.s != 9) hh += tm.measure(Quran.BASMALA, st.copy(lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified, textAlign = TextAlign.Center),
+                    constraints = androidx.compose.ui.unit.Constraints(maxWidth = wPx)).size.height + with(d) { 12.dp.toPx() }
+            }
+            hh.toDouble()
+        }.toFloat()
+        var lo = 14; var hi = 40; var best = 14
+        while (lo <= hi) { val mid = (lo + hi) / 2; if (height(mid) <= hPx) { best = mid; lo = mid + 1 } else hi = mid - 1 }
+        best
+    }
+}
+
 /** One mushaf page: its surah and juz on top, surah banners, the verses as one flowing text, the page number. */
 @Composable
-private fun QuranPage(p: Int, starts: IntArray, toggle: () -> Unit, long: (Quran.Ayah) -> Unit, paper: Reading.Paper = Reading.paper) {
+private fun QuranPage(p: Int, starts: IntArray, toggle: () -> Unit, long: (Quran.Ayah) -> Unit, paper: Reading.Paper = Reading.paper, size: Int = Reading.quranSize) {
     val muted = Color(paper.muted)
     val ayahs = Quran.ayahs.subList(starts[p - 1], starts[p].coerceAtLeast(starts[p - 1]))
     if (ayahs.isEmpty()) return
@@ -467,15 +529,15 @@ private fun QuranPage(p: Int, starts: IntArray, toggle: () -> Unit, long: (Quran
             Text("الجزء ${Quran.digits(ayahs.first().juz)}", color = muted, fontSize = 12.sp)
         }
         runs.forEach { run ->
-            if (run.first().a == 1) SurahBanner(run.first().s, paper)
-            AyahRun(run, toggle, long, paper)
+            if (run.first().a == 1) SurahBanner(run.first().s, paper, size)
+            AyahRun(run, toggle, long, paper, size)
         }
         Text(Quran.digits(p), color = muted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
     }
 }
 
 @Composable
-private fun SurahBanner(s: Int, paper: Reading.Paper = Reading.paper) {
+private fun SurahBanner(s: Int, paper: Reading.Paper = Reading.paper, size: Int = Reading.quranSize) {
     val acc = Color(paper.accent)
     val info = Quran.surahs[s - 1]
     Column(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 6.dp).clip(RoundedCornerShape(14.dp)).background(acc.copy(alpha = .08f))
@@ -483,13 +545,13 @@ private fun SurahBanner(s: Int, paper: Reading.Paper = Reading.paper) {
         Text("سورة ${info.name}", color = Color(paper.ink), fontSize = 21.sp, fontWeight = FontWeight.Bold, fontFamily = Fonts.naskh)
         Text("${if (info.meccan) "مكية" else "مدنية"} · آياتها ${Quran.digits(info.count)}", color = Color(paper.muted), fontSize = 11.sp)
     }
-    if (s != 1 && s != 9) Text(Quran.BASMALA, color = Color(paper.ink), fontSize = Reading.quranSize.sp, fontFamily = Fonts.quran,
+    if (s != 1 && s != 9) Text(Quran.BASMALA, color = Color(paper.ink), fontSize = size.sp, fontFamily = Fonts.quran,
         textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp))
 }
 
 /** The verses of one surah on a page as one justified text; a long press on a verse opens its options. */
 @Composable
-private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah) -> Unit, paper: Reading.Paper = Reading.paper) {
+private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah) -> Unit, paper: Reading.Paper = Reading.paper, size: Int = Reading.quranSize) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val acc = Color(paper.accent)
     val now = Recitation.now
@@ -507,7 +569,6 @@ private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah
         }
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
-    val size = Reading.quranSize
     Text(text, color = Color(paper.ink), fontSize = size.sp, lineHeight = (size * 1.95f * Reading.line).sp, fontFamily = Fonts.quran, textAlign = TextAlign.Justify,
         onTextLayout = { layout = it },
         modifier = Modifier.fillMaxWidth().pointerInput(run.first().s, run.first().a) {
@@ -603,6 +664,7 @@ data class RBlock(val kind: RKind, val text: String)
 /** Any text book in reading mode: headings, paragraphs, verses, notes; it reopens where you left it. */
 @Composable
 fun TextReading(title: String, key: String, blocks: List<RBlock>, startAt: Int = -1, back: () -> Unit) {
+    Reading.scope = key.substringBefore(':')   // this card's own reading look
     QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version

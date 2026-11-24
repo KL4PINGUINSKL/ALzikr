@@ -25,6 +25,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,12 +74,12 @@ fun QuietWhileReading() {
 
 // ------------------------------------------------------------------------------------------------ interactions
 
-/** «كلّمني، العب معي، اجلس، نم، حيّني»: for fun and friendship only (❤, capped daily), never experience. */
+/** «كلّمني، العب معي، تمشَّ، نم» (the four states): for fun and friendship only (❤, capped daily), never experience. */
 @Composable
 fun PetInteractions() {
     val acts = listOf(
-        Triple("💬", "كلّمني", PetState.TALK), Triple("🧶", "العب معي", PetState.PLAY), Triple("🪑", "اجلس", PetState.SIT),
-        Triple("💤", "نم", PetState.SLEEP), Triple("👋", "حيّني", PetState.WAVE),
+        Triple("💬", "كلّمني", PetState.IDLE), Triple("🧶", "العب معي", PetState.HAPPY), Triple("🐾", "تمشَّ", PetState.WALK),
+        Triple("💤", "نم", PetState.SLEEP),
     )
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         acts.forEach { (icon, label, st) ->
@@ -112,15 +115,37 @@ object PetSeason {
 
 // ------------------------------------------------------------------------------------------------ the room
 
-/** Things for the friend's room, opened by the level. Drawn by code (no outside art); each can be shown or put away. */
-data class RoomItem(val id: String, val icon: String, val name: String, val level: Int)
+/**
+ * The friend's home, painted by ALzikr Pet Studio (assets/pets/originals/room.json): one room per animal, furniture
+ * opened by the level (one special piece per animal), and upgrades (string lights at 5, a garden canopy at 10).
+ * Each piece can be shown or put away from the bag. Positions are percentages of a 640×440 room.
+ */
+data class RoomItem(val id: String, val name: String, val level: Int, val only: List<String>?, val x: Float, val y: Float, val scale: Float, val size: Float, val path: String) {
+    val icon: String get() = when (id) { "floor" -> "🟫"; "bed" -> "🛏"; "toy" -> "🧶"; "plant" -> "🪴"; "window", "curtain" -> "🪟"; "lamp" -> "🏮"; "table" -> "📚"
+        "print" -> "🖼"; "garden" -> "🌷"; "mobile" -> "✨"; "cushion" -> "🛋"; else -> "⭐" }
+}
 object PetRoomItems {
-    val items = listOf(
-        RoomItem("rug", "🟫", "سجادة مزخرفة", 1), RoomItem("cushion", "🛋", "وسادة مريحة", 2), RoomItem("plant", "🪴", "نبتة", 3),
-        RoomItem("lantern", "🏮", "فانوس", 4), RoomItem("shelf", "📚", "رف كتب", 5), RoomItem("yarn", "🧶", "كرة صوف", 6),
-        RoomItem("clock", "🕰", "ساعة حائط", 7), RoomItem("pattern", "✴", "زخرفة هندسية", 8), RoomItem("garden", "🌷", "حديقة صغيرة عند النافذة", 10),
-        RoomItem("stars", "✨", "نجوم السقف", 12),
-    )
+    /** [stages]: a home that changes with the level (legendary friends): level → (name, picture). */
+    class Room(val homes: Map<String, Pair<String, String>>, val items: List<RoomItem>, val upgrades: List<Pair<Int, List<String>>>,
+               val stages: Map<String, List<Triple<Int, String, String>>> = emptyMap())
+    val room: Room by lazy { listOf("originals/room.json", "legendary/room.json").mapNotNull(::read).reduce { a, b ->
+        Room(a.homes + b.homes, a.items + b.items, a.upgrades + b.upgrades, a.stages + b.stages) } }
+    private fun read(path: String): Room? {
+        val o = runCatching { org.json.JSONObject(com.alzikr.app.pets.PetPacks.open("room", path)!!.use { it.readBytes().toString(Charsets.UTF_8) }) }.getOrNull()
+        return if (o == null) null else {
+            val h = o.getJSONObject("homes"); val f = o.getJSONArray("furniture"); val u = o.getJSONArray("upgrades")
+            Room(h.keys().asSequence().associateWith { k -> h.getJSONObject(k).let { it.optString("name") to it.getString("path") } },
+                (0 until f.length()).map { f.getJSONObject(it) }.map { j -> RoomItem(j.getString("id"), j.optString("name"), j.optInt("level", 1),
+                    j.optJSONArray("only")?.let { a -> (0 until a.length()).map { a.getString(it) } }, j.getDouble("x").toFloat(), j.getDouble("y").toFloat(),
+                    j.getDouble("scale").toFloat(), j.getDouble("size").toFloat(), j.getString("path")) },
+                (0 until u.length()).map { u.getJSONObject(it) }.map { j -> j.getInt("level") to j.getJSONArray("layers").let { a -> (0 until a.length()).map { a.getString(it) } } },
+                h.keys().asSequence().mapNotNull { k -> h.getJSONObject(k).optJSONArray("stages")?.let { a -> k to (0 until a.length()).map { a.getJSONObject(it) }.map { j -> Triple(j.getInt("level"), j.optString("name"), j.getString("path")) } } }.toMap())
+        }
+    }
+    /** The home for this friend now: for a home that grows, the last stage the level has reached. */
+    fun home(sp: Species): Pair<String, String>? = room.stages[sp.name]?.lastOrNull { Progress.level() >= it.first }?.let { it.second to it.third } ?: room.homes[sp.name]
+    /** The pieces this animal can have (the special one belongs to its own animal). */
+    fun items(sp: Species? = Pet.species): List<RoomItem> = room.items.filter { it.only == null || (sp != null && sp.name in it.only) }
     fun owned(i: RoomItem) = Progress.level() >= i.level
     fun shown(i: RoomItem) = owned(i) && i.id !in (Store.prefs.getStringSet("pet_room_hidden", emptySet()) ?: emptySet())
     fun toggle(i: RoomItem, show: Boolean) {
@@ -128,70 +153,72 @@ object PetRoomItems {
         if (show) s -= i.id else s += i.id
         Store.prefs.edit().putStringSet("pet_room_hidden", s).apply(); Store.bump()
     }
+    fun layers(): Set<String> = room.upgrades.filter { Progress.level() >= it.first }.flatMap { it.second }.toSet()
+    fun homeName(sp: Species?) = sp?.let { home(it)?.first }
 }
 
-/** «غرفة صديقي»: a small room whose window follows the real time of day, with the items the friend has earned. */
+/** «غرفة صديقي»: the friend's painted home; its light follows the real time of day. */
 @Composable
 fun PetRoom() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    val h = LocalTime.now().hour
-    // Morning, day, evening, night: the sky in the window and the light on the wall.
-    val (sky1, sky2, wall) = when (h) {
-        in 5..9 -> Triple(Color(0xFFFFD9A8), Color(0xFFB8E0F5), Color(0xFFF4E6D4))
-        in 10..15 -> Triple(Color(0xFF7CC4F0), Color(0xFFCFEFFF), Color(0xFFF1EBDD))
-        in 16..18 -> Triple(Color(0xFFF2A65A), Color(0xFF8E6FB5), Color(0xFFE9D6C2))
-        else -> Triple(Color(0xFF0E1A3A), Color(0xFF2A2F5E), Color(0xFF3A3550))
+    val sp = Pet.species ?: return
+    val home = PetRoomItems.home(sp)?.second
+    val items = PetRoomItems.items(sp).filter { PetRoomItems.shown(it) }
+    val layers = PetRoomItems.layers()
+    val paths = (listOfNotNull(home) + items.map { it.path } + (if ("canopy" in layers) listOf("originals/items/curtain.webp") else emptyList()) +
+        (if ("planters" in layers) listOf("originals/items/garden.webp") else emptyList())).distinct()
+    val pics = androidx.compose.runtime.produceState<Map<String, android.graphics.Bitmap>>(emptyMap(), paths) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { paths.mapNotNull { p -> com.alzikr.app.pets.PetBitmaps.get("room", p, 1024)?.let { p to it } }.toMap() }
+    }.value
+    val hour = LocalTime.now().hour
+    // Daylight, morning/evening glow, or night (the Studio's own light colors).
+    val tint = when (hour) { in 7..16 -> null; 5, 6, 17, 18 -> Color(0xFFD48268).copy(alpha = .2f); else -> Color(0xFF142948).copy(alpha = .34f) }
+    val paint = remember { android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG or android.graphics.Paint.ANTI_ALIAS_FLAG) }
+    fun drawItem(c: android.graphics.Canvas, b: android.graphics.Bitmap, id: String, x: Float, y: Float, scale: Float, size: Float, W: Float, H: Float) {
+        val w = size * scale * W / 640f; val hh = w * b.height / b.width * (if (id == "floor") .55f else 1f)
+        val cx = W * x / 100f; val cy = H * y / 100f
+        c.drawBitmap(b, null, android.graphics.RectF(cx - w / 2, cy - hh / 2, cx + w / 2, cy + hh / 2), paint)
     }
-    val night = h !in 5..18
-    val show = { id: String -> PetRoomItems.items.firstOrNull { it.id == id }?.let { PetRoomItems.shown(it) } == true }
-    BoxWithConstraints(Modifier.fillMaxWidth().height(300.dp).clip(L.shape(18.dp))) {
-        Canvas(Modifier.fillMaxSize()) {
-            val W = size.width; val H = size.height; val floorY = H * .68f
-            drawRect(Brush.verticalGradient(listOf(wall, wall.copy(alpha = .92f))), size = Size(W, floorY))
-            if (show("pattern")) {
-                // An eight-pointed star repeated faintly on the wall.
-                val c = if (night) Color.White.copy(alpha = .07f) else Color(0xFF1F7A5A).copy(alpha = .08f)
-                var y = 30f
-                while (y < floorY - 20) { var x = 30f; while (x < W) { star8(this, Offset(x, y), 16f, c); x += 70f }; y += 70f }
+    BoxWithConstraints(Modifier.fillMaxWidth().clip(L.shape(18.dp))) {
+        val roomH = maxWidth * (440f / 640f)
+        Box(Modifier.fillMaxWidth().height(roomH)) {
+            // Behind the friend: the room, its light, upgrades and the furniture that stands further back.
+            Canvas(Modifier.fillMaxSize()) {
+                val W = size.width; val H = size.height
+                drawIntoCanvas { cv -> val c = cv.nativeCanvas
+                    home?.let { pics[it] }?.let { b ->
+                        val r = maxOf(W / b.width, H / b.height); val dw = b.width * r; val dh = b.height * r
+                        c.drawBitmap(b, null, android.graphics.RectF((W - dw) / 2, (H - dh) * .66f, (W - dw) / 2 + dw, (H - dh) * .66f + dh), paint)
+                    }
+                }
+                tint?.let { drawRect(it) }
+                drawIntoCanvas { cv -> val c = cv.nativeCanvas
+                    if ("canopy" in layers) pics["originals/items/curtain.webp"]?.let { b -> paint.alpha = 235; c.drawBitmap(b, null, android.graphics.RectF(0f, -H * .035f, W, H * .425f), paint); paint.alpha = 255 }
+                    if ("planters" in layers) pics["originals/items/garden.webp"]?.let { b -> listOf(1f, 90f).forEach { x -> drawItem(c, b, "garden", x, 67f, .75f, 123f, W, H) } }
+                }
+                if ("stringlights" in layers) {
+                    val sx = W / 640f; val sy = H / 440f
+                    val path = Path().apply { moveTo(0f, 27f * sy); quadraticBezierTo(310f * sx, 93f * sy, 640f * sx, 20f * sy) }
+                    drawPath(path, Color(0xFF635541), style = Stroke(1.7f * sx))
+                    for (i in 0 until 13) { val t = (i + .45f) / 13f; val x = t * 640f; val y = 27f * (1 - t) * (1 - t) + 186f * t * (1 - t) + 20f * t * t
+                        drawOval(Color(0xFFFBDD97), Offset((x - 3.4f) * sx, (y + 3.7f - 5.4f) * sy), Size(6.8f * sx, 10.8f * sy)) }
+                }
+                drawIntoCanvas { cv -> val c = cv.nativeCanvas
+                    items.filter { it.id == "floor" || it.y <= 84f }.sortedBy { if (it.id == "floor") -100f else it.y }
+                        .forEach { i -> pics[i.path]?.let { drawItem(c, it, i.id, i.x, i.y, i.scale, i.size, W, H) } }
+                }
             }
-            // Window with the real sky.
-            val wx = W * .58f; val wy = H * .1f; val ww = W * .32f; val wh = H * .36f
-            drawRoundRect(Brush.verticalGradient(listOf(sky1, sky2), startY = wy, endY = wy + wh), Offset(wx, wy), Size(ww, wh), CornerRadius(14f))
-            if (night) {
-                drawCircle(Color(0xFFF3E7B0), 14f, Offset(wx + ww * .72f, wy + wh * .3f))
-                drawCircle(sky1, 12f, Offset(wx + ww * .66f, wy + wh * .26f))   // crescent
-                listOf(.2f to .2f, .35f to .55f, .5f to .3f, .15f to .7f, .85f to .75f).forEach { (a, b) -> drawCircle(Color.White.copy(alpha = .8f), 2.2f, Offset(wx + ww * a, wy + wh * b)) }
-            } else drawCircle(Color(0xFFFFE07A).copy(alpha = .9f), 18f, Offset(wx + ww * .3f, wy + wh * .32f))
-            drawRoundRect(Color(0xFF8A6A4A), Offset(wx, wy), Size(ww, wh), CornerRadius(14f), style = Stroke(6f))
-            drawLine(Color(0xFF8A6A4A), Offset(wx + ww / 2, wy), Offset(wx + ww / 2, wy + wh), 4f)
-            if (show("stars")) listOf(.1f, .3f, .45f, .8f, .92f).forEachIndexed { i, a -> star8(this, Offset(W * a, 14f + (i % 2) * 14f), 6f, Color(0xFFE7C66B).copy(alpha = .8f)) }
-            // Floor and rug.
-            drawRect(Brush.verticalGradient(listOf(Color(0xFFB98A5E), Color(0xFF9C7048)), startY = floorY, endY = H), Offset(0f, floorY), Size(W, H - floorY))
-            if (show("rug")) {
-                drawOval(Color(0xFF8E2F3C), Offset(W * .18f, floorY + (H - floorY) * .28f), Size(W * .64f, (H - floorY) * .58f))
-                drawOval(Color(0xFFE7C66B), Offset(W * .23f, floorY + (H - floorY) * .36f), Size(W * .54f, (H - floorY) * .42f), style = Stroke(3f))
+            // The friend stands on the rug (feet at 87 % of the room's height, like the Studio).
+            val petH = roomH * .62f
+            Box(Modifier.fillMaxWidth().height(petH).offset(y = roomH * .87f - petH * .9f)) {
+                PetStage(Modifier.fillMaxWidth(), height = petH.value.toInt(), paper = Color.Transparent)
             }
-            if (night) drawRect(Color(0xFF000814).copy(alpha = .25f), size = size)
-        }
-        val wpx = maxWidth
-        // Furniture and things, placed around the room.
-        @Composable fun item(id: String, x: Float, y: Float, sizeSp: Int) { if (show(id)) Text(PetRoomItems.items.first { it.id == id }.icon, fontSize = sizeSp.sp, modifier = Modifier.offset(wpx * x, 300.dp * y)) }
-        item("shelf", .06f, .14f, 34); item("clock", .38f, .08f, 26); item("lantern", .44f, .3f, 26)
-        item("garden", .62f, .42f, 22); item("plant", .86f, .5f, 34); item("cushion", .06f, .6f, 34); item("yarn", .72f, .78f, 22)
-        // The friend lives on the rug.
-        Box(Modifier.fillMaxWidth().height(130.dp).align(Alignment.BottomCenter).padding(bottom = 12.dp)) {
-            PetStage(Modifier.fillMaxWidth(), height = 118, paper = Color.Transparent)
+            // In front of the friend: the pieces nearest to the viewer.
+            Canvas(Modifier.fillMaxSize()) {
+                drawIntoCanvas { cv -> items.filter { it.id != "floor" && it.y > 84f }.forEach { i -> pics[i.path]?.let { drawItem(cv.nativeCanvas, it, i.id, i.x, i.y, i.scale, i.size, size.width, size.height) } } }
+            }
         }
     }
-}
-private fun star8(d: androidx.compose.ui.graphics.drawscope.DrawScope, c: Offset, r: Float, col: Color) {
-    val p = Path()
-    for (k in 0 until 16) {
-        val a = Math.PI * k / 8; val rr = if (k % 2 == 0) r else r * .55f
-        val x = c.x + (rr * kotlin.math.cos(a)).toFloat(); val y = c.y + (rr * kotlin.math.sin(a)).toFloat()
-        if (k == 0) p.moveTo(x, y) else p.lineTo(x, y)
-    }
-    p.close(); d.drawPath(p, col)
 }
 
 // ------------------------------------------------------------------------------------------------ the bag
@@ -202,7 +229,8 @@ fun PetBag() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     Panel(pad = 14.dp) {
         Title("أغراض الغرفة")
-        PetRoomItems.items.forEach { i ->
+        PetRoomItems.homeName(Pet.species)?.let { Sub("بيت صديقك: $it", size = 13.sp) }
+        PetRoomItems.items().forEach { i ->
             val owned = PetRoomItems.owned(i)
             SettingRow("${if (owned) i.icon else "🔒"} ${i.name}", if (owned) null else "يُفتح في المستوى ${Quran.digits(i.level)}") {
                 if (owned) Switch(PetRoomItems.shown(i), { PetRoomItems.toggle(i, it) })

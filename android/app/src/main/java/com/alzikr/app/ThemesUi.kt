@@ -103,7 +103,7 @@ fun ColorChoice() {
     val base = look.basePal(dark, Data.theme).copy(dark = now.dark)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Sub("لون الأزرار والعناوين في «${look.name}»", size = 13.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Wrap(gap = 8.dp) {
             Tints.presets.forEach { i ->
                 val t = Tints.tint(i)!!
                 val c = Tints.accentFor(i, 0f, base.dark) ?: base.accent
@@ -126,7 +126,7 @@ fun ColorChoice() {
         // The background, then the text color: mix any of them with any buttons color.
         val back = Data.lookBack(look.id)
         Sub("الخلفية", Modifier.padding(top = 6.dp), size = 13.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Wrap(gap = 8.dp) {
             Backs.list.forEachIndexed { i, b ->
                 val bg = if (i == 0) look.basePal(dark, Data.theme).bg else androidx.compose.ui.graphics.Color(b.bg)
                 val card = if (i == 0) look.basePal(dark, Data.theme).card else androidx.compose.ui.graphics.Color(b.card)
@@ -141,7 +141,7 @@ fun ColorChoice() {
         }
         val ink = Data.lookInk(look.id)
         Sub("لون الخط", Modifier.padding(top = 6.dp), size = 13.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Wrap(gap = 8.dp) {
             Inks.list.forEachIndexed { i, k ->
                 val c = if (i == 0) (if (now.dark) androidx.compose.ui.graphics.Color(0xFFF2F2F2) else androidx.compose.ui.graphics.Color(0xFF151515)) else androidx.compose.ui.graphics.Color(k.c)
                 val readable = i == 0 || Tints.contrast(c, now.bg) >= 3f

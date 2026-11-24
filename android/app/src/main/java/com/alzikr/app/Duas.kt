@@ -132,10 +132,7 @@ fun DuasPage() {
             Title("أدعيتي", Modifier.weight(1f))
             Text("+ دعاء", color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(10.dp)).clickable { adding = Duas.Dua(0, "", maxOf(cat, 0)) }.padding(8.dp))
         }
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Choice("الكل", cat == -1) { cat = -1 }
-            Duas.cats.forEachIndexed { i, c -> Choice(c, cat == i) { cat = i } }
-        }
+        PickOne(listOf("-1" to "الكل") + Duas.cats.mapIndexed { i, c -> i.toString() to c }, cat.toString(), "التصنيف", shown = 3) { cat = it.toInt() }
         val list = Duas.duas().filter { cat == -1 || it.cat == cat }
         if (list.isEmpty()) Sub("لا أدعية هنا بعد. اضغط «+ دعاء»، أو خذ من «أدعية من القرآن» و«أدعية من السنة» في الأذكار.", size = 12.sp)
         list.forEach { d ->
@@ -157,7 +154,7 @@ fun DuasPage() {
             SettingRow("الثلث الأخير من الليل", "«ينزل ربنا… فيقول: من يدعوني فأستجيب له» (البخاري ومسلم)") { Switch(Duas.remindLastThird, { Duas.remindLastThird = it; re() }) }
             SettingRow("آخر ساعة يوم الجمعة", "قبل المغرب بـ ٤٥ دقيقة (أبو داود والنسائي)") { Switch(Duas.remindFriday, { Duas.remindFriday = it; re() }) }
             Sub("بين الأذان والإقامة (الترمذي وأبو داود): لصلاة", Modifier.padding(top = 8.dp))
-            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                 Choice("لا", Duas.remindAfterAdhan == null) { Duas.remindAfterAdhan = null; re() }
                 Prayer.entries.filter { it.alertable }.forEach { p -> Choice(p.ar, Duas.remindAfterAdhan == p) { Duas.remindAfterAdhan = p; re() } }
             }
@@ -172,9 +169,7 @@ fun DuasPage() {
             text = {
                 Column {
                     OutlinedTextField(text, { text = it }, minLines = 3, modifier = Modifier.fillMaxWidth(), placeholder = { Text("اللهم…") })
-                    Row(Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Duas.cats.forEachIndexed { i, n -> Choice(n, c == i) { c = i } }
-                    }
+                    PickOne(Duas.cats.mapIndexed { i, n -> i.toString() to n }, c.toString(), "التصنيف", modifier = Modifier.padding(top = 8.dp)) { c = it.toInt() }
                 }
             },
             confirmButton = { TextButton({ if (text.isNotBlank()) { if (d.id == 0L) Duas.add(text, c) else Duas.update(d.copy(text = text.trim(), cat = c)) }; adding = null }) { Text("حفظ") } },
@@ -207,7 +202,8 @@ fun DuasPage() {
 
 /** A verse, hadith or dua as a picture in the theme's colors (Amiri, centered, with its source), then the share sheet. */
 object ShareCard {
-    fun share(c: Context, title: String, text: String, src: String, quran: Boolean = false) = runCatching {
+    /** [note]: an optional explanation under the text (e.g. a verse's tafsir, with [noteTitle]). */
+    fun share(c: Context, title: String, text: String, src: String, quran: Boolean = false, note: String = "", noteTitle: String = "") = runCatching {
         val pal = ThemeColors.of(c)
         val w = 1080
         val res = c.resources
@@ -216,7 +212,11 @@ object ShareCard {
         val layout = android.text.StaticLayout.Builder.obtain(text, 0, text.length, body, w - 200)
             .setAlignment(android.text.Layout.Alignment.ALIGN_CENTER).setLineSpacing(0f, if (quran) 1.55f else 1.35f)
             .setTextDirection(android.text.TextDirectionHeuristics.RTL).build()
-        val h = (layout.height + 560).coerceAtLeast(900)
+        val notePaint = android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { typeface = runCatching { androidx.core.content.res.ResourcesCompat.getFont(c, R.font.amiri) }.getOrNull() ?: android.graphics.Typeface.SERIF; textSize = 34f; color = pal.ink.copy(alpha = .85f).toArgb() }
+        val noteLayout = note.takeIf { it.isNotBlank() }?.let { n -> android.text.StaticLayout.Builder.obtain(n, 0, n.length, notePaint, w - 200)
+            .setAlignment(android.text.Layout.Alignment.ALIGN_NORMAL).setLineSpacing(0f, 1.3f).setTextDirection(android.text.TextDirectionHeuristics.RTL).build() }
+        val extra = noteLayout?.let { it.height + 140 } ?: 0
+        val h = (layout.height + 560 + extra).coerceAtLeast(900)
         val bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
         val cv = android.graphics.Canvas(bmp)
         cv.drawColor(pal.bg.toArgb())
@@ -230,6 +230,13 @@ object ShareCard {
         cv.save(); cv.translate(100f, 270f); layout.draw(cv); cv.restore()
         small.color = pal.muted.toArgb(); small.textSize = 34f
         if (src.isNotBlank()) cv.drawText(src, w / 2f, 270f + layout.height + 90f, small)
+        noteLayout?.let { nl ->
+            val top = 270f + layout.height + 150f
+            small.color = pal.gold.toArgb(); small.textSize = 34f
+            cv.drawText(noteTitle, w / 2f, top, small)
+            cv.save(); cv.translate(100f, top + 30f); nl.draw(cv); cv.restore()
+            small.color = pal.muted.toArgb()
+        }
         small.textSize = 30f
         cv.drawText("ALzikr", w / 2f, h - 110f, small)
         val dir = java.io.File(c.cacheDir, "share").apply { mkdirs() }

@@ -144,7 +144,27 @@ fun PetView(skin: Skin, state: PetState, modifier: Modifier, place: Place = Plac
             SourceKind.WEBP -> WebpSource(skin, src, anim, clock)
             SourceKind.PNG -> StillSource(skin, src.path)
             SourceKind.RIVE -> skin.fallback?.let { StillSource(skin, it.path) }     // Rive is not enabled yet: its still fallback
+            SourceKind.RIG -> RigSource(skin, src, if (anim) clock else { { 0L } }, sp)
         }
+    }
+}
+
+/** The pictures of a rig, decoded once (the painting is ~400 px). */
+internal class RigArt(val rig: PetRig.Rig, val art: Bitmap, val sleep: Bitmap?, val closed: Bitmap?)
+internal fun rigArt(skin: Skin, src: Source): RigArt? {
+    val r = PetRig.load(skin.id, src.path) ?: return null
+    // Mipmaps: the 400 px painting is often drawn at ~100 px; without them the face turns grainy.
+    fun pic(p: String) = PetBitmaps.get(skin.id, p, 1024)?.also { if (!it.hasMipMap()) it.setHasMipMap(true) }
+    val art = pic(r.art) ?: return null
+    return RigArt(r, art, r.sleep?.let { pic(it) }, r.closed?.let { pic(it) })
+}
+
+@Composable
+private fun RigSource(skin: Skin, src: Source, clock: () -> Long, speed: Float) {
+    val a = produceState<RigArt?>(null, skin.id, src.path) { value = withContext(Dispatchers.IO) { rigArt(skin, src) } }.value ?: return
+    Canvas(Modifier.fillMaxSize()) {
+        val t = clock() * speed / 1000f
+        drawIntoCanvas { PetRig.draw(it.nativeCanvas, size.width, size.height, a.rig, src.anim, t, a.art, a.sleep, a.closed) }
     }
 }
 
@@ -249,11 +269,20 @@ object PetFrames {
             SourceKind.SPRITE, SourceKind.FRAMES -> spriteFrames(skin, src, px).takeIf { it.isNotEmpty() }?.let { fs -> drawFit(cv, fs[((at * fs.size).toInt()).coerceIn(0, fs.size - 1)], px, skin.fit) } ?: return null
             SourceKind.WEBP, SourceKind.PNG -> (PetBitmaps.get(skin.id, src.path, px) ?: return null).let { drawFit(cv, it, px, skin.fit) }
             SourceKind.RIVE -> skin.fallback?.let { f -> PetBitmaps.get(skin.id, f.path, px)?.let { drawFit(cv, it, px, skin.fit) } } ?: return null
+            SourceKind.RIG -> {
+                val a0 = rigArt(skin, src) ?: return null
+                // The widget draws in software (no mipmaps): halve the pictures down to about the drawn size first.
+                fun fit(b: Bitmap?): Bitmap? { var x = b ?: return null; while (x.width / 2 >= px * skin.fit.zoom) x = Bitmap.createScaledBitmap(x, x.width / 2, x.height / 2, true); return x }
+                val a = RigArt(a0.rig, fit(a0.art)!!, fit(a0.sleep), fit(a0.closed))
+                cv.save(); cv.translate(px * (1 - skin.fit.zoom) / 2f, px * (1 - skin.fit.zoom) / 2f - skin.fit.lift * px); cv.scale(skin.fit.zoom, skin.fit.zoom)
+                PetRig.draw(cv, px.toFloat(), px.toFloat(), a.rig, src.anim, at * RIG_LOOP_S, a.art, a.sleep, a.closed)
+                cv.restore()
+            }
         }
         return out
     }
     /** Can this skin give more than one frame (so the widget animates)? */
-    fun animated(skin: Skin) = StateResolver.resolve(skin, PetState.IDLE)?.source?.kind.let { it == SourceKind.LOTTIE || it == SourceKind.DOTLOTTIE || it == SourceKind.SPRITE || it == SourceKind.FRAMES }
+    fun animated(skin: Skin) = StateResolver.resolve(skin, PetState.IDLE)?.source?.kind.let { it == SourceKind.LOTTIE || it == SourceKind.DOTLOTTIE || it == SourceKind.SPRITE || it == SourceKind.FRAMES || it == SourceKind.RIG }
     private fun drawFit(cv: android.graphics.Canvas, b: Bitmap, px: Int, fit: Fit) {
         val s = minOf(px.toFloat() / b.width, px.toFloat() / b.height) * fit.zoom
         val w = b.width * s; val h = b.height * s
@@ -267,7 +296,10 @@ object PetFrames {
                 ?: LottieCompositionFactory.fromAssetSync(c, "pets/${src.path}").value)?.duration?.times(src.to - src.from) ?: 0f
             SourceKind.DOTLOTTIE -> DotLottie.json(skin.id, src.path)?.let { LottieCompositionFactory.fromJsonStringSync(it, "dl:${skin.id}").value?.duration } ?: 0f
             SourceKind.SPRITE, SourceKind.FRAMES -> (if (src.kind == SourceKind.FRAMES) src.paths.size else (if (src.frames > 0) src.frames else src.cols * src.rows)) * 1000f / src.fps
+            SourceKind.RIG -> RIG_LOOP_S * 1000f
             else -> 0f
         }
     }
+    /** A rig's idle repeats its breathing and blink every 4.6 s, so the widget loops that span. */
+    const val RIG_LOOP_S = 4.6f
 }

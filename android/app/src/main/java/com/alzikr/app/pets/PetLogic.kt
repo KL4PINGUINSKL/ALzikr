@@ -46,12 +46,8 @@ object Evolution {
     )
     fun stages(sp: SpeciesDef?) = sp?.stages?.takeIf { it.isNotEmpty() }?.sortedBy { it.fromLevel } ?: defaultStages
     fun stage(sp: SpeciesDef?, level: Int): Stage = stages(sp).last { level >= it.fromLevel }
-    /** States a stage may show by itself (a little friend does not "read" yet; an old friend has every behaviour). */
-    fun allowed(stage: Stage, s: PetState): Boolean = when (stage.id) {
-        "baby" -> s in setOf(PetState.IDLE, PetState.WALK, PetState.SLEEP, PetState.HAPPY, PetState.JUMP, PetState.YAWN, PetState.CURIOUS, PetState.APPEAR, PetState.DISAPPEAR, PetState.TALK, PetState.WAKE_UP)
-        "curious" -> s != PetState.READING && s != PetState.THINKING && s != PetState.CELEBRATE
-        else -> true
-    }
+    /** States a stage may show by itself: all four, at every stage (only the size changes). */
+    @Suppress("UNUSED_PARAMETER") fun allowed(stage: Stage, s: PetState): Boolean = true
 }
 
 /** Behaviour: what the friend does next by itself, from its personality, the time of day, the day's mood and its stage. */
@@ -59,30 +55,25 @@ object Behavior {
     data class Pick(val state: PetState, val durationMs: Long)
     /** [hour] 0..23, [mood] 0..100, [asleep] the app's sleep window (after Isha). */
     fun next(p: Personality, hour: Int, mood: Int, asleep: Boolean, stage: Stage, rnd: Random = Random): Pick {
-        if (asleep) return Pick(if (rnd.nextFloat() < .08f) PetState.YAWN else PetState.SLEEP, 20_000)
+        if (asleep) return Pick(PetState.SLEEP, 20_000)
         val w = LinkedHashMap<PetState, Float>()
-        w[PetState.IDLE] = 3f
-        w[PetState.WALK] = 1f + 2f * p.energy
-        w[PetState.RUN] = .6f * p.energy
-        w[PetState.SIT] = 1f + (1 - p.energy)
-        w[PetState.PLAY] = 1.5f * p.playful
-        w[PetState.CURIOUS] = 1.2f * p.curious
-        w[PetState.THINKING] = .5f * p.curious
-        w[PetState.TALK] = .8f * p.chatty
-        w[PetState.YAWN] = .3f + .6f * p.sleepy
+        w[PetState.IDLE] = 3f + (1 - p.energy) + p.curious + .8f * p.chatty
+        w[PetState.WALK] = .6f + 2f * p.energy
+        w[PetState.HAPPY] = 1.5f * p.playful
+        w[PetState.SLEEP] = .3f + .6f * p.sleepy
         when (hour) {
-            in 4..8 -> { w[PetState.STRETCH] = 2f; w[PetState.WAKE_UP] = 1f; w[PetState.YAWN] = (w[PetState.YAWN] ?: 0f) + 1f }
-            in 9..16 -> { w[PetState.WALK] = (w[PetState.WALK] ?: 0f) * 1.4f; w[PetState.PLAY] = (w[PetState.PLAY] ?: 0f) * 1.4f }
-            in 17..20 -> { w[PetState.SIT] = (w[PetState.SIT] ?: 0f) * 1.5f; w[PetState.READING] = 1.2f; w[PetState.RUN] = 0f }
-            else -> { w[PetState.SLEEP] = 1f + 2f * p.sleepy; w[PetState.RUN] = 0f; w[PetState.PLAY] = (w[PetState.PLAY] ?: 0f) * .4f }
+            in 4..8 -> { w[PetState.IDLE] = w.getValue(PetState.IDLE) + 1f; w[PetState.SLEEP] = w.getValue(PetState.SLEEP) + 1f }
+            in 9..16 -> { w[PetState.WALK] = w.getValue(PetState.WALK) * 1.4f; w[PetState.HAPPY] = w.getValue(PetState.HAPPY) * 1.4f }
+            in 17..20 -> { w[PetState.IDLE] = w.getValue(PetState.IDLE) * 1.5f; w[PetState.WALK] = 0f }
+            else -> { w[PetState.SLEEP] = 1f + 2f * p.sleepy; w[PetState.WALK] = 0f; w[PetState.HAPPY] = w.getValue(PetState.HAPPY) * .4f }
         }
-        if (mood >= 80) { w[PetState.HAPPY] = 2f; w[PetState.LAUGH] = .8f }
-        // A rare move now and then, so it is never fully predictable.
-        if (rnd.nextFloat() < .04f) w[PetState.WAVE] = 6f
+        if (mood >= 80) w[PetState.HAPPY] = 2f
+        // A happy moment now and then, so it is never fully predictable.
+        if (rnd.nextFloat() < .04f) w[PetState.HAPPY] = 6f
         val allowed = w.filter { (s, v) -> v > 0 && Evolution.allowed(stage, s) }
         var r = rnd.nextFloat() * allowed.values.sum()
         val s = allowed.entries.first { r -= it.value; r <= 0 }.key
-        val ms = when (s) { PetState.SLEEP -> 30_000L; PetState.SIT, PetState.READING -> 12_000L; PetState.WALK -> 6_000L; PetState.RUN -> 2_500L; else -> 3_500L }
+        val ms = when (s) { PetState.SLEEP -> 30_000L; PetState.IDLE -> 12_000L; PetState.WALK -> 6_000L; PetState.HAPPY -> 3_500L }
         return Pick(s, ms)
     }
 }
@@ -129,12 +120,13 @@ object AssetValidator {
     fun validate(pack: Pack, read: (String) -> ByteArray?, checkHashes: Boolean = pack.files.isNotEmpty()): List<Issue> {
         val out = ArrayList<Issue>()
         var total = 0L
+        val rigs = pack.skins().flatMap { s -> s.states.values.filter { it.kind == SourceKind.RIG }.map { it.path } }.toSet()
         for (p in pack.referencedFiles()) {
             val b = read(p); if (b == null) { out += Issue(p, "missing"); continue }
             total += b.size
             if (b.size > MAX_FILE) out += Issue(p, "larger than ${MAX_FILE / 1024 / 1024} MB (${b.size / 1024} KB)")
             when (p.substringAfterLast('.').lowercase()) {
-                "json" -> lottieProblem(b)?.let { out += Issue(p, it) }
+                "json" -> (if (p in rigs) rigProblem(b) else lottieProblem(b))?.let { out += Issue(p, it) }
                 "png" -> if (!(b.size > 8 && b[0] == 0x89.toByte() && b[1] == 'P'.code.toByte())) out += Issue(p, "not a PNG")
                 "webp" -> if (!(b.size > 12 && String(b, 0, 4) == "RIFF" && String(b, 8, 4) == "WEBP")) out += Issue(p, "not a WebP")
                 "lottie" -> if (!(b.size > 4 && b[0] == 'P'.code.toByte() && b[1] == 'K'.code.toByte())) out += Issue(p, "not a dotLottie (zip)")
@@ -155,6 +147,13 @@ object AssetValidator {
         }
         return out
     }
+
+    /** A rig: its pictures and the landmarks the motion bends around. */
+    fun rigProblem(b: ByteArray): String? = try {
+        val o = JSONObject(String(b, Charsets.UTF_8))
+        val need = listOf("art", "g")   // landmarks are optional (without them only the whole body moves)
+        need.firstOrNull { !o.has(it) }?.let { "rig without $it" } ?: o.optString("art").let { a -> runCatching { PackParser.checkPath(a, SourceKind.PNG); null }.getOrElse { "rig art path not allowed" } }
+    } catch (e: Exception) { "not valid JSON" }
 
     /** A Lottie file this app can draw: version, frame rate, size, a timeline and layers; images embedded, not linked. */
     fun lottieProblem(b: ByteArray): String? = try {

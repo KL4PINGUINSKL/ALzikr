@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -74,6 +75,88 @@ fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: (
     Box(modifier.clip(shape).background(if (on) P.accent else P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
         GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, softWrap = false)
     }
+}
+
+/**
+ * Options that wrap onto new lines instead of a sideways-scrolling row (people often miss that a row scrolls and think
+ * what they see is everything). Long lists show [lines] lines and a clear «＋ المزيد» chip that opens the rest, with «أقل»
+ * to fold them again. Use it everywhere a set of choices, filters or tabs is shown.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun Wrap(modifier: Modifier = Modifier, gap: Dp = 6.dp, lines: Int = 3, startOpen: Boolean = false, content: @Composable () -> Unit) {
+    // [startOpen]: open all when the chosen item would otherwise be folded away.
+    val all = androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(startOpen) }
+    androidx.compose.foundation.layout.FlowRow(
+        modifier, horizontalArrangement = Arrangement.spacedBy(gap), verticalArrangement = Arrangement.spacedBy(gap),
+        maxLines = if (all.value) Int.MAX_VALUE else lines,
+        overflow = androidx.compose.foundation.layout.FlowRowOverflow.expandOrCollapseIndicator(
+            expandIndicator = { MoreChip("＋ المزيد ▾") { all.value = true } },
+            collapseIndicator = { MoreChip("أقل ▴") { all.value = false } },
+            minRowsToShowCollapse = if (lines == Int.MAX_VALUE) lines else lines + 1,   // no overflow past Int.MAX
+        ),
+    ) { content() }
+}
+@Composable
+private fun MoreChip(label: String, onClick: () -> Unit) {
+    val shape = L.shape(10.dp)
+    Box(Modifier.clip(shape).border(1.dp, P.accent, shape).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
+        GText(label, color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+    }
+}
+
+/** Sections as a grid of equal tiles (icon over label), [cols] per row: every section is visible at once. */
+@Composable
+fun TabGrid(tabs: List<Triple<String, String, String>>, current: String, cols: Int = 3, pick: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        tabs.chunked(cols).forEach { row ->
+            Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                row.forEach { (k, icon, label) ->
+                    val on = k == current; val shape = L.shape(12.dp)
+                    Column(Modifier.weight(1f).fillMaxHeight().clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape)
+                        .clickable { pick(k) }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        GText(icon, fontSize = 18.sp)
+                        GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 2,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(horizontal = 2.dp))
+                    }
+                }
+                repeat(cols - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+/**
+ * One choice out of many, compact: the chosen one, then [shown]-1 others, then «المزيد ▾» which opens the full list.
+ * For long lists such as the tafsir books (a wrapped list of a dozen names looks untidy).
+ */
+@Composable
+fun PickOne(options: List<Pair<String, String>>, selected: String, title: String, shown: Int = 2, modifier: Modifier = Modifier, pick: (String) -> Unit) {
+    val open = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val cur = options.firstOrNull { it.first == selected } ?: options.firstOrNull()
+    val quick = (listOfNotNull(cur) + options.filter { it.first != cur?.first }).take(shown)
+    // Wraps instead of squeezing: a squeezed chip cut its number off («٥ صفحات» showed as «صفحات»).
+    Wrap(modifier, gap = 6.dp, lines = Int.MAX_VALUE) {
+        quick.forEach { (k, l) -> Choice(l, k == cur?.first) { pick(k) } }
+        if (options.size > quick.size) MoreChip("المزيد ▾") { open.value = true }
+    }
+    if (open.value) androidx.compose.material3.AlertDialog(
+        onDismissRequest = { open.value = false }, containerColor = P.surface,
+        title = { GText(title, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(Modifier.heightIn(max = 460.dp).verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                options.forEach { (k, l) ->
+                    val on = k == cur?.first
+                    Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .14f) else Color.Transparent)
+                        .clickable { pick(k); open.value = false }.padding(horizontal = 10.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        GText(if (on) "●" else "○", color = if (on) P.accent else P.muted, fontSize = 14.sp)
+                        GText(l, color = P.ink, fontSize = 15.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, modifier = Modifier.padding(start = 10.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = { androidx.compose.material3.TextButton({ open.value = false }) { GText("إغلاق", color = P.accent) } },
+    )
 }
 
 /** The main button. */

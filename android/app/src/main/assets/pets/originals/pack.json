@@ -1,0 +1,1896 @@
+{
+ "schema": 1,
+ "id": "originals",
+ "version": 1,
+ "title": "أصدقاء الذكر الأصليون",
+ "builtin": true,
+ "licenses": [
+  {
+   "id": "alzikr-original",
+   "name": "ALzikr original artwork (ALzikr Pet Studio)",
+   "commercial": true,
+   "url": ""
+  }
+ ],
+ "species": [
+  {
+   "id": "CAT",
+   "skins": [
+    {
+     "id": "originals-mishmish",
+     "name": "مشمش",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 40
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/mishmish.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/mishmish.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/mishmish.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/mishmish.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/mishmish.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-bristle",
+     "name": "خُصلة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 41
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/bristle.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/bristle.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/bristle.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/bristle.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/bristle.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "RABBIT",
+   "skins": [
+    {
+     "id": "originals-clover",
+     "name": "برسيم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 12
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/clover.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/clover.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/clover.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/clover.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/clover.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-thistle",
+     "name": "وثّاب",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 13
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/thistle.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/thistle.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/thistle.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/thistle.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/thistle.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "SHEEP",
+   "skins": [
+    {
+     "id": "originals-cloudlet",
+     "name": "سحابة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 8
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/cloudlet.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/cloudlet.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/cloudlet.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/cloudlet.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/cloudlet.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-bramble",
+     "name": "قرنان",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 9
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/bramble.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/bramble.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/bramble.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/bramble.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/bramble.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COW",
+   "skins": [
+    {
+     "id": "originals-hazel",
+     "name": "بندقة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 8
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/hazel.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/hazel.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/hazel.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/hazel.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/hazel.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-burr",
+     "name": "أشعث",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 9
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/burr.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/burr.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/burr.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/burr.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/burr.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEPHANT",
+   "skins": [
+    {
+     "id": "originals-pebble",
+     "name": "حصاة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 3
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/pebble.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/pebble.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/pebble.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/pebble.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/pebble.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-lotus",
+     "name": "لوتس",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 4
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/lotus.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/lotus.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/lotus.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/lotus.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/lotus.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "GIRAFFE",
+   "skins": [
+    {
+     "id": "originals-saffron",
+     "name": "زعفران",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 4
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/saffron.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/saffron.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/saffron.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/saffron.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/saffron.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-sumac",
+     "name": "سمّاق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 5
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/sumac.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/sumac.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/sumac.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/sumac.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/sumac.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "BEAR",
+   "skins": [
+    {
+     "id": "originals-honeycomb",
+     "name": "شهد",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 16
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/honeycomb.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/honeycomb.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/honeycomb.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/honeycomb.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/honeycomb.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-sorrel",
+     "name": "كستناء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 17
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/sorrel.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/sorrel.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/sorrel.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/sorrel.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/sorrel.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PANDA",
+   "skins": [
+    {
+     "id": "originals-bamboo",
+     "name": "خيزران",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 17
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/bamboo.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/bamboo.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/bamboo.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/bamboo.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/bamboo.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-rowan",
+     "name": "حنّاء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 18
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/rowan.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/rowan.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/rowan.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/rowan.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/rowan.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PENGUIN",
+   "skins": [
+    {
+     "id": "originals-pip",
+     "name": "زغلول",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 6
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/pip.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/pip.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/pip.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/pip.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/pip.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-luulu",
+     "name": "لؤلؤ",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 7
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/luulu.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/luulu.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/luulu.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/luulu.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/luulu.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-aurora",
+     "name": "شفق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 8
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/aurora.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/aurora.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/aurora.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/aurora.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/aurora.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-tamr",
+     "name": "تمر",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 9
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/tamr.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/tamr.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/tamr.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/tamr.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/tamr.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-ghayma",
+     "name": "ثلجة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 10
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/ghayma.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/ghayma.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/ghayma.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/ghayma.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/ghayma.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-simsim",
+     "name": "سمسم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 11
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/simsim.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/simsim.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/simsim.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/simsim.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/simsim.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ALBATROSS",
+   "skins": [
+    {
+     "id": "originals-tide",
+     "name": "مدّ",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 11
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/tide.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/tide.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/tide.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/tide.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/tide.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-mariner",
+     "name": "ملّاح",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 12
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/mariner.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/mariner.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/mariner.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/mariner.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/mariner.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-fanar",
+     "name": "فنار",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 13
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/fanar.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/fanar.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/fanar.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/fanar.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/fanar.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-naseem",
+     "name": "نسيم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 14
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/naseem.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/naseem.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/naseem.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/naseem.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/naseem.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "SWALLOW",
+   "skins": [
+    {
+     "id": "originals-indigo",
+     "name": "نيلي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 5
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/indigo.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/indigo.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/indigo.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/indigo.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/indigo.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-ember",
+     "name": "جمرة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 6
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/ember.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/ember.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/ember.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/ember.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/ember.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CHICKEN",
+   "skins": [
+    {
+     "id": "originals-pollen",
+     "name": "برعم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 14
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/pollen.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/pollen.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/pollen.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/pollen.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/pollen.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-marigold",
+     "name": "قطيفة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 15
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/marigold.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/marigold.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/marigold.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/marigold.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/marigold.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "BIRD",
+   "skins": [
+    {
+     "id": "originals-pipit",
+     "name": "صفّار",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 17
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/pipit.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/pipit.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/pipit.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/pipit.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/pipit.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-finch",
+     "name": "حسّون",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 18
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/finch.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/finch.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/finch.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/finch.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/finch.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "TURTLE",
+   "ar": "سلحفاة",
+   "about": "صبورة تمشي على مهل وتحب الماء",
+   "defaultName": "صبورة",
+   "unlock": {
+    "level": 12
+   },
+   "personality": {
+    "energy": 0.2,
+    "sleepy": 0.7,
+    "playful": 0.4,
+    "chatty": 0.3,
+    "curious": 0.5
+   },
+   "skins": [
+    {
+     "id": "originals-moss",
+     "name": "طحلب",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 12
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/moss.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/moss.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/moss.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/moss.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/moss.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-ripple",
+     "name": "موجة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 13
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/ripple.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/ripple.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/ripple.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/ripple.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/ripple.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-marjan",
+     "name": "مرجان",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 14
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/marjan.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/marjan.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/marjan.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/marjan.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/marjan.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-lawza",
+     "name": "لوزة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 15
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/lawza.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/lawza.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/lawza.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/lawza.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/lawza.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "FOX",
+   "ar": "ثعلب",
+   "about": "رشيق فطن بذيل كثيف",
+   "defaultName": "ثعلوب",
+   "unlock": {
+    "level": 13
+   },
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.8,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "originals-russet",
+     "name": "أصهب",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 13
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/russet.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/russet.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/russet.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/russet.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/russet.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-frost",
+     "name": "صقيع",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 14
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/frost.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/frost.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/frost.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/frost.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/frost.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-sahra",
+     "name": "صحراء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 15
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/sahra.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/sahra.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/sahra.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/sahra.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/sahra.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-sidr",
+     "name": "سدر",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 16
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/sidr.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/sidr.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/sidr.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/sidr.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/sidr.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OWL",
+   "ar": "بومة",
+   "about": "تسهر الليل بعينين واسعتين",
+   "defaultName": "بومي",
+   "unlock": {
+    "level": 14
+   },
+   "personality": {
+    "energy": 0.4,
+    "sleepy": 0.5,
+    "playful": 0.4,
+    "chatty": 0.5,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "originals-ochre",
+     "name": "وقور",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 14
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/ochre.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/ochre.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/ochre.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/ochre.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/ochre.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-vesper",
+     "name": "مساء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 15
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/vesper.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/vesper.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/vesper.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/vesper.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/vesper.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-najma",
+     "name": "نجمة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 16
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/najma.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/najma.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/najma.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/najma.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/najma.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "originals-bunduq",
+     "name": "بندق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "page": "",
+     "unlock": {
+      "level": 17
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "originals/stills/bunduq.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "originals/rigs/bunduq.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "originals/rigs/bunduq.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "originals/rigs/bunduq.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "originals/rigs/bunduq.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

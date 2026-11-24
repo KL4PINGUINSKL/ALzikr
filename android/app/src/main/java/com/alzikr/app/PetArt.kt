@@ -41,6 +41,16 @@ enum class Species(val ar: String, val about: String) {
     BIRD("عصفور", "يغرّد ويرفرف بجناحيه"),
     BEAR("دب", "ضخم لطيف يحب العسل"),
     PANDA("باندا", "يحب الخيزران والنوم"),
+    // Drawn by ALzikr Pet Studio (assets/pets/originals).
+    TURTLE("سلحفاة", "صبورة تمشي على مهل وتحب الماء"),
+    FOX("ثعلب", "رشيق فطن بذيل كثيف"),
+    OWL("بومة", "تسهر الليل بعينين واسعتين"),
+    // Legendary friends (assets/pets/legendary), from level 50.
+    CELESTIAL_DRAGON("التنين السماوي", "ينساب في الهواء ويوجّه نفسه بذيله"),
+    WINGED_UNICORN("الحصان المجنّح", "رشيق بجناحين من ريش وقرن لامع"),
+    GRIFFIN("الغريفين", "رأس عُقاب وجسم أسد، حارس وفيّ"),
+    PHOENIX("العنقاء", "طائر من ريش كاللهب الدافئ"),
+    COSMIC_DRAGON("التنين الكوني", "يحمل النجوم في حراشفه"),
 }
 
 /** How the friend stands right now. Everything is continuous, so motion can be smooth. */
@@ -116,7 +126,9 @@ fun DrawScope.drawPet(s: Species, p: Pose, line: PetLine? = null) {
                         // These three are drawn only by their Lottie looks.
                         Species.COW, Species.ELEPHANT, Species.GIRAFFE -> sheep(u, p, stride)
                         Species.BIRD -> swallow(u, p, stride)
-                        Species.BEAR, Species.PANDA -> sheep(u, p, stride)
+                        Species.BEAR, Species.PANDA, Species.TURTLE, Species.FOX -> sheep(u, p, stride)
+                        Species.OWL, Species.PHOENIX, Species.GRIFFIN -> swallow(u, p, stride)
+                        Species.CELESTIAL_DRAGON, Species.WINGED_UNICORN, Species.COSMIC_DRAGON -> sheep(u, p, stride)
                     }
                 }
             }

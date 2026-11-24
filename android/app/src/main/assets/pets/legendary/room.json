@@ -1,0 +1,307 @@
+{
+ "homes": {
+  "CELESTIAL_DRAGON": {
+   "name": "كهوف البلّور",
+   "path": "legendary/homes/legend-room-0-0.webp",
+   "stages": [
+    {
+     "name": "كهوف البلّور",
+     "level": 50,
+     "path": "legendary/homes/legend-room-0-0.webp"
+    },
+    {
+     "name": "قلعة الجبل",
+     "level": 65,
+     "path": "legendary/homes/legend-room-0-1.webp"
+    },
+    {
+     "name": "الجزر الطائرة",
+     "level": 85,
+     "path": "legendary/homes/legend-room-0-2.webp"
+    }
+   ]
+  },
+  "WINGED_UNICORN": {
+   "name": "المرج المسحور",
+   "path": "legendary/homes/legend-room-1-0.webp",
+   "stages": [
+    {
+     "name": "المرج المسحور",
+     "level": 60,
+     "path": "legendary/homes/legend-room-1-0.webp"
+    },
+    {
+     "name": "حديقة الزهر",
+     "level": 72,
+     "path": "legendary/homes/legend-room-1-1.webp"
+    },
+    {
+     "name": "قصر الغيم",
+     "level": 90,
+     "path": "legendary/homes/legend-room-1-2.webp"
+    }
+   ]
+  },
+  "GRIFFIN": {
+   "name": "عشّ الجبل",
+   "path": "legendary/homes/legend-room-2-0.webp",
+   "stages": [
+    {
+     "name": "عشّ الجبل",
+     "level": 70,
+     "path": "legendary/homes/legend-room-2-0.webp"
+    },
+    {
+     "name": "البرج العتيق",
+     "level": 84,
+     "path": "legendary/homes/legend-room-2-1.webp"
+    },
+    {
+     "name": "الملاذ الجوي",
+     "level": 100,
+     "path": "legendary/homes/legend-room-2-2.webp"
+    }
+   ]
+  },
+  "PHOENIX": {
+   "name": "الرفّ البركاني",
+   "path": "legendary/homes/legend-room-3-0.webp",
+   "stages": [
+    {
+     "name": "الرفّ البركاني",
+     "level": 80,
+     "path": "legendary/homes/legend-room-3-0.webp"
+    },
+    {
+     "name": "الحديقة الذهبية",
+     "level": 92,
+     "path": "legendary/homes/legend-room-3-1.webp"
+    },
+    {
+     "name": "القصر المضيء",
+     "level": 110,
+     "path": "legendary/homes/legend-room-3-2.webp"
+    }
+   ]
+  },
+  "COSMIC_DRAGON": {
+   "name": "الجزر السماوية",
+   "path": "legendary/homes/legend-room-4-0.webp",
+   "stages": [
+    {
+     "name": "الجزر السماوية",
+     "level": 100,
+     "path": "legendary/homes/legend-room-4-0.webp"
+    },
+    {
+     "name": "بحيرة النجوم",
+     "level": 115,
+     "path": "legendary/homes/legend-room-4-1.webp"
+    },
+    {
+     "name": "القصر الكوني",
+     "level": 130,
+     "path": "legendary/homes/legend-room-4-2.webp"
+    }
+   ]
+  }
+ },
+ "furniture": [
+  {
+   "id": "legend-furn-0",
+   "name": "وسادة بلّورية",
+   "level": 50,
+   "only": [
+    "CELESTIAL_DRAGON"
+   ],
+   "x": 24,
+   "y": 81,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-0.webp"
+  },
+  {
+   "id": "legend-furn-1",
+   "name": "سرير جناح الغيم",
+   "level": 60,
+   "only": [
+    "WINGED_UNICORN"
+   ],
+   "x": 24,
+   "y": 81,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-1.webp"
+  },
+  {
+   "id": "legend-furn-2",
+   "name": "عشّ العُقاب",
+   "level": 70,
+   "only": [
+    "GRIFFIN"
+   ],
+   "x": 24,
+   "y": 81,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-2.webp"
+  },
+  {
+   "id": "legend-furn-3",
+   "name": "موقد الزجاج الناري",
+   "level": 80,
+   "only": [
+    "PHOENIX"
+   ],
+   "x": 24,
+   "y": 81,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-3.webp"
+  },
+  {
+   "id": "legend-furn-4",
+   "name": "أريكة حجر القمر",
+   "level": 100,
+   "only": [
+    "COSMIC_DRAGON"
+   ],
+   "x": 24,
+   "y": 81,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-4.webp"
+  },
+  {
+   "id": "legend-furn-5",
+   "name": "فانوس الكوارتز",
+   "level": 54,
+   "only": [
+    "CELESTIAL_DRAGON"
+   ],
+   "x": 78,
+   "y": 72,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-5.webp"
+  },
+  {
+   "id": "legend-furn-6",
+   "name": "عريشة الورد",
+   "level": 64,
+   "only": [
+    "WINGED_UNICORN"
+   ],
+   "x": 78,
+   "y": 72,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-6.webp"
+  },
+  {
+   "id": "legend-furn-7",
+   "name": "منظار المراقبة",
+   "level": 74,
+   "only": [
+    "GRIFFIN"
+   ],
+   "x": 78,
+   "y": 72,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-7.webp"
+  },
+  {
+   "id": "legend-furn-8",
+   "name": "شجرة الحمضيات الذهبية",
+   "level": 84,
+   "only": [
+    "PHOENIX"
+   ],
+   "x": 78,
+   "y": 72,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-8.webp"
+  },
+  {
+   "id": "legend-furn-9",
+   "name": "مجسّم الأفلاك النحاسي",
+   "level": 104,
+   "only": [
+    "COSMIC_DRAGON"
+   ],
+   "x": 78,
+   "y": 72,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-9.webp"
+  },
+  {
+   "id": "legend-furn-10",
+   "name": "بونساي جبلي",
+   "level": 58,
+   "only": [
+    "CELESTIAL_DRAGON"
+   ],
+   "x": 15,
+   "y": 66,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-10.webp"
+  },
+  {
+   "id": "legend-furn-11",
+   "name": "أصيص الفاوانيا الزرقاء",
+   "level": 68,
+   "only": [
+    "WINGED_UNICORN"
+   ],
+   "x": 15,
+   "y": 66,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-11.webp"
+  },
+  {
+   "id": "legend-furn-12",
+   "name": "التنّوب الفضي",
+   "level": 78,
+   "only": [
+    "GRIFFIN"
+   ],
+   "x": 15,
+   "y": 66,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-12.webp"
+  },
+  {
+   "id": "legend-furn-13",
+   "name": "أصيص زهر الجمر",
+   "level": 88,
+   "only": [
+    "PHOENIX"
+   ],
+   "x": 15,
+   "y": 66,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-13.webp"
+  },
+  {
+   "id": "legend-furn-14",
+   "name": "سرخس السديم",
+   "level": 108,
+   "only": [
+    "COSMIC_DRAGON"
+   ],
+   "x": 15,
+   "y": 66,
+   "scale": 1,
+   "size": 128,
+   "path": "legendary/items/legend-furn-14.webp"
+  }
+ ],
+ "upgrades": []
+}

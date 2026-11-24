@@ -312,7 +312,7 @@ private fun HarakatPage() {
     val c = Kids.letters[letter].c.let { if (it == "ا") "أ" else it }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("الحركات تخبرنا كيف ننطق الحرف. اختر حرفًا ثم اضغط على كل حركة لتسمعها:", color = P.muted, fontSize = 15.sp)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Wrap(gap = 6.dp) {
             Kids.letters.forEachIndexed { i, l -> Choice(l.c, letter == i) { letter = i } }
         }
         Kids.harakat.forEach { h ->

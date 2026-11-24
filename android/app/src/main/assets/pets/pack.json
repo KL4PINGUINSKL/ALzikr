@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "id": "core",
- "version": 2,
+ "version": 3,
  "title": "أصدقاء ALzikr",
  "builtin": true,
  "licenses": [
@@ -122,46 +122,6 @@
      }
     },
     {
-     "id": "cat-n2",
-     "name": "تطلّ",
-     "by": "Tom Fabre",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/le-petit-chat-cat-noir-NY18MEMwbZ",
-     "rarity": "common",
-     "unlock": {
-      "level": 4
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n2.json"
-      }
-     },
-     "fit": {
-      "zoom": 1.6
-     }
-    },
-    {
-     "id": "cat-n3",
-     "name": "تتدحرج نائمة",
-     "by": "Cảnh Ngô",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/cat-is-sleeping-and-rolling-QnXhMBjCbD",
-     "rarity": "common",
-     "unlock": {
-      "level": 5
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n3.json"
-      }
-     },
-     "fit": {
-      "zoom": 1.2
-     }
-    },
-    {
      "id": "cat-n4",
      "name": "في الصندوق",
      "by": "Julio",
@@ -192,23 +152,6 @@
       "idle": {
        "kind": "lottie",
        "path": "cat-n5.json"
-      }
-     }
-    },
-    {
-     "id": "cat-n7",
-     "name": "نائمة… هدوء",
-     "by": "Bayu Febrianto",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/ssssttt-shut-up-the-cat-is-sleeping-iqnOJKMcdA",
-     "rarity": "common",
-     "unlock": {
-      "level": 8
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n7.json"
       }
      }
     },
@@ -247,77 +190,6 @@
      }
     },
     {
-     "id": "cat-n14",
-     "name": "في دائرة",
-     "by": "Pramod",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/sleepy-cat-NBqdPWnFAj",
-     "rarity": "common",
-     "unlock": {
-      "level": 11
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n14.json"
-      }
-     }
-    },
-    {
-     "id": "cat-n16",
-     "name": "تبتسم",
-     "by": "Nastinator",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitten-smile-KH59IER1MS",
-     "rarity": "common",
-     "unlock": {
-      "level": 12
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n16.json"
-      }
-     },
-     "hidden": true
-    },
-    {
-     "id": "cat-n17",
-     "name": "تنعس",
-     "by": "Nastinator",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitten-sleeping-8urKzKs6H9",
-     "rarity": "common",
-     "unlock": {
-      "level": 13
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n17.json"
-      }
-     },
-     "hidden": true
-    },
-    {
-     "id": "cat-n18",
-     "name": "غاضبة",
-     "by": "Nastinator",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitten-angry-seiGOl28R9",
-     "rarity": "common",
-     "unlock": {
-      "level": 14
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n18.json"
-      }
-     },
-     "hidden": true
-    },
-    {
      "id": "cat-n28",
      "name": "تتربّص",
      "by": "Denys Zavalii",
@@ -348,23 +220,6 @@
       "idle": {
        "kind": "lottie",
        "path": "cat-n26.json"
-      }
-     }
-    },
-    {
-     "id": "cat-n29",
-     "name": "سوداء جالسة",
-     "by": "Masud Rana",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/cute-cat-moveing-lottie-animation-caHsqbruBq",
-     "rarity": "common",
-     "unlock": {
-      "level": 17
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n29.json"
       }
      }
     },
@@ -403,23 +258,6 @@
      }
     },
     {
-     "id": "cat-n32",
-     "name": "سوداء تهزّ ذيلها",
-     "by": "Zoheir Hassoun",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/cat-oa1ny9QMv7",
-     "rarity": "common",
-     "unlock": {
-      "level": 20
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n32.json"
-      }
-     }
-    },
-    {
      "id": "cat-n40",
      "name": "تتمطّى",
      "by": "Rasul Gadzhiev",
@@ -433,76 +271,6 @@
       "idle": {
        "kind": "lottie",
        "path": "cat-n40.json"
-      }
-     }
-    },
-    {
-     "id": "cat-n41",
-     "name": "في الفنجان",
-     "by": "Charly Hill",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/peekaboo-cat-o7AV4dTpEZ",
-     "rarity": "common",
-     "unlock": {
-      "level": 22
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n41.json"
-      }
-     }
-    },
-    {
-     "id": "cat-n49",
-     "name": "متحيّرة",
-     "by": "Nastinator",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitty-confused-OQ9Dc36fiP",
-     "rarity": "common",
-     "unlock": {
-      "level": 23
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n49.json"
-      }
-     },
-     "hidden": true
-    },
-    {
-     "id": "cat-n45",
-     "name": "تبكي",
-     "by": "Nastinator",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitten-crying-EaUFlQutH9",
-     "rarity": "common",
-     "unlock": {
-      "level": 24
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n45.json"
-      }
-     },
-     "hidden": true
-    },
-    {
-     "id": "cat-n44",
-     "name": "بالقلم",
-     "by": "Roman Karpiuk",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitty-BUiuSoLIsH",
-     "rarity": "common",
-     "unlock": {
-      "level": 25
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n44.json"
       }
      }
     },
@@ -524,23 +292,6 @@
      }
     },
     {
-     "id": "cat-n52",
-     "name": "تحلم",
-     "by": "Sourav Haldar",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/kitty-in-dream-piu4AwR2zX",
-     "rarity": "common",
-     "unlock": {
-      "level": 27
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-n52.json"
-      }
-     }
-    },
-    {
      "id": "cat-m2",
      "name": "القطة الهادئة",
      "by": "xiaolong chen",
@@ -554,23 +305,6 @@
       "idle": {
        "kind": "lottie",
        "path": "cat-m2.json"
-      }
-     }
-    },
-    {
-     "id": "cat-m4",
-     "name": "القطة اللطيفة",
-     "by": "Omar",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/cute-cat-7t7bs7Z2fL",
-     "rarity": "rare",
-     "unlock": {
-      "level": 29
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-m4.json"
       }
      }
     },
@@ -626,40 +360,6 @@
      }
     },
     {
-     "id": "cat-m11",
-     "name": "القطة المرحة",
-     "by": "Issey",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/cat-qnUBnfRpMb",
-     "rarity": "rare",
-     "unlock": {
-      "level": 33
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-m11.json"
-      }
-     }
-    },
-    {
-     "id": "cat-m12",
-     "name": "القطة المصوّرة",
-     "by": "Isis Doutriaux",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/photographing-cat-fep9JoLC5D",
-     "rarity": "rare",
-     "unlock": {
-      "level": 34
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-m12.json"
-      }
-     }
-    },
-    {
      "id": "cat-m14",
      "name": "القطيطة",
      "by": "Louis Thiriez",
@@ -707,23 +407,6 @@
       "idle": {
        "kind": "lottie",
        "path": "cat-m17.json"
-      }
-     }
-    },
-    {
-     "id": "cat-m19",
-     "name": "القطة القارئة",
-     "by": "Isis Doutriaux",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/reading-cat-RvnINkLacs",
-     "rarity": "rare",
-     "unlock": {
-      "level": 38
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cat-m19.json"
       }
      }
     },
@@ -777,26 +460,6 @@
        "kind": "lottie",
        "path": "penguin-2.json"
       }
-     }
-    },
-    {
-     "id": "penguin-3",
-     "name": "يحتفل",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/party-penguin-Ui8lrBo8QX",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "penguin-3.json"
-      }
-     },
-     "fit": {
-      "zoom": 1.6
      }
     },
     {
@@ -886,91 +549,6 @@
        "path": "penguin-n3.json"
       }
      }
-    },
-    {
-     "id": "penguin-n6",
-     "name": "على الجليد",
-     "by": "Roshni N",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/cute-penguin-GkkjfH0Iqe",
-     "rarity": "common",
-     "unlock": {
-      "level": 6
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "penguin-n6.json"
-      }
-     }
-    },
-    {
-     "id": "penguin-m1",
-     "name": "البطريق اللطيف",
-     "by": "Roshni N",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/cute-penguin-FmiU9BoxmE",
-     "rarity": "rare",
-     "unlock": {
-      "level": 7
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "penguin-m1.json"
-      }
-     }
-    },
-    {
-     "id": "penguin-m2",
-     "name": "بطريق الثلج",
-     "by": "Ridwan Ridun",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/penguin-QzzwBHeiyb",
-     "rarity": "rare",
-     "unlock": {
-      "level": 8
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "penguin-m2.json"
-      }
-     }
-    },
-    {
-     "id": "penguin-m3",
-     "name": "البطريق المحب",
-     "by": "Dmitrii Tomikhin",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/penguin-gives-love-FEswP8luFx",
-     "rarity": "rare",
-     "unlock": {
-      "level": 9
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "penguin-m3.json"
-      }
-     }
-    },
-    {
-     "id": "penguin-m5",
-     "name": "البطريق المفكّر",
-     "by": "Joana Barreira",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/happy-normal-thinker-penguin-to-be-continued-uLGGTFSWHs",
-     "rarity": "rare",
-     "unlock": {
-      "level": 10
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "penguin-m5.json"
-      }
-     }
     }
    ]
   },
@@ -989,25 +567,7 @@
     "chatty": 0.3,
     "curious": 0.7
    },
-   "skins": [
-    {
-     "id": "seabird-1",
-     "name": "فوق البحر",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/over-the-sea-reY3Qd10de",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "seabird-1.json"
-      }
-     }
-    }
-   ]
+   "skins": []
   },
   {
    "id": "SWALLOW",
@@ -1169,40 +729,6 @@
      }
     },
     {
-     "id": "rabbit-2",
-     "name": "يقفز",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/bunny-hop-IyaEEf3x3s",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "rabbit-2.json"
-      }
-     }
-    },
-    {
-     "id": "rabbit-5",
-     "name": "الساحر",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/presto-rabbit-Hj83TFQDh9",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "rabbit-5.json"
-      }
-     }
-    },
-    {
      "id": "rabbit-10",
      "name": "أرنبان",
      "by": "LottieFiles",
@@ -1237,26 +763,6 @@
      }
     },
     {
-     "id": "rabbit-9",
-     "name": "أرنب",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/lf20-kdwdnnuj-json-EAdXmy7TXR",
-     "rarity": "common",
-     "unlock": {
-      "level": 4
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "rabbit-9.json"
-      }
-     },
-     "fit": {
-      "zoom": 1.4
-     }
-    },
-    {
      "id": "rabbit-n7",
      "name": "خجول",
      "by": "Brian Karungani",
@@ -1270,40 +776,6 @@
       "idle": {
        "kind": "lottie",
        "path": "rabbit-n7.json"
-      }
-     }
-    },
-    {
-     "id": "rabbit-n16",
-     "name": "مع الجزرة",
-     "by": "Roshni N",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/transparent-bunny-gif-IiY0iEUbzd",
-     "rarity": "common",
-     "unlock": {
-      "level": 6
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "rabbit-n16.json"
-      }
-     }
-    },
-    {
-     "id": "rabbit-m2",
-     "name": "الأرنب الصغير",
-     "by": "秉蓁 陳",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/rabbit-v6pNw5OnUc",
-     "rarity": "rare",
-     "unlock": {
-      "level": 7
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "rabbit-m2.json"
       }
      }
     },
@@ -1342,23 +814,6 @@
      }
     },
     {
-     "id": "rabbit-m18",
-     "name": "الأرنب الوديع",
-     "by": "Daria Voronina",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/cute-rabbit-ECJTc98fM7",
-     "rarity": "rare",
-     "unlock": {
-      "level": 10
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "rabbit-m18.json"
-      }
-     }
-    },
-    {
      "id": "rabbit-m14",
      "name": "الأرنب والكتاكيت",
      "by": "Brian Karungani",
@@ -1393,60 +848,6 @@
     "curious": 0.4
    },
    "skins": [
-    {
-     "id": "sheep-2",
-     "name": "تعدّ الخراف",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/counting-sheeps-w0pf5vg2p3",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "sheep-2.json"
-      }
-     }
-    },
-    {
-     "id": "sheep-4",
-     "name": "غنمة",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/sheep-hNt1Oyvmhx",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "sheep-4.json"
-      }
-     },
-     "fit": {
-      "zoom": 2.0
-     }
-    },
-    {
-     "id": "sheep-5",
-     "name": "تقفز",
-     "by": "LottieFiles",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/counting-sheep-qwFmCZB2bT",
-     "rarity": "common",
-     "unlock": {
-      "level": 1
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "sheep-5.json"
-      }
-     }
-    },
     {
      "id": "sheep-8",
      "name": "صغيرة",
@@ -1730,23 +1131,6 @@
      }
     },
     {
-     "id": "chicken-n13",
-     "name": "ديك",
-     "by": "Bashir Ahmad",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/rhode-island-Mwe4c0V2lo",
-     "rarity": "common",
-     "unlock": {
-      "level": 8
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "chicken-n13.json"
-      }
-     }
-    },
-    {
      "id": "chicken-n9",
      "name": "كتكوت بقبعة",
      "by": "DezigningEye",
@@ -1935,43 +1319,6 @@
      }
     },
     {
-     "id": "cow-1",
-     "name": "صغيرة",
-     "by": "Sheikh Sohel",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/cow-drink-milk-zzRzHfN1BX",
-     "rarity": "common",
-     "unlock": {
-      "level": 4
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cow-1.json"
-      }
-     },
-     "fit": {
-      "zoom": 2.4
-     }
-    },
-    {
-     "id": "cow-13",
-     "name": "غاضبة",
-     "by": "Anna Mazurkevich",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/angry-cow-3cNMUxt9rI",
-     "rarity": "common",
-     "unlock": {
-      "level": 5
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "cow-13.json"
-      }
-     }
-    },
-    {
      "id": "cow-m1",
      "name": "البقرة البنية",
      "by": "Lyco Wahyudi",
@@ -2090,23 +1437,6 @@
        "path": "elephant-m1.json"
       }
      }
-    },
-    {
-     "id": "elephant-m5",
-     "name": "الفيل يزرع شجرة",
-     "by": "Натали Токаренко",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/elephant-grow-tree-FLj7P11xf3",
-     "rarity": "rare",
-     "unlock": {
-      "level": 3
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "elephant-m5.json"
-      }
-     }
     }
    ]
   },
@@ -2210,43 +1540,6 @@
        "path": "giraffe-9.json"
       }
      }
-    },
-    {
-     "id": "giraffe-2",
-     "name": "على الدراجة",
-     "by": "Doug Fuchs",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/celebration-giraffe-pLQOTL6MQS",
-     "rarity": "common",
-     "unlock": {
-      "level": 4
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "giraffe-2.json"
-      }
-     },
-     "fit": {
-      "zoom": 2.4
-     }
-    },
-    {
-     "id": "giraffe-7",
-     "name": "مع الحوت",
-     "by": "Qrious Studio",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/jiggling-giraffe-xZBDrWjEvI",
-     "rarity": "common",
-     "unlock": {
-      "level": 5
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "giraffe-7.json"
-      }
-     }
     }
    ]
   },
@@ -2318,23 +1611,6 @@
      },
      "fit": {
       "zoom": 1.8
-     }
-    },
-    {
-     "id": "bird-n6",
-     "name": "يحمل رسالة",
-     "by": "Zef Cherry-Kynaston",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/flappy-bird-delivering-a-message-56rQKo8lNI",
-     "rarity": "common",
-     "unlock": {
-      "level": 2
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "bird-n6.json"
-      }
      }
     },
     {
@@ -2542,23 +1818,6 @@
      }
     },
     {
-     "id": "bird-m17",
-     "name": "البومة الصغيرة",
-     "by": "Sajad Sajad",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/owl-brid-CqIvXt8s6W",
-     "rarity": "rare",
-     "unlock": {
-      "level": 15
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "bird-m17.json"
-      }
-     }
-    },
-    {
      "id": "bird-m20",
      "name": "العصفور يأكل",
      "by": "Muhammad Tahir",
@@ -2662,23 +1921,6 @@
      }
     },
     {
-     "id": "bear-n10",
-     "name": "يصفّق",
-     "by": "Abdul Latif",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/bear-clapping-4hjv0nfIf9",
-     "rarity": "common",
-     "unlock": {
-      "level": 3
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "bear-n10.json"
-      }
-     }
-    },
-    {
      "id": "bear-n25",
      "name": "يرسل التحية",
      "by": "Tyler Williams",
@@ -2709,23 +1951,6 @@
       "idle": {
        "kind": "lottie",
        "path": "bear-n15.json"
-      }
-     }
-    },
-    {
-     "id": "bear-n7",
-     "name": "نائم على الغصن",
-     "by": "Motionstk.studio",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/sleeping-polar-bear-9rqjQuWKEu",
-     "rarity": "common",
-     "unlock": {
-      "level": 6
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "bear-n7.json"
       }
      }
     },
@@ -2952,23 +2177,6 @@
      }
     },
     {
-     "id": "panda-n7",
-     "name": "مع الخيزران",
-     "by": "ucilucil",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/free-animation/panda-z49l0xFGAI",
-     "rarity": "common",
-     "unlock": {
-      "level": 2
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "panda-n7.json"
-      }
-     }
-    },
-    {
      "id": "panda-n1",
      "name": "نائم",
      "by": "Zakaria Harry Utomo",
@@ -3067,23 +2275,6 @@
       "idle": {
        "kind": "lottie",
        "path": "panda-m1.json"
-      }
-     }
-    },
-    {
-     "id": "panda-m3",
-     "name": "الباندا المغامر",
-     "by": "carlos eduardo",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/pandarian-OP4LWjLtAs",
-     "rarity": "rare",
-     "unlock": {
-      "level": 9
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "panda-m3.json"
       }
      }
     },
@@ -3203,40 +2394,6 @@
       "idle": {
        "kind": "lottie",
        "path": "panda-m20.json"
-      }
-     }
-    },
-    {
-     "id": "panda-m11",
-     "name": "الباندا المتدحرج",
-     "by": "Jan Abigail Ampo Juarez",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/panda-roll-gKsfntzJA8",
-     "rarity": "rare",
-     "unlock": {
-      "level": 17
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "panda-m11.json"
-      }
-     }
-    },
-    {
-     "id": "panda-m2",
-     "name": "الباندا البسيط",
-     "by": "Nguyen Manh Hai",
-     "license": "lottie-simple",
-     "page": "https://lottiefiles.com/animations/panda-GGolTEYlHH",
-     "rarity": "rare",
-     "unlock": {
-      "level": 18
-     },
-     "states": {
-      "idle": {
-       "kind": "lottie",
-       "path": "panda-m2.json"
       }
      }
     }

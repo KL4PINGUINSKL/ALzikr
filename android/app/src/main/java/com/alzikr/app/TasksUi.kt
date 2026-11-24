@@ -46,8 +46,9 @@ import java.util.Locale
 @Composable
 fun TasksScreen() {
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("المهام", "العادات", "التركيز", "الختمة", "الملاحظات").forEachIndexed { i, t -> Choice(t, Nav.daily == i) { Nav.daily = i } }
+        Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            TabGrid(listOf("✅" to "المهام", "🔁" to "العادات", "🎯" to "التركيز", "📖" to "الختمة", "📝" to "ملاحظات").mapIndexed { i, (ic, t) -> Triple(i.toString(), ic, t) },
+                Nav.daily.toString(), cols = 5) { Nav.daily = it.toInt() }
         }
         when (Nav.daily) {
             1 -> HabitsList()
@@ -76,7 +77,7 @@ private fun TaskList() {
             Panel(pad = 12.dp) {
                 OutlinedTextField(text, { text = it }, placeholder = { Text("مهمة جديدة…") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { add() }))
-                Row(Modifier.horizontalScroll(rememberScrollState()).padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Wrap(Modifier.padding(top = 8.dp), gap = 6.dp) {
                     Choice("بلا وقت", after == null) { after = null }
                     Prayer.entries.filter { it.alertable }.forEach { p -> Choice("بعد ${p.ar}", after == p.name) { after = p.name } }
                 }

@@ -56,7 +56,13 @@ object Progress {
 
     val xp: Int get() = sp.getInt(pk("pet_xp"), 0)
     /** Total experience at which level [n] begins: 0, 150, 375, 675, 1050, 1500, 2025, 2625, 3300, 4050… */
+    /**
+     * Points needed to reach level [n] (total). A fixed arithmetic progression: level 2 needs 150, and every level needs
+     * 75 more than the one before it (150, 225, 300, 375…), so need(n) - need(n-1) = 75·(n+1).
+     */
     fun need(n: Int): Int = if (n <= 1) 0 else 75 * (n - 1) * (n + 2) / 2
+    /** Points this level alone needs (the step from the previous one). */
+    fun step(n: Int): Int = need(n) - need(n - 1)
     fun level(x: Int = xp): Int { var n = 1; while (need(n + 1) <= x) n++; return n }
     fun title(l: Int = level()) = when { l >= 12 -> "صديق العمر"; l >= 9 -> "رفيق الدرب"; l >= 7 -> "الخِلّ الوفيّ"; l >= 5 -> "الصاحب"; l >= 3 -> "الرفيق"; else -> "صديق جديد" }
 
@@ -134,6 +140,8 @@ object Progress {
     fun lookOpen(s: Species, i: Int): Boolean {
         val l = PetLooks.of(s).getOrNull(i) ?: return false
         if (l.id == kept("look_${s.name}")) return true
+        // The look this friend wears now stays open even if its level moved up later (levels were re-arranged in 1.4.0).
+        if (l.id == sp.getString("pet_look_${s.name}", null)) return true
         if (level() < l.level) return false
         val season = l.season ?: return true
         // A seasonal look already chosen stays with its friend after the season.

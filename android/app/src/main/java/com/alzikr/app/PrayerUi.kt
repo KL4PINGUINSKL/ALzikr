@@ -143,6 +143,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             }
             },
             "moment" to { MomentCard() },
+            "tadabbur" to { DailyTadabburCard() },
             "forbid" to { ForbidBanner() },
             "tomorrow" to { TomorrowCard { Nav.daySheet = it } },
             "tiles" to { HomeShortcuts() },
@@ -150,7 +151,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             // Today's times, in the chosen view.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("مواقيت اليوم", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                if (Data.viewChips) Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (Data.viewChips) Wrap(gap = 4.dp) {
                     listOf(1 to "بطاقات", 2 to "قائمة", 3 to "سطر", 4 to "خط زمني").forEach { (n, l) -> Choice(l, view == n) { Data.prayerView = n } }
                 }
                 // A small button shows or hides the view choice.
@@ -238,7 +239,7 @@ private fun TimesOptions(openSettings: () -> Unit, close: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val state = androidx.compose.material3.rememberModalBottomSheetState()
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, sheetState = state, containerColor = P.surface) {
+    AppSheet(onDismissRequest = close) {
         Column(Modifier.fillMaxWidth().quickDismiss(state, close).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Title("خيارات الأوقات")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -249,9 +250,7 @@ private fun TimesOptions(openSettings: () -> Unit, close: () -> Unit) {
             Sub("الموقع: ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }}", Modifier.padding(top = 6.dp))
             LocationSetup(compact = true)
             Sub("طريقة الحساب", Modifier.padding(top = 6.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Method.entries.forEach { m -> Choice(m.ar, Store.method == m) { Store.method = m; Store.methodChosen = true; Alerts.reschedule(ctx) } }
-            }
+            PickOne(Method.entries.map { it.name to it.ar }, Store.method.name, "طريقة الحساب", shown = 1) { Store.method = Method.valueOf(it); Store.methodChosen = true; Alerts.reschedule(ctx) }
             Sub("وقت العصر")
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Choice("الجمهور (الظل مثله)", !Store.hanafi) { Store.hanafi = false; Alerts.reschedule(ctx) }

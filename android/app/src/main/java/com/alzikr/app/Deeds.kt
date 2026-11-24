@@ -93,7 +93,7 @@ fun SadaqaPage() {
         Action("+ تصدّقت اليوم", Modifier.fillMaxWidth()) { adding = true }
         Panel(pad = 14.dp) {
             Title("التذكير بالصدقة")
-            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                 listOf(0 to "متوقف", 1 to "كل يوم", 2 to "كل جمعة").forEach { (k, l) -> Choice(l, Sadaqa.remind == k) { Sadaqa.remind = k; Alerts.reschedule(ctx) } }
             }
             if (Sadaqa.remind > 0) Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -258,7 +258,7 @@ fun SalahGuidePage() {
     var part by remember { mutableIntStateOf(0) }
     val p = SalahGuide.parts[part]
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Wrap(gap = 6.dp) {
             SalahGuide.parts.forEachIndexed { i, x -> Choice(x.name, part == i) { part = i } }
         }
         Sub(p.intro, size = 13.sp)

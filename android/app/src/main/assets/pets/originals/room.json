@@ -1,0 +1,433 @@
+{
+ "homes": {
+  "CAT": {
+   "name": "علّية الشمس",
+   "path": "originals/homes/cat.webp"
+  },
+  "PENGUIN": {
+   "name": "كوخ الجليد",
+   "path": "originals/homes/penguin.webp"
+  },
+  "ALBATROSS": {
+   "name": "رصيف المدّ",
+   "path": "originals/homes/albatross.webp"
+  },
+  "SWALLOW": {
+   "name": "شرفة الزهر",
+   "path": "originals/homes/swallow.webp"
+  },
+  "RABBIT": {
+   "name": "جُحر البرسيم",
+   "path": "originals/homes/rabbit.webp"
+  },
+  "SHEEP": {
+   "name": "كوخ المرج",
+   "path": "originals/homes/sheep.webp"
+  },
+  "CHICKEN": {
+   "name": "قنّ القطيفة",
+   "path": "originals/homes/chicken.webp"
+  },
+  "COW": {
+   "name": "حظيرة البستان",
+   "path": "originals/homes/cow.webp"
+  },
+  "ELEPHANT": {
+   "name": "شرفة النهر",
+   "path": "originals/homes/elephant.webp"
+  },
+  "GIRAFFE": {
+   "name": "ظلّ السنط",
+   "path": "originals/homes/giraffe.webp"
+  },
+  "BIRD": {
+   "name": "بيت الصفصاف",
+   "path": "originals/homes/bird.webp"
+  },
+  "BEAR": {
+   "name": "كهف العسل",
+   "path": "originals/homes/bear.webp"
+  },
+  "PANDA": {
+   "name": "جناح الخيزران",
+   "path": "originals/homes/panda.webp"
+  },
+  "TURTLE": {
+   "name": "ضفّة الزنبق",
+   "path": "originals/homes/turtle.webp"
+  },
+  "FOX": {
+   "name": "وكر القيقب",
+   "path": "originals/homes/fox.webp"
+  },
+  "OWL": {
+   "name": "تجويف القمر",
+   "path": "originals/homes/owl.webp"
+  }
+ },
+ "furniture": [
+  {
+   "id": "floor",
+   "name": "سجّادة منسوجة",
+   "level": 1,
+   "only": null,
+   "x": 49,
+   "y": 83,
+   "scale": 1.35,
+   "size": 190,
+   "path": "originals/items/floor.webp"
+  },
+  {
+   "id": "bed",
+   "name": "عشّ مبطّن",
+   "level": 2,
+   "only": null,
+   "x": 22,
+   "y": 80,
+   "scale": 1.1,
+   "size": 114,
+   "path": "originals/items/bed.webp"
+  },
+  {
+   "id": "toy",
+   "name": "كرة الشريط",
+   "level": 2,
+   "only": null,
+   "x": 77,
+   "y": 86,
+   "scale": 0.7,
+   "size": 55,
+   "path": "originals/items/toy.webp"
+  },
+  {
+   "id": "plant",
+   "name": "سرخس في أصيص",
+   "level": 3,
+   "only": null,
+   "x": 15,
+   "y": 67,
+   "scale": 1,
+   "size": 87,
+   "path": "originals/items/plant.webp"
+  },
+  {
+   "id": "window",
+   "name": "نافذة مقوّسة",
+   "level": 4,
+   "only": null,
+   "x": 23,
+   "y": 28,
+   "scale": 0.95,
+   "size": 100,
+   "path": "originals/items/window.webp"
+  },
+  {
+   "id": "lamp",
+   "name": "فانوس",
+   "level": 5,
+   "only": null,
+   "x": 81,
+   "y": 24,
+   "scale": 0.8,
+   "size": 47,
+   "path": "originals/items/lamp.webp"
+  },
+  {
+   "id": "table",
+   "name": "طاولة القراءة",
+   "level": 6,
+   "only": null,
+   "x": 83,
+   "y": 66,
+   "scale": 0.9,
+   "size": 99,
+   "path": "originals/items/table.webp"
+  },
+  {
+   "id": "print",
+   "name": "لوحة نباتات",
+   "level": 7,
+   "only": null,
+   "x": 70,
+   "y": 26,
+   "scale": 0.8,
+   "size": 72,
+   "path": "originals/items/print.webp"
+  },
+  {
+   "id": "garden",
+   "name": "حديقة زهور",
+   "level": 8,
+   "only": null,
+   "x": 80,
+   "y": 78,
+   "scale": 1,
+   "size": 123,
+   "path": "originals/items/garden.webp"
+  },
+  {
+   "id": "mobile",
+   "name": "معلّقة النجوم",
+   "level": 9,
+   "only": null,
+   "x": 31,
+   "y": 25,
+   "scale": 0.8,
+   "size": 62,
+   "path": "originals/items/mobile.webp"
+  },
+  {
+   "id": "cushion",
+   "name": "وسادة مخملية",
+   "level": 4,
+   "only": null,
+   "x": 68,
+   "y": 82,
+   "scale": 0.8,
+   "size": 73,
+   "path": "originals/items/cushion.webp"
+  },
+  {
+   "id": "curtain",
+   "name": "ستائر الكتّان",
+   "level": 10,
+   "only": null,
+   "x": 48,
+   "y": 21,
+   "scale": 1.3,
+   "size": 155,
+   "path": "originals/items/curtain.webp"
+  },
+  {
+   "id": "feature-cat",
+   "name": "برج التسلّق",
+   "level": 6,
+   "only": [
+    "CAT"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-cat.webp"
+  },
+  {
+   "id": "feature-penguin",
+   "name": "بلّورة الجليد",
+   "level": 6,
+   "only": [
+    "PENGUIN"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-penguin.webp"
+  },
+  {
+   "id": "feature-albatross",
+   "name": "منارة الميناء",
+   "level": 6,
+   "only": [
+    "ALBATROSS"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-albatross.webp"
+  },
+  {
+   "id": "feature-swallow",
+   "name": "أرجوحة الزهر",
+   "level": 6,
+   "only": [
+    "SWALLOW"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-swallow.webp"
+  },
+  {
+   "id": "feature-rabbit",
+   "name": "عربة الجزر",
+   "level": 6,
+   "only": [
+    "RABBIT"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-rabbit.webp"
+  },
+  {
+   "id": "feature-sheep",
+   "name": "مغزل الصوف",
+   "level": 6,
+   "only": [
+    "SHEEP"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-sheep.webp"
+  },
+  {
+   "id": "feature-chicken",
+   "name": "مجثم دوّار الشمس",
+   "level": 6,
+   "only": [
+    "CHICKEN"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-chicken.webp"
+  },
+  {
+   "id": "feature-cow",
+   "name": "مخضّة الزهور",
+   "level": 6,
+   "only": [
+    "COW"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-cow.webp"
+  },
+  {
+   "id": "feature-elephant",
+   "name": "حوض الشرب",
+   "level": 6,
+   "only": [
+    "ELEPHANT"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-elephant.webp"
+  },
+  {
+   "id": "feature-giraffe",
+   "name": "شتلة السنط",
+   "level": 6,
+   "only": [
+    "GIRAFFE"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-giraffe.webp"
+  },
+  {
+   "id": "feature-bird",
+   "name": "حامل العشّ",
+   "level": 6,
+   "only": [
+    "BIRD"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-bird.webp"
+  },
+  {
+   "id": "feature-bear",
+   "name": "جذع العسل",
+   "level": 6,
+   "only": [
+    "BEAR"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-bear.webp"
+  },
+  {
+   "id": "feature-panda",
+   "name": "أجراس الخيزران",
+   "level": 6,
+   "only": [
+    "PANDA"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-panda.webp"
+  },
+  {
+   "id": "feature-turtle",
+   "name": "حوض اللوتس",
+   "level": 6,
+   "only": [
+    "TURTLE"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-turtle.webp"
+  },
+  {
+   "id": "feature-fox",
+   "name": "فانوس الفطر",
+   "level": 6,
+   "only": [
+    "FOX"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-fox.webp"
+  },
+  {
+   "id": "feature-owl",
+   "name": "مرقب النجوم",
+   "level": 6,
+   "only": [
+    "OWL"
+   ],
+   "x": 78,
+   "y": 68,
+   "scale": 1,
+   "size": 128,
+   "path": "originals/items/feature-owl.webp"
+  }
+ ],
+ "upgrades": [
+  {
+   "id": "haven",
+   "level": 1,
+   "layers": []
+  },
+  {
+   "id": "lanterns",
+   "level": 5,
+   "layers": [
+    "stringlights"
+   ]
+  },
+  {
+   "id": "gardenroom",
+   "level": 10,
+   "layers": [
+    "stringlights",
+    "canopy",
+    "planters"
+   ]
+  }
+ ]
+}

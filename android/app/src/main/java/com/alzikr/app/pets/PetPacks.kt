@@ -17,17 +17,27 @@ object PetPacks {
     /** Set when a pack is installed, updated or removed, so screens re-read. */
     @Volatile var revision = 0; private set
 
-    class Registry(val core: Pack, val packs: List<Pack>) {
-        /** Every animal with its skins: core skins first in their order, then pack skins. */
-        val species: List<SpeciesDef> = core.species.map { s -> s.copy(skins = s.skins + packs.flatMap { p -> p.species.filter { it.id == s.id }.flatMap { it.skins } }) }
+    /**
+     * [core] and [builtin] packs ship inside the app (their files are under assets/pets/); built-in packs may add animals.
+     * Downloaded [packs] only add skins to known animals.
+     */
+    class Registry(val core: Pack, val packs: List<Pack>, val builtin: List<Pack> = emptyList()) {
+        private val all = listOf(core) + builtin + packs
+        /** Every animal with its skins: core skins first in their order, then built-in packs, then downloaded ones. */
+        val species: List<SpeciesDef> = (core.species + builtin.flatMap { it.species }.filter { b -> core.species.none { it.id == b.id } }.distinctBy { it.id })
+            .map { s -> s.copy(skins = (if (core.species.any { it.id == s.id }) core.species.first { it.id == s.id }.skins else emptyList()) +
+                (builtin + packs).flatMap { p -> p.species.filter { it.id == s.id }.flatMap { it.skins } }) }
         private val bySpecies = species.associateBy { it.id }
-        private val owner: Map<String, String> = (listOf(core) + packs).flatMap { p -> p.skins().map { it.id to p.id } }.toMap()
-        val licenses: Map<String, License> = (listOf(core) + packs).flatMap { it.licenses.values }.associateBy { it.id }
+        private val owner: Map<String, String> = all.flatMap { p -> p.skins().map { it.id to (if (p in builtin) "core" else p.id) } }.toMap()
+        val licenses: Map<String, License> = all.flatMap { it.licenses.values }.associateBy { it.id }
         fun species(id: String) = bySpecies[id]
         fun skins(speciesId: String) = bySpecies[speciesId]?.skins.orEmpty()
         fun skin(id: String) = species.firstNotNullOfOrNull { s -> s.skins.firstOrNull { it.id == id } }
         fun packOf(skinId: String) = owner[skinId] ?: "core"
     }
+
+    /** Packs inside the app besides the core one (paths under assets/pets/). */
+    val BUILTIN = listOf("originals/pack.json", "legendary/pack.json")
 
     fun init(c: Context) { if (ctx == null) ctx = c.applicationContext }
     /** One store per process: its staging area is cleared once, so an install running on another thread is never wiped. */
@@ -37,10 +47,14 @@ object PetPacks {
     /** The registry; in JVM tests (no Context) the core pack is read from the source tree. */
     fun registry(): Registry = cache ?: synchronized(this) {
         cache ?: run {
-            val text = ctx?.assets?.open("pets/pack.json")?.use { it.readBytes().toString(Charsets.UTF_8) } ?: File("src/main/assets/pets/pack.json").readText()
-            val core = PackParser.parse(text)
-            val packs = runCatching { store()?.installed().orEmpty() }.getOrDefault(emptyList()).filter { p -> p.id != "core" && p.schema <= PET_SCHEMA }
-            Registry(core, packs).also { cache = it }
+            fun asset(p: String) = ctx?.assets?.open("pets/$p")?.use { it.readBytes().toString(Charsets.UTF_8) } ?: File("src/main/assets/pets/$p").readText()
+            val core = PackParser.parse(asset("pack.json"))
+            val builtin = BUILTIN.mapNotNull { p -> runCatching { PackParser.parse(asset(p)) }.getOrNull() }
+            val known = (listOf(core) + builtin).flatMap { it.skins() }.map { it.id }.toSet()
+            // A downloaded copy of a built-in pack (e.g. a test install of the Studio export) would duplicate its skins.
+            val packs = runCatching { store()?.installed().orEmpty() }.getOrDefault(emptyList())
+                .filter { p -> p.id != "core" && p.schema <= PET_SCHEMA && builtin.none { it.id == p.id } && p.skins().none { it.id in known } }
+            Registry(core, packs, builtin).also { cache = it }
         }
     }
     private fun changed() { cache = null; revision++ }

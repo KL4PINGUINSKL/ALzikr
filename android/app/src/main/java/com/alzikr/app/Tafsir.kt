@@ -32,6 +32,24 @@ object Tafsir {
         Book("wasit", "التفسير الوسيط", "تفسير معاصر مفصّل", "ar-tafsir-al-wasit", false),
         Book("tanwir", "التحرير والتنوير", "ابن عاشور، لغة وبلاغة", "ar-tafseer-tahrir-al-tanwir", false),
         Book("irab", "إعراب القرآن الميسر", "إعراب الكلمات آية آية", "al-i-rab-al-muyassar", false),
+        // Words and their meanings (غريب القرآن)
+        Book("gharib", "الميسر في غريب القرآن", "غريب القرآن: معاني الكلمات، موجز", "al-muyassar-fi-al-gharib", true),
+        Book("siraj", "السراج في بيان غريب القرآن", "غريب القرآن: معاني الكلمات بتوسّع", "asseraj-fi-bayan-gharib-alquran", false),
+        Book("kalimat", "تحليل كلمات القرآن", "صرف الكلمات ونحوها كلمةً كلمة", "tahlil-kalimat-al-qur-an", false),
+        Book("darwish", "إعراب القرآن وبيانه", "محيي الدين الدرويش: إعراب وبلاغة", "i-rab-al-quran-li-al-darwish", false),
+        // Reflection
+        Book("tadabbur", "تدبّر وعمل", "وقفات تدبرية وعملية مع الآيات", "tadabbur-wa-amal", false),
+        // By narration (includes the reports of أسباب النزول)
+        Book("durr", "الدر المنثور", "السيوطي: التفسير بالمأثور، وفيه أسباب النزول", "al-durr-al-manthur", false),
+        Book("mathoor", "موسوعة التفسير المأثور", "المرويات عن النبي ﷺ والصحابة والتابعين، وفيها أسباب النزول", "mawsoo-at-al-tafsir-al-ma-thoor", false),
+        // More tafsirs
+        Book("adwa", "أضواء البيان", "الشنقيطي: تفسير القرآن بالقرآن", "adwa-al-bayan", false),
+        Book("shawkani", "فتح القدير", "الشوكاني: بين الرواية والدراية", "fath-al-qadir-al-shawkani", false),
+        Book("ibnatiyyah", "المحرر الوجيز", "ابن عطية الأندلسي", "al-muharrar-al-wajiz-ibn-atiyyah", false),
+        Book("ibnjuzay", "التسهيل لعلوم التنزيل", "ابن جزي الكلبي، موجز محرر", "tafsir-ibn-juzay", false),
+        Book("nasafi", "مدارك التنزيل", "تفسير النسفي", "tafsir-al-nasafi", false),
+        Book("qasimi", "محاسن التأويل", "جمال الدين القاسمي", "mahasin-al-ta-wil-al-qasimi", false),
+        Book("ibnqayyim", "تفسير ابن القيم", "ما جُمع من كلام ابن القيم في التفسير", "tafsir-ibn-al-qayyim", false),
     )
     fun book(id: String) = books.firstOrNull { it.id == id } ?: books.first()
 

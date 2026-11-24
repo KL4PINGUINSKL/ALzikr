@@ -173,7 +173,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
                         playing = b != null || walking.value || hop.isRunning || (Pet.floatMove && !asleep && !mini && !quiet),
                         speed = if (asleep) .45f else if (walking.value) 1.4f else 1f, place = com.alzikr.app.pets.Place.OVERLAY,
                         // The engine's states: a skin with its own walk/sleep/talk animation uses it; others fall back to idle.
-                        state = when { asleep -> com.alzikr.app.pets.PetState.SLEEP; walking.value -> com.alzikr.app.pets.PetState.WALK; b != null -> com.alzikr.app.pets.PetState.TALK; else -> com.alzikr.app.pets.PetState.IDLE })
+                        state = when { asleep -> com.alzikr.app.pets.PetState.SLEEP; walking.value -> com.alzikr.app.pets.PetState.WALK; b != null -> com.alzikr.app.pets.PetState.IDLE; else -> com.alzikr.app.pets.PetState.IDLE })
                 }
                 if (asleep && b == null) androidx.compose.material3.Text("💤", fontSize = 14.sp, modifier = Modifier.align(if (right) Alignment.TopStart else Alignment.TopEnd))
                 if (h > 0) FloatingHearts(h, Modifier.align(Alignment.TopCenter))

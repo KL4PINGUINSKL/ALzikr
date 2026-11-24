@@ -22,6 +22,8 @@ class PetEngineTest {
     private val assets = File("src/main/assets/pets")
     private val core by lazy { PackParser.parse(File(assets, "pack.json").readText()) }
     private val baseline by lazy { JSONObject(javaClass.classLoader!!.getResource("pet_baseline.json")!!.readText()) }
+    /** Looks removed in 1.4.0 for being unclear (design/pet-engine/removed_skins.json). */
+    private val removed by lazy { JSONObject(javaClass.classLoader!!.getResource("removed_skins.json")!!.readText()).getJSONArray("ids").let { a -> (0 until a.length()).map { a.getString(it) }.toSet() } }
 
     // ---------------------------------------------------------------- migration: nothing visible may change
 
@@ -36,9 +38,12 @@ class PetEngineTest {
             assertEquals(b.getString("defaultName"), c.defaultName)
             assertEquals("unlock level of ${c.id}", b.getInt("unlockLevel"), c.unlock.level)
             val bs = b.getJSONArray("skins")
-            // The old skins come first, in their old order (new ones may follow).
+            // The old skins come first, in their old order (new ones may follow); removed ones are gone and nothing else moved.
+            var n = 0
             for (j in 0 until bs.length()) {
-                val k = bs.getJSONObject(j); val s = c.skins[j]
+                val k = bs.getJSONObject(j)
+                if (k.getString("id") in removed) { assertTrue("${k.getString("id")} removed", c.skins.none { it.id == k.getString("id") }); continue }
+                val s = c.skins[n++]
                 assertEquals("skin $j of ${c.id}", k.getString("id"), s.id)
                 assertEquals(k.getString("name"), s.name)
                 assertEquals(k.getString("by"), s.by)
@@ -84,22 +89,22 @@ class PetEngineTest {
         }
         core.skins().forEach { k -> PetState.entries.forEach { s -> assertNotNull("${k.id}/$s", StateResolver.resolve(k, s)) } }
         val k = core.skins().first()
-        val jump = StateResolver.resolve(k, PetState.JUMP)!!
+        val jump = StateResolver.resolve(k, PetState.HAPPY)!!
         assertTrue(jump.fellBack); assertEquals(Motion.HOP, jump.motion)       // falls back to idle but still hops
         assertEquals(Motion.NONE, StateResolver.resolve(k, PetState.IDLE)!!.motion)
     }
 
     @Test fun stillFallbackIsUsedWhenNoStateExists() {
         val s = Skin("x", "CAT", "x", fallback = Source(SourceKind.PNG, "x.png"))
-        val r = StateResolver.resolve(s, PetState.CELEBRATE)!!
+        val r = StateResolver.resolve(s, PetState.HAPPY)!!
         assertEquals(SourceKind.PNG, r.source.kind); assertEquals(Motion.HOP, r.motion)
     }
 
     @Test fun stateMachineReturnsToBaseAndKeepsPriorities() {
         val m = PetStateMachine()
-        m.request(PetState.CELEBRATE, now = 0, durationMs = 1000, prio = 5)
-        assertFalse("lower priority ignored", m.request(PetState.CURIOUS, now = 500, durationMs = 500, prio = 1))
-        assertEquals(PetState.CELEBRATE, m.tick(900))
+        m.request(PetState.HAPPY, now = 0, durationMs = 1000, prio = 5)
+        assertFalse("lower priority ignored", m.request(PetState.IDLE, now = 500, durationMs = 500, prio = 1))
+        assertEquals(PetState.HAPPY, m.tick(900))
         assertEquals(PetState.IDLE, m.tick(1000))
         m.setBase(PetState.SLEEP, 1100); assertEquals(PetState.SLEEP, m.tick(1200))
     }
@@ -110,11 +115,11 @@ class PetEngineTest {
         val calm = Personality(energy = .1f, sleepy = .9f, playful = .1f, chatty = .1f, curious = .1f)
         val stage = Evolution.defaultStages.last()
         val night = (0 until 400).map { Behavior.next(calm, 1, 50, asleep = true, stage = stage, rnd = Random(it)).state }
-        assertTrue(night.all { it == PetState.SLEEP || it == PetState.YAWN })
+        assertTrue(night.all { it == PetState.SLEEP })
         val r = Random(7)
         val playful = Personality(energy = .9f, playful = .9f)
         val day = (0 until 2000).map { Behavior.next(playful, 12, 50, false, stage, r).state }
-        assertTrue("an energetic friend walks or plays at noon", day.count { it == PetState.WALK || it == PetState.PLAY || it == PetState.RUN } > day.count { it == PetState.SIT })
+        assertTrue("an energetic friend walks or plays at noon", day.count { it == PetState.WALK || it == PetState.HAPPY } > day.count { it == PetState.IDLE })
         val baby = Evolution.defaultStages.first()
         assertTrue((0 until 500).map { Behavior.next(playful, 18, 90, false, baby, Random(it)).state }.all { Evolution.allowed(baby, it) })
     }

@@ -147,7 +147,7 @@ fun HifzPage() {
                 }
                 Choice("أو اختر سورة: سورة ${Quran.surahs[Hifz.pos.first - 1].name}", false, Modifier.padding(top = 8.dp)) { pickSurah = true }
                 Sub("كم آية كل يوم؟", Modifier.padding(top = 10.dp))
-                Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                     listOf(2, 3, 5, 7, 10, 15).forEach { n -> Choice("$n آيات", Hifz.perDay == n) { Hifz.perDay = n } }
                 }
                 Action("ابدأ على بركة الله", Modifier.fillMaxWidth().padding(top = 14.dp)) { Hifz.started = true }
@@ -187,14 +187,14 @@ fun HifzPage() {
             Panel(pad = 14.dp) {
                 Title("محفوظاتك")
                 Sub("${Quran.digits(Hifz.versesDone())} آية · ${Quran.digits(surahs.size)} سورة كاملة", Modifier.padding(top = 4.dp))
-                if (surahs.isNotEmpty()) Row(Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (surahs.isNotEmpty()) Wrap(Modifier.padding(top = 8.dp), gap = 6.dp) {
                     surahs.forEach { s -> Choice("✓ " + Quran.surahs[s - 1].name, true) { viewing = Triple(s, 1, Quran.surahs[s - 1].count) } }
                 }
             }
             // Settings.
             Panel(pad = 14.dp) {
                 Sub("كم آية كل يوم؟")
-                Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                     listOf(2, 3, 5, 7, 10, 15).forEach { n -> Choice("$n آيات", Hifz.perDay == n) { Hifz.perDay = n } }
                 }
                 Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -226,7 +226,7 @@ private fun HifzReader(s: Int, from: Int, to: Int, review: Hifz.Chunk?, learn: B
     Subpage(if (review != null) "مراجعة" else "حفظ اليوم", back) {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             Text(Hifz.label(s, from, to), color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
-            Row(Modifier.padding(vertical = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Wrap(Modifier.padding(vertical = 8.dp), gap = 6.dp) {
                 Choice("▶ استمع ×${Recitation.repeat}", false) { Recitation.play(ctx, s, from, stopAfter = to) }
                 Choice("🔁 التكرار: ${Recitation.repeat}", Recitation.repeat > 1) { Recitation.repeat = listOf(1, 3, 5, 10).let { r -> r[(r.indexOf(Recitation.repeat) + 1) % r.size] } }
                 Choice(if (test) "👁 إظهار النص" else "🧠 اختبرني", test) { test = !test }

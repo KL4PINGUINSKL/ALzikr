@@ -2,6 +2,7 @@
 
   python make_core.py                 existing 110 skins only (step 2: no visible change)
   python make_core.py --with-new      + the user's 63 picks from pet-candidates5 (step 4)
+  python make_core.py --with-new --prune   without the unclear looks in removed_skins.json (1.4.0)
 
 Unlock levels reproduce the app exactly: species levels from Progress.speciesLevels, and look i of a species opens at
 level 1 for i < 3, otherwise at level i - 1 (one new look per level, no cap). New picks continue that numbering.
@@ -36,6 +37,9 @@ licenses = [{'id': LSL, 'name': 'Lottie Simple License', 'url': 'https://lottief
 
 def look_level(i): return 1 if i < 3 else i - 1
 
+# Looks removed for being unclear (python make_core.py --with-new --prune). Levels of the others do not move.
+removed = set(json.load(open(os.path.join(HERE, 'removed_skins.json'), encoding='utf-8'))['ids']) if '--prune' in sys.argv else set()
+
 new_by_species = {}
 if '--with-new' in sys.argv:
     meta = json.load(open(os.path.join(HERE, 'new_skins.json'), encoding='utf-8'))
@@ -47,6 +51,7 @@ for s in base['species']:
     skins = []
     allk = [dict(k, new=False) for k in s['skins']] + [dict(k, new=True) for k in new_by_species.get(s['id'], [])]
     for i, k in enumerate(allk):
+        if k['id'] in removed: continue
         info = src.get(k['id'], {})
         lic = (k.get('license') or info.get('license') or '')
         if lic != 'Lottie Simple License': raise SystemExit(f"{k['id']}: license not verified ({lic!r})")
@@ -64,7 +69,7 @@ for s in base['species']:
     species.append({'id': s['id'], 'ar': s['ar'], 'about': about.get(s['id'], ''), 'defaultName': s['defaultName'], 'unlock': {'level': s['unlockLevel']},
                     'personality': dict(zip(['energy', 'sleepy', 'playful', 'chatty', 'curious'], p)), 'skins': skins})
 
-pack = {'schema': 1, 'id': 'core', 'version': 2 if new_by_species else 1, 'title': 'أصدقاء ALzikr', 'builtin': True, 'licenses': licenses, 'species': species}
+pack = {'schema': 1, 'id': 'core', 'version': 3 if removed else 2 if new_by_species else 1, 'title': 'أصدقاء ALzikr', 'builtin': True, 'licenses': licenses, 'species': species}
 missing = [k['id'] for s in species for k in s['skins'] if not os.path.exists(os.path.join(APP, k['id'] + '.json'))]
 if missing: raise SystemExit('missing asset files: ' + ', '.join(missing))
 json.dump(pack, open(os.path.join(APP, 'pack.json'), 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=1)

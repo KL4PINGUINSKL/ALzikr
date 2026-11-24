@@ -92,6 +92,7 @@ fun GText(
     fontWeight: FontWeight? = null, fontFamily: FontFamily? = null, lineHeight: TextUnit = TextUnit.Unspecified, textAlign: TextAlign? = null,
     maxLines: Int = Int.MAX_VALUE, overflow: TextOverflow = TextOverflow.Clip, softWrap: Boolean = true,
 ) {
+    @Suppress("NAME_SHADOWING") val text = Quran.numerals(text)   // the app's digit style, everywhere text goes through here
     if (!Glyphs.has(text)) { Text(text, modifier, color = color, fontSize = fontSize, fontWeight = fontWeight, fontFamily = fontFamily, lineHeight = lineHeight, textAlign = textAlign, maxLines = maxLines, overflow = overflow, softWrap = softWrap); return }
     val parts = remember(text) { Glyphs.parts(text) }
     val inline = HashMap<String, InlineTextContent>()

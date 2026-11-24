@@ -1,5 +1,7 @@
 package com.alzikr.app.pets
 
+import com.alzikr.app.Wrap
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -67,12 +69,8 @@ fun PetPreviewPage() {
     val reg = PetPacks.registry()
     val skin = lookId?.let { reg.skin(it) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Species.entries.forEach { s -> Choice(s.ar, s == species) { species = s } }
-        }
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            PetLooks.of(species).forEach { l -> Choice(l.name, l.id == lookId) { lookId = l.id } }
-        }
+        com.alzikr.app.PickOne(Species.entries.map { it.name to it.ar }, species.name, "الصديق", shown = 3) { species = Species.valueOf(it) }
+        PetLooks.of(species).let { ls -> com.alzikr.app.PickOne(ls.map { it.id to it.name }, lookId ?: ls.firstOrNull()?.id ?: "", "الشكل", shown = 2) { lookId = it } }
         if (skin == null) return@Column
         Panel(color = P.card, pad = 12.dp) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

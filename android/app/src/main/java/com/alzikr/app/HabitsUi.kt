@@ -158,14 +158,12 @@ fun KhatmaPage() {
             Title("متى تختم؟")
             Sub("أتمّها خلال (من اليوم):", Modifier.padding(top = 6.dp))
             val left = Data.daysLeft()
-            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(3, 7, 10, 15, 20, 30, 40, 60, 90).forEach { d -> Choice(if (d == 7) "أسبوع" else if (d == 30) "شهر" else "$d يومًا", left == d) { Data.finishIn(d) } }
+            Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                PickOne(listOf(3, 7, 10, 15, 20, 30, 40, 60, 90).map { d -> d.toString() to (if (d == 7) "أسبوع" else if (d == 30) "شهر" else "$d يومًا") }, left.toString(), "أختم في", modifier = Modifier.weight(1f, fill = false)) { Data.finishIn(it.toInt()) }
                 Choice("مدة أخرى…", false) { askDays = true }
             }
             Sub("أو اختر وردك اليومي بالصفحات:", Modifier.padding(top = 10.dp))
-            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(1, 2, 4, 5, 10, 20, 40).forEach { n -> Choice(if (n == 20) "جزء" else if (n == 40) "جزآن" else "$n صفحات", wird == n) { Data.setPagesPerDay(n) } }
-            }
+            PickOne(listOf(1, 2, 4, 5, 10, 20, 40).map { n -> n.toString() to (if (n == 20) "جزء" else if (n == 40) "جزآن" else "$n صفحات") }, wird.toString(), "الورد اليومي", shown = 3, modifier = Modifier.padding(top = 6.dp)) { Data.setPagesPerDay(it.toInt()) }
             Sub("تذكير يومي بالورد", Modifier.padding(top = 10.dp))
             val remind = Data.khatmaRemindAt
             Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

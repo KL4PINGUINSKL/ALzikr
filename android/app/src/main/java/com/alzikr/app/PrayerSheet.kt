@@ -65,7 +65,7 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
     val state = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val time = Store.times().getValue(p)
     val now = LocalTime.now().let { it.hour * 60 + it.minute }
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, sheetState = state, containerColor = P.surface) {
+    AppSheet(onDismissRequest = close) {
         Column(Modifier.fillMaxWidth().quickDismiss(state, close).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Name, time, and how far it is.

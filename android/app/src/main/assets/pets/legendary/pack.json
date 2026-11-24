@@ -1,0 +1,866 @@
+{
+ "schema": 1,
+ "id": "legendary",
+ "version": 1,
+ "title": "الأصدقاء الأسطوريون",
+ "builtin": true,
+ "licenses": [
+  {
+   "id": "alzikr-original",
+   "name": "ALzikr original artwork (ALzikr Pet Studio)",
+   "commercial": true
+  }
+ ],
+ "species": [
+  {
+   "id": "CELESTIAL_DRAGON",
+   "ar": "التنين السماوي",
+   "about": "ينساب في الهواء ويوجّه نفسه بذيله",
+   "defaultName": "سماء",
+   "unlock": {
+    "level": 50
+   },
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "legend-celestial-blue",
+     "name": "لازوردي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 50
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-celestial-blue.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-celestial-blue.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-celestial-blue.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-celestial-blue.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-celestial-blue.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-emerald",
+     "name": "زمرّد",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 55
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-emerald.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emerald.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emerald.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emerald.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emerald.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-golden",
+     "name": "ذهبي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 60
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-golden.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-golden.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-golden.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-golden.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-golden.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-frost",
+     "name": "جليدي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 65
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-frost.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-frost.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-frost.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-frost.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-frost.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-flame",
+     "name": "لهب",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 70
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-flame.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-flame.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-flame.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-flame.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-flame.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-lunar",
+     "name": "قمري",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 75
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-lunar.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-lunar.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-lunar.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-lunar.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-lunar.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-crystal",
+     "name": "بلّوري",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 85
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-crystal.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-crystal.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-crystal.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-crystal.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-crystal.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "WINGED_UNICORN",
+   "ar": "الحصان المجنّح",
+   "about": "رشيق بجناحين من ريش وقرن لامع",
+   "defaultName": "جناح",
+   "unlock": {
+    "level": 60
+   },
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.3,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "legend-cloudsilk",
+     "name": "حرير الغيم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 60
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-cloudsilk.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-cloudsilk.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-cloudsilk.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-cloudsilk.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-cloudsilk.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-briar-rose",
+     "name": "ورد البرّ",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 68
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-briar-rose.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-briar-rose.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-briar-rose.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-briar-rose.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-briar-rose.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-glacier-plume",
+     "name": "ريشة الجليد",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 80
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-glacier-plume.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-glacier-plume.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-glacier-plume.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-glacier-plume.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-glacier-plume.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "GRIFFIN",
+   "ar": "الغريفين",
+   "about": "رأس عُقاب وجسم أسد، حارس وفيّ",
+   "defaultName": "عُقاب",
+   "unlock": {
+    "level": 70
+   },
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.5,
+    "chatty": 0.3,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "legend-honeycrag",
+     "name": "صخرة العسل",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 70
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-honeycrag.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-honeycrag.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-honeycrag.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-honeycrag.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-honeycrag.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-storm-ruff",
+     "name": "العاصفة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 78
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-storm-ruff.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-storm-ruff.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-storm-ruff.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-storm-ruff.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-storm-ruff.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-copper-kestrel",
+     "name": "صقر النحاس",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 90
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-copper-kestrel.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-copper-kestrel.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-copper-kestrel.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-copper-kestrel.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-copper-kestrel.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PHOENIX",
+   "ar": "العنقاء",
+   "about": "طائر من ريش كاللهب الدافئ",
+   "defaultName": "شُعلة",
+   "unlock": {
+    "level": 80
+   },
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "legend-emberbloom",
+     "name": "زهرة الجمر",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 80
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-emberbloom.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emberbloom.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emberbloom.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emberbloom.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-emberbloom.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-blue-hour",
+     "name": "الساعة الزرقاء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 88
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-blue-hour.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-blue-hour.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-blue-hour.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-blue-hour.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-blue-hour.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-gilded-fan",
+     "name": "المروحة المذهّبة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 96
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-gilded-fan.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-gilded-fan.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-gilded-fan.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-gilded-fan.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-gilded-fan.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_DRAGON",
+   "ar": "التنين الكوني",
+   "about": "يحمل النجوم في حراشفه",
+   "defaultName": "نجم",
+   "unlock": {
+    "level": 100
+   },
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "legend-deep-orbit",
+     "name": "المدار العميق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 100
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-deep-orbit.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-deep-orbit.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-deep-orbit.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-deep-orbit.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-deep-orbit.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-nebula-veil",
+     "name": "حجاب السديم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 110
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-nebula-veil.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-nebula-veil.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-nebula-veil.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-nebula-veil.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-nebula-veil.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    },
+    {
+     "id": "legend-pulsar",
+     "name": "النابض",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 125
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "legendary/art/legend-pulsar.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-pulsar.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-pulsar.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-pulsar.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "legendary/rigs/legend-pulsar.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

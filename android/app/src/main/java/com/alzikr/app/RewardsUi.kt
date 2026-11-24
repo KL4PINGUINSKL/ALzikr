@@ -75,15 +75,12 @@ fun RewardsPage() {
         }
         Panel(pad = 14.dp) {
             Title("إطار أداة «صديقي»")
-            Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Progress.frames.forEach { f ->
+            // An even grid, like the friends' looks.
+            Box(Modifier.padding(top = 8.dp)) {
+                TileGrid(Progress.frames, cols = 3, rows = 2, noun = "الإطارات") { f, m ->
                     val open = lv >= f.level; val on = Progress.frame == f.id
-                    Column(Modifier.width(96.dp).clip(L.shape(12.dp)).border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(12.dp))
-                        .clickable(enabled = open) { Progress.frame = f.id; PetWidget.update(ctx) }.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.fillMaxWidth().height(46.dp).clip(L.shape(10.dp)).background(framePreview(f.id)), contentAlignment = Alignment.Center) {
-                            if (!open) Text("🔒 ${Quran.digits(f.level)}", color = androidx.compose.ui.graphics.Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text(f.name, color = P.ink, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 2, modifier = Modifier.padding(top = 4.dp))
+                    PictureTile(f.name, on, open, f.level, m, onClick = { if (open) { Progress.frame = f.id; PetWidget.update(ctx) } }) { pm ->
+                        Box(pm.padding(6.dp).clip(L.shape(10.dp)).background(framePreview(f.id)))
                     }
                 }
             }

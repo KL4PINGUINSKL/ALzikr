@@ -167,6 +167,7 @@ object Home {
         Part("moment", "ذكر الوقت (الصباح، المساء، النوم، الكهف…)"),
         Part("extra", "الإمساك والضحى ومنتصف الليل"),
         Part("words", "آية اليوم وحديث اليوم"),
+        Part("tadabbur", "آية للتدبّر اليوم (التفسير ووقفات تدبّر وعمل)"),
         Part("tomorrow", "المناسبة القادمة (غدًا الجمعة، الاثنين، الأيام البيض…)"),
         Part("stats", "صلوات اليوم والأسبوع والمناسبة القادمة"),
         Part("place", "الموقع وطريقة الحساب"),
@@ -280,7 +281,7 @@ fun MomentCard() {
         }
         if (list.size > 1) {
             Sub("ويناسب الآن أيضًا:", Modifier.padding(top = 10.dp), size = 12.sp)
-            Row(Modifier.fillMaxWidth().padding(top = 4.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Wrap(Modifier.fillMaxWidth().padding(top = 4.dp), gap = 6.dp) {
                 list.drop(1).forEach { o -> Choice(o.icon + " " + o.title, false) { o.go() } }
             }
         }
@@ -308,16 +309,14 @@ fun HomeShortcuts() {
 fun HomeEditor(close: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val state = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = close, sheetState = state, containerColor = P.surface) {
+    AppSheet(onDismissRequest = close) {
         Column(Modifier.fillMaxWidth().quickDismiss(state, close).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Title("تخصيص الصفحة الرئيسية")
             Sub("اختر ما يظهر وترتيبه. التغيير يُحفظ فورًا.")
 
             Sub("اسم الصفحة في شريط التنقل", Modifier.padding(top = 6.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Home.names.forEach { n -> Choice(n, Home.name == n) { Home.name = n } }
-            }
+            PickOne(Home.names.map { it to it }, Home.name, "الاسم", shown = 3) { Home.name = it }
 
             Sub("الأقسام (اضغط ▲ ▼ للترتيب)", Modifier.padding(top = 6.dp))
             val order = Home.order; val hidden = Home.hidden
@@ -358,36 +357,7 @@ fun HomeEditor(close: () -> Unit) {
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun Modifier.quickDismiss(state: androidx.compose.material3.SheetState, close: () -> Unit): Modifier {
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val conn = remember(state) {
-        val limit = with(density) { 36.dp.toPx() }
-        var pulled = 0f
-        var closing = false
-        fun shut() {
-            if (closing) return; closing = true
-            scope.launch { runCatching { state.hide() }; close() }
-        }
-        object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
-            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
-                if (available.y < 0) pulled = 0f
-                return androidx.compose.ui.geometry.Offset.Zero
-            }
-            override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
-                // Content is at its top and the finger keeps pulling down.
-                if (available.y > 0 && source == androidx.compose.ui.input.nestedscroll.NestedScrollSource.UserInput) {
-                    pulled += available.y
-                    if (pulled > limit) shut()
-                    return androidx.compose.ui.geometry.Offset(0f, available.y)
-                }
-                return androidx.compose.ui.geometry.Offset.Zero
-            }
-            override suspend fun onPreFling(available: androidx.compose.ui.unit.Velocity): androidx.compose.ui.unit.Velocity { pulled = 0f; return androidx.compose.ui.unit.Velocity.Zero }
-            override suspend fun onPostFling(consumed: androidx.compose.ui.unit.Velocity, available: androidx.compose.ui.unit.Velocity): androidx.compose.ui.unit.Velocity {
-                if (available.y > 600f) { shut(); return available }
-                return androidx.compose.ui.unit.Velocity.Zero
-            }
-        }
-    }
-    return this.nestedScroll(conn)
+    // Sheets now close only from their top bar (AppSheet), the back button or a tap outside: scrolling never closes them.
+    @Suppress("UNUSED_VARIABLE") val unused = state to close
+    return this
 }

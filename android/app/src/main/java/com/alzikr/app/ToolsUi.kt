@@ -103,7 +103,7 @@ fun AlarmPage() {
                         Choice("+ ٥", false) { PrayerAlarm.setOffset(ctx, p, off + 5) }
                     }
                     val days = PrayerAlarm.days(p)
-                    Row(Modifier.padding(top = 6.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Wrap(Modifier.padding(top = 6.dp), gap = 4.dp) {
                         PrayerAlarm.dayNames.forEach { (d, n) ->
                             Choice(n, d in days) { val nd = if (d in days) days - d else days + d; if (nd.isNotEmpty()) PrayerAlarm.setDays(ctx, p, nd) }
                         }
@@ -114,7 +114,7 @@ fun AlarmPage() {
 
         Title("الصوت والغفوة")
         Sub("الصوت")
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Wrap(gap = 6.dp) {
             Choice("نغمة منبه الهاتف", PrayerAlarm.sound == 0) { PrayerAlarm.sound = 0 }
             Choice("الأذان ثم النغمة", PrayerAlarm.sound == 1) { PrayerAlarm.sound = 1 }
             Choice("اهتزاز فقط", PrayerAlarm.sound == 2) { PrayerAlarm.sound = 2 }

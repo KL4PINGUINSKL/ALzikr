@@ -62,6 +62,9 @@ object Nav {
         return false
     }
 
-    fun openQuran(surah: Int, ayah: Int) { quran = surah to ayah; tab = "library" }
+    /** [sheet]: also open the verse's sheet; [tadabbur]: with its reflections already open. */
+    var quranSheet by mutableStateOf(false)
+    var openTadabbur = false
+    fun openQuran(surah: Int, ayah: Int, sheet: Boolean = false, tadabbur: Boolean = false) { quranSheet = sheet; openTadabbur = tadabbur; quran = surah to ayah; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }
 }
