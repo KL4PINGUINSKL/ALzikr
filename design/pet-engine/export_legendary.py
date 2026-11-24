@@ -1,8 +1,8 @@
 """Builds the built-in "legendary" pack (assets/pets/legendary/) from ALzikr Pet Studio/legendary (read-only).
 
-The Studio has not marked the landmarks (legendary/landmarks.json) yet, so the rigs carry the pictures and the drawn
-area only: the app moves the whole body (breathing, hop, sway, sleep picture). When landmarks.json appears, they are
-copied into the rigs and the limbs move too; accessories are added then (they need the anchors).
+Landmarks, bounds and the sleeping pose's points come from the Studio's own models (legendary/assets.js, read through
+Node), so the limbs move and the accessories sit where the Studio puts them. Accessories (pictures) and the optional
+effects go to wear.json; the app anchors them live (PetRig.wear).
 
   python design/pet-engine/export_legendary.py
 """
@@ -14,7 +14,9 @@ HERE = Path(__file__).resolve().parent
 SRC = HERE.parent.parent / 'ALzikr Pet Studio' / 'legendary'
 OUT = HERE.parent.parent / 'android' / 'app' / 'src' / 'main' / 'assets' / 'pets' / 'legendary'
 col = json.loads((SRC / 'collection.json').read_text(encoding='utf-8'))
-marks = json.loads((SRC / 'landmarks.json').read_text()) if (SRC / 'landmarks.json').exists() else {}
+import subprocess
+MODELS = {m['id']: m for m in json.loads(subprocess.run(['node', '-e', "require(process.argv[1]);const A=globalThis.LegendaryAssets;"
+    "console.log(JSON.stringify(A.models.map(({src,sleepSrc,...m})=>m)))", str(SRC / 'assets.js')], capture_output=True, text=True, check=True).stdout)}
 
 AR = {
     'species': {
@@ -45,10 +47,20 @@ AR = {
         'Brass orrery': 'مجسّم الأفلاك النحاسي', 'Alpine bonsai': 'بونساي جبلي', 'Blue peony planter': 'أصيص الفاوانيا الزرقاء',
         'Silver fir': 'التنّوب الفضي', 'Emberflower planter': 'أصيص زهر الجمر', 'Nebula fern': 'سرخس السديم',
     },
+    'accessories': {
+        'legend-laurel': 'إكليل الغار الذهبي', 'legend-diadem': 'التاج البلّوري', 'legend-regal-scarf': 'وشاح الحرير الملكي',
+        'legend-velvet-cape': 'عباءة المخمل', 'legend-scale-corlet': 'درع الحراشف', 'legend-gem-chain': 'قلادة الزمرّد',
+        'legend-wing-cuff': 'حلية الجناح المذهّبة', 'legend-sapphire-band': 'سوار الياقوت الأزرق', 'legend-jade-antler': 'حلية القرن اليشمية',
+        'legend-blossom-comb': 'مشط الزهر للعُرف', 'legend-talon-band': 'طوق المخلب النحاسي', 'legend-sun-clasp': 'مشبك ريشة الشمس',
+        'legend-orbit-band': 'حلقات الذيل المدارية',
+    },
+    'effects': {'stars': 'نجوم طافية', 'crystals': 'بلّورات مضيئة', 'flames': 'لهب لطيف', 'snow': 'ندف الثلج',
+                'gold': 'ذرّات ذهبية', 'trails': 'آثار كونية', 'wings': 'وميض الأجنحة'},
 }
 # Body rhythm (cycle s, stride, lift, sway, bob) for whole-body motion; gliders sway, the unicorn strides.
-GAIT = {'CELESTIAL_DRAGON': ('glide', [1.65, 10, 3, 2, 4]), 'WINGED_UNICORN': ('stride', [1.65, 15, 9, 2, 3]), 'GRIFFIN': ('glide', [1.65, 10, 3, 2, 4]),
-        'PHOENIX': ('glide', [1.65, 10, 3, 2, 4]), 'COSMIC_DRAGON': ('glide', [1.65, 10, 3, 2, 4])}
+# The Studio's gaits (legendary/register.js) under the names the app's motion knows (glide sways the tip, stride nods).
+GAIT = {'CELESTIAL_DRAGON': ('glide', [2.15, 9, 5, 2, 5]), 'WINGED_UNICORN': ('stride', [1.28, 17, 9, 3, 5]), 'GRIFFIN': ('prowl', [1.64, 14, 7, 2, 3]),
+        'PHOENIX': ('glide', [1.84, 6, 3, 4, 9]), 'COSMIC_DRAGON': ('glide', [2.8, 6, 3, 3, 6])}
 PERS = {'CELESTIAL_DRAGON': (.6, .4, .6, .4, .9), 'WINGED_UNICORN': (.8, .3, .7, .4, .7), 'GRIFFIN': (.7, .4, .5, .3, .8),
         'PHOENIX': (.7, .3, .6, .6, .7), 'COSMIC_DRAGON': (.5, .5, .5, .4, .9)}
 
@@ -72,11 +84,9 @@ for sp in col['species']:
         if sleep.exists():
             s2 = drawn(Image.open(sleep)); v = [min(v[0], s2[0]), min(v[1], s2[1]), max(v[2], s2[2]), max(v[3], s2[3])]
         rig['view'] = v
-        m = marks.get(k['source'])
-        if m:   # the Studio's proof is 200 px; model units are 400
-            pt = lambda xy: [2 * xy[0], 2 * xy[1]]
-            rig.update({'eyes': [pt(m[0][0:2]), pt(m[0][2:4])], 'eyeRadius': m[0][4] * 2, 'head': [2 * m[0][0], 2 * m[0][1] + 12],
-                        **dict(zip(['neck', 'tail', 'near', 'far', 'tip'], [pt(x) for x in m[1:6]]))})
+        m = MODELS[k['id']]
+        rig.update({'species': sp['id'], 'bounds': m['bounds'], 'eyes': m['eyes'], 'eyeRadius': m['eyeRadius'],
+                    **{n: m[n] for n in ('head', 'neck', 'tail', 'near', 'far', 'tip')}, 'rest': m['sleep']})
         (OUT / 'rigs' / (k['id'] + '.json')).write_text(json.dumps(rig), encoding='utf-8')
         states = {st: {'kind': 'rig', 'path': f'legendary/rigs/{k["id"]}.json', 'anim': st, 'loop': True} for st in ('idle', 'walk', 'happy', 'sleep')}
         skins.append({'id': k['id'], 'name': AR['skins'][k['source']], 'by': 'ALzikr Pet Studio', 'license': 'alzikr-original', 'rarity': 'epic',
@@ -102,5 +112,16 @@ for f in col['furniture']:
     furniture.append({'id': f['id'], 'name': AR['furniture'][f['name']], 'level': f['level'], 'only': f['only'], 'x': f['x'], 'y': f['y'],
                       'scale': f['scale'], 'size': 128, 'path': f'legendary/items/{f["id"]}.webp'})
 (OUT / 'room.json').write_text(json.dumps({'homes': homes, 'furniture': furniture, 'upgrades': []}, ensure_ascii=False, indent=1), encoding='utf-8')
+# What the friend can wear (pictures anchored live by the app) and the optional effects, with the Studio's conflicts.
+(OUT / 'wear').mkdir()
+wear = {'accessories': [], 'effects': [], 'conflicts': [['legend-velvet-cape', 'legend-scale-corlet']] +
+        [[c, h['id']] for c in ('legend-jade-antler', 'legend-blossom-comb') for h in col['accessories'] if h['slot'] == 'head']}
+for a in col['accessories']:
+    shutil.copy(SRC / 'art' / (a['id'] + '.webp'), OUT / 'wear' / (a['id'] + '.webp'))
+    wear['accessories'].append({'id': a['id'], 'name': AR['accessories'][a['id']], 'slot': a['slot'], 'level': a['level'], 'width': a['width'],
+                                'only': a['only'], 'path': f'legendary/wear/{a["id"]}.webp'})
+for e in col['effects']:
+    wear['effects'].append({'id': e['id'], 'name': AR['effects'][e['id']], 'level': e['level'], 'only': e['only']})
+(OUT / 'wear.json').write_text(json.dumps(wear, ensure_ascii=False, indent=1), encoding='utf-8')
 size = sum(p.stat().st_size for p in OUT.rglob('*') if p.is_file())
-print(f'{len(species)} species, {sum(len(s["skins"]) for s in species)} skins, landmarks for {len(marks)}; {size/1e6:.1f} MB')
+print(f'{len(species)} species, {sum(len(s["skins"]) for s in species)} skins, landmarks for {len(MODELS)}, {len(wear['accessories'])} accessories, {len(wear['effects'])} effects; {size/1e6:.1f} MB')

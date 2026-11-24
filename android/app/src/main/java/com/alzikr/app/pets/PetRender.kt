@@ -164,7 +164,7 @@ private fun RigSource(skin: Skin, src: Source, clock: () -> Long, speed: Float) 
     val a = produceState<RigArt?>(null, skin.id, src.path) { value = withContext(Dispatchers.IO) { rigArt(skin, src) } }.value ?: return
     Canvas(Modifier.fillMaxSize()) {
         val t = clock() * speed / 1000f
-        drawIntoCanvas { PetRig.draw(it.nativeCanvas, size.width, size.height, a.rig, src.anim, t, a.art, a.sleep, a.closed) }
+        drawIntoCanvas { PetRig.draw(it.nativeCanvas, size.width, size.height, a.rig, src.anim, t, a.art, a.sleep, a.closed, effects = !PetPerf.reduceMotion && !PetPerf.saving) }
     }
 }
 
@@ -275,7 +275,7 @@ object PetFrames {
                 fun fit(b: Bitmap?): Bitmap? { var x = b ?: return null; while (x.width / 2 >= px * skin.fit.zoom) x = Bitmap.createScaledBitmap(x, x.width / 2, x.height / 2, true); return x }
                 val a = RigArt(a0.rig, fit(a0.art)!!, fit(a0.sleep), fit(a0.closed))
                 cv.save(); cv.translate(px * (1 - skin.fit.zoom) / 2f, px * (1 - skin.fit.zoom) / 2f - skin.fit.lift * px); cv.scale(skin.fit.zoom, skin.fit.zoom)
-                PetRig.draw(cv, px.toFloat(), px.toFloat(), a.rig, src.anim, at * RIG_LOOP_S, a.art, a.sleep, a.closed)
+                PetRig.draw(cv, px.toFloat(), px.toFloat(), a.rig, src.anim, at * RIG_LOOP_S, a.art, a.sleep, a.closed, effects = false)
                 cv.restore()
             }
         }

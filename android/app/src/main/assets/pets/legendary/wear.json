@@ -1,0 +1,281 @@
+{
+ "accessories": [
+  {
+   "id": "legend-laurel",
+   "name": "إكليل الغار الذهبي",
+   "slot": "head",
+   "level": 54,
+   "width": 82,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-laurel.webp"
+  },
+  {
+   "id": "legend-diadem",
+   "name": "التاج البلّوري",
+   "slot": "head",
+   "level": 75,
+   "width": 76,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-diadem.webp"
+  },
+  {
+   "id": "legend-regal-scarf",
+   "name": "وشاح الحرير الملكي",
+   "slot": "neck",
+   "level": 58,
+   "width": 64,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-regal-scarf.webp"
+  },
+  {
+   "id": "legend-velvet-cape",
+   "name": "عباءة المخمل",
+   "slot": "back",
+   "level": 72,
+   "width": 86,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-velvet-cape.webp"
+  },
+  {
+   "id": "legend-scale-corlet",
+   "name": "درع الحراشف",
+   "slot": "torso",
+   "level": 78,
+   "width": 65,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-scale-corlet.webp"
+  },
+  {
+   "id": "legend-gem-chain",
+   "name": "قلادة الزمرّد",
+   "slot": "neck",
+   "level": 62,
+   "width": 66,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-gem-chain.webp"
+  },
+  {
+   "id": "legend-wing-cuff",
+   "name": "حلية الجناح المذهّبة",
+   "slot": "wing",
+   "level": 82,
+   "width": 36,
+   "only": [
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-wing-cuff.webp"
+  },
+  {
+   "id": "legend-sapphire-band",
+   "name": "سوار الياقوت الأزرق",
+   "slot": "leg",
+   "level": 65,
+   "width": 29,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-sapphire-band.webp"
+  },
+  {
+   "id": "legend-jade-antler",
+   "name": "حلية القرن اليشمية",
+   "slot": "crest",
+   "level": 56,
+   "width": 45,
+   "only": [
+    "CELESTIAL_DRAGON"
+   ],
+   "path": "legendary/wear/legend-jade-antler.webp"
+  },
+  {
+   "id": "legend-blossom-comb",
+   "name": "مشط الزهر للعُرف",
+   "slot": "crest",
+   "level": 66,
+   "width": 36,
+   "only": [
+    "WINGED_UNICORN"
+   ],
+   "path": "legendary/wear/legend-blossom-comb.webp"
+  },
+  {
+   "id": "legend-talon-band",
+   "name": "طوق المخلب النحاسي",
+   "slot": "leg",
+   "level": 76,
+   "width": 30,
+   "only": [
+    "GRIFFIN"
+   ],
+   "path": "legendary/wear/legend-talon-band.webp"
+  },
+  {
+   "id": "legend-sun-clasp",
+   "name": "مشبك ريشة الشمس",
+   "slot": "wing",
+   "level": 86,
+   "width": 38,
+   "only": [
+    "PHOENIX"
+   ],
+   "path": "legendary/wear/legend-sun-clasp.webp"
+  },
+  {
+   "id": "legend-orbit-band",
+   "name": "حلقات الذيل المدارية",
+   "slot": "tail",
+   "level": 105,
+   "width": 42,
+   "only": [
+    "COSMIC_DRAGON"
+   ],
+   "path": "legendary/wear/legend-orbit-band.webp"
+  }
+ ],
+ "effects": [
+  {
+   "id": "stars",
+   "name": "نجوم طافية",
+   "level": 50,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ]
+  },
+  {
+   "id": "crystals",
+   "name": "بلّورات مضيئة",
+   "level": 55,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ]
+  },
+  {
+   "id": "flames",
+   "name": "لهب لطيف",
+   "level": 80,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ]
+  },
+  {
+   "id": "snow",
+   "name": "ندف الثلج",
+   "level": 65,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ]
+  },
+  {
+   "id": "gold",
+   "name": "ذرّات ذهبية",
+   "level": 60,
+   "only": [
+    "CELESTIAL_DRAGON",
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ]
+  },
+  {
+   "id": "trails",
+   "name": "آثار كونية",
+   "level": 100,
+   "only": [
+    "COSMIC_DRAGON"
+   ]
+  },
+  {
+   "id": "wings",
+   "name": "وميض الأجنحة",
+   "level": 74,
+   "only": [
+    "WINGED_UNICORN",
+    "GRIFFIN",
+    "PHOENIX",
+    "COSMIC_DRAGON"
+   ]
+  }
+ ],
+ "conflicts": [
+  [
+   "legend-velvet-cape",
+   "legend-scale-corlet"
+  ],
+  [
+   "legend-jade-antler",
+   "legend-laurel"
+  ],
+  [
+   "legend-jade-antler",
+   "legend-diadem"
+  ],
+  [
+   "legend-blossom-comb",
+   "legend-laurel"
+  ],
+  [
+   "legend-blossom-comb",
+   "legend-diadem"
+  ]
+ ]
+}

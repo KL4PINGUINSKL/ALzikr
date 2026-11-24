@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -237,6 +238,7 @@ fun PetBag() {
             }
         }
     }
+    PetWearPanel()
     Panel(pad = 14.dp) {
         Title("إطارات الأداة")
         Progress.frames.forEach { f ->
@@ -254,6 +256,43 @@ fun PetBag() {
         Sub("أشكال ${sp?.ar ?: "صديقك"}: ${Quran.digits(open)} من ${Quran.digits(looks.size)} · النادرة المفتوحة: ${Quran.digits(sp?.let { s -> looks.withIndex().count { (i, l) -> l.rarity != com.alzikr.app.pets.Rarity.COMMON && Progress.lookOpen(s, i) } } ?: 0)}", size = 13.sp)
         Sub("الأوسمة: ${Quran.digits(Progress.earned().size)} من ${Quran.digits(Progress.badges.size)}", size = 13.sp)
         Action("🎁 كل المكافآت والأوسمة", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { Nav.morePage = "rewards"; Nav.go("more") }
+    }
+}
+
+/** «زينة صديقك» and «المؤثرات» (legendary friends): pictures to wear, anchored on the moving friend, and optional sparkles. */
+@Composable
+private fun PetWearPanel() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val sp = Pet.species?.name ?: return
+    val items = com.alzikr.app.pets.PetWear.items(sp)
+    val fx = com.alzikr.app.pets.PetWear.effectsFor(sp)
+    if (items.isEmpty() && fx.isEmpty()) return
+    if (items.isNotEmpty()) Panel(pad = 14.dp) {
+        Title("زينة صديقك")
+        Sub("القطعتان في المكان نفسه لا تجتمعان: اختيار إحداهما يخلع الأخرى.", size = 13.sp, modifier = Modifier.padding(bottom = 8.dp))
+        TileGrid(items, cols = 3, rows = 2, noun = "القطع") { i, m ->
+            val open = com.alzikr.app.pets.PetWear.open(i.level)
+            PictureTile(i.name, com.alzikr.app.pets.PetWear.wearing(sp, i.id), open, i.level, m, onClick = {
+                if (open) com.alzikr.app.pets.PetWear.toggleWear(sp, i)
+            }) { mod ->
+                val pic = androidx.compose.runtime.produceState<android.graphics.Bitmap?>(null, i.path) {
+                    value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.alzikr.app.pets.PetBitmaps.get("wear", i.path, 256) }
+                }.value
+                Box(mod.padding(6.dp), contentAlignment = Alignment.Center) {
+                    pic?.let { androidx.compose.foundation.Image(it.asImageBitmap(), i.name, Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Fit) }
+                }
+            }
+        }
+    }
+    if (fx.isNotEmpty()) Panel(pad = 14.dp) {
+        Title("المؤثرات")
+        if (com.alzikr.app.pets.PetPerf.reduceMotion || com.alzikr.app.pets.PetPerf.saving) Sub("متوقفة الآن: الحركة المخفّفة أو توفير الطاقة مفعّل.", size = 13.sp)
+        fx.forEach { e ->
+            val open = com.alzikr.app.pets.PetWear.open(e.level)
+            SettingRow("${if (open) "✨" else "🔒"} ${e.name}", if (open) null else "يُفتح في المستوى ${Quran.digits(e.level)}") {
+                if (open) Switch(com.alzikr.app.pets.PetWear.showing(sp, e.id), { com.alzikr.app.pets.PetWear.toggleEffect(sp, e.id) })
+            }
+        }
     }
 }
 
