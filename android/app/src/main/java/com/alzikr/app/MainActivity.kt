@@ -123,7 +123,7 @@ class MainActivity : ComponentActivity() {
         openPlace(intent)
     }
 
-    override fun onPause() { super.onPause(); PetOverlay.appVisible(this, false) }
+    override fun onPause() { super.onPause(); PetOverlay.appVisible(this, false); val app = applicationContext; Thread { runCatching { PetWidget.update(app) } }.start() }
 
     override fun onResume() {
         PetOverlay.appVisible(this, true)
@@ -186,7 +186,7 @@ private fun Root() {
     var settings by remember { mutableStateOf(false) }
     // The home-screen widgets follow the theme too.
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx); MomentWidget.update(ctx) } }
+    androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx); MomentWidget.update(ctx); PetWidget.update(ctx) } }
     AppTheme {
         run {
             // Back returns to the previous page (inner pages handle back first).

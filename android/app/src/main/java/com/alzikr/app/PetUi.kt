@@ -322,6 +322,30 @@ fun PetPage() {
             androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).clip(L.shape(4.dp)), color = P.accent, trackColor = P.line)
             Sub("بقي ${Quran.digits(to - x)} ✨ لـ«${Pet.title(lv + 1)}» المستوى ${Quran.digits(lv + 1)}. كل صلاة تعلّمها، وكل أذكار تتمها، وكل صدقة ودرس وكل ٣٣ تسبيحة تزيد صداقتكما (مرة في اليوم لكل عمل).", size = 11.sp)
+            LaunchedEffect(Unit) { Pet.noteGoodDay() }
+            val st = Pet.streak()
+            Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
+                (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
+                color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+            Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
+        }
+        if (sp != null) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
+            Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+            if (Pet.challengeDone) Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", size = 12.sp)
+            else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
+        }
+        if (sp != null) Panel(pad = 14.dp) {
+            Title("على الشاشة الرئيسية")
+            Sub("ضع ${Pet.name} على شاشة هاتفك الرئيسية: صورته وقلوب يومه وكلمة منه، وزرّا «كلّمني» و«سبّح». أو اختصارًا في رئيسية التطبيق.", size = 12.sp)
+            val onPhone = remember(r) { PetWidget.has(ctx) }
+            Action(if (onPhone) "✓ على شاشة الهاتف (أضف نسخة أخرى)" else "🏠 ضعه على شاشة الهاتف", Modifier.fillMaxWidth().padding(top = 8.dp), filled = !onPhone) {
+                if (!PetWidget.pin(ctx)) android.widget.Toast.makeText(ctx, "اضغط مطولًا على الشاشة الرئيسية ← الأدوات ← ALzikr ← «صديقي»", android.widget.Toast.LENGTH_LONG).show()
+            }
+            val inApp = "pet" in Home.shortcuts
+            Action(if (inApp) "✓ في رئيسية التطبيق (إزالة)" else "➕ اختصار في رئيسية التطبيق", Modifier.fillMaxWidth().padding(top = 6.dp), filled = false) {
+                Home.shortcuts = if (inApp) Home.shortcuts - "pet" else listOf("pet") + Home.shortcuts
+            }
         }
         Title("اختر صديقك")
         SpeciesGrid(sp) { Pet.species = it }

@@ -44,6 +44,7 @@ object Pet {
     fun cheer(text: String = "ما شاء الله، أحسنت!", key: String = text) {
         sp.edit().putLong("pet_cheer_at", System.currentTimeMillis()).putString("pet_cheer", text).apply()
         gain(key, 10)
+        runCatching { noteGoodDay() }
         Store.bump()
     }
 
@@ -146,6 +147,52 @@ object Pet {
     var hiddenUntil: Long
         get() = sp.getLong("pet_hidden_until", 0L)
         set(v) { sp.edit().putLong("pet_hidden_until", v).apply(); Store.bump() }
+
+    // ---- good days in a row: a day counts once its mood reaches 60
+    fun noteGoodDay() {
+        if (mood() < 60) return
+        val d = LocalDate.now().toString()
+        val set = sp.getStringSet("pet_good_days", emptySet())!!
+        if (d in set) return
+        val keep = LocalDate.now().minusDays(400).toString()
+        sp.edit().putStringSet("pet_good_days", (set.filter { it >= keep } + d).toSet()).apply()
+    }
+    /** Consecutive good days up to today (or up to yesterday, if today is not good yet). */
+    fun streak(): Int {
+        val set = sp.getStringSet("pet_good_days", emptySet())!!
+        var d = LocalDate.now(); if (d.toString() !in set) d = d.minusDays(1)
+        var n = 0
+        while (d.toString() in set) { n++; d = d.minusDays(1) }
+        return n
+    }
+    fun bestStreak(): Int {
+        val days = sp.getStringSet("pet_good_days", emptySet())!!.mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.sorted()
+        var best = 0; var cur = 0; var prev: LocalDate? = null
+        days.forEach { d -> cur = if (prev?.plusDays(1) == d) cur + 1 else 1; best = maxOf(best, cur); prev = d }
+        return best
+    }
+
+    // ---- the day's small challenge: one good deed suggested each day
+    private val challenges = listOf(
+        "صلِّ ركعتي الضحى", "تصدّق اليوم ولو بشيء قليل", "صِل أحد أرحامك واسأل عن حاله", "اقرأ صفحة زائدة على وردك",
+        "قل «سبحان الله وبحمده» مئة مرة", "استغفر الله مئة مرة", "صلِّ على النبي ﷺ أكثر من عادتك", "صلِّ السنن الرواتب كلها",
+        "صلِّ الوتر قبل أن تنام", "ابدأ من تلقاه بالسلام وابتسم في وجهه", "ادعُ لأخ لك بظهر الغيب", "احفظ حديثًا جديدًا من «حديث اليوم»",
+        "سبّح وحمّد وكبّر ثلاثًا وثلاثين بعد كل صلاة", "أمِط أذى عن الطريق أو أعِن أحدًا في حاجته", "احفظ لسانك اليوم من الغيبة",
+        "اقرأ أذكار الصباح والمساء كاملة", "تعلّم مسألة فقهية جديدة من «الأحكام الفقهية»", "اقرأ تفسير آية من وردك",
+    )
+    private val kidsChallenges = listOf(
+        "ساعد أمك أو أباك في شيء", "قل «بسم الله» قبل الأكل و«الحمد لله» بعده", "رتّب غرفتك وحدك", "قل «السلام عليكم» لأهل البيت",
+        "احفظ آية جديدة", "صلِّ الصلوات الخمس في وقتها", "قل «جزاك الله خيرًا» لمن يساعدك", "اقرأ أذكار النوم قبل أن تنام",
+        "ابتسم لإخوتك وشاركهم ألعابك", "تعلّم حرفًا جديدًا في قسم الأطفال",
+    )
+    fun challenge(): String = LocalDate.now().let { d -> if (kids) kidsChallenges[d.dayOfYear % kidsChallenges.size] else challenges[(d.dayOfYear * 7 + d.year) % challenges.size] }
+    val challengeDone: Boolean get() = sp.getString("pet_ch_done", "") == LocalDate.now().toString()
+    fun doChallenge() {
+        sp.edit().putString("pet_ch_done", LocalDate.now().toString()).apply()
+        if (kids) stars += 2
+        cheer("ما شاء الله! أتممت تحدي اليوم", key = "challenge")
+        gain("challenge_bonus", 10)
+    }
 
     // ---- mood and sleep
     /** Happy when today's prayers so far are marked and the adhkar of the time are done. */
