@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
@@ -65,6 +66,13 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     val onRight = mutableStateOf(true)
     private var n = 0
     private var appOpen = false
+    /** What the window was built with; if the friend changed while ALzikr was open, it is rebuilt. */
+    private var shown: String? = null
+    private fun key() = "${Pet.species}|${Pet.species?.let { PetLooks.chosen(it)?.id }}|${Pet.floatSize}|${Pet.floatAlpha}"
+    /** Hearts after a tap (bumped to replay), walking while it strolls, the tasbih count shown briefly. */
+    val hearts = mutableStateOf(0)
+    val walking = mutableStateOf(false)
+    val count = mutableStateOf<Int?>(null)
     private val margin get() = (6 * resources.displayMetrics.density).toInt()
     private val screenW get() = resources.displayMetrics.widthPixels
     private val petPx get() = (Pet.floatSize * resources.displayMetrics.density).toInt()
@@ -86,13 +94,15 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
             POKE -> { speak(force = true) }
             REFRESH -> { removeView(); show(); schedule() }
             APP_OPEN -> { appOpen = true; view?.visibility = android.view.View.GONE }
-            APP_CLOSED -> { appOpen = false; view?.visibility = android.view.View.VISIBLE }
+            APP_CLOSED -> { appOpen = false; if (shown != key()) { removeView(); show() } else view?.visibility = android.view.View.VISIBLE }
         }
         if (!Pet.floating || !Settings.canDrawOverlays(this) || Pet.species == null) { stopSelf(); return START_NOT_STICKY }
         val n = notice()
         if (Build.VERSION.SDK_INT >= 34) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) else startForeground(ID, n)
         if (view == null && System.currentTimeMillis() >= Pet.hiddenUntil) show()
         if (intent?.action == null) schedule()
+        handler.removeCallbacks(minute); handler.postDelayed(minute, 30_000L)
+        handler.removeCallbacks(stroll); handler.postDelayed(stroll, 20_000L)
         registry.currentState = Lifecycle.State.RESUMED
         return START_STICKY
     }
@@ -103,7 +113,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         fun act(a: String, code: Int) = PendingIntent.getService(this, code, Intent(this, PetOverlay::class.java).setAction(a), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val open = PendingIntent.getActivity(this, 95, Intent(this, MainActivity::class.java).putExtra("page", "pet").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         return Notification.Builder(this, CH).setSmallIcon(R.drawable.ic_stat_zikr)
-            .setContentTitle("${Pet.name} يرافقك").setContentText("يذكّرك كل ${if (Pet.every < 60) "${Pet.every} دقيقة" else "${Pet.every / 60} ساعة"}")
+            .setContentTitle("${Pet.name} يرافقك · ${Pet.title()}").setContentText("يذكّرك كل ${if (Pet.every < 60) "${Pet.every} دقيقة" else "${Pet.every / 60} ساعة"}")
             .setContentIntent(open).setOngoing(true).setColor(0xFF1F7A5A.toInt())
             .addAction(Notification.Action.Builder(null, "إخفاء ساعة", act(HIDE, 96)).build())
             .addAction(Notification.Action.Builder(null, "إيقاف", act(STOP, 97)).build())
@@ -112,8 +122,9 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     private fun show() {
         if (view != null || !Settings.canDrawOverlays(this)) return
-        val species = Pet.species ?: return
-        wm = getSystemService(WindowManager::class.java)
+        if (Pet.species == null) return
+        shown = key()
+        wm =getSystemService(WindowManager::class.java)
         onRight.value = Pet.floatX != 0
         params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
@@ -125,7 +136,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
             setViewTreeLifecycleOwner(this@PetOverlay)
             setViewTreeSavedStateRegistryOwner(this@PetOverlay)
             // Left-to-right for the layout only, so the sprite stays on its edge and the bubble opens inward (the text inside stays Arabic).
-            setContent { AppTheme { androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) { Floating(species) } } }
+            setContent { AppTheme { androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) { Floating() } } }
         }
         v.setOnTouchListener(touch)
         if (appOpen) v.visibility = android.view.View.GONE
@@ -133,17 +144,35 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     @androidx.compose.runtime.Composable
-    private fun Floating(species: Species) {
-        val clock = rememberPetClock(gentle = true)
+    private fun Floating() {
+        // Read the store, so choosing another friend or look in ALzikr changes this one at once.
+        @Suppress("UNUSED_VARIABLE") val v = Store.version
+        val species = Pet.species ?: return
         val b = bubble.value
         val right = onRight.value
+        val asleep = Pet.asleep()
+        val hop = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
+        val h = hearts.value
+        androidx.compose.runtime.LaunchedEffect(h) {
+            if (h == 0) return@LaunchedEffect
+            repeat(2) { hop.animateTo(1f, androidx.compose.animation.core.tween(150)); hop.animateTo(0f, androidx.compose.animation.core.tween(190)) }
+        }
         Row(Modifier.onSizeChanged { fit(it.width) }, verticalAlignment = Alignment.CenterVertically) {
             if (right && b != null) Box(Modifier.padding(end = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
-            Box(Modifier.size(Pet.floatSize.dp).alpha(Pet.floatAlpha)
-            ) {
-                @Suppress("UNUSED_VARIABLE") val t0 = clock()
-                // Moves while it speaks; otherwise a still frame, so it costs nothing.
-                PetLottie(species, Modifier.size(Pet.floatSize.dp), playing = b != null)
+            Box(Modifier.size(Pet.floatSize.dp).alpha(if (asleep) Pet.floatAlpha * .75f else Pet.floatAlpha)) {
+                val look = PetLooks.chosen(species)
+                androidx.compose.runtime.key(species, look?.id) {
+                    // Keeps moving (unless turned off or asleep); always while it speaks or strolls.
+                    PetLottie(species, Modifier.size(Pet.floatSize.dp).hopping { hop.value }, look = look,
+                        playing = b != null || walking.value || hop.isRunning || (Pet.floatMove && !asleep),
+                        speed = if (asleep) .45f else if (walking.value) 1.4f else 1f)
+                }
+                if (asleep && b == null) androidx.compose.material3.Text("💤", fontSize = 14.sp, modifier = Modifier.align(if (right) Alignment.TopStart else Alignment.TopEnd))
+                if (h > 0) FloatingHearts(h, Modifier.align(Alignment.TopCenter))
+                count.value?.let { c ->
+                    androidx.compose.material3.Text(Quran.digits(c), color = androidx.compose.ui.graphics.Color.White, fontSize = 11.sp,
+                        modifier = Modifier.align(Alignment.BottomCenter).background(P.accent, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).padding(horizontal = 6.dp))
+                }
             }
             if (!right && b != null) Box(Modifier.padding(start = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
         }
@@ -152,6 +181,9 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     /** Touches on the sprite: drag (raw screen coordinates, so it follows the finger), tap to speak, long press for the app. Touches on the bubble go to it. */
     private val touch by lazy { object : android.view.View.OnTouchListener {
         var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var downAt = 0L; var dragging = false; var mine = false
+        var lastTap = 0L
+        /** One tap waits a moment: a second tap makes it a tasbih instead of a word. */
+        val single = Runnable { hearts.value++; speak(force = true) }
         val slop = android.view.ViewConfiguration.get(this@PetOverlay).scaledTouchSlop
         val long = Runnable { if (!dragging && mine) { mine = false; openApp(null) } }
         @android.annotation.SuppressLint("ClickableViewAccessibility")
@@ -168,7 +200,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
                 android.view.MotionEvent.ACTION_MOVE -> {
                     if (!mine) return false
                     val dx = e.rawX - downX; val dy = e.rawY - downY
-                    if (!dragging && kotlin.math.hypot(dx, dy) > slop) { dragging = true; handler.removeCallbacks(long); bubble.value = null; showTrash() }
+                    if (!dragging && kotlin.math.hypot(dx, dy) > slop) { dragging = true; stopStroll(); handler.removeCallbacks(long); bubble.value = null; showTrash() }
                     if (dragging) moveTo(startX + dx.toInt(), startY + dy.toInt())
                     return true
                 }
@@ -176,7 +208,12 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     handler.removeCallbacks(long)
                     if (!mine) return false
                     mine = false
-                    if (dragging) dropped() else if (e.actionMasked == android.view.MotionEvent.ACTION_UP && System.currentTimeMillis() - downAt < 600) speak(force = true)
+                    if (dragging) dropped() else if (e.actionMasked == android.view.MotionEvent.ACTION_UP && System.currentTimeMillis() - downAt < 600) {
+                        val now = System.currentTimeMillis()
+                        if (!Pet.floatTasbih) { hearts.value++; speak(force = true) }
+                        else if (now - lastTap < 320) { handler.removeCallbacks(single); lastTap = 0L; tasbih() }
+                        else { lastTap = now; handler.postDelayed(single, 320) }
+                    }
                     return true
                 }
             }
@@ -247,6 +284,63 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         handler.postDelayed(clear, if ((bubble.value?.first?.length ?: 0) > 80) 12_000L else 8_000L)
     }
     private val clear = Runnable { bubble.value = null }
+
+    /** Two taps: one tasbih, counted with the app's tasbih (and its notification); every 33 it cheers. */
+    private fun tasbih() {
+        val c = Data.tasbihTap()
+        Haptics.tap(this, c % 33 == 0)
+        runCatching { CounterNotice.update(this) }
+        count.value = c
+        val word = "${Pet.tasbihWord(c)} · ${Quran.digits(c)}"
+        bubble.value = (if (c % 33 == 0) "$word\nما شاء الله، أتممت ${Quran.digits(33)}" else word) to null
+        if (c % 33 == 0) { hearts.value++; Pet.gain("tasbih_${c / 33}", 5) }
+        handler.removeCallbacks(clear); handler.postDelayed(clear, 2_500L)
+        handler.removeCallbacks(hideCount); handler.postDelayed(hideCount, 4_000L)
+    }
+    private val hideCount = Runnable { count.value = null }
+
+    /** Every half minute: a word before the prayer (once for each prayer). */
+    private val minute = object : Runnable { override fun run() { nudge(); handler.postDelayed(this, 30_000L) } }
+    private fun nudge() {
+        if (!Pet.prayerNudge || !Store.hasLocation || view == null || appOpen || Pet.kids) return
+        val w = runCatching { window() }.getOrNull() ?: return
+        if (!w.next.alertable) return
+        val left = ((w.nextAt - System.currentTimeMillis()) / 60_000L).toInt()
+        if (left !in 1..10 || Store.prefs.getLong("pet_nudged", 0L) == w.nextAt) return
+        val audio = getSystemService(AudioManager::class.java)
+        if (audio.mode != AudioManager.MODE_NORMAL || !getSystemService(PowerManager::class.java).isInteractive) return
+        Store.prefs.edit().putLong("pet_nudged", w.nextAt).apply()
+        hearts.value++
+        bubble.value = "بقي ${Quran.digits(left)} ${if (left in 3..10) "دقائق" else "دقيقة"} على صلاة ${w.next.ar}، استعد لها 🕌" to null
+        handler.removeCallbacks(clear); handler.postDelayed(clear, 12_000L)
+    }
+
+    /** A stroll: now and then it walks a little up or down its edge, then rests. */
+    private var walk: android.animation.ValueAnimator? = null
+    private val stroll = object : Runnable { override fun run() { strollOnce(); handler.postDelayed(this, (25_000L..55_000L).random()) } }
+    private fun strollOnce() {
+        if (!Pet.wander || view == null || appOpen || bubble.value != null || walk != null || Pet.asleep()) return
+        if (!getSystemService(PowerManager::class.java).isInteractive) return
+        val d = resources.displayMetrics.density
+        val h = resources.displayMetrics.heightPixels
+        val top = (90 * d).toInt(); val bottom = h - petPx - (160 * d).toInt()
+        if (bottom <= top) return
+        val step = ((40..150).random() * d).toInt() * (if (Math.random() < .5) -1 else 1)
+        val to = (if (params.y + step in top..bottom) params.y + step else params.y - step).coerceIn(top, bottom)
+        val from = params.y
+        if (to == from) return
+        walking.value = true
+        walk = android.animation.ValueAnimator.ofInt(from, to).apply {
+            duration = (kotlin.math.abs(to - from) / d * 14).toLong().coerceIn(900L, 2600L)
+            interpolator = android.view.animation.AccelerateDecelerateInterpolator()
+            addUpdateListener { a -> if (view != null) { params.y = a.animatedValue as Int; runCatching { wm?.updateViewLayout(view, params) } } }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(a: android.animation.Animator) { walking.value = false; walk = null; Pet.floatY = params.y }
+            })
+            start()
+        }
+    }
+    private fun stopStroll() { walk?.cancel(); walk = null; walking.value = false }
     private val tick = object : Runnable { override fun run() { speak(force = false); handler.postDelayed(this, Pet.every * 60_000L) } }
     private fun schedule() { handler.removeCallbacks(tick); handler.postDelayed(tick, Pet.every * 60_000L) }
 
@@ -257,7 +351,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         runCatching { startActivity(i) }
     }
 
-    private fun removeView() { hideTrash(); view?.let { runCatching { wm?.removeView(it) } }; view = null }
+    private fun removeView() { stopStroll(); hideTrash(); view?.let { runCatching { wm?.removeView(it) } }; view = null }
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
@@ -279,7 +373,13 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         fun refresh(c: Context) { instance?.get()?.let { s -> s.handler.post { s.removeView(); s.show(); s.schedule() } } }
         fun poke(c: Context) { instance?.get()?.let { s -> s.handler.post { s.speak(force = true) } } }
         /** ALzikr on screen: the floating twin steps aside (the one in the app is there). Same process, so no service start from the background. */
-        fun appVisible(c: Context, visible: Boolean) { instance?.get()?.let { s -> s.handler.post { s.appOpen = visible; s.view?.visibility = if (visible) android.view.View.GONE else android.view.View.VISIBLE } } }
+        fun appVisible(c: Context, visible: Boolean) { instance?.get()?.let { s -> s.handler.post {
+            s.appOpen = visible
+            if (visible) { s.stopStroll(); s.view?.visibility = android.view.View.GONE }
+            // Back from ALzikr: if the friend, its look or its size changed there, build it anew.
+            else if (s.view != null && s.shown != s.key()) { s.removeView(); s.show() }
+            else s.view?.visibility = android.view.View.VISIBLE
+        } } }
     }
 }
 
@@ -296,3 +396,17 @@ private fun TrashTarget(over: Boolean) {
     }
 }
 private fun Modifier.androidx_clipCircle() = this.clip(androidx.compose.foundation.shape.CircleShape)
+
+/** A little hop: [lift] 0..1 raises it and squashes it a touch. */
+private fun Modifier.hopping(lift: () -> Float) = this.graphicsLayer { val v = lift(); translationY = -v * size.height * .22f; scaleX = 1f + v * .05f; scaleY = 1f - v * .03f }
+
+/** Three hearts rising and fading after a tap. */
+@androidx.compose.runtime.Composable
+private fun FloatingHearts(key: Int, modifier: Modifier) {
+    val t = androidx.compose.runtime.remember(key) { androidx.compose.animation.core.Animatable(0f) }
+    androidx.compose.runtime.LaunchedEffect(key) { t.animateTo(1f, androidx.compose.animation.core.tween(1300)) }
+    if (t.value >= 1f) return
+    Row(modifier.graphicsLayer { val v = t.value; translationY = -v * 60f; alpha = 1f - v }) {
+        listOf("❤", "💚", "❤").forEach { androidx.compose.material3.Text(it, fontSize = 12.sp, color = P.danger) }
+    }
+}

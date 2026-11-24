@@ -13,7 +13,7 @@ object Pet {
     private val sp get() = Store.prefs
     var species: Species?
         get() = sp.getString("pet_species", null)?.let { runCatching { Species.valueOf(it) }.getOrNull() }
-        set(v) { sp.edit().putString("pet_species", v?.name).apply(); Store.bump() }
+        set(v) { sp.edit().putString("pet_species", v?.name).apply(); if (v != null && since == 0L) since = System.currentTimeMillis(); Store.bump() }
     /** Each friend keeps its own name. */
     fun nameOf(s: Species) = sp.getString("pet_name_${s.name}", null)?.takeIf { it.isNotBlank() }
         // The first test build kept one name for all: it belongs to the friend chosen then.
@@ -41,7 +41,33 @@ object Pet {
         return m.coerceIn(0, 100)
     }
     /** Something good was just done: the friend hops and says so. */
-    fun cheer(text: String = "ما شاء الله، أحسنت!") { sp.edit().putLong("pet_cheer_at", System.currentTimeMillis()).putString("pet_cheer", text).apply(); Store.bump() }
+    fun cheer(text: String = "ما شاء الله، أحسنت!", key: String = text) {
+        sp.edit().putLong("pet_cheer_at", System.currentTimeMillis()).putString("pet_cheer", text).apply()
+        gain(key, 10)
+        Store.bump()
+    }
+
+    // ---- friendship: experience from good deeds (each deed counts once a day), levels and titles
+    var xp: Int
+        get() = sp.getInt("pet_xp", 0)
+        private set(v) { sp.edit().putInt("pet_xp", v).apply() }
+    /** Adds [amount] once per day for each [key], so marking and unmarking a prayer does not count twice. */
+    fun gain(key: String, amount: Int) {
+        val day = LocalDate.now().toString()
+        val keys = if (sp.getString("pet_xp_day", "") == day) sp.getStringSet("pet_xp_keys", emptySet())!!.toMutableSet() else mutableSetOf()
+        if (!keys.add(key)) return
+        sp.edit().putString("pet_xp_day", day).putStringSet("pet_xp_keys", keys).putInt("pet_xp", xp + amount).apply()
+        if (since == 0L) since = System.currentTimeMillis()
+    }
+    fun level(x: Int = xp) = 1 + kotlin.math.sqrt(x / 30.0).toInt()
+    /** Experience where a level starts. */
+    fun levelStart(l: Int) = 30 * (l - 1) * (l - 1)
+    fun title(l: Int = level()) = when { l >= 12 -> "صديق العمر"; l >= 9 -> "رفيق الدرب"; l >= 7 -> "الخِلّ الوفيّ"; l >= 5 -> "الصاحب"; l >= 3 -> "الرفيق"; else -> "صديق جديد" }
+    /** When the friendship began (the first friend chosen). */
+    var since: Long
+        get() = sp.getLong("pet_since", 0L)
+        set(v) { sp.edit().putLong("pet_since", v).apply() }
+    fun daysTogether() = if (since == 0L) 0 else (java.time.temporal.ChronoUnit.DAYS.between(java.time.Instant.ofEpochMilli(since).atZone(java.time.ZoneId.systemDefault()).toLocalDate(), LocalDate.now()) + 1).toInt()
     fun cheerNow(): String? = sp.getString("pet_cheer", null)?.takeIf { System.currentTimeMillis() - sp.getLong("pet_cheer_at", 0) < 6000 }
     fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة"; Species.COW -> "زهرة"; Species.ELEPHANT -> "فيلو"; Species.GIRAFFE -> "طويلة"; Species.BIRD -> "زقزوق"; Species.BEAR -> "دبدوب"; Species.PANDA -> "بمبو" }
     /** For children: encouragement and lessons instead of reminders. */
@@ -87,6 +113,24 @@ object Pet {
     var floatY: Int
         get() = sp.getInt("pet_fy", 400)
         set(v) { sp.edit().putInt("pet_fy", v).apply() }
+    /** Over other apps it keeps moving (off: a still picture that moves only when it speaks). */
+    var floatMove: Boolean
+        get() = sp.getBoolean("pet_fmove", true)
+        set(v) { sp.edit().putBoolean("pet_fmove", v).apply(); Store.bump() }
+    /** Now and then it strolls up or down along its edge. */
+    var wander: Boolean
+        get() = sp.getBoolean("pet_wander", true)
+        set(v) { sp.edit().putBoolean("pet_wander", v).apply(); Store.bump() }
+    /** Two taps on it over other apps = one tasbih. */
+    var floatTasbih: Boolean
+        get() = sp.getBoolean("pet_ftasbih", true)
+        set(v) { sp.edit().putBoolean("pet_ftasbih", v).apply(); Store.bump() }
+    /** Over other apps: a word ten minutes before each prayer. */
+    var prayerNudge: Boolean
+        get() = sp.getBoolean("pet_pnudge", true)
+        set(v) { sp.edit().putBoolean("pet_pnudge", v).apply(); Store.bump() }
+    /** The tasbih phrase for count [n]: 33 subhan Allah, 33 al-hamdu lillah, 34 Allahu akbar, then again. */
+    fun tasbihWord(n: Int) = ((n - 1) % 100).let { if (it < 33) "سبحان الله" else if (it < 66) "الحمد لله" else "الله أكبر" }
     /** Quiet hours: no bubbles between these minutes (e.g. 23:00–05:00); -1 = none. */
     var quietFrom: Int
         get() = sp.getInt("pet_qfrom", 23 * 60)

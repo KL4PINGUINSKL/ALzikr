@@ -308,6 +308,21 @@ fun PetPage() {
             Sub(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلواتك وأذكارك ليفرح" }, Modifier.fillMaxWidth(), size = 12.sp)
             Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
         }
+        if (sp != null) Panel(pad = 14.dp) {
+            // Friendship grows with the good deeds of each day.
+            val lv = Pet.level(); val x = Pet.xp
+            val from = Pet.levelStart(lv); val to = Pet.levelStart(lv + 1)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${Pet.title(lv)} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
+                }
+                Text("${Quran.digits(x)} ✨", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            }
+            androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).clip(L.shape(4.dp)), color = P.accent, trackColor = P.line)
+            Sub("بقي ${Quran.digits(to - x)} ✨ لـ«${Pet.title(lv + 1)}» المستوى ${Quran.digits(lv + 1)}. كل صلاة تعلّمها، وكل أذكار تتمها، وكل صدقة ودرس وكل ٣٣ تسبيحة تزيد صداقتكما (مرة في اليوم لكل عمل).", size = 11.sp)
+        }
         Title("اختر صديقك")
         SpeciesGrid(sp) { Pet.species = it }
         if (sp == null) return@Column
@@ -382,10 +397,14 @@ fun PetPage() {
             Sub("الشفافية", Modifier.padding(top = 8.dp))
             var a by remember { mutableFloatStateOf(Pet.floatAlpha) }
             Slider(a, { a = it }, valueRange = .35f..1f, onValueChangeFinished = { Pet.floatAlpha = a; PetOverlay.refresh(ctx) })
+            SettingRow("يتحرك دائمًا", "متوقف: صورة ثابتة تتحرك فقط حين يتكلم (أوفر للبطارية)") { Switch(Pet.floatMove, { Pet.floatMove = it }) }
+            SettingRow("يتجوّل على حافة الشاشة", "يمشي قليلًا صعودًا ونزولًا كل نصف دقيقة تقريبًا ثم يستريح") { Switch(Pet.wander, { Pet.wander = it }) }
+            SettingRow("ضغطتان = تسبيحة", "تُحسب مع سبحتك: ٣٣ سبحان الله، ٣٣ الحمد لله، ٣٤ الله أكبر") { Switch(Pet.floatTasbih, { Pet.floatTasbih = it }) }
+            SettingRow("ينبّهك قبل الصلاة", "كلمة قبل كل صلاة بعشر دقائق") { Switch(Pet.prayerNudge, { Pet.prayerNudge = it }) }
             SettingRow("ساعات الهدوء", if (Pet.quietFrom < 0) "متوقفة" else "لا فقاعات من ${Alerts.timeText(Pet.quietFrom)} إلى ${Alerts.timeText(Pet.quietTo)}") {
                 Switch(Pet.quietFrom >= 0, { Pet.quietFrom = if (it) 23 * 60 else -1 })
             }
-            Sub("لا يتكلم أثناء المكالمات. ومن إشعاره: «إخفاء ساعة» أو «إيقاف».", size = 11.sp)
+            Sub("اضغط عليه ليقول شيئًا، وضغطتين ليسبّح، ومطولًا لفتح التطبيق، واسحبه إلى ✕ لإخفائه. ينام بعد العشاء. لا يتكلم أثناء المكالمات. ومن إشعاره: «إخفاء ساعة» أو «إيقاف».", size = 11.sp)
             if (Pet.floating && can) Action("أرني فقاعة الآن", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { PetOverlay.poke(ctx) }
         }
     }
