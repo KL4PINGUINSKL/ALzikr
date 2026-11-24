@@ -111,6 +111,10 @@ object Pet {
     var floatY: Int
         get() = sp.getInt("pet_fy", 400)
         set(v) { sp.edit().putInt("pet_fy", v).apply() }
+    /** Over other apps: "normal", "mini" (a small still icon at the edge; a tap opens it for a moment) or "quiet" (still, no bubbles, no strolls). */
+    var floatMode: String
+        get() = sp.getString("pet_fmode", "normal") ?: "normal"
+        set(v) { sp.edit().putString("pet_fmode", v).apply(); Store.bump() }
     /** Over other apps it keeps moving (off: a still picture that moves only when it speaks). */
     var floatMove: Boolean
         get() = sp.getBoolean("pet_fmove", true)

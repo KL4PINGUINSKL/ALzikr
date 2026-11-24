@@ -45,6 +45,20 @@ object AppIcons {
         }
     }.build()
 
+    /** A paw: four toes and a pad (filled, or outlined). */
+    private fun paw(outlined: Boolean): ImageVector = ImageVector.Builder("paw", 24.dp, 24.dp, 24f, 24f).apply {
+        fun circle(b: androidx.compose.ui.graphics.vector.PathBuilder, cx: Float, cy: Float, rx: Float, ry: Float) {
+            b.moveTo(cx - rx, cy); b.arcToRelative(rx, ry, 0f, true, true, 2 * rx, 0f); b.arcToRelative(rx, ry, 0f, true, true, -2 * rx, 0f); b.close()
+        }
+        val fill = if (outlined) null else SolidColor(Color.Black)
+        val stroke = if (outlined) SolidColor(Color.Black) else null
+        path(fill = fill, stroke = stroke, strokeLineWidth = 1.6f) {
+            circle(this, 5f, 10.5f, 2f, 2.5f); circle(this, 9f, 6f, 2.1f, 2.6f); circle(this, 15f, 6f, 2.1f, 2.6f); circle(this, 19f, 10.5f, 2f, 2.5f)
+            moveTo(12f, 11.5f); curveTo(8.6f, 11.5f, 6.2f, 15.6f, 6.6f, 18.2f); curveTo(7f, 20.4f, 9.6f, 20.2f, 12f, 19.4f)
+            curveTo(14.4f, 20.2f, 17f, 20.4f, 17.4f, 18.2f); curveTo(17.8f, 15.6f, 15.4f, 11.5f, 12f, 11.5f); close()
+        }
+    }.build()
+
     private val cache = HashMap<String, ImageVector>()
 
     fun of(section: String, style: IconStyle): ImageVector = cache.getOrPut("$section/$style") {
@@ -53,6 +67,7 @@ object AppIcons {
             "adhkar" -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.FavoriteBorder; IconStyle.ROUNDED -> Icons.Rounded.Favorite; IconStyle.SHARP -> Icons.Sharp.Favorite; else -> Icons.Filled.Favorite }
             "library" -> book(outlined = style == IconStyle.OUTLINED, rounded = style == IconStyle.ROUNDED)
             "daily" -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.CheckCircle; IconStyle.ROUNDED -> Icons.Rounded.CheckCircle; IconStyle.SHARP -> Icons.Sharp.CheckCircle; else -> Icons.Filled.CheckCircle }
+            "pet" -> paw(outlined = style == IconStyle.OUTLINED)
             "kids" -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.Star; IconStyle.ROUNDED -> Icons.Rounded.Star; IconStyle.SHARP -> Icons.Sharp.Star; else -> Icons.Filled.Star }
             else -> when (style) { IconStyle.OUTLINED -> Icons.Outlined.Menu; IconStyle.ROUNDED -> Icons.Rounded.Menu; IconStyle.SHARP -> Icons.Sharp.Menu; else -> Icons.Filled.Menu }
         }

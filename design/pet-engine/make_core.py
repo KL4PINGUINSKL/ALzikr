@@ -58,6 +58,8 @@ for s in base['species']:
         if k.get('lift', 0.0) != 0.0: fit['lift'] = k['lift']
         if k.get('darkLines'): fit['darkLines'] = True
         if fit: skin['fit'] = fit
+        # Built with After Effects expressions, which Lottie on Android does not run: they draw a dot. Kept for whoever chose them.
+        if k['id'] in ('cat-n16', 'cat-n17', 'cat-n18', 'cat-n45', 'cat-n49'): skin['hidden'] = True
         skins.append(skin)
     species.append({'id': s['id'], 'ar': s['ar'], 'about': about.get(s['id'], ''), 'defaultName': s['defaultName'], 'unlock': {'level': s['unlockLevel']},
                     'personality': dict(zip(['energy', 'sleepy', 'playful', 'chatty', 'curious'], p)), 'skins': skins})

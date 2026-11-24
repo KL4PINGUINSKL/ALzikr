@@ -278,7 +278,8 @@
        "kind": "lottie",
        "path": "cat-n16.json"
       }
-     }
+     },
+     "hidden": true
     },
     {
      "id": "cat-n17",
@@ -295,7 +296,8 @@
        "kind": "lottie",
        "path": "cat-n17.json"
       }
-     }
+     },
+     "hidden": true
     },
     {
      "id": "cat-n18",
@@ -312,7 +314,8 @@
        "kind": "lottie",
        "path": "cat-n18.json"
       }
-     }
+     },
+     "hidden": true
     },
     {
      "id": "cat-n28",
@@ -465,7 +468,8 @@
        "kind": "lottie",
        "path": "cat-n49.json"
       }
-     }
+     },
+     "hidden": true
     },
     {
      "id": "cat-n45",
@@ -482,7 +486,8 @@
        "kind": "lottie",
        "path": "cat-n45.json"
       }
-     }
+     },
+     "hidden": true
     },
     {
      "id": "cat-n44",

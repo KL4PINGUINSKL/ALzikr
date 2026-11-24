@@ -23,17 +23,21 @@ import com.alzikr.app.pets.Season
 object PetLooks {
     /** [zoom] enlarges a drawing that leaves empty space around the animal; [lift] moves it up (fraction of the box). */
     data class Look(val id: String, val name: String, val by: String, val zoom: Float = 1f, val lift: Float = 0f, val darkLines: Boolean = false,
-                    val level: Int = 1, val rarity: Rarity = Rarity.COMMON, val season: Season? = null, val license: String = "", val page: String = "")
+                    val level: Int = 1, val rarity: Rarity = Rarity.COMMON, val season: Season? = null, val license: String = "", val page: String = "", val hidden: Boolean = false)
     @Volatile private var memo: Pair<Int, Map<Species, List<Look>>>? = null
     val looks: Map<Species, List<Look>> get() {
         val rev = PetPacks.revision
         memo?.takeIf { it.first == rev }?.let { return it.second }
         val reg = PetPacks.registry()
-        val m = Species.entries.associateWith { s -> reg.skins(s.name).map { k -> Look(k.id, k.name, k.by, k.fit.zoom, k.fit.lift, k.fit.darkLines, k.unlock.level, k.rarity, k.season, k.license, k.page) } }
+        val m = Species.entries.associateWith { s -> reg.skins(s.name).map { k -> Look(k.id, k.name, k.by, k.fit.zoom, k.fit.lift, k.fit.darkLines, k.unlock.level, k.rarity, k.season, k.license, k.page, k.hidden) } }
         memo = rev to m
         return m
     }
-    fun of(s: Species) = looks[s].orEmpty()
+    /** The looks offered for [s]: hidden ones only when this friend already uses it. */
+    fun of(s: Species): List<Look> {
+        val mine = runCatching { Store.prefs.getString("pet_look_${s.name}", null) }.getOrNull()
+        return looks[s].orEmpty().filter { !it.hidden || it.id == mine }
+    }
     /** The look chosen for this friend (each friend keeps its own). */
     fun chosen(s: Species): Look? {
         val id = Store.prefs.getString("pet_look_${s.name}", null)

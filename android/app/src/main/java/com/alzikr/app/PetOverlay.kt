@@ -68,14 +68,20 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var appOpen = false
     /** What the window was built with; if the friend changed while ALzikr was open, it is rebuilt. */
     private var shown: String? = null
-    private fun key() = "${Pet.species}|${Pet.species?.let { PetLooks.chosen(it)?.id }}|${Pet.floatSize}|${Pet.floatAlpha}"
+    private fun key() = "${Pet.species}|${Pet.species?.let { PetLooks.chosen(it)?.id }}|${Pet.floatSize}|${Pet.floatAlpha}|${Pet.floatMode}"
+    /** Mini mode opened by a tap, for a moment. */
+    val expanded = mutableStateOf(false)
+    private val mini get() = Pet.floatMode == "mini" && !expanded.value
+    private val quiet get() = Pet.floatMode == "quiet"
+    /** The sprite's size now: 34 dp in mini mode, otherwise the chosen size. */
+    private fun sz(): Int = if (mini) 34 else Pet.floatSize
     /** Hearts after a tap (bumped to replay), walking while it strolls, the tasbih count shown briefly. */
     val hearts = mutableStateOf(0)
     val walking = mutableStateOf(false)
     val count = mutableStateOf<Int?>(null)
     private val margin get() = (6 * resources.displayMetrics.density).toInt()
     private val screenW get() = resources.displayMetrics.widthPixels
-    private val petPx get() = (Pet.floatSize * resources.displayMetrics.density).toInt()
+    private val petPx get() = (sz() * resources.displayMetrics.density).toInt()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -159,12 +165,12 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         }
         Row(Modifier.onSizeChanged { fit(it.width) }, verticalAlignment = Alignment.CenterVertically) {
             if (right && b != null) Box(Modifier.padding(end = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
-            Box(Modifier.size(Pet.floatSize.dp).alpha(if (asleep) Pet.floatAlpha * .75f else Pet.floatAlpha)) {
+            Box(Modifier.size(sz().dp).alpha((if (asleep) Pet.floatAlpha * .75f else Pet.floatAlpha) * (if (mini) .7f else 1f))) {
                 val look = PetLooks.chosen(species)
                 androidx.compose.runtime.key(species, look?.id) {
                     // Keeps moving (unless turned off or asleep); always while it speaks or strolls.
-                    PetLottie(species, Modifier.size(Pet.floatSize.dp).hopping { hop.value }, look = look,
-                        playing = b != null || walking.value || hop.isRunning || (Pet.floatMove && !asleep),
+                    PetLottie(species, Modifier.size(sz().dp).hopping { hop.value }, look = look,
+                        playing = b != null || walking.value || hop.isRunning || (Pet.floatMove && !asleep && !mini && !quiet),
                         speed = if (asleep) .45f else if (walking.value) 1.4f else 1f, place = com.alzikr.app.pets.Place.OVERLAY,
                         // The engine's states: a skin with its own walk/sleep/talk animation uses it; others fall back to idle.
                         state = when { asleep -> com.alzikr.app.pets.PetState.SLEEP; walking.value -> com.alzikr.app.pets.PetState.WALK; b != null -> com.alzikr.app.pets.PetState.TALK; else -> com.alzikr.app.pets.PetState.IDLE })
@@ -185,7 +191,10 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         var downX = 0f; var downY = 0f; var startX = 0; var startY = 0; var downAt = 0L; var dragging = false; var mine = false
         var lastTap = 0L
         /** One tap waits a moment: a second tap makes it a tasbih instead of a word. */
-        val single = Runnable { hearts.value++; Progress.bond("ftap" + System.currentTimeMillis() / 1_800_000L); speak(force = true) }
+        val single = Runnable {
+            if (mini) { expanded.value = true; handler.postDelayed({ expanded.value = false }, 15_000L); return@Runnable }
+            hearts.value++; Progress.bond("ftap" + System.currentTimeMillis() / 1_800_000L); speak(force = true)
+        }
         val slop = android.view.ViewConfiguration.get(this@PetOverlay).scaledTouchSlop
         val long = Runnable { if (!dragging && mine) { mine = false; openApp(null) } }
         @android.annotation.SuppressLint("ClickableViewAccessibility")
@@ -280,7 +289,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         if (view == null || appOpen) return
         val audio = getSystemService(AudioManager::class.java)
         val screenOn = getSystemService(PowerManager::class.java).isInteractive
-        if (!force && (audio.mode != AudioManager.MODE_NORMAL || !screenOn || Pet.quietNow())) return
+        if (!force && (quiet || audio.mode != AudioManager.MODE_NORMAL || !screenOn || Pet.quietNow())) return
         bubble.value = Pet.floatText(this, n++)
         handler.removeCallbacks(clear)
         handler.postDelayed(clear, if ((bubble.value?.first?.length ?: 0) > 80) 12_000L else 8_000L)
@@ -306,13 +315,13 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     /** From level 6: when the day's hearts are full it hops and hearts fly, at most once an hour. */
     private var joyAt = 0L
     private fun joy() {
-        if (view == null || appOpen || bubble.value != null || !Progress.has(6) || Pet.asleep()) return
+        if (view == null || appOpen || mini || quiet || bubble.value != null || !Progress.has(6) || Pet.asleep()) return
         if (System.currentTimeMillis() - joyAt < 3_600_000L || Pet.mood() < 80) return
         if (!getSystemService(PowerManager::class.java).isInteractive) return
         joyAt = System.currentTimeMillis(); hearts.value++
     }
     private fun nudge() {
-        if (!Pet.prayerNudge || !Store.hasLocation || view == null || appOpen || Pet.kids) return
+        if (!Pet.prayerNudge || quiet || !Store.hasLocation || view == null || appOpen || Pet.kids) return
         val w = runCatching { window() }.getOrNull() ?: return
         if (!w.next.alertable) return
         val left = ((w.nextAt - System.currentTimeMillis()) / 60_000L).toInt()
@@ -329,7 +338,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var walk: android.animation.ValueAnimator? = null
     private val stroll = object : Runnable { override fun run() { strollOnce(); handler.postDelayed(this, (25_000L..55_000L).random()) } }
     private fun strollOnce() {
-        if (!Pet.wander || view == null || appOpen || bubble.value != null || walk != null || Pet.asleep()) return
+        if (!Pet.wander || mini || quiet || view == null || appOpen || bubble.value != null || walk != null || Pet.asleep()) return
         if (!getSystemService(PowerManager::class.java).isInteractive) return
         val d = resources.displayMetrics.density
         val h = resources.displayMetrics.heightPixels

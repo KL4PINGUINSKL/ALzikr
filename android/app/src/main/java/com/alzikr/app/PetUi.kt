@@ -193,6 +193,9 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
     LaunchedEffect(sp, stage.id) {
         delay(800)
         while (true) {
+            // An interaction from the menu, or quiet reading, takes precedence.
+            val asked = PetActions.request?.second ?: 0L
+            if (PetQuiet.active || System.currentTimeMillis() - asked < 22_000) { delay(3_000); continue }
             val pick = com.alzikr.app.pets.Behavior.next(def?.personality ?: com.alzikr.app.pets.Personality(), java.time.LocalTime.now().hour, Pet.mood(), Pet.asleep(), stage)
             act = pick.state; delay(pick.durationMs)
         }
@@ -205,8 +208,23 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
     LaunchedEffect(Unit) {
         while (true) {
             delay(Random.nextLong(150_000, 300_000))
-            if (Pet.talks && !Pet.asleep()) speak()
+            if (Pet.talks && !Pet.asleep() && !PetQuiet.active) speak()
         }
+    }
+    // The interactions menu (كلّمني، العب معي، اجلس، نم، حيّني).
+    val req = PetActions.request
+    LaunchedEffect(req) {
+        val (want, at) = req ?: return@LaunchedEffect
+        if (System.currentTimeMillis() - at > 3_000) return@LaunchedEffect
+        when (want) {
+            com.alzikr.app.pets.PetState.TALK -> { act = want; speak() }
+            com.alzikr.app.pets.PetState.PLAY -> { act = want; sim.mode = 2; sim.playLeft = 12f; sim.ball = true; sim.bx = sim.x; sim.bv = .4f; sim.jump(.6f) }
+            com.alzikr.app.pets.PetState.WAVE -> { act = want; said = Pet.Say("السلام عليكم${Pet.userName.takeIf { it.isNotBlank() }?.let { " يا $it" } ?: ""}! 👋"); sim.flapT = .8f }
+            com.alzikr.app.pets.PetState.SLEEP -> { act = want; said = Pet.Say("سأغفو قليلًا… 💤") }
+            else -> act = want
+        }
+        delay(if (want == com.alzikr.app.pets.PetState.SLEEP) 20_000 else 10_000)
+        act = com.alzikr.app.pets.PetState.IDLE
     }
     val cheer = Pet.cheerNow()
     LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); act = com.alzikr.app.pets.PetState.CELEBRATE; sim.jump(); delay(650); sim.jump(.7f) } }
@@ -236,7 +254,10 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
                 translationY = -sim.hop * size.height * .18f
                 rotationZ = sim.lean * .4f * (if (sim.face < 0) -1f else 1f)
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, .95f)
-            }, speed = if (sim.asleep) .35f else 1f, state = if (sim.asleep) com.alzikr.app.pets.PetState.SLEEP else act, scale = stage.scale)
+            }, speed = if (sim.asleep || act == com.alzikr.app.pets.PetState.SLEEP) .35f else 1f, scale = stage.scale,
+                // Quiet while reading: a still, calm friend.
+                playing = !PetQuiet.active,
+                state = when { PetQuiet.active -> com.alzikr.app.pets.PetState.READING; sim.asleep -> com.alzikr.app.pets.PetState.SLEEP; else -> act })
             said?.let { s ->
                 val px = with(LocalDensity.current) { box.roundToPx() }
                 Popup(alignment = if (bubbleBelow) Alignment.TopCenter else Alignment.BottomCenter, offset = IntOffset(0, if (bubbleBelow) px else -px)) {
@@ -281,7 +302,8 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
     val clock = rememberPetClock()
     val line = Pet.lineStyle(P.accent, P.card)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Species.entries.chunked(3).forEach { row ->
+        // Organised by when they open: the animals you can choose first.
+        Species.entries.sortedBy { Progress.speciesLevel(it) }.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { s ->
                     val on = s == chosen
@@ -306,7 +328,10 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
     }
 }
 
-/** The friend's page: choose, name, adults or children, where it lives, and its twin over other apps. */
+/** A tab to open the pet page on (e.g. "room"). */
+object PetTabs { var start: String? = null }
+
+/** The friend's page, in tabs: the friend, its look, its room, memories, bag, and settings. */
 @Composable
 fun PetPage() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -320,8 +345,16 @@ fun PetPage() {
     @Suppress("UNUSED_VARIABLE") val r = resumed
     val sp = Pet.species
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("pet", "🐾", "اختر صديقك وسمّه. يعيش في أعلى التطبيق أو على أرضية في أسفله، يمشي بهدوء ويتكلم أحيانًا. اضغط عليه ليقول شيئًا، واضغط مطولًا لتفتح هذه الصفحة.")
-        if (sp != null) Panel(color = P.card, pad = 12.dp) {
+        Hint("pet2", "🐾", "صفحة صديقك في أقسام: «صديقي» لحاله وتحدّيه واللعب معه، و«المظهر» لاختياره وشكله، و«الغرفة» و«الذكريات» و«الحقيبة»، و«الإعدادات». اضغط عليه ليقول شيئًا، ومطولًا لتفتح هذه الصفحة.")
+        // The page in tabs (organised); without a friend yet, it opens on choosing one.
+        var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(PetTabs.start ?: "friend") }
+        LaunchedEffect(Unit) { PetTabs.start = null }
+        if (sp == null) tab = "look"
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("friend" to "🐾 صديقي", "look" to "🎨 المظهر", "room" to "🏠 الغرفة", "album" to "📔 الذكريات", "bag" to "🎒 الحقيبة", "settings" to "⚙ الإعدادات")
+                .forEach { (k, l) -> Choice(l, tab == k) { tab = k } }
+        }
+        if (tab == "friend" && sp != null) Panel(color = P.card, pad = 12.dp) {
             Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110, paper = P.card) }
             Text(Pet.name, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             val mood = Pet.mood()
@@ -331,7 +364,12 @@ fun PetPage() {
             Sub(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلواتك وأذكارك ليفرح" }, Modifier.fillMaxWidth(), size = 12.sp)
             Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
         }
-        if (sp != null) Panel(pad = 14.dp) {
+        if (tab == "friend" && sp != null) Panel(pad = 12.dp) {
+            Title("العب معه")
+            Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
+            Box(Modifier.padding(top = 8.dp)) { PetInteractions() }
+        }
+        if (tab == "friend" && sp != null) Panel(pad = 14.dp) {
             LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
             Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
             // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
@@ -369,13 +407,13 @@ fun PetPage() {
                 color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
             Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
         }
-        if (sp != null) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
+        if (tab == "friend" && sp != null) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
             if (Pet.challengeDone) Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", size = 12.sp)
             else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
         }
-        if (sp != null) Panel(pad = 14.dp) {
+        if (tab == "settings" && sp != null) Panel(pad = 14.dp) {
             Title("على الشاشة الرئيسية")
             Sub("ضع ${Pet.name} على شاشة هاتفك الرئيسية: صورته وقلوب يومه وكلمة منه، وزرّا «كلّمني» و«سبّح». أو اختصارًا في رئيسية التطبيق.", size = 12.sp)
             val onPhone = remember(r) { PetWidget.has(ctx) }
@@ -387,6 +425,10 @@ fun PetPage() {
                 Home.shortcuts = if (inApp) Home.shortcuts - "pet" else listOf("pet") + Home.shortcuts
             }
         }
+        if (tab == "room" && sp != null) { PetRoom(); Sub("الغرفة تتبع وقت يومك: نافذتها صباحًا ونهارًا ومساءً وليلًا، وتزيد أغراضها مع المستوى. تُظهرها وتخفيها من «الحقيبة».", size = 12.sp) }
+        if (tab == "album") PetAlbumPage()
+        if (tab == "bag") PetBag()
+        if (tab == "look") {
         Title("اختر صديقك")
         SpeciesGrid(sp) { Pet.species = it }
         if (sp == null) return@Column
@@ -424,6 +466,8 @@ fun PetPage() {
             var me by remember { mutableStateOf(Pet.userName) }
             OutlinedTextField(me, { me = it; Pet.userName = it }, singleLine = true, label = { Text("بماذا يناديك؟") }, modifier = Modifier.weight(1f))
         }
+        }
+        if (tab == "settings") {
 
         Panel(pad = 14.dp) {
             Title("لمن؟")
@@ -432,6 +476,13 @@ fun PetPage() {
                 Choice("للصغار: يتعلّم معي", Pet.kids) { Pet.kids = true }
             }
             if (Pet.kids) Action("⭐ تعلّم مع ${Pet.name}", Modifier.fillMaxWidth().padding(top = 10.dp)) { Nav.morePage = "kids"; Nav.go("more") }
+        }
+        Panel(pad = 14.dp) {
+            Title("الهدوء")
+            SettingRow("هادئ أثناء القراءة", "لا يتكلم ولا يتحرك وأنت تقرأ القرآن أو الحديث") {
+                Switch(Store.prefs.getBoolean("pet_quiet_reading", true), { Store.prefs.edit().putBoolean("pet_quiet_reading", it).apply(); Store.bump() })
+            }
+            Action("الحركة والبطارية والحزم", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { Nav.morePage = "petpacks"; Nav.go("more") }
         }
         Panel(pad = 14.dp) {
             Title("أين يعيش في التطبيق؟")
@@ -455,6 +506,11 @@ fun PetPage() {
                     if (it && Settings.canDrawOverlays(ctx)) PetOverlay.start(ctx) else PetOverlay.stop(ctx)
                 })
             }
+            Sub("طريقة ظهوره", Modifier.padding(top = 8.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("normal" to "🐾 عادي", "mini" to "🫧 مصغّر", "quiet" to "💤 هادئ").forEach { (k, l) -> Choice(l, Pet.floatMode == k) { Pet.floatMode = k; PetOverlay.refresh(ctx) } }
+            }
+            Sub(when (Pet.floatMode) { "mini" -> "أيقونة صغيرة ثابتة على الحافة، اضغطها فيكبر لحظات"; "quiet" -> "ثابت بلا فقاعات ولا تجوّل ولا تنبيهات، ولا يتدخل في استخدامك"; else -> "بحجمه، يتحرك ويتكلم حسب الإعدادات أدناه" }, size = 11.sp)
             if (Pet.floating && !can) Text("اضغط هنا لمنح الإذن، ثم ارجع", color = P.danger, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
                 runCatching { ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${ctx.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             }.padding(6.dp))
@@ -483,6 +539,7 @@ fun PetPage() {
             }
             Sub("اضغط عليه ليقول شيئًا، وضغطتين ليسبّح، ومطولًا لفتح التطبيق، واسحبه إلى ✕ لإخفائه. ينام بعد العشاء. لا يتكلم أثناء المكالمات. ومن إشعاره: «إخفاء ساعة» أو «إيقاف».", size = 11.sp)
             if (Pet.floating && can) Action("أرني فقاعة الآن", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { PetOverlay.poke(ctx) }
+        }
         }
     }
 }

@@ -98,6 +98,7 @@ class MainActivity : ComponentActivity() {
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
         i?.getStringExtra("petskin")?.let { com.alzikr.app.pets.PetPreview.start = it }
+        i?.getStringExtra("pettab")?.let { PetTabs.start = it }
         i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
         // Pet packs placed in the app's private files/incoming/ (by adb run-as, for testing): install them through the
         // same checks as a download. Other apps cannot write there, so the name alone is not a risk.
@@ -165,10 +166,10 @@ private fun typography(font: FontFamily?): Typography {
 data class Section(val id: String, val label: String, val glyph: String)
 val sections get() = if (Looks.byId(Data.look).kids) listOf(
     Section("kids", "الأطفال", "⭐"), Section("prayer", Home.name, "🕌"), Section("adhkar", "الأذكار", "📿"),
-    Section("library", "المكتبة", "📖"), Section("more", "المزيد", "☰"),
+    Section("library", "المكتبة", "📖"), Section("pet", "صديقي", "🐾"), Section("more", "المزيد", "☰"),
 ) else listOf(
     Section("prayer", Home.name, "🕌"), Section("adhkar", "الأذكار", "📿"), Section("library", "المكتبة", "📖"),
-    Section("daily", "يومي", "☑"), Section("more", "المزيد", "☰"),
+    Section("daily", "يومي", "☑"), Section("pet", "صديقي", "🐾"), Section("more", "المزيد", "☰"),
 )
 
 /** The applied theme (look, colors, fonts, right-to-left) around any screen: the app, the alarm. */
@@ -212,6 +213,7 @@ private fun Root() {
                             "daily" -> TasksScreen()
                             "more" -> MoreScreen(openSettings = { settings = true })
                             "kids" -> KidsHome()
+                            "pet" -> PetPage()   // «صديقي» as its own section (it stays in «المزيد» too)
                             else -> PrayerScreen(openSettings = { settings = true })
                         }
                     }

@@ -12,6 +12,8 @@ import org.json.JSONObject
  */
 object Progress {
     private val sp get() = Store.prefs
+    /** Children keep their own progress (experience, friendship, badges), apart from the adult's, on the same phone. */
+    private fun pk(name: String) = if (Pet.kids) "kid_$name" else name
     private fun today() = LocalDate.now().toString()
 
     // ------------------------------------------------------------ experience
@@ -24,7 +26,7 @@ object Progress {
     /** Records one thing done today; returns the experience it earned (0 if counted already or the cap is reached). */
     fun record(kind: Kind, key: String): Int {
         val d = today()
-        val day = if (sp.getString("prog_day", "") == d) JSONObject(sp.getString("prog_today", "{}")!!) else JSONObject()
+        val day = if (sp.getString(pk("prog_day"), "") == d) JSONObject(sp.getString(pk("prog_today"), "{}")!!) else JSONObject()
         val seen = day.optJSONObject("seen") ?: JSONObject()
         val id = "${kind.name}:$key"
         if (seen.has(id)) return 0
@@ -34,10 +36,10 @@ object Progress {
         val add = kind.xp.coerceAtMost(kind.cap - before).coerceAtLeast(0)
         got.put(kind.name, before + add)
         day.put("seen", seen).put("xp", got)
-        val e = sp.edit().putString("prog_day", d).putString("prog_today", day.toString())
+        val e = sp.edit().putString(pk("prog_day"), d).putString(pk("prog_today"), day.toString())
         count(e, kind)
         val oldLevel = level()
-        if (add > 0) e.putInt("pet_xp", xp + add)
+        if (add > 0) e.putInt(pk("pet_xp"), xp + add)
         e.apply()
         if (Pet.since == 0L && Pet.species != null) Pet.since = System.currentTimeMillis()
         if (level() > oldLevel) levelUp(level())
@@ -48,11 +50,11 @@ object Progress {
         return add
     }
     /** Lifetime counters behind the badges. */
-    private fun count(e: android.content.SharedPreferences.Editor, k: Kind) { e.putInt("prog_n_${k.name}", total(k) + 1) }
-    fun total(k: Kind) = sp.getInt("prog_n_${k.name}", 0)
-    fun todayXp(k: Kind): Int = if (sp.getString("prog_day", "") == today()) JSONObject(sp.getString("prog_today", "{}")!!).optJSONObject("xp")?.optInt(k.name) ?: 0 else 0
+    private fun count(e: android.content.SharedPreferences.Editor, k: Kind) { e.putInt(pk("prog_n_${k.name}"), total(k) + 1) }
+    fun total(k: Kind) = sp.getInt(pk("prog_n_${k.name}"), 0)
+    fun todayXp(k: Kind): Int = if (sp.getString(pk("prog_day"), "") == today()) JSONObject(sp.getString(pk("prog_today"), "{}")!!).optJSONObject("xp")?.optInt(k.name) ?: 0 else 0
 
-    val xp: Int get() = sp.getInt("pet_xp", 0)
+    val xp: Int get() = sp.getInt(pk("pet_xp"), 0)
     /** Total experience at which level [n] begins: 0, 150, 375, 675, 1050, 1500, 2025, 2625, 3300, 4050… */
     fun need(n: Int): Int = if (n <= 1) 0 else 75 * (n - 1) * (n + 2) / 2
     fun level(x: Int = xp): Int { var n = 1; while (need(n + 1) <= x) n++; return n }
@@ -64,23 +66,23 @@ object Progress {
         set(v) { sp.edit().putBoolean("prog_show", v).apply(); Store.bump() }
 
     // ------------------------------------------------------------ level-up
-    private fun levelUp(l: Int) { sp.edit().putInt("prog_levelup", l).apply(); Pet.remember("level", l) }
+    private fun levelUp(l: Int) { sp.edit().putInt(pk("prog_levelup"), l).apply(); Pet.remember("level", l) }
     /** A level reached and not yet celebrated. */
-    fun pendingLevelUp(): Int? = sp.getInt("prog_levelup", 0).takeIf { it > 1 && showLevels }
-    fun celebrated() { sp.edit().remove("prog_levelup").apply(); Store.bump() }
+    fun pendingLevelUp(): Int? = sp.getInt(pk("prog_levelup"), 0).takeIf { it > 1 && showLevels }
+    fun celebrated() { sp.edit().remove(pk("prog_levelup")).apply(); Store.bump() }
 
     // ------------------------------------------------------------ friendship (❤), separate from experience
     /** Time spent with the friend: [amount] once per [key] a day, at most 15 a day. */
     fun bond(key: String, amount: Int = 1) {
         val d = today()
-        val keys = if (sp.getString("bond_day", "") == d) sp.getStringSet("bond_keys", emptySet())!!.toMutableSet() else mutableSetOf()
-        val got = if (sp.getString("bond_day", "") == d) sp.getInt("bond_today", 0) else 0
+        val keys = if (sp.getString(pk("bond_day"), "") == d) sp.getStringSet(pk("bond_keys"), emptySet())!!.toMutableSet() else mutableSetOf()
+        val got = if (sp.getString(pk("bond_day"), "") == d) sp.getInt(pk("bond_today"), 0) else 0
         if (!keys.add(key) || got >= 15) return
         val add = amount.coerceAtMost(15 - got)
-        sp.edit().putString("bond_day", d).putStringSet("bond_keys", keys).putInt("bond_today", got + add).putInt("bond", bondPoints + add).apply()
+        sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), bondPoints + add).apply()
         checkBadges(); Store.bump()
     }
-    val bondPoints: Int get() = sp.getInt("bond", 0)
+    val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
     private val bondSteps = listOf(0 to "تعارف", 20 to "ألفة", 60 to "مودّة", 150 to "صحبة", 300 to "أخوّة", 600 to "رفقة العمر")
     fun bondName(b: Int = bondPoints) = bondSteps.last { b >= it.first }.second
     fun bondStage(b: Int = bondPoints) = bondSteps.indexOfLast { b >= it.first }
@@ -165,15 +167,15 @@ object Progress {
         Badge("challenges30", "🎯", "صاحب التحديات", "أتمّ ثلاثين تحديًا يوميًا", 30) { sp.getInt("pet_ch_count", 0) },
         Badge("level10", "⭐", "المستوى العاشر", "بلغ صديقك المستوى ١٠", 10) { level() },
     )
-    fun earned(): Map<String, String> = JSONObject(sp.getString("prog_badges", "{}")!!).let { o -> o.keys().asSequence().associateWith { o.getString(it) } }
+    fun earned(): Map<String, String> = JSONObject(sp.getString(pk("prog_badges"), "{}")!!).let { o -> o.keys().asSequence().associateWith { o.getString(it) } }
     fun checkBadges() {
-        val o = JSONObject(sp.getString("prog_badges", "{}")!!)
+        val o = JSONObject(sp.getString(pk("prog_badges"), "{}")!!)
         var fresh: Badge? = null
         badges.forEach { b -> if (!o.has(b.id) && runCatching { b.now() }.getOrDefault(0) >= b.target) { o.put(b.id, today()); fresh = b } }
-        if (fresh != null) { sp.edit().putString("prog_badges", o.toString()).putString("prog_newbadge", fresh!!.id).apply() }
+        if (fresh != null) { sp.edit().putString(pk("prog_badges"), o.toString()).putString(pk("prog_newbadge"), fresh!!.id).apply() }
     }
-    fun newBadge(): Badge? = sp.getString("prog_newbadge", null)?.let { id -> badges.firstOrNull { it.id == id } }?.takeIf { showLevels }
-    fun badgeSeen() { sp.edit().remove("prog_newbadge").apply(); Store.bump() }
+    fun newBadge(): Badge? = sp.getString(pk("prog_newbadge"), null)?.let { id -> badges.firstOrNull { it.id == id } }?.takeIf { showLevels }
+    fun badgeSeen() { sp.edit().remove(pk("prog_newbadge")).apply(); Store.bump() }
 
     // ------------------------------------------------------------ hooks
     /** Pages moved forward in the khatma (reading mode counts a page after ten seconds on it; the buttons are for a paper mushaf). */

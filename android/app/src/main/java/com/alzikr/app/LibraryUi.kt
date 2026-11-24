@@ -181,6 +181,7 @@ fun QuranOverlay(surah: Int, ayah: Int, back: () -> Unit) {
 
 @Composable
 private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Boolean = false) {
+    QuietWhileReading()  // the friend stays calm and silent while reading
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
     val ctx = LocalContext.current
@@ -540,6 +541,7 @@ private fun HadithHome() {
 
 @Composable
 internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: String? = number.takeIf { it > 0 }?.toString()) {
+    QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     var book by remember(bookId) { mutableStateOf<Hadith.Book?>(null) }

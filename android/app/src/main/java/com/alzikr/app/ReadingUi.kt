@@ -170,6 +170,7 @@ fun SharhOpen(id: String, back: () -> Unit) = SharhPage(id, back)
 
 @Composable
 private fun SharhPage(id: String, back: () -> Unit) {
+    QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     var h by remember(id) { mutableStateOf<Sharh.Hadith?>(null) }

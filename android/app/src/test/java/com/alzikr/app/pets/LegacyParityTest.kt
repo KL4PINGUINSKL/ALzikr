@@ -14,12 +14,11 @@ class LegacyParityTest {
     @Test fun liveLooksEqualCorePack() {
         Species.entries.forEach { sp ->
             val live = PetLooks.of(sp)
-            val pack = core.species.first { it.id == sp.name }.skins
+            val pack = core.species.first { it.id == sp.name }.skins.filter { !it.hidden }   // hidden looks are not offered
             assertEquals("${sp.name} count", live.size, pack.size)
             live.zip(pack).forEachIndexed { i, (l, s) ->
                 assertEquals(l.id, s.id); assertEquals(l.name, s.name); assertEquals(l.by, s.by)
                 assertEquals(l.zoom, s.fit.zoom, 1e-4f); assertEquals(l.lift, s.fit.lift, 1e-4f); assertEquals(l.darkLines, s.fit.darkLines)
-                assertEquals("level of ${l.id}", Progress.lookLevel(i), s.unlock.level)
                 assertEquals("pack level of ${l.id}", Progress.lookLevel(sp, i), l.level)
             }
             assertEquals("species level ${sp.name}", Progress.speciesLevel(sp), core.species.first { it.id == sp.name }.unlock.level)

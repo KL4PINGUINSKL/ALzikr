@@ -343,6 +343,7 @@ private fun pageStarts(): IntArray {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
+    QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     if (!Quran.ready) { Box(Modifier.fillMaxSize().background(Color(Reading.paper.bg))); return }
@@ -602,6 +603,7 @@ data class RBlock(val kind: RKind, val text: String)
 /** Any text book in reading mode: headings, paragraphs, verses, notes; it reopens where you left it. */
 @Composable
 fun TextReading(title: String, key: String, blocks: List<RBlock>, startAt: Int = -1, back: () -> Unit) {
+    QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val scope = rememberCoroutineScope()

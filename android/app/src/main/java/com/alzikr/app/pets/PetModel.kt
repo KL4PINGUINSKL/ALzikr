@@ -86,6 +86,8 @@ data class Skin(
     val id: String, val species: String, val name: String, val by: String = "", val license: String = "", val page: String = "",
     val rarity: Rarity = Rarity.COMMON, val unlock: Unlock = Unlock(), val fit: Fit = Fit(),
     val states: Map<PetState, Source> = emptyMap(), val fallback: Source? = null, val season: Season? = null,
+    /** Kept for whoever already chose it, but not offered (e.g. a file that does not draw on Android). */
+    val hidden: Boolean = false,
 )
 data class SpeciesDef(
     val id: String, val ar: String, val about: String = "", val defaultName: String = "", val unlock: Unlock = Unlock(),
@@ -149,7 +151,7 @@ object PackParser {
         val f = k.optJSONObject("fit")
         return Skin(id, sid, k.optString("name", id), k.optString("by"), lic, k.optString("page"), Rarity.of(k.optString("rarity")), unlock(k.optJSONObject("unlock")),
             if (f == null) Fit() else Fit(f.optDouble("zoom", 1.0).toFloat(), f.optDouble("lift", 0.0).toFloat(), f.optBoolean("darkLines")),
-            states, k.optJSONObject("fallback")?.let(::source), k.optJSONObject("season")?.let(::season))
+            states, k.optJSONObject("fallback")?.let(::source), k.optJSONObject("season")?.let(::season), k.optBoolean("hidden"))
     }
     fun source(s: JSONObject): Source {
         val kind = SourceKind.of(s.optString("kind")) ?: throw PackFormatException("unknown source kind '${s.optString("kind")}'")
