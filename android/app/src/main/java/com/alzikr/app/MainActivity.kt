@@ -98,6 +98,7 @@ class MainActivity : ComponentActivity() {
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
         i?.getStringExtra("petskin")?.let { com.alzikr.app.pets.PetPreview.start = it }
+        i?.getStringExtra("petstate")?.let { com.alzikr.app.pets.PetPreview.state = it }
         i?.getStringExtra("pettab")?.let { PetTabs.start = it }
         i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
         // Pet packs placed in the app's private files/incoming/ (by adb run-as, for testing): install them through the

@@ -30,7 +30,9 @@ object PetPacks {
     }
 
     fun init(c: Context) { if (ctx == null) ctx = c.applicationContext }
-    private fun store(): PackStore? = ctx?.let { PackStore(File(it.filesDir, "petpacks")) }
+    /** One store per process: its staging area is cleared once, so an install running on another thread is never wiped. */
+    @Volatile private var storeInstance: PackStore? = null
+    private fun store(): PackStore? = storeInstance ?: synchronized(this) { storeInstance ?: ctx?.let { PackStore(File(it.filesDir, "petpacks")) }?.also { storeInstance = it } }
 
     /** The registry; in JVM tests (no Context) the core pack is read from the source tree. */
     fun registry(): Registry = cache ?: synchronized(this) {
@@ -93,7 +95,7 @@ object PetPacks {
         val f = File(File(c.filesDir, "incoming"), "$name.zip").takeIf { it.exists() } ?: error("no such file")
         val bytes = f.readBytes()
         (store() ?: error("no storage")).install(bytes.inputStream(), PackStoreHash.of(bytes)).also { changed(); f.delete() }
-    }
+    }.onFailure { android.util.Log.w("PetPacks", "local install of $name refused: ${it.message}") }
 
     private fun get(url: String): ByteArray? {
         val u = URL(url)

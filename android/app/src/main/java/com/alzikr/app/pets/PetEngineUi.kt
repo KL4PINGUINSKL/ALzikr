@@ -54,7 +54,7 @@ import kotlinx.coroutines.withContext
 
 /** Pet Preview: any look in any of the twenty states, with how the engine resolved it, its pack, license and unlock. */
 /** A look to open the preview on (deep link extra "petskin"). */
-object PetPreview { var start: String? = null }
+object PetPreview { var start: String? = null; var state: String? = null }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -63,7 +63,7 @@ fun PetPreviewPage() {
     val first = remember { PetPreview.start?.let { PetPacks.registry().skin(it) }.also { PetPreview.start = null } }
     var species by remember { mutableStateOf(first?.let { f -> Species.entries.firstOrNull { it.name == f.species } } ?: Pet.species ?: Species.CAT) }
     var lookId by remember(species) { mutableStateOf(first?.takeIf { it.species == species.name }?.id ?: PetLooks.chosen(species)?.id ?: PetLooks.of(species).firstOrNull()?.id) }
-    var state by remember { mutableStateOf(PetState.IDLE) }
+    var state by remember { mutableStateOf(PetPreview.state?.let { PetState.of(it) } ?: PetState.IDLE).also { PetPreview.state = null } }
     val reg = PetPacks.registry()
     val skin = lookId?.let { reg.skin(it) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

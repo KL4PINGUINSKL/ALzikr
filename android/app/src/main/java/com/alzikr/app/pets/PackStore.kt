@@ -36,6 +36,7 @@ class PackStore(private val root: File) {
 
     /** Installs a zip whose SHA-256 must equal [sha256] (from the signed catalog). Returns the installed pack. */
     fun install(zip: InputStream, sha256: String, expectId: String? = null): Pack {
+        // Each install has its own staging directory; stale ones from a crash were cleared when the store was created.
         val tmp = File(staging, "dl-${System.nanoTime()}").apply { mkdirs() }
         try {
             val bytes = zip.readBytes()
