@@ -16,4 +16,6 @@ dependencies {
     // The companion pets: professional Lottie animations (LottieFiles, Lottie Simple License).
     implementation("com.airbnb.android:lottie-compose:6.6.0")
     testImplementation("junit:junit:4.13.2")
+    // The real org.json for JVM tests (Android's copy is a stub there).
+    testImplementation("org.json:json:20240303")
 }

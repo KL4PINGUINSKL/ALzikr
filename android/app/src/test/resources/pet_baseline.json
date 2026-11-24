@@ -1,0 +1,988 @@
+{
+ "species": [
+  {
+   "id": "CAT",
+   "ar": "قطة",
+   "defaultName": "لؤلؤة",
+   "unlockLevel": 1,
+   "skins": [
+    {
+     "id": "cat-1",
+     "name": "تلعب",
+     "by": "Abdul Latif",
+     "zoom": 1.15,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-2",
+     "name": "تضحك",
+     "by": "Abdul Latif",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-5",
+     "name": "بوكي",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-12",
+     "name": "القطة السوداء",
+     "by": "PoPoF",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": true
+    },
+    {
+     "id": "cat-n1",
+     "name": "على القمر",
+     "by": "Mohammad Saiduzzaman Sayed",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n2",
+     "name": "تطلّ",
+     "by": "Tom Fabre",
+     "zoom": 1.6,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n3",
+     "name": "تتدحرج نائمة",
+     "by": "Cảnh Ngô",
+     "zoom": 1.2,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n4",
+     "name": "في الصندوق",
+     "by": "Julio",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n5",
+     "name": "في القرعة",
+     "by": "Tam Doan",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n7",
+     "name": "نائمة… هدوء",
+     "by": "Bayu Febrianto",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n12",
+     "name": "بالنظارة",
+     "by": "Haligul Jaman",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n13",
+     "name": "تموء",
+     "by": "konstaner",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n14",
+     "name": "في دائرة",
+     "by": "Pramod",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n16",
+     "name": "تبتسم",
+     "by": "Nastinator",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n17",
+     "name": "تنعس",
+     "by": "Nastinator",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n18",
+     "name": "غاضبة",
+     "by": "Nastinator",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n28",
+     "name": "تتربّص",
+     "by": "Denys Zavalii",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n26",
+     "name": "مع الكرة",
+     "by": "Anita Kumari Pandey",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n29",
+     "name": "سوداء جالسة",
+     "by": "Masud Rana",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n30",
+     "name": "تلوّح",
+     "by": "aan hamdani",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n35",
+     "name": "تمشي",
+     "by": "Egor Petushkov",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n32",
+     "name": "سوداء تهزّ ذيلها",
+     "by": "Zoheir Hassoun",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n40",
+     "name": "تتمطّى",
+     "by": "Rasul Gadzhiev",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n41",
+     "name": "في الفنجان",
+     "by": "Charly Hill",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n49",
+     "name": "متحيّرة",
+     "by": "Nastinator",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n45",
+     "name": "تبكي",
+     "by": "Nastinator",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n44",
+     "name": "بالقلم",
+     "by": "Roman Karpiuk",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n43",
+     "name": "في القرعة الصغيرة",
+     "by": "Ridwan Ridun",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cat-n52",
+     "name": "تحلم",
+     "by": "Sourav Haldar",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "PENGUIN",
+   "ar": "بطريق",
+   "defaultName": "بطبوط",
+   "unlockLevel": 1,
+   "skins": [
+    {
+     "id": "penguin-2",
+     "name": "بالمنظار",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-3",
+     "name": "يحتفل",
+     "by": "LottieFiles",
+     "zoom": 1.6,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-5",
+     "name": "يقفز",
+     "by": "Ankur K",
+     "zoom": 1.7,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-7",
+     "name": "نائم",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-n1",
+     "name": "أزرق",
+     "by": "Apps for kids",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-n2",
+     "name": "يركل الكرة",
+     "by": "Nick J Cave",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-n3",
+     "name": "مع أصدقائه",
+     "by": "Bianca Beatrix Quicho",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "penguin-n6",
+     "name": "على الجليد",
+     "by": "Roshni N",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "ALBATROSS",
+   "ar": "طائر القطرس",
+   "defaultName": "رحّال",
+   "unlockLevel": 11,
+   "skins": [
+    {
+     "id": "seabird-1",
+     "name": "فوق البحر",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "SWALLOW",
+   "ar": "سنونو",
+   "defaultName": "سنونة",
+   "unlockLevel": 5,
+   "skins": [
+    {
+     "id": "bird-3",
+     "name": "سعيد",
+     "by": "LottieFiles",
+     "zoom": 1.15,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-6",
+     "name": "يلوّح",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-9",
+     "name": "مرح",
+     "by": "LottieFiles",
+     "zoom": 1.15,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "RABBIT",
+   "ar": "أرنب",
+   "defaultName": "قطن",
+   "unlockLevel": 2,
+   "skins": [
+    {
+     "id": "rabbit-6",
+     "name": "منفوش",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-2",
+     "name": "يقفز",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-5",
+     "name": "الساحر",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-10",
+     "name": "أرنبان",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-12",
+     "name": "يلوّح",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-9",
+     "name": "أرنب",
+     "by": "LottieFiles",
+     "zoom": 1.4,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-n7",
+     "name": "خجول",
+     "by": "Brian Karungani",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "rabbit-n16",
+     "name": "مع الجزرة",
+     "by": "Roshni N",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "SHEEP",
+   "ar": "غنمة",
+   "defaultName": "غيمة",
+   "unlockLevel": 1,
+   "skins": [
+    {
+     "id": "sheep-2",
+     "name": "تعدّ الخراف",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "sheep-4",
+     "name": "غنمة",
+     "by": "LottieFiles",
+     "zoom": 2.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "sheep-5",
+     "name": "تقفز",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "sheep-8",
+     "name": "صغيرة",
+     "by": "LottieFiles",
+     "zoom": 1.1,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "sheep-n2",
+     "name": "صوفية",
+     "by": "拓真 豊原",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "CHICKEN",
+   "ar": "دجاجة",
+   "defaultName": "كتكوتة",
+   "unlockLevel": 3,
+   "skins": [
+    {
+     "id": "chicken-1",
+     "name": "دجاجة",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-5",
+     "name": "عصفورة زرقاء",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-6",
+     "name": "ترقص",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-12",
+     "name": "تركض",
+     "by": "LottieFiles",
+     "zoom": 1.3,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-7",
+     "name": "تنقر",
+     "by": "LottieFiles",
+     "zoom": 1.3,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-9",
+     "name": "كتكوت",
+     "by": "LottieFiles",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-n1",
+     "name": "دجاجة بيضاء",
+     "by": "Guilherme Galvao",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-n7",
+     "name": "الكتكوت الأنيق",
+     "by": "Ciara",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-n5",
+     "name": "يفقس",
+     "by": "Elmer Vergara",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-n13",
+     "name": "ديك",
+     "by": "Bashir Ahmad",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "chicken-n9",
+     "name": "كتكوت بقبعة",
+     "by": "DezigningEye",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "COW",
+   "ar": "بقرة",
+   "defaultName": "زهرة",
+   "unlockLevel": 8,
+   "skins": [
+    {
+     "id": "cow-2",
+     "name": "ترقص",
+     "by": "Betsa",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cow-6",
+     "name": "تأكل العشب",
+     "by": "Bashir Ahmad",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cow-4",
+     "name": "تمضغ",
+     "by": "Stephane Urth",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cow-5",
+     "name": "السوداء",
+     "by": "Phase Media",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cow-7",
+     "name": "وجه البقرة",
+     "by": "balaji madiri",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cow-1",
+     "name": "صغيرة",
+     "by": "Sheikh Sohel",
+     "zoom": 2.4,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "cow-13",
+     "name": "غاضبة",
+     "by": "Anna Mazurkevich",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "ELEPHANT",
+   "ar": "فيل",
+   "defaultName": "فيلو",
+   "unlockLevel": 10,
+   "skins": [
+    {
+     "id": "elephant-2",
+     "name": "يمشي",
+     "by": "Bashir Ahmad",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "elephant-3",
+     "name": "على التل",
+     "by": "Porag Gogoi",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "elephant-5",
+     "name": "يفكّر",
+     "by": "Noah Wise",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "GIRAFFE",
+   "ar": "زرافة",
+   "defaultName": "طويلة",
+   "unlockLevel": 9,
+   "skins": [
+    {
+     "id": "giraffe-3",
+     "name": "سعيدة",
+     "by": "Tarryn Myburgh",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "giraffe-1",
+     "name": "تمشي",
+     "by": "Bashir Ahmad",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "giraffe-4",
+     "name": "صغيرة جالسة",
+     "by": "Tom Fabre",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "giraffe-13",
+     "name": "تطلّ",
+     "by": "Sam Fry",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "giraffe-9",
+     "name": "تبتسم",
+     "by": "Sam Fry",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "giraffe-2",
+     "name": "على الدراجة",
+     "by": "Doug Fuchs",
+     "zoom": 2.4,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "giraffe-7",
+     "name": "مع الحوت",
+     "by": "Qrious Studio",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "BIRD",
+   "ar": "عصفور",
+   "defaultName": "زقزوق",
+   "unlockLevel": 4,
+   "skins": [
+    {
+     "id": "bird-n1",
+     "name": "بومة",
+     "by": "Brian Karungani",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n2",
+     "name": "يطير",
+     "by": "Oyinloluwa Adedoyin",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n5",
+     "name": "يحلّق",
+     "by": "Diogo de Freitas",
+     "zoom": 1.8,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n6",
+     "name": "يحمل رسالة",
+     "by": "Zef Cherry-Kynaston",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n7",
+     "name": "أحمر الرأس",
+     "by": "modor mockups",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n8",
+     "name": "وردي",
+     "by": "Pixora Studio",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n10",
+     "name": "على الغصن",
+     "by": "Sekayi Liburd",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n11",
+     "name": "أخضر",
+     "by": "gomotion",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bird-n12",
+     "name": "أصفر",
+     "by": "Akash Gupta",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "BEAR",
+   "ar": "دب",
+   "defaultName": "دبدوب",
+   "unlockLevel": 6,
+   "skins": [
+    {
+     "id": "bear-n5",
+     "name": "الدب البني",
+     "by": "Bashir Ahmad",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n11",
+     "name": "دبدوب",
+     "by": "Itay Alon",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n22",
+     "name": "صغير لطيف",
+     "by": "Fphox Nguyen",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n3",
+     "name": "يشرب الشاي",
+     "by": "Amanda",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n10",
+     "name": "يصفّق",
+     "by": "Abdul Latif",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n25",
+     "name": "يرسل التحية",
+     "by": "Tyler Williams",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n15",
+     "name": "معجب",
+     "by": "Telegram Tracker",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n7",
+     "name": "نائم على الغصن",
+     "by": "Motionstk.studio",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n20",
+     "name": "يطير على القلم",
+     "by": "Abdul Latif",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "bear-n12",
+     "name": "لاعب الكرة",
+     "by": "Abdul Latif",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  },
+  {
+   "id": "PANDA",
+   "ar": "باندا",
+   "defaultName": "بمبو",
+   "unlockLevel": 7,
+   "skins": [
+    {
+     "id": "panda-n4",
+     "name": "يلوّح",
+     "by": "Bhaskar Wary",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n11",
+     "name": "يقرأ",
+     "by": "Abdul Latif",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n8",
+     "name": "يلعب",
+     "by": "Abdul Latif",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n7",
+     "name": "مع الخيزران",
+     "by": "ucilucil",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n1",
+     "name": "نائم",
+     "by": "Zakaria Harry Utomo",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n2",
+     "name": "يحلم",
+     "by": "Irfanlesnar",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n13",
+     "name": "يغفو",
+     "by": "Steven Junior",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n5",
+     "name": "صغير نائم",
+     "by": "Yash Yash",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    },
+    {
+     "id": "panda-n9",
+     "name": "في الفضاء",
+     "by": "Sant Rojas",
+     "zoom": 1.0,
+     "lift": 0.0,
+     "darkLines": false
+    }
+   ]
+  }
+ ]
+}
