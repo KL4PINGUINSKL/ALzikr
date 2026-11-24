@@ -1,0 +1,13 @@
+{
+ "packs": [
+  {
+   "id": "engine-test",
+   "version": 1,
+   "title": "حزمة اختبار المحرّك",
+   "schema": 1,
+   "url": "https://github.com/KL4PINGUINSKL/ALzikr/releases/download/petpacks/engine-test.zip",
+   "sha256": "534cfda3e16bb45f749e089b4f27e8d5433d3029cc290504eec8ea2f2b125ce3",
+   "size": 161553
+  }
+ ]
+}

@@ -192,6 +192,15 @@ class PetEngineTest {
         assertEquals(1, st.activeVersion("spring"))
     }
 
+    @Test fun catalogSignedByThePublishScriptVerifiesWithTheAppKey() {
+        val dir = "catalogtest/"
+        val body = javaClass.classLoader!!.getResource(dir + "catalog.json")!!.readBytes()
+        val sig = javaClass.classLoader!!.getResource(dir + "catalog.json.sig")!!.readText()
+        assertTrue("openssl signature with ALzikr's key", Catalog.verify(body, sig, PetPacks.PUBLIC_KEY))
+        assertFalse("tampered catalog", Catalog.verify(String(body).replace("engine-test", "evil-test").toByteArray(), sig, PetPacks.PUBLIC_KEY))
+        assertEquals("engine-test", Catalog.parse(body).single().id)
+    }
+
     @Test fun catalogMustBeSignedAndPointToTrustedHosts() {
         val kp = KeyPairGenerator.getInstance("EC").apply { initialize(256) }.genKeyPair()
         val body = """{"packs":[{"id":"spring","version":1,"url":"https://github.com/KL4PINGUINSKL/ALzikr/releases/download/p/spring.zip","sha256":"ab"},

@@ -59,7 +59,7 @@ object PetPacks {
      * catalog-signing key (ECDSA P-256, X.509, Base64). Until a catalog is published, the list is simply empty.
      */
     const val CATALOG_URL = "https://raw.githubusercontent.com/KL4PINGUINSKL/ALzikr/main/petpacks/catalog.json"
-    var PUBLIC_KEY = ""
+    const val PUBLIC_KEY = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEwaQgsRTbSmMYApOiu1V2YtkjfJ35nJoDRoHHbQr1flKROaNL8f5Z4JOzxGaU3mmC7E19+6JGsHYD0BfVPLmSvw=="
 
     data class Available(val entry: Catalog.Entry, val installed: Int?)
     /** Fetches and verifies the catalog; null when offline, unsigned or tampered. */
