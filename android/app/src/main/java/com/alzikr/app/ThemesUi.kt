@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
@@ -45,12 +46,14 @@ fun ThemeGallery() {
         Looks.all.forEach { look ->
             val pal = look.pal(dark, Data.theme)
             val chosen = Data.look == look.id
+            val open = Friendship.themeOpen(look.id)
             CompositionLocalProvider(LocalPal provides pal, LocalLook provides look) {
-                Column(Modifier.fillMaxWidth().clip(look.shape()).background(pal.bg).border(if (chosen) 3.dp else 1.dp, if (chosen) pal.accent else pal.line, look.shape())
-                    .clickable { Data.look = look.id }.padding(14.dp)) {
+                Column(Modifier.fillMaxWidth().alpha(if (open) 1f else .6f).clip(look.shape()).background(pal.bg).border(if (chosen) 3.dp else 1.dp, if (chosen) pal.accent else pal.line, look.shape())
+                    .clickable(enabled = open) { Data.look = look.id }.padding(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text((if (look.ornament.isNotEmpty()) look.ornament + " " else "") + look.name, color = pal.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body, modifier = Modifier.weight(1f))
                         if (chosen) Text("✓ المستخدم", color = pal.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        else if (!open) Text("🔒 ${Quran.digits(Friendship.themeGift(look.id)!!.bond)} ❤ صداقة", color = pal.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Text(look.about, color = pal.muted, fontSize = 12.sp, fontFamily = look.body)
                     Spacer(Modifier.height(10.dp))

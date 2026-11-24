@@ -139,6 +139,18 @@ object Looks {
             pal(false, 0xFFEAF6FF, 0xFFFFFFFF, 0xFFFFF2C4, 0xFFBFDFF5, 0xFF1D2B5A, 0xFF56689A, 0xFFF0603F, 0xFFFFFFFF, 0xFF1E9E63),
             pal(true, 0xFF101634, 0xFF19204A, 0xFF242C5E, 0xFF344080, 0xFFF1F4FF, 0xFFA9B4E0, 0xFFFF8A65, 0xFF2A0A00, 0xFF5EE0A0),
             Corners.ROUND, 30.dp, Fonts.changa, Fonts.changa, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "⭐", kids = true),
+        // Opened by friendship (Friendship.gifts theme_<id>).
+        Look("breeze", "نسيم", "نعناعي وسماوي هادئ، خط المسيري للعناوين، شريط عائم وبطاقات للصلوات · هدية الصداقة",
+            pal(false, 0xFFEEF8F5, 0xFFFFFFFF, 0xFFDDF1EC, 0xFFC2E2DA, 0xFF123A36, 0xFF5A7E78, 0xFF2A9D8F, 0xFFFFFFFF, 0xFFE0A84A),
+            pal(true, 0xFF08171A, 0xFF0E2226, 0xFF142D32, 0xFF21444B, 0xFFE3F5F2, 0xFF8DB3AD, 0xFF5CD6C2, 0xFF02201C, 0xFFF0C060),
+            Corners.ROUND, 22.dp, null, Fonts.messiri, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.RING, ornament = "≈"),
+        Look("dusk", "غسق", "بنفسجي المغيب وذهب خافت، عناوين كوفية، خط زمني للصلوات وسبحة خرز · هدية الصداقة",
+            pal(false, 0xFFF6F0F8, 0xFFFFFFFF, 0xFFEADDF0, 0xFFD8C4E3, 0xFF2E1A3D, 0xFF7A6688, 0xFF7B4BA8, 0xFFFFFFFF, 0xFFD2953A),
+            pal(true, 0xFF140E1E, 0xFF1C1429, 0xFF261B36, 0xFF3A2B52, 0xFFF0E6F8, 0xFFAE9CC0, 0xFFB58AE6, 0xFF1A0A2A, 0xFFE8B060),
+            Corners.SOFT, 16.dp, Fonts.modern, Fonts.kufi, NavStyle.BAR, IconStyle.OUTLINED, PrayerLayout.TIMELINE, CounterStyle.BEADS, ornament = "✦"),
+        Look("moon", "ضوء القمر", "ليل فضّي وذهب القمر، خط النسخ وعناوين كوفية، شريط عائم وسبحة خرز · هدية الصداقة",
+            null, pal(true, 0xFF0C0F16, 0xFF141925, 0xFF1C2232, 0xFF2C3447, 0xFFEDEFF5, 0xFF9AA3B8, 0xFFC9D3E6, 0xFF0C0F16, 0xFFE8C877),
+            Corners.ROUND, 26.dp, Fonts.naskh, Fonts.kufi, NavStyle.DOCK, IconStyle.GLYPH, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "☽"),
     ) }
 
     fun byId(id: String) = all.firstOrNull { it.id == id } ?: all.first()

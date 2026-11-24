@@ -71,15 +71,29 @@ fun RewardsPage() {
                     }
                 }
             }
-            Sub("ومع كل مستوى بعد ذلك يُفتح شكل جديد لكل حيوان، بلا حدّ للمستويات. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
+            Sub("وكل مستوى من ٢ إلى ١٢٥ يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
+        }
+        Panel(pad = 14.dp) {
+            Title("جوائز الصداقة ${Friendship.heart}")
+            Sub("بنقاط الصداقة وحدها (${Quran.digits(Progress.bondPoints)} ❤ الآن)، منفصلة عن المستوى: إطارات، وثيمات، وأوسمة، ومزايا.", size = 12.sp)
+            Friendship.gifts.forEach { g ->
+                val got = Progress.bondPoints >= g.bond
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp).alpha(if (got) 1f else .55f), verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (got) g.icon else "🔒", fontSize = 20.sp, modifier = Modifier.width(34.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("${g.name} · ${g.kind.ar}", color = P.ink, fontSize = 14.sp)
+                        Sub(if (got) "مفتوح ✓ · ${g.about}" else "${Quran.digits(g.bond)} ❤ · ${g.about}", size = 11.sp, color = if (got) P.accent else P.muted)
+                    }
+                }
+            }
         }
         Panel(pad = 14.dp) {
             Title("إطار أداة «صديقي»")
             // An even grid, like the friends' looks.
             Box(Modifier.padding(top = 8.dp)) {
                 TileGrid(Progress.frames, cols = 3, rows = 2, noun = "الإطارات") { f, m ->
-                    val open = lv >= f.level; val on = Progress.frame == f.id
-                    PictureTile(f.name, on, open, f.level, m, onClick = { if (open) { Progress.frame = f.id; PetWidget.update(ctx) } }) { pm ->
+                    val open = f.open; val on = Progress.frame == f.id
+                    PictureTile(f.name, on, open, f.bond, m, onClick = { if (open) { Progress.frame = f.id; PetWidget.update(ctx) } }) { pm ->
                         Box(pm.padding(6.dp).clip(L.shape(10.dp)).background(framePreview(f.id)))
                     }
                 }
@@ -104,8 +118,9 @@ fun RewardsPage() {
         }
         if (sp != null) Panel(pad = 14.dp) {
             Title("شهادة الصداقة 📜")
-            Sub(if (lv >= 9) "صورة فيها اسم صديقك ومستواه وأيامكما معًا، تشاركها إن شئت. لا تظهر فيها تفاصيل عبادتك." else "تُفتح في المستوى ٩.", size = 12.sp)
-            if (lv >= 9) Action("مشاركة الشهادة", Modifier.fillMaxWidth().padding(top = 8.dp)) { Certificate.share(ctx) }
+            val cert = Friendship.has("certificate")
+            Sub(if (cert) "صورة فيها اسم صديقك ومستواه وأيامكما معًا، تشاركها إن شئت. لا تظهر فيها تفاصيل عبادتك." else "تُفتح بـ ${Quran.digits(Friendship.gift("certificate")!!.bond)} ❤ صداقة.", size = 12.sp)
+            if (cert) Action("مشاركة الشهادة", Modifier.fillMaxWidth().padding(top = 8.dp)) { Certificate.share(ctx) }
         }
     }
 }
@@ -126,6 +141,21 @@ fun ProgressCelebration() {
     val sp = Pet.species ?: return
     val l = Progress.pendingLevelUp()
     val badge = if (l == null) Progress.newBadge() else null
+    val gift = if (l == null && badge == null) Friendship.newGift() else null
+    if (gift != null) {
+        androidx.compose.material3.AlertDialog(onDismissRequest = { Friendship.giftSeen() }, containerColor = P.surface,
+            confirmButton = { androidx.compose.material3.TextButton({ Friendship.giftSeen() }) { Text("جميل!", color = P.accent) } },
+            title = { Text("${Friendship.heart} هدية الصداقة", color = P.ink, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    PetLottie(sp, Modifier.size(130.dp), speed = 1.3f)
+                    Text("${gift.icon} ${gift.name}", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Sub(gift.about, size = 13.sp)
+                    Sub("صداقتكما الآن: ${Progress.bondName()}", size = 12.sp)
+                }
+            })
+        return
+    }
     if (l == null && badge == null) return
     val opened = if (l != null) Progress.rewards().filter { it.level == l } else emptyList()
     val looks = if (l != null) PetLooks.of(sp).indices.count { Progress.lookLevel(sp, it) == l } else 0
@@ -170,7 +200,7 @@ object Certificate {
         t.color = pal.ink.toArgb(); t.textSize = 76f
         cv.drawText(Pet.name, w / 2f, 760f, t)
         t.isFakeBoldText = false; t.textSize = 46f; t.color = pal.accent.toArgb()
-        cv.drawText("«${Progress.title()}» · المستوى ${Quran.digits(Progress.level())}", w / 2f, 850f, t)
+        cv.drawText("«${Friendship.title()}» · المستوى ${Quran.digits(Progress.level())}", w / 2f, 850f, t)
         t.color = pal.ink.toArgb(); t.textSize = 42f
         val who = Pet.userName.takeIf { it.isNotBlank() }
         cv.drawText(if (who != null) "صديق $who" else "صديقي في ALzikr", w / 2f, 950f, t)

@@ -281,10 +281,11 @@ object Pet {
             return Say(kidsWords[(n + LocalTime.now().minute) % kidsWords.size])
         }
         val hm = LocalTime.now().let { it.hour * 60 + it.minute }
-        if (n % 4 == 0 && Progress.has(4) && hm in 300..600 && sp.getString("pet_greet_day", "") != LocalDate.now().toString()) {
+        if (n % 4 == 0 && Friendship.has("greet") && hm in 300..600 && sp.getString("pet_greet_day", "") != LocalDate.now().toString()) {
             sp.edit().putString("pet_greet_day", LocalDate.now().toString()).apply()
             return Say("صباح الخير${userName.takeIf { it.isNotBlank() }?.let { " يا $it" } ?: ""} ☀ يوم مبارك، ابدأه بأذكار الصباح") { Nav.collection = "morning"; Nav.go("adhkar") }
         }
+        if (n % 2 == 0) Friendship.line()?.let { return it }
         if (asleep()) return Say("تصبح على خير… لا تنسَ أذكار النوم") { Nav.collection = "sleep"; Nav.go("adhkar") }
         val opts = ArrayList<Say>()
         if (Store.hasLocation) {

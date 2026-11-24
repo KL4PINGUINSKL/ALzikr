@@ -119,7 +119,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         fun act(a: String, code: Int) = PendingIntent.getService(this, code, Intent(this, PetOverlay::class.java).setAction(a), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val open = PendingIntent.getActivity(this, 95, Intent(this, MainActivity::class.java).putExtra("page", "pet").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         return Notification.Builder(this, CH).setSmallIcon(R.drawable.ic_stat_zikr)
-            .setContentTitle("${Pet.name} يرافقك · ${Pet.title()}").setContentText("يذكّرك كل ${if (Pet.every < 60) "${Pet.every} دقيقة" else "${Pet.every / 60} ساعة"}")
+            .setContentTitle("${Pet.name} يرافقك · ${Friendship.title()}").setContentText("يذكّرك كل ${if (Pet.every < 60) "${Pet.every} دقيقة" else "${Pet.every / 60} ساعة"}")
             .setContentIntent(open).setOngoing(true).setColor(0xFF1F7A5A.toInt())
             .addAction(Notification.Action.Builder(null, "إخفاء ساعة", act(HIDE, 96)).build())
             .addAction(Notification.Action.Builder(null, "إيقاف", act(STOP, 97)).build())
@@ -315,7 +315,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     /** From level 6: when the day's hearts are full it hops and hearts fly, at most once an hour. */
     private var joyAt = 0L
     private fun joy() {
-        if (view == null || appOpen || mini || quiet || bubble.value != null || !Progress.has(6) || Pet.asleep()) return
+        if (view == null || appOpen || mini || quiet || bubble.value != null || !Friendship.has("joy") || Pet.asleep()) return
         if (System.currentTimeMillis() - joyAt < 3_600_000L || Pet.mood() < 80) return
         if (!getSystemService(PowerManager::class.java).isInteractive) return
         joyAt = System.currentTimeMillis(); hearts.value++

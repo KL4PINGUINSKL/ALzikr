@@ -342,7 +342,7 @@ fun PetPage() {
             Text(Pet.name, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             val mood = Pet.mood()
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
-                repeat(5) { k -> val on = mood >= (k + 1) * 20 - 10; Glyph(if (on) "❤" else "♡", tint = if (on) P.accent else P.line, size = 26.dp, modifier = Modifier.padding(horizontal = 3.dp)) }
+                repeat(5) { k -> val on = mood >= (k + 1) * 20 - 10; Glyph(if (on) Friendship.heart else "♡", tint = if (on) (if (Friendship.has("golden")) P.gold else P.accent) else P.line, size = 26.dp, modifier = Modifier.padding(horizontal = 3.dp)) }
             }
             Sub(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلواتك وأذكارك ليفرح" }, Modifier.fillMaxWidth(), size = 12.sp)
             Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
@@ -367,7 +367,7 @@ fun PetPage() {
                 val lv = Progress.level(); val x = Progress.xp
                 val from = Progress.need(lv); val to = Progress.need(lv + 1)
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("✨ ${Progress.title(lv)} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text("✨ ${Friendship.title()} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 }
                 androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
@@ -394,15 +394,6 @@ fun PetPage() {
                     Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
                 }
                 Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه (٧٥ حتى المستوى ٢٥، ثم ١٢٥ حتى ٥٠، ثم ١٥٠): المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
-                // ❤ friendship: time spent together, separate from the experience
-                val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
-                Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("❤ الصداقة: ${Progress.bondName()}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    Text(Quran.digits(bp), color = P.accent, fontSize = 14.sp)
-                }
-                if (bt > 0) androidx.compose.material3.LinearProgressIndicator(progress = { ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(6.dp).clip(L.shape(3.dp)), color = P.accent, trackColor = P.line)
-                Sub("تكبر بوقتك معه: زيارته، واللعب والحديث معه، وتحدياته اليومية.", size = 11.sp)
                 Action("🎁 مكافآتي وأوسمتي", Modifier.fillMaxWidth().padding(top = 10.dp)) { Nav.morePage = "rewards"; Nav.go("more") }
             }
             val st = Pet.streak()
@@ -411,6 +402,7 @@ fun PetPage() {
                 color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
             Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
         }
+        if (tab == "friend" && sp != null && Progress.showLevels) Panel(pad = 14.dp) { FriendshipPanel() }
         if (tab == "friend" && sp != null) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
@@ -588,6 +580,51 @@ fun KidsPage() {
             Text(if (it == q.answer) "أحسنت! ${Pet.name} فرحان بك 🎉" else "حاول مرة أخرى في المرة القادمة", color = if (it == q.answer) P.accent else P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub(q.why, size = 14.sp)
             Action("السؤال التالي ›", Modifier.fillMaxWidth()) { i++ }
+        }
+    }
+}
+
+/** ❤ Friendship: its own points and its own gifts (frames, themes, badges, perks), never added to the level. */
+@Composable
+fun FriendshipPanel() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("${Friendship.heart} الصداقة: ${Progress.bondName()}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text("${Quran.digits(bp)} ❤", color = P.accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+    }
+    if (bt > 0) androidx.compose.material3.LinearProgressIndicator(progress = { ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) },
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.accent, trackColor = P.line)
+    Sub("نقاط منفصلة عن نقاط المستوى ✨: تكبر بوقتك مع صديقك فقط، ولها جوائزها الخاصة.", size = 11.sp)
+    Friendship.next()?.let { g ->
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(g.icon, fontSize = 22.sp, modifier = Modifier.padding(end = 8.dp))
+            Column(Modifier.weight(1f)) {
+                Text("الجائزة التالية: ${g.name}", color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Sub("${g.about} · بقي ${Quran.digits(g.bond - bp)} ❤", size = 11.sp)
+            }
+        }
+    }
+    var how by remember { mutableStateOf(false) }
+    Text(if (how) "▴ كيف تكبر الصداقة؟" else "❓ كيف تكبر الصداقة؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
+    if (how) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        listOf("زيارة صفحة صديقك" to "+٢ مرة في اليوم", "لمسه أو الحديث معه (في التطبيق أو العائم أو الأداة)" to "+١ كل نصف ساعة",
+            "اللعب معه: كلّمني، العب معي، تمشَّ، نم" to "+١ كل نصف ساعة", "إتمام تحدي اليوم" to "+٥").forEach { (a, b) ->
+            Row(Modifier.fillMaxWidth()) { Sub(a, Modifier.weight(1f), size = 12.sp); Text(b, color = P.accent, fontSize = 12.sp) }
+        }
+        Sub("الحد اليومي ١٥ ❤.", size = 11.sp)
+    }
+    if (Friendship.has("nick")) {
+        var edit by remember { mutableStateOf(false) }
+        SettingRow("🏷 لقب صديقك", Friendship.nick.ifBlank { "«${Progress.title()}» (لقب المستوى)" }) { Action("تغيير", filled = false) { edit = true } }
+        if (edit) {
+            var text by remember { mutableStateOf(Friendship.nick) }
+            androidx.compose.material3.AlertDialog(onDismissRequest = { edit = false }, containerColor = P.surface,
+                title = { Text("لقب صديقك", color = P.ink) },
+                text = { androidx.compose.material3.OutlinedTextField(text, { text = it.take(24) }, singleLine = true, placeholder = { Text(Progress.title()) }) },
+                confirmButton = { androidx.compose.material3.TextButton({ Friendship.nick = text; edit = false }) { Text("حفظ", color = P.accent) } },
+                dismissButton = { androidx.compose.material3.TextButton({ Friendship.nick = ""; edit = false }) { Text("لقب المستوى", color = P.muted) } })
         }
     }
 }

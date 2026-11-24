@@ -253,8 +253,8 @@ fun PetBag() {
     Panel(pad = 14.dp) {
         Title("إطارات الأداة")
         Progress.frames.forEach { f ->
-            val open = Progress.level() >= f.level
-            SettingRow("${if (open) "🖼" else "🔒"} ${f.name}", if (open) (if (Progress.frame == f.id) "مستعمل الآن ✓" else null) else "المستوى ${Quran.digits(f.level)}") {
+            val open = f.open
+            SettingRow("${if (open) "🖼" else "🔒"} ${f.name}", if (open) (if (Progress.frame == f.id) "مستعمل الآن ✓" else null) else "يُفتح بـ ${Quran.digits(f.bond)} ❤ صداقة") {
                 if (open && Progress.frame != f.id) Action("استعمال") { Progress.frame = f.id }
             }
         }

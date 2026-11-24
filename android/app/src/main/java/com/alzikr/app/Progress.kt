@@ -109,11 +109,13 @@ object Progress {
         val got = if (sp.getString(pk("bond_day"), "") == d) sp.getInt(pk("bond_today"), 0) else 0
         if (!keys.add(key) || got >= 15) return
         val add = amount.coerceAtMost(15 - got)
-        sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), bondPoints + add).apply()
+        val before = bondPoints
+        sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), before + add).apply()
+        if (!Pet.kids) Friendship.crossed(before, before + add)
         checkBadges(); Store.bump()
     }
     val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
-    private val bondSteps = listOf(0 to "تعارف", 20 to "ألفة", 60 to "مودّة", 150 to "صحبة", 300 to "أخوّة", 600 to "رفقة العمر")
+    private val bondSteps = listOf(0 to "تعارف", 20 to "ألفة", 60 to "مودّة", 150 to "صحبة", 300 to "أخوّة", 600 to "رفقة العمر", 1000 to "صفاء الودّ")
     fun bondName(b: Int = bondPoints) = bondSteps.last { b >= it.first }.second
     fun bondStage(b: Int = bondPoints) = bondSteps.indexOfLast { b >= it.first }
     /** (from, to) of the current friendship stage, for its bar; to = -1 at the last stage. */
@@ -122,16 +124,10 @@ object Progress {
     // ------------------------------------------------------------ rewards opened by level (looks for new friends, widget frames, the certificate)
     data class Reward(val level: Int, val icon: String, val name: String)
     fun rewards(): List<Reward> = listOf(
-        Reward(1, "🐾", "القطة والبطريق والغنمة، وثلاثة أشكال لكل حيوان"),
-        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وشكل جديد لكل حيوان مع كل مستوى بلا حدّ"),
-        Reward(3, "🖼", "إطار «الليل المرصّع بالنجوم» للأداة"),
-        Reward(4, "🌅", "يحيّيك صديقك باسمك صباحًا، ويقول «تقبّل الله» حين تتم وردك"),
-        Reward(5, "✨", "إطار «الذهبي» للأداة"),
-        Reward(6, "😊", "وضع الفرح فوق التطبيقات: يقفز وتطير القلوب حين تمتلئ قلوب يومك"),
-        Reward(8, "🕌", "إطار «الزخرفة» للأداة"),
-        Reward(9, "📜", "شهادة الصداقة: صورة تشاركها باسمك ومستوى صديقك وأيامكما"),
-        Reward(10, "🌟", "إطار «الفجر» للأداة"),
+        Reward(1, "🐾", "القطة والبطريق والغنمة، وأشكال لكل منها"),
+        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وكل مستوى يفتح صديقًا أو شكلًا جديدًا"),
         Reward(12, "👑", "لقب «صديق العمر»"),
+        Reward(50, "🐉", "الأصدقاء الأسطوريون، ولهم زينة ومؤثرات تُفتح مع المستوى"),
     ) + speciesLevels.filter { it.value > 1 }.map { (s, l) -> Reward(l, "🐾", "صديق جديد: ${s.ar}") }.sortedBy { it.level }
     /** Animals open with the level too (the cat, the penguin and the sheep from the start): the levels are in the pack data. */
     val speciesLevels: Map<Species, Int> get() = Species.entries.associateWith { speciesLevel(it) }
@@ -174,13 +170,15 @@ object Progress {
     }
 
     // ------------------------------------------------------------ widget frames
-    data class Frame(val id: String, val name: String, val level: Int, val res: Int?)
+    /** Widget frames: friendship gifts ([bond] = the friendship points that open one; see [Friendship]). */
+    data class Frame(val id: String, val name: String, val bond: Int, val res: Int?) { val open: Boolean get() = Friendship.frameOpen(id) }
     val frames: List<Frame> get() = listOf(
-        Frame("plain", "بلون الثيم", 1, null), Frame("night", "الليل المرصّع بالنجوم", 3, R.drawable.frame_night),
-        Frame("gold", "الذهبي", 5, R.drawable.frame_gold), Frame("pattern", "الزخرفة", 8, R.drawable.frame_pattern), Frame("dawn", "الفجر", 10, R.drawable.frame_dawn),
+        Frame("plain", "بلون الثيم", 0, null), Frame("night", "الليل المرصّع بالنجوم", Friendship.frameGift("night")!!.bond, R.drawable.frame_night),
+        Frame("gold", "الذهبي", Friendship.frameGift("gold")!!.bond, R.drawable.frame_gold), Frame("pattern", "الزخرفة", Friendship.frameGift("pattern")!!.bond, R.drawable.frame_pattern),
+        Frame("dawn", "الفجر", Friendship.frameGift("dawn")!!.bond, R.drawable.frame_dawn),
     )
     var frame: String
-        get() = sp.getString("prog_frame", "plain")!!.takeIf { id -> frames.any { it.id == id && level() >= it.level } } ?: "plain"
+        get() = sp.getString("prog_frame", "plain")!!.takeIf { id -> frames.any { it.id == id && it.open } } ?: "plain"
         set(v) { sp.edit().putString("prog_frame", v).apply(); Store.bump() }
 
     // ------------------------------------------------------------ badges (🏅): long-term milestones, kept with the day they were earned
@@ -198,6 +196,11 @@ object Progress {
         Badge("days365", "🌳", "سنة معًا", "سنة كاملة على صداقتكما", 365) { Pet.daysTogether() },
         Badge("challenges30", "🎯", "صاحب التحديات", "أتمّ ثلاثين تحديًا يوميًا", 30) { sp.getInt("pet_ch_count", 0) },
         Badge("level10", "⭐", "المستوى العاشر", "بلغ صديقك المستوى ١٠", 10) { level() },
+        // Friendship badges (time together, not worship).
+        Badge("bond20", "🤝", "أول ألفة", "اجمع ٢٠ ❤ من وقتك مع صديقك", 20) { bondPoints },
+        Badge("bond150", "💞", "صحبة", "اجمع ١٥٠ ❤", 150) { bondPoints },
+        Badge("bond600", "🫶", "رفقة العمر", "اجمع ٦٠٠ ❤", 600) { bondPoints },
+        Badge("bond1000", "💛", "صفاء الودّ", "اجمع ١٠٠٠ ❤", 1000) { bondPoints },
     )
     fun earned(): Map<String, String> = JSONObject(sp.getString(pk("prog_badges"), "{}")!!).let { o -> o.keys().asSequence().associateWith { o.getString(it) } }
     fun checkBadges() {
