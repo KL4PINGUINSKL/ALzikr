@@ -232,7 +232,12 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
     fun visibleAyah() = list.getOrNull((state.firstVisibleItemIndex - header).coerceAtLeast(0)) ?: list.first()
     // A mushaf page counts for the friend after twenty seconds on it (once a day).
     val readPage = visibleAyah().page
-    LaunchedEffect(s, readPage) { kotlinx.coroutines.delay(20_000); Progress.record(Progress.Kind.PAGE, "p$readPage") }
+    LaunchedEffect(s, readPage) {
+        kotlinx.coroutines.delay(20_000); Progress.record(Progress.Kind.PAGE, "p$readPage")
+        // The next pages of the khatma, read in order here, move it on (and complete the wird), as in reading mode.
+        val k = Data.khatmaPage
+        if (k < Data.PAGES && readPage in (k + 1)..(k + 3)) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString(); Data.khatmaPage = readPage }
+    }
     LaunchedEffect(s) { snapshotFlow { state.firstVisibleItemIndex }.collect { i -> list.getOrNull((i - header).coerceAtLeast(0))?.let { Quran.last = it.s to it.a } } }
     LaunchedEffect(Recitation.now) {
         val (rs, ra) = Recitation.now ?: return@LaunchedEffect

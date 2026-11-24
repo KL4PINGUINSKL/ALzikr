@@ -224,9 +224,19 @@ object Pet {
     }
 
     // ---- mood and sleep
+    /** Puts the friend to sleep now, or wakes it (for an hour, even at night). */
+    fun setNap(sleep: Boolean) {
+        val now = System.currentTimeMillis()
+        sp.edit().putLong("pet_nap_until", if (sleep) now + 8 * 3_600_000L else 0L).putLong("pet_wake_until", if (sleep) 0L else now + 3_600_000L).apply()
+        Store.bump()
+    }
     /** Happy when today's prayers so far are marked and the adhkar of the time are done. */
     fun happy(): Boolean = mood() >= 60
     fun asleep(): Boolean {
+        // «نم» / «استيقظ» from the widget: a nap until woken (at most 8 hours), or awake for an hour at night.
+        val now = System.currentTimeMillis()
+        if (now < sp.getLong("pet_wake_until", 0L)) return false
+        if (now < sp.getLong("pet_nap_until", 0L)) return true
         if (!Store.hasLocation) return false
         val t = Store.times(); val m = LocalTime.now().let { it.hour * 60 + it.minute }
         return m >= t.getValue(Prayer.ISHA) + 150 || m < t.getValue(Prayer.FAJR) - 20

@@ -27,6 +27,7 @@ class PetWidget : AppWidgetProvider() {
         super.onReceive(c, i)
         when (i.action) {
             TALK -> { Store.init(c); Store.prefs.edit().putInt("pet_wn", Store.prefs.getInt("pet_wn", 0) + 1).apply(); Progress.bond("wtalk" + System.currentTimeMillis() / 1_800_000L); update(c, full = false) }
+            NAP -> { Store.init(c); Pet.setNap(!Pet.asleep()); update(c) }
             TASBIH -> {
                 Store.init(c)
                 val n = Data.tasbihTap()
@@ -42,6 +43,7 @@ class PetWidget : AppWidgetProvider() {
     companion object {
         const val TALK = "com.alzikr.app.PET_W_TALK"
         const val TASBIH = "com.alzikr.app.PET_W_TASBIH"
+        const val NAP = "com.alzikr.app.PET_W_NAP"
 
         fun has(c: Context) = AppWidgetManager.getInstance(c).getAppWidgetIds(ComponentName(c, PetWidget::class.java)).isNotEmpty()
 
@@ -81,9 +83,9 @@ class PetWidget : AppWidgetProvider() {
             }
             v.setTextColor(R.id.p_name, ink); v.setTextColor(R.id.p_title, gold)
             v.setTextColor(R.id.p_hearts, acc); v.setTextColor(R.id.p_say, ink); v.setTextColor(R.id.p_extra, (ink and 0x00FFFFFF) or 0xB3000000.toInt())
-            v.setTextColor(R.id.p_talk, acc); v.setTextColor(R.id.p_tasbih, acc)
+            v.setTextColor(R.id.p_talk, acc); v.setTextColor(R.id.p_tasbih, acc); v.setTextColor(R.id.p_nap, acc)
             // The buttons' pill takes the accent, faintly, so it shows on light and dark backgrounds alike.
-            if (android.os.Build.VERSION.SDK_INT >= 31) listOf(R.id.p_talk, R.id.p_tasbih).forEach {
+            if (android.os.Build.VERSION.SDK_INT >= 31) listOf(R.id.p_talk, R.id.p_tasbih, R.id.p_nap).forEach {
                 v.setColorStateList(it, "setBackgroundTintList", android.content.res.ColorStateList.valueOf((acc and 0x00FFFFFF) or 0x55000000))
             }
             words(v)
@@ -95,6 +97,8 @@ class PetWidget : AppWidgetProvider() {
             val open = PendingIntent.getActivity(c, 98, Intent(c, MainActivity::class.java).putExtra("page", "pet").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
             v.setOnClickPendingIntent(R.id.p_img, open); v.setOnClickPendingIntent(R.id.p_name, open)
             v.setOnClickPendingIntent(R.id.p_talk, PendingIntent.getBroadcast(c, 99, Intent(c, PetWidget::class.java).setAction(TALK), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+            v.setTextViewText(R.id.p_nap, if (Pet.asleep()) "☀ أيقظه" else "💤 نم")
+            v.setOnClickPendingIntent(R.id.p_nap, PendingIntent.getBroadcast(c, 101, Intent(c, PetWidget::class.java).setAction(NAP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             v.setOnClickPendingIntent(R.id.p_tasbih, PendingIntent.getBroadcast(c, 100, Intent(c, PetWidget::class.java).setAction(TASBIH), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             // If the launcher refuses so many pictures, keep the friend still rather than leave the widget empty.
             runCatching { ids.forEach { manager.updateAppWidget(it, v) } }.onFailure {
@@ -147,7 +151,7 @@ class PetWidget : AppWidgetProvider() {
             val still = asleep || com.alzikr.app.pets.PetPerf.reduceMotion || !com.alzikr.app.pets.PetFrames.animated(skin)
             val n = if (still) 1 else (com.alzikr.app.pets.PetFrames.durationMs(c, skin) / 90f).toInt().coerceIn(8, 18)
             val px = (120 * c.resources.displayMetrics.density).toInt().coerceIn(200, 300)
-            val list = (0 until n).mapNotNull { i -> com.alzikr.app.pets.PetFrames.frame(c, skin, if (n == 1) 0f else i.toFloat() / n, px) }
+            val list = (0 until n).mapNotNull { i -> com.alzikr.app.pets.PetFrames.frame(c, skin, if (n == 1) 0f else i.toFloat() / n, px, if (asleep) com.alzikr.app.pets.PetState.SLEEP else com.alzikr.app.pets.PetState.IDLE) }
             cache = key to list
             return list
         }

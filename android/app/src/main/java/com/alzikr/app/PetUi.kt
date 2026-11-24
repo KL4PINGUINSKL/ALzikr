@@ -347,7 +347,7 @@ fun PetPage() {
             Sub(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلواتك وأذكارك ليفرح" }, Modifier.fillMaxWidth(), size = 12.sp)
             Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
         }
-        if (tab == "friend" && sp != null) Panel(pad = 12.dp) {
+        if (tab == "friend" && sp != null && petHasMoves(sp)) Panel(pad = 12.dp) {
             Title("العب معه")
             Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
             Box(Modifier.padding(top = 8.dp)) { PetInteractions() }
@@ -373,6 +373,24 @@ fun PetPage() {
                 androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
                 Sub("بقي ${Quran.digits(to - x)} ✨ للمستوى ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
+                var how by remember { mutableStateOf(false) }
+                Text(if (how) "▴ كيف أكسب النقاط؟" else "❓ كيف أكسب النقاط؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
+                if (how) Column(Modifier.fillMaxWidth().padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Progress.Kind.entries.forEach { k ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                            Column(Modifier.weight(1f)) {
+                                Text(k.ar, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Sub(Progress.how(k), size = 11.sp)
+                            }
+                            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
+                                Text("+${Quran.digits(k.xp)} ✨", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Sub("اليوم ${Quran.digits(Progress.todayXp(k))} من ${Quran.digits(k.cap)}", size = 10.sp)
+                            }
+                        }
+                    }
+                    Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
+                }
                 Sub("كل مستوى يحتاج ${Quran.digits(75)} ✨ أكثر من سابقه: المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
                 // ❤ friendship: time spent together, separate from the experience
                 val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()

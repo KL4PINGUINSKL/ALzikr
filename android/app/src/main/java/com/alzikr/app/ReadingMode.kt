@@ -639,6 +639,7 @@ fun WirdReader(back: () -> Unit) {
         LaunchedEffect(pager.currentPage) {
             if (pager.currentPage == count - 1) { delay(10_000); if (to > Data.khatmaPage) Data.khatmaPage = to }
             if (pager.currentPage == count && to > Data.khatmaPage) Data.khatmaPage = to
+            if (pager.currentPage == count && count > 0) runCatching { Progress.wirdDone() }
         }
         var chosen by remember { mutableStateOf<Quran.Ayah?>(null) }
         HorizontalPager(pager, Modifier.fillMaxSize(), key = { it }) { i ->

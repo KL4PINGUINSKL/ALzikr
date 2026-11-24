@@ -75,6 +75,17 @@ fun QuietWhileReading() {
 
 // ------------------------------------------------------------------------------------------------ interactions
 
+/**
+ * Does the chosen look really have the four moves? Our painted friends (rigs) and sprite packs do; a LottieFiles
+ * animation has one built-in motion, so the menu would change nothing and is hidden for it.
+ */
+fun petHasMoves(sp: Species? = Pet.species): Boolean {
+    val look = sp?.let { PetLooks.chosen(it) } ?: return false
+    val skin = com.alzikr.app.pets.PetPacks.registry().skin(look.id) ?: return false
+    val k = com.alzikr.app.pets.StateResolver.resolve(skin, PetState.WALK)?.source?.kind
+    return k == com.alzikr.app.pets.SourceKind.RIG || k == com.alzikr.app.pets.SourceKind.SPRITE || k == com.alzikr.app.pets.SourceKind.FRAMES
+}
+
 /** «كلّمني، العب معي، تمشَّ، نم» (the four states): for fun and friendship only (❤, capped daily), never experience. */
 @Composable
 fun PetInteractions() {

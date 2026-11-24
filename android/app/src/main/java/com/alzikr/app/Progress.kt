@@ -23,6 +23,17 @@ object Progress {
         DEED(10, 60, "الصلوات والأذكار والصدقة"),
     }
 
+    /** How each kind is earned, in plain words (shown under «كيف أكسب النقاط؟»). */
+    fun how(k: Kind): String = when (k) {
+        Kind.PAGE -> "كل صفحة قرآن: تبقى عليها ٢٠ ثانية في المصحف، أو تقلّبها في وضع القراءة أو في «اقرأ وردك»"
+        Kind.WIRD -> "إتمام ورد اليوم من ختمتك (يُحسب عند آخر صفحة منه، أينما قرأته بالترتيب)"
+        Kind.KHATMA -> "ختم القرآن كاملًا"
+        Kind.HADITH -> "كل حديث تقرؤه ١٥ ثانية"
+        Kind.SHARH -> "كل شرح حديث تبقى عليه دقيقة"
+        Kind.STUDY -> "كل درس تجويد تتمّه، وكل مقطع تحفظه أو تراجعه"
+        Kind.DEED -> "كل صلاة تعلّمها ✓، وإتمام أذكار، وصدقة، وكل ٣٣ تسبيحة"
+    }
+
     /** Records one thing done today; returns the experience it earned (0 if counted already or the cap is reached). */
     fun record(kind: Kind, key: String): Int {
         val d = today()
@@ -186,11 +197,14 @@ object Progress {
     fun badgeSeen() { sp.edit().remove(pk("prog_newbadge")).apply(); Store.bump() }
 
     // ------------------------------------------------------------ hooks
+    /** Today's wird is read (from the khatma count, or the wird reader's last page): once a day, and the friend says so. */
+    fun wirdDone() { if (record(Kind.WIRD, "wird") > 0) Pet.cheer("تقبّل الله منك وردك 🌙", key = "wird_cheer") }
+
     /** Pages moved forward in the khatma (reading mode counts a page after ten seconds on it; the buttons are for a paper mushaf). */
     fun khatmaMoved(old: Int, new: Int) {
         if (new <= old) return
         ((old + 1)..new).take(40).forEach { record(Kind.PAGE, "p$it") }
-        if (Data.wirdToday() > 0 && Data.pagesToday() >= Data.wirdToday()) { if (record(Kind.WIRD, "wird") > 0 && has(4)) Pet.cheer("تقبّل الله منك وردك 🌙", key = "wird_cheer") }
+        if (Data.wirdToday() > 0 && Data.pagesToday() >= Data.wirdToday()) wirdDone()
         if (new >= Data.PAGES) record(Kind.KHATMA, "k${Data.khatmaCount}_${Data.khatmaStarted}")
     }
 }
