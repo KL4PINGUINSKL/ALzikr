@@ -20,7 +20,7 @@ object Progress {
     enum class Kind(val xp: Int, val cap: Int, val ar: String) {
         PAGE(2, DAY_MAX, "صفحات القرآن"), WIRD(15, 15, "إتمام الورد"), KHATMA(200, 200, "ختم القرآن"),
         HADITH(2, 30, "قراءة الأحاديث"), SHARH(3, 15, "شروح الأحاديث"), STUDY(5, 20, "الحفظ والتجويد"),
-        DEED(10, 60, "الصلوات والأذكار والصدقة"), LISTEN(1, DAY_MAX, "الاستماع للتلاوة"),
+        DEED(10, 60, "الصلوات والأذكار والصدقة"), LISTEN(1, 60, "الاستماع للتلاوة"),
     }
     /** All experience of one day together never passes this; a finished khatma fills what is left of it (up to 200). */
     const val DAY_MAX = 300
