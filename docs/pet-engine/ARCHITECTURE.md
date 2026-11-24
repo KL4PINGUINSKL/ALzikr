@@ -46,13 +46,13 @@ by code (hop, bob, sway, tilt, slow, fast, fade), so a single-loop Lottie still 
 
 | Place | Frame budget | Saving mode |
 |---|---|---|
-| App (header/stage) | 30 fps | 15 |
-| Floating overlay | 24 fps | 12 |
-| Kids | 30 fps | 15 |
-| Preview | 15 fps | 8 |
-| Grids (pickers) | 12 fps | 8 |
+| App (header/stage, room) | 60 fps | 30 |
+| Floating overlay | 30 fps | 15 |
+| Kids | 60 fps | 30 |
+| Preview | 30 fps | 15 |
+| Grids (pickers) | 12 fps, and only the chosen item moves | 8 |
 
-- Lottie progress is driven by the engine's own clock (not every display frame).
+- All friends read one shared clock per frame rate (`PetClock`), so they advance in the same frame; a clock runs only while a friend uses it.
 - The in-app movement simulation now runs at the place budget instead of every display frame (up to 120 Hz).
 - Reduced motion (phone setting "remove animations" or the app switch): still frames, no code motion; widget uses one frame.
 - Screen off → nothing animates; the overlay stops while ALzikr is open; the app's friends stop while it is in the background.
@@ -77,3 +77,14 @@ atomically. The catalog URL is `https://raw.githubusercontent.com/KL4PINGUINSKL/
 - **Seasonal packs**: the `season` window (Hijri) is parsed and enforced for skins; no seasonal content exists yet.
 - **Per-animal state animations**: current Lottie skins are single loops; real `walk/sleep/...` animations arrive with packs
   that have them (sprite/frames/WebP renderers are ready and were tested with a test pack).
+
+## Added in 1.4.0 (app side, `PetHome.kt`, `PetUi.kt`)
+
+- «صديقي» section in the bottom bar (the page stays in «المزيد»); the page has tabs: friend, look, room, memories, bag, settings.
+- Interactions menu → `PetActions` → the stage (talk, play with the yarn ball, sit, sleep, wave); friendship only.
+- `PetRoom` (time-of-day window, ten items by level, shown/hidden from the bag), `PetBag`, `PetAlbum` (real moments, share as a picture).
+- Overlay modes `Pet.floatMode`: normal, mini (34 dp still icon, a tap opens it for 15 s), quiet (no bubbles, strolls or nudges).
+- Quiet while reading: `QuietWhileReading()` in the Quran reader, reading mode, hadith reader, sharh and text reading.
+- Children's progress is separate: `Progress` keys get a `kid_` prefix while `Pet.kids`.
+- `Skin.hidden`: kept for whoever chose it, not offered (the five expression-based cats).
+- One `PackStore` per process (a second instance cleared the staging area under a running install).

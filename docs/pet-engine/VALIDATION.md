@@ -65,3 +65,14 @@ Device: Samsung SM-S928B (Android 15/One UI, 120 Hz), debug build installed over
   want to drop this skin.
 - **Some new skins include a background scene** (e.g. cat-m10, cat-m16, sheep-m3, panda-m11, elephant-m1, penguin-m2);
   they were chosen as shown in the gallery and kept as is.
+
+## Update (1.4.0, same day)
+
+- **Studio pack «مشمش»** (sprite sheets, 20 states) installed on the phone through `PackStore`; 8 states checked by screenshots;
+  preview page CPU ≈ 16 % vs ≈ 22 % for a Lottie cat, ≈ +10 MB memory. It exposed an installer race, now fixed.
+- **Frame pacing**, prayer tab with the header friend (sheep-8, a heavy scene), 10 s gfxinfo after the shared clock and the
+  60 fps budget: 843 frames, Missed Vsync 0, 50th/90th/99th percentile 7/11/12 ms, no frame above 18 ms. The "janky 31 %"
+  counter is measured against the 120 Hz deadline (8.3 ms), so these frames are not visible stutter at 60 fps.
+- CPU (one core) at 60 fps: prayer tab ≈ 85 %, pet tab ≈ 90 %. Before the engine the same tab was 42–113 % (mean ≈ 73 %).
+  At 30 fps it was ≈ 59 %. Battery saving halves the budget. The header look itself (a full Lottie scene) is the main cost.
+- Merge paths on/off made no measurable difference for this look; they stay on (bear-m17 needs them).
