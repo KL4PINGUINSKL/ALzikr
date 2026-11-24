@@ -483,6 +483,9 @@ fun PetPage() {
             SettingRow("هادئ أثناء القراءة", "لا يتكلم ولا يتحرك وأنت تقرأ القرآن أو الحديث") {
                 Switch(Store.prefs.getBoolean("pet_quiet_reading", true), { Store.prefs.edit().putBoolean("pet_quiet_reading", it).apply(); Store.bump() })
             }
+            SettingRow("يقترح عليك شرح الحديث", "بعد قراءة حديث له شرح في الموسوعة، سطر هادئ تحته") {
+                Switch(Store.prefs.getBoolean("pet_suggest", true), { Store.prefs.edit().putBoolean("pet_suggest", it).apply(); Store.bump() })
+            }
             Action("الحركة والبطارية والحزم", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { Nav.morePage = "petpacks"; Nav.go("more") }
         }
         Panel(pad = 14.dp) {

@@ -629,6 +629,22 @@ private fun HadithCard(b: Hadith.Book, h: Hadith.Item, focused: Boolean = false,
                     else Toast.makeText(ctx, if (HadithSearch.hasIndex(ctx)) "لا يوجد شرح لهذا الحديث في موسوعة الأحاديث المشروحة" else "تحتاج المرة الأولى إلى الإنترنت لتحميل فهرس الشروح", Toast.LENGTH_LONG).show()
                 }
             }.padding(horizontal = 12.dp, vertical = 8.dp))
+        // The friend's gentle suggestion: after a while on a hadith opened by itself, if the encyclopedia explains it.
+        // Quiet text only (no motion or sound), once per hadith, and it can be closed or turned off in the friend's settings.
+        if (focused && Pet.species != null && Store.prefs.getBoolean("pet_suggest", true)) {
+            var tip by remember(h.number) { mutableStateOf<String?>(null) }
+            var closed by remember(h.number) { mutableStateOf(false) }
+            LaunchedEffect(h.number) {
+                kotlinx.coroutines.delay(15_000)
+                if (HadithSearch.hasIndex(ctx)) tip = withContext(Dispatchers.IO) { HadithSearch.findSharh(ctx, h.text) }
+            }
+            val id = tip
+            if (id != null && !closed) Row(Modifier.fillMaxWidth().padding(top = 10.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("🐾 ${Pet.name}: لهذا الحديث شرح في الموسوعة، أتحب أن تقرأه؟", color = P.ink, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Text("اقرأ", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(8.dp)).clickable { openSharh(id) }.padding(horizontal = 8.dp, vertical = 4.dp))
+                Text("✕", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { closed = true }.padding(horizontal = 6.dp, vertical = 4.dp))
+            }
+        }
     }
 }
 

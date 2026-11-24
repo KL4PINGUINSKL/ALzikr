@@ -90,6 +90,26 @@ fun PetInteractions() {
     }
 }
 
+// ------------------------------------------------------------------------------------------------ seasons
+
+/**
+ * Seasons for the friend (Hijri): Ramadan brings its own words (room decorations will come with the room's new design); seasonal looks in packs use the
+ * same windows (Skin.season). "pet_season_preview" (a test switch) shows a season out of its time.
+ */
+object PetSeason {
+    val ramadan = com.alzikr.app.pets.Season(9, 1, 9, 30)
+    fun now(): String? {
+        Store.prefs.getString("pet_season_preview", null)?.takeIf { it.isNotBlank() }?.let { return it }
+        val h = Data.hijri()
+        return if (h.year > 0 && ramadan.contains(h.month, h.day)) "ramadan" else null
+    }
+    val isRamadan: Boolean get() = now() == "ramadan"
+    /** Plain greetings for the season (no quotations). */
+    fun line(n: Int): String? = if (!isRamadan) null else listOf(
+        "رمضان مبارك! 🌙", "تقبّل الله صيامك وقيامك", "هل قرأت وردك اليوم؟ رمضان شهر القرآن", "لا تنسَ السحور، ففيه بركة", "اللهم بلّغنا ليلة القدر",
+    )[Math.floorMod(n, 5)]
+}
+
 // ------------------------------------------------------------------------------------------------ the room
 
 /** Things for the friend's room, opened by the level. Drawn by code (no outside art); each can be shown or put away. */

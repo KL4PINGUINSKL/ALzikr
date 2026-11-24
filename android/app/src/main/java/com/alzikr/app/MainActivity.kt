@@ -100,6 +100,8 @@ class MainActivity : ComponentActivity() {
         i?.getStringExtra("petskin")?.let { com.alzikr.app.pets.PetPreview.start = it }
         i?.getStringExtra("petstate")?.let { com.alzikr.app.pets.PetPreview.state = it }
         i?.getStringExtra("pettab")?.let { PetTabs.start = it }
+        // Test switch: show a season's decorations out of its time ("ramadan", or "off").
+        i?.getStringExtra("petseason")?.let { Store.prefs.edit().putString("pet_season_preview", if (it == "off") "" else it).apply(); Store.bump() }
         i?.getStringExtra("page")?.let { Nav.morePage = it; Nav.go("more") }
         // Pet packs placed in the app's private files/incoming/ (by adb run-as, for testing): install them through the
         // same checks as a download. Other apps cannot write there, so the name alone is not a risk.

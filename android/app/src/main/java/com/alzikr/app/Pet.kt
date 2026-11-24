@@ -265,6 +265,7 @@ object Pet {
     /** Something fitting for now, the most useful first, otherwise a gentle reminder. */
     fun say(n: Int = 0): Say {
         if (n % 4 == 1) memoryLine()?.let { return Say(it) }
+        if (n % 4 == 3) PetSeason.line(n / 4)?.let { return Say(it) }
         if (kids) {
             if (n % 3 == 0) return Say("هيا نتعلم معًا! عندك ${stars} نجمة ⭐") { Nav.morePage = "kids"; Nav.go("more") }
             return Say(kidsWords[(n + LocalTime.now().minute) % kidsWords.size])
