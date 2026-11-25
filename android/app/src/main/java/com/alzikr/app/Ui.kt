@@ -1,6 +1,5 @@
 package com.alzikr.app
 
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 
 import androidx.compose.foundation.horizontalScroll
 
@@ -91,10 +90,10 @@ fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: (
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun Wrap(modifier: Modifier = Modifier, gap: Dp = 6.dp, lines: Int = 3, startOpen: Boolean = false, content: @Composable () -> Unit) {
-    // The setting «كلها في شريط يُمرَّر»: every option in one row that scrolls sideways, no «المزيد».
+    // The setting «كلها في شريط يُمرَّر»: no «المزيد» here either — every option shows (still wrapping, as some groups hold
+    // full-width rows such as the reciter's, which a sideways row would push to its far end).
     if (Data.pickScroll && lines != Int.MAX_VALUE) {
-        Row(modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalAlignment = Alignment.CenterVertically) { content() }
+        androidx.compose.foundation.layout.FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(gap), verticalArrangement = Arrangement.spacedBy(gap)) { content() }
         return
     }
     // [startOpen]: open all when the chosen item would otherwise be folded away.
@@ -142,18 +141,20 @@ fun TabGrid(tabs: List<Triple<String, String, String>>, current: String, cols: I
  * One choice out of many, compact: the chosen one, then [shown]-1 others, then «المزيد ▾» which opens the full list.
  * For long lists such as the tafsir books (a wrapped list of a dozen names looks untidy).
  */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun PickOne(options: List<Pair<String, String>>, selected: String, title: String, shown: Int = 2, modifier: Modifier = Modifier, pick: (String) -> Unit) {
     val open = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val cur = options.firstOrNull { it.first == selected } ?: options.firstOrNull()
     if (Data.pickScroll) {
-        // Every option in one row that scrolls sideways (the chosen one is brought into view).
-        val sel = androidx.compose.runtime.remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
-        Row(modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            options.forEach { (k, l) -> Choice(l, k == cur?.first, if (k == cur?.first) Modifier.bringIntoViewRequester(sel) else Modifier) { pick(k) } }
+        // Every option in one row that scrolls sideways, the chosen one first (nothing scrolls the page to it). Inside a row
+        // that already scrolls sideways there is no width to scroll in, so the options simply follow one another there.
+        val ordered = listOfNotNull(cur) + options.filter { it.first != cur?.first }
+        androidx.compose.foundation.layout.BoxWithConstraints(modifier) {
+            val row = if (constraints.hasBoundedWidth) Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier
+            Row(row, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ordered.forEach { (k, l) -> Choice(l, k == cur?.first) { pick(k) } }
+            }
         }
-        androidx.compose.runtime.LaunchedEffect(cur?.first) { runCatching { sel.bringIntoView() } }
         return
     }
     val quick = (listOfNotNull(cur) + options.filter { it.first != cur?.first }).take(shown)

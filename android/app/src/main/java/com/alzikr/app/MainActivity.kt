@@ -94,6 +94,8 @@ class MainActivity : ComponentActivity() {
     private fun openPlace(i: Intent?) {
         if (i?.getBooleanExtra("darktasbih", false) == true) TasbihDarkActivity.open(this)
         i?.getStringExtra("read")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.reading = it[0] to it[1] }
+        // Opens a surah at a verse in the library's reader ("3:1"; also for testing by adb).
+        i?.getStringExtra("quran")?.split(':')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 2 }?.let { Nav.openQuran(it[0], it[1]) }
         i?.getStringExtra("hsearch")?.let { Nav.hadithQuery = it; Nav.tab = "library" }
         i?.getIntExtra("lib", -1)?.takeIf { it >= 0 }?.let { Nav.library = it; Nav.tab = "library" }
         i?.getIntExtra("story", -1)?.takeIf { it >= 0 }?.let { Nav.story = it; Nav.library = 1; Nav.tab = "library" }
