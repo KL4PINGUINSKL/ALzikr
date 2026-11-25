@@ -72,13 +72,14 @@ class PetWidget : AppWidgetProvider() {
             val pal = ThemeColors.of(c)
             val v = RemoteViews(c.packageName, R.layout.widget_pet)
             // The theme's colors, or a frame opened by the friend's level (light text on the dark frames, dark on gold).
-            val fr = Progress.frames.firstOrNull { it.id == Progress.frame }?.res
+            val frame = Progress.frames.firstOrNull { it.id == Progress.frame }
+            val fr = frame?.res
             var ink = ThemeColors.argb(pal.ink); var gold = ThemeColors.argb(pal.gold); var acc = ThemeColors.argb(pal.accent)
             if (fr == null) ThemeColors.background(v, R.id.p_root, pal.surface)
             else {
                 v.setInt(R.id.p_root, "setBackgroundResource", fr)
                 if (android.os.Build.VERSION.SDK_INT >= 31) v.setColorStateList(R.id.p_root, "setBackgroundTintList", null)
-                if (Progress.frame == "gold") { ink = 0xFF3A2A06.toInt(); gold = 0xFF7A4E00.toInt(); acc = 0xFF5A3A00.toInt() }
+                if (frame?.light == true) { ink = 0xFF2A1E10.toInt(); gold = 0xFF7A4E00.toInt(); acc = 0xFF4A3200.toInt() }
                 else { ink = 0xFFFFFFFF.toInt(); gold = 0xFFF3D27A.toInt(); acc = 0xFFFFFFFF.toInt() }
             }
             v.setTextColor(R.id.p_name, ink); v.setTextColor(R.id.p_title, gold)

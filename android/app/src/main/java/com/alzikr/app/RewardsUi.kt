@@ -125,13 +125,10 @@ fun RewardsPage() {
 }
 
 @Composable
-private fun framePreview(id: String): androidx.compose.ui.graphics.Brush = when (id) {
-    "night" -> androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(0xFF14204A), androidx.compose.ui.graphics.Color(0xFF3A2466)))
-    "gold" -> androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(0xFFF6E3A6), androidx.compose.ui.graphics.Color(0xFFD4A846)))
-    "pattern" -> androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(0xFF0F4D3A), androidx.compose.ui.graphics.Color(0xFF1F7A5A)))
-    "dawn" -> androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(0xFF3B2A5C), androidx.compose.ui.graphics.Color(0xFFE88A5A)))
-    else -> androidx.compose.ui.graphics.Brush.verticalGradient(listOf(P.surface, P.card))
-}
+private fun framePreview(id: String): androidx.compose.ui.graphics.Brush =
+    Progress.frames.firstOrNull { it.id == id && it.res != null }?.let { f ->
+        androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(f.top), androidx.compose.ui.graphics.Color(f.bottom)))
+    } ?: androidx.compose.ui.graphics.Brush.verticalGradient(listOf(P.surface, P.card))
 
 /** A new level or badge: a short celebration with the friend, once. Lives at the app's root. */
 @Composable

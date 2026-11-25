@@ -226,12 +226,27 @@ object Progress {
 
     // ------------------------------------------------------------ widget frames
     /** Widget frames: friendship gifts ([bond] = the friendship points that open one; see [Friendship]). */
-    data class Frame(val id: String, val name: String, val bond: Int, val res: Int?) { val open: Boolean get() = Friendship.frameOpen(id) }
+    /** [top]/[bottom]: the frame's colors for its preview; [light]: a light frame, so the widget's words are dark on it. */
+    data class Frame(val id: String, val name: String, val bond: Int, val res: Int?, val top: Long, val bottom: Long, val light: Boolean) {
+        val open: Boolean get() = Friendship.frameOpen(id)
+    }
     val frames: List<Frame> get() = listOf(
-        Frame("plain", "بلون الثيم", 0, null), Frame("night", "الليل المرصّع بالنجوم", Friendship.frameGift("night")!!.bond, R.drawable.frame_night),
-        Frame("gold", "الذهبي", Friendship.frameGift("gold")!!.bond, R.drawable.frame_gold), Frame("pattern", "الزخرفة", Friendship.frameGift("pattern")!!.bond, R.drawable.frame_pattern),
-        Frame("dawn", "الفجر", Friendship.frameGift("dawn")!!.bond, R.drawable.frame_dawn),
-    )
+        Frame("plain", "بلون الثيم", 0, null, 0, 0, false),
+        Frame("night", "الليل المرصّع بالنجوم", Friendship.frameGift("night")!!.bond, R.drawable.frame_night, 0xFF14204A, 0xFF3A2466, false),
+        Frame("gold", "الذهبي", Friendship.frameGift("gold")!!.bond, R.drawable.frame_gold, 0xFFF6E3A6, 0xFFD4A846, true),
+        Frame("pattern", "الزخرفة", Friendship.frameGift("pattern")!!.bond, R.drawable.frame_pattern, 0xFF0F4D3A, 0xFF1F7A5A, false),
+        Frame("dawn", "الفجر", Friendship.frameGift("dawn")!!.bond, R.drawable.frame_dawn, 0xFF3B2A5C, 0xFFE88A5A, false),
+        Frame("rose", "الورد", Friendship.frameGift("rose")!!.bond, R.drawable.frame_rose, 0xFFFBE3EA, 0xFFF0B6C8, true),
+        Frame("ocean", "البحر", Friendship.frameGift("ocean")!!.bond, R.drawable.frame_ocean, 0xFF0B3D5C, 0xFF0F7A8A, false),
+        Frame("desert", "الكثبان", Friendship.frameGift("desert")!!.bond, R.drawable.frame_desert, 0xFFF6E2C0, 0xFFE0B47A, true),
+        Frame("lantern", "القنديل", Friendship.frameGift("lantern")!!.bond, R.drawable.frame_lantern, 0xFF1E1208, 0xFF5A3410, false),
+        Frame("zellige", "الزليج", Friendship.frameGift("zellige")!!.bond, R.drawable.frame_zellige, 0xFF10275E, 0xFF1F4FA8, false),
+        Frame("aurora", "الشفق", Friendship.frameGift("aurora")!!.bond, R.drawable.frame_aurora, 0xFF06121E, 0xFF1C3A4A, false),
+        Frame("pearl", "اللؤلؤ", Friendship.frameGift("pearl")!!.bond, R.drawable.frame_pearl, 0xFFFAF8FF, 0xFFE6E0F2, true),
+        Frame("royal", "الملكي", Friendship.frameGift("royal")!!.bond, R.drawable.frame_royal, 0xFF2A0E40, 0xFF4A1E6A, false),
+        Frame("crystal", "البلّور", Friendship.frameGift("crystal")!!.bond, R.drawable.frame_crystal, 0xFFEAF9FF, 0xFFBFE8F5, true),
+        Frame("galaxy", "المجرّة", Friendship.frameGift("galaxy")!!.bond, R.drawable.frame_galaxy, 0xFF05030F, 0xFF2A1650, false),
+    ).sortedBy { it.bond }
     var frame: String
         get() = sp.getString("prog_frame", "plain")!!.takeIf { id -> frames.any { it.id == id && it.open } } ?: "plain"
         set(v) { sp.edit().putString("prog_frame", v).apply(); Store.bump() }
@@ -256,6 +271,11 @@ object Progress {
         Badge("bond150", "💞", "صحبة", "اجمع 375 ❤", 375) { bondPoints },
         Badge("bond600", "🫶", "رفقة العمر", "اجمع 1500 ❤", 1500) { bondPoints },
         Badge("bond1000", "💛", "صفاء الودّ", "اجمع 2500 ❤", 2500) { bondPoints },
+        Badge("bond50", "🌱", "مودّة", "اجمع 150 ❤", 150) { bondPoints },
+        Badge("bond300", "🤲", "أخوّة", "اجمع 750 ❤", 750) { bondPoints },
+        Badge("bond4000", "🎖", "وفاء", "اجمع 4000 ❤", 4000) { bondPoints },
+        Badge("bond6000", "🏆", "خُلّة صافية", "اجمع 6000 ❤", 6000) { bondPoints },
+        Badge("bond10000", "👑", "صحبة لا تنقطع", "اجمع 10000 ❤", 10000) { bondPoints },
         Badge("chest4", "🎁", "أسابيع مكتملة", "افتح صندوق الأسبوع أربع مرات", 4) { sp.getInt("miss_chests", 0) },
         Badge("questions30", "💡", "الباحث", "أجب عن ثلاثين سؤالًا من أسئلة اليوم", 30) { sp.getInt("q_count", 0) },
         Badge("learn30", "📚", "طالب العلم", "أتمم «تعلّم اليوم» ثلاثين يومًا", 30) { sp.getInt("learn_count", 0) },

@@ -30,7 +30,10 @@ import kotlin.math.sin
  * follows the real prayer times, twinkling stars of the last third of the night, and rays of light.
  * They move slowly at about 12 frames a second, and stand still when "reduce motion" or "save battery" is on.
  */
-enum class Backdrop(val moving: Boolean) { NONE(false), LANTERN(true), VINES(true), GIRIH(false), RAIN(true), AURORA(true), ILLUMINATED(false), SKY(true), STARS(true), RAYS(true) }
+enum class Backdrop(val moving: Boolean) {
+    NONE(false), LANTERN(true), VINES(true), GIRIH(false), RAIN(true), AURORA(true), ILLUMINATED(false), SKY(true), STARS(true), RAYS(true),
+    SNOW(true), PETALS(true), FIREFLIES(true), BUBBLES(true), DUNES(true), ROSETTE(true), SKYLINE(true),
+}
 
 @Composable
 fun ThemeBackdrop(b: Backdrop, p: Pal) {
@@ -53,6 +56,13 @@ fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
             Backdrop.SKY -> sky(p, t)
             Backdrop.STARS -> stars(p, t)
             Backdrop.RAYS -> rays(p, t)
+            Backdrop.SNOW -> snow(p, t)
+            Backdrop.PETALS -> petals(p, t)
+            Backdrop.FIREFLIES -> fireflies(p, t)
+            Backdrop.BUBBLES -> bubbles(p, t)
+            Backdrop.DUNES -> dunes(p, t)
+            Backdrop.ROSETTE -> rosette(p, t)
+            Backdrop.SKYLINE -> skyline(p, t)
             Backdrop.NONE -> Unit
         }
 }
@@ -220,6 +230,122 @@ private fun DrawScope.rays(p: Pal, t: Float) {
             drawPath(path, Brush.radialGradient(listOf(p.gold.copy(alpha = .10f + .04f * sin(t * .7f + i)), Color.Transparent), c, len))
         }
     }
+}
+
+/** «ثلج»: snowflakes falling and swaying, small and large. */
+private fun DrawScope.snow(p: Pal, t: Float) {
+    val c = if (p.dark) Color.White else Color(0xFF9CC4E4)
+    for (i in 0 until 55) {
+        val speed = .04f + rnd(i, 3) * .06f; val r = 1.5f + rnd(i, 4) * 3.5f
+        val ph = (t * speed + rnd(i, 1)) % 1f
+        val x = rnd(i, 2) * size.width + sin(t * .7f + i) * 14f
+        drawCircle(c.copy(alpha = .14f + rnd(i, 5) * .16f), r, Offset(x, ph * (size.height + 20f) - 10f))
+    }
+}
+
+/** «بتلات»: petals drifting down on the breeze, turning as they fall. */
+private fun DrawScope.petals(p: Pal, t: Float) {
+    val cols = listOf(Color(0xFFF4A7C0), Color(0xFFF8C8D6), Color(0xFFE88AA8))
+    for (i in 0 until 26) {
+        val ph = (t * (.035f + rnd(i, 3) * .04f) + rnd(i, 1)) % 1f
+        val x = ((rnd(i, 2) * size.width + ph * size.width * .35f + sin(t * .5f + i) * 20f) % (size.width + 40f)) - 20f
+        val y = ph * (size.height + 30f) - 15f
+        rotate(t * 40f * (if (i % 2 == 0) 1 else -1) + i * 30f, Offset(x, y)) {
+            drawOval(cols[i % 3].copy(alpha = .22f), Offset(x - 7f, y - 4f), Size(14f, 8f))
+        }
+    }
+}
+
+/** «يراعات»: fireflies wandering slowly, each glowing and fading on its own. */
+private fun DrawScope.fireflies(p: Pal, t: Float) {
+    val c = Color(0xFFE8F57A)
+    for (i in 0 until 22) {
+        val x = size.width * (.5f + .45f * sin(t * (.05f + rnd(i, 3) * .06f) + i * 2.1f))
+        val y = size.height * (.5f + .45f * sin(t * (.04f + rnd(i, 4) * .05f) + i * 1.3f + 1f))
+        val glow = (.5f + .5f * sin(t * (1.2f + rnd(i, 5)) + i)).let { it * it }
+        drawCircle(Brush.radialGradient(listOf(c.copy(alpha = .30f * glow), Color.Transparent), Offset(x, y), 26f), 26f, Offset(x, y))
+        drawCircle(c.copy(alpha = .35f + .5f * glow), 2.4f, Offset(x, y))
+    }
+}
+
+/** «أعماق»: bubbles rising and light rippling like the sea floor. */
+private fun DrawScope.bubbles(p: Pal, t: Float) {
+    for (k in 0 until 5) {         // light bands (caustics)
+        val path = Path(); val y0 = size.height * (.15f + k * .18f)
+        path.moveTo(0f, y0); var x = 0f
+        while (x <= size.width + 20f) { path.lineTo(x, y0 + sin(x / 60f + t * .8f + k) * 10f); x += 20f }
+        drawPath(path, Color(0xFF7FE0F0).copy(alpha = .06f), style = Stroke(10f))
+    }
+    for (i in 0 until 30) {
+        val ph = (t * (.05f + rnd(i, 3) * .07f) + rnd(i, 1)) % 1f
+        val x = rnd(i, 2) * size.width + sin(t * 1.3f + i) * 8f; val y = size.height * (1.05f - ph * 1.1f)
+        val r = 3f + rnd(i, 4) * 7f
+        drawCircle(Color.White.copy(alpha = .16f), r, Offset(x, y), style = Stroke(1.4f))
+        drawCircle(Color.White.copy(alpha = .22f), r * .25f, Offset(x - r * .35f, y - r * .35f))
+    }
+}
+
+/** «كثبان»: layered dunes at the bottom and sand blown across them. */
+private fun DrawScope.dunes(p: Pal, t: Float) {
+    val tones = listOf(p.gold.copy(alpha = .10f), p.accent.copy(alpha = .10f), p.gold.copy(alpha = .16f))
+    tones.forEachIndexed { k, c ->
+        val path = Path(); val base = size.height * (.78f + k * .07f)
+        path.moveTo(0f, size.height); path.lineTo(0f, base); var x = 0f
+        while (x <= size.width + 20f) { path.lineTo(x, base + sin(x / size.width * PI.toFloat() * (1.4f + k * .5f) + k * 1.7f) * size.height * .035f); x += 16f }
+        path.lineTo(size.width, size.height); path.close()
+        drawPath(path, c)
+    }
+    for (i in 0 until 14) {       // wind
+        val ph = (t * (.12f + rnd(i, 3) * .1f) + rnd(i, 1)) % 1f
+        val x = ph * (size.width + 120f) - 60f; val y = size.height * (.55f + rnd(i, 2) * .3f)
+        drawLine(p.gold.copy(alpha = .14f * (1 - abs(ph - .5f) * 2)), Offset(x, y), Offset(x + 40f, y - 3f), 1.5f)
+    }
+}
+
+/** «وردة هندسية»: a twelve-fold Islamic rosette, large and faint, turning very slowly. */
+private fun DrawScope.rosette(p: Pal, t: Float) {
+    val c = Offset(size.width / 2, size.height * .42f); val R = size.width * .62f
+    rotate(t * 2f, c) {
+        for (ring in 0 until 3) {
+            val r = R * (1f - ring * .28f); val n = 12
+            val star = Path()
+            for (k in 0..n * 2) {
+                val a = k * PI.toFloat() / n
+                val rr = if (k % 2 == 0) r else r * .62f
+                val pt = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                if (k == 0) star.moveTo(pt.x, pt.y) else star.lineTo(pt.x, pt.y)
+            }
+            star.close()
+            drawPath(star, (if (ring == 1) p.gold else p.accent).copy(alpha = .08f), style = Stroke(1.8f))
+        }
+        for (k in 0 until 12) { val a = k * PI.toFloat() / 6; drawLine(p.accent.copy(alpha = .05f), c, Offset(c.x + cos(a) * R, c.y + sin(a) * R), 1f) }
+        drawCircle(p.gold.copy(alpha = .1f), R * .1f, c, style = Stroke(2f))
+    }
+}
+
+/** «مآذن»: domes and minarets on the horizon; at night their windows light up one by one. */
+private fun DrawScope.skyline(p: Pal, t: Float) {
+    val base = size.height * .9f; val c = p.accent.copy(alpha = .13f); val w = size.width
+    val path = Path().apply {
+        moveTo(0f, size.height); lineTo(0f, base)
+        fun dome(cx: Float, r: Float) { lineTo(cx - r, base); cubicTo(cx - r, base - r * 1.25f, cx + r, base - r * 1.25f, cx + r, base); lineTo(cx + r, base) }
+        fun minaret(cx: Float, h: Float) {
+            val mw = w * .018f
+            lineTo(cx - mw, base); lineTo(cx - mw, base - h); lineTo(cx - mw * 1.6f, base - h); lineTo(cx - mw * 1.6f, base - h - 6f)
+            lineTo(cx, base - h - mw * 4f); lineTo(cx + mw * 1.6f, base - h - 6f); lineTo(cx + mw * 1.6f, base - h); lineTo(cx + mw, base - h); lineTo(cx + mw, base)
+        }
+        minaret(w * .08f, size.height * .2f); dome(w * .25f, w * .09f); minaret(w * .4f, size.height * .26f)
+        dome(w * .55f, w * .13f); dome(w * .72f, w * .07f); minaret(w * .85f, size.height * .18f); dome(w * .95f, w * .05f)
+        lineTo(w, base); lineTo(w, size.height); close()
+    }
+    drawRect(c, Offset(0f, base), Size(w, size.height - base))
+    drawPath(path, c)
+    if (p.dark) for (i in 0 until 9) {        // windows
+        val on = .5f + .5f * sin(t * .4f + i * 1.9f)
+        drawRect(p.gold.copy(alpha = .1f + .25f * on), Offset(w * (.12f + i * .095f), base + 8f + (i % 2) * 10f), Size(5f, 8f))
+    }
+    drawCircle(p.gold.copy(alpha = .25f), 16f, Offset(w * .8f, size.height * .58f))      // the crescent above
+    drawCircle(p.bg.copy(alpha = .9f), 14f, Offset(w * .8f + 7f, size.height * .58f - 4f))
 }
 
 /**
