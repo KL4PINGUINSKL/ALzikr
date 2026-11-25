@@ -446,12 +446,17 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
                 }
             }
 
-            // The tafsir, right under the verse.
+            // The tafsir, right under the verse. It folds away with one tap (a long one, such as Ibn Kathir's, need not be
+            // scrolled past to reach the verse's actions); the choice is remembered.
+            var tafsirShown by remember { mutableStateOf(!Store.prefs.getBoolean("sheet_tafsir_hidden", false)) }
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 GText("📖 التفسير:", color = P.muted, fontSize = 13.sp)
-                PickOne(Tafsir.books.map { it.id to it.name }, sel, "اختر التفسير", shown = 1, modifier = Modifier.padding(start = 8.dp)) { Tafsir.selected = it }
+                PickOne(Tafsir.books.map { it.id to it.name }, sel, "اختر التفسير", shown = 1, modifier = Modifier.weight(1f).padding(start = 8.dp)) { Tafsir.selected = it; tafsirShown = true }
+                Choice(if (tafsirShown) "إخفاء ▴" else "إظهار ▾", false, Modifier.padding(start = 6.dp)) {
+                    tafsirShown = !tafsirShown; Store.prefs.edit().putBoolean("sheet_tafsir_hidden", !tafsirShown).apply()
+                }
             }
-            Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
+            if (tafsirShown) Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
                 Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 when {
                     entry != null && entry.text.isNotBlank() -> {
