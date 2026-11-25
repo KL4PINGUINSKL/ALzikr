@@ -5,6 +5,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -397,16 +400,23 @@ internal fun ReciterDialog(close: () -> Unit) {
 /** Tapping a verse: the verse, six clear actions, then its tafsir in its own section. */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: () -> Unit) {
+internal fun AyahSheet(first: Quran.Ayah, inContext: (() -> Unit)? = null, close: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
+    // The sheet can walk to the next or previous verse (buttons, or a sideways swipe) without closing.
+    var a by remember(first) { mutableStateOf(first) }
+    val scroll = rememberScrollState()
+    fun step(d: Int) {
+        val next = if (d > 0) Quran.at(a.s, a.a + 1) ?: Quran.at(a.s + 1, 1) else if (a.a > 1) Quran.at(a.s, a.a - 1) else if (a.s > 1) Quran.ofSurah(a.s - 1).lastOrNull() else null
+        if (next != null) { a = next; scope.launch { scroll.scrollTo(0) } }
+    }
     @Suppress("UNUSED_VARIABLE") val tv = Tafsir.version
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ref = "سورة ${Quran.surahs[a.s - 1].name}، الآية ${a.a}"
     var loading by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     val sel = Tafsir.selected
-    LaunchedEffect(sel) {
+    LaunchedEffect(sel, a.s) {
         failed = false
         if (!Tafsir.has(ctx, sel, a.s)) {
             loading = true
@@ -422,7 +432,24 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
     // Opens fully, so the tafsir is in view right away.
     val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
     AppSheet(onDismissRequest = close) {
-        Column(Modifier.fillMaxWidth().quickDismiss(sheetState, close).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
+        var drag by remember { mutableStateOf(0f) }
+        Column(Modifier.fillMaxWidth().quickDismiss(sheetState, close)
+            .pointerInput(Unit) {
+                // A sideways swipe: as in the mushaf, a swipe to the right goes on to the next verse, to the left goes back.
+                detectHorizontalDragGestures(onDragStart = { drag = 0f }, onDragCancel = { drag = 0f },
+                    onDragEnd = { val limit = 70.dp.toPx(); if (drag > limit) step(1) else if (drag < -limit) step(-1); drag = 0f }) { ch, dx -> drag += dx; ch.consume() }
+            }
+            .verticalScroll(scroll).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                val hasPrev = a.s > 1 || a.a > 1; val hasNext = a.s < 114 || Quran.at(a.s, a.a + 1) != null
+                Text("› الآية السابقة", color = if (hasPrev) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = hasPrev) { step(-1) }.padding(horizontal = 8.dp, vertical = 6.dp))
+                Spacer(Modifier.weight(1f))
+                Sub("اسحب جانبًا للتنقل", size = 11.sp)
+                Spacer(Modifier.weight(1f))
+                Text("الآية التالية ‹", color = if (hasNext) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = hasNext) { step(1) }.padding(horizontal = 8.dp, vertical = 6.dp))
+            }
             Text(ref + " · صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)}" + if (a.sajda) " · موضع سجدة" else "", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(a.text, color = P.ink, fontSize = 22.sp, fontFamily = Fonts.quran, lineHeight = 40.sp, modifier = Modifier.padding(vertical = 4.dp))
             // Listening first: play it, from here, memorize it, the reciter and how far «من هنا» goes.
