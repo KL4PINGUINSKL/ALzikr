@@ -81,10 +81,13 @@ fun LibraryScreen() {
     Nav.library?.let { section = it; Nav.library = null }
     // A books section opened from the stories or the sciences ("" = all books).
     var booksAt by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
+    // The sections (e.g. the Islamic stories list) keep their place while a books page covers them.
+    val keepTabs = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     booksAt?.let { (id, name) ->
         Subpage(if (id.isEmpty()) "الكتب الإسلامية" else name, { booksAt = null }) { BooksHome(root = id.ifEmpty { null }, rootTitle = name) }
         return@SaveableStateProvider
     }
+    keepTabs.SaveableStateProvider("tabs") {
     Column(Modifier.fillMaxSize()) {
         // The sections as an even grid of tiles that slides away with the finger as you scroll down and slides back as
         // you scroll up, anywhere in the list (no jump: it moves exactly as far as the content does). Hidden in reading mode.
@@ -124,6 +127,7 @@ fun LibraryScreen() {
                 else -> Favorites()
             }
         }
+    }
     }
     }
 }

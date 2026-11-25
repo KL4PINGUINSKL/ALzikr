@@ -103,11 +103,19 @@ fun JournalSheet(close: () -> Unit) {
             // Now: the level by experience, and the friendship.
             val l = Progress.level(); val xp = Progress.xp
             val from = Progress.need(l); val to = Progress.need(l + 1)
-            Meter("✨ المستوى ${Quran.digits(l)}", "${Quran.digits(xp)} ✨ · بقي ${Quran.digits(to - xp)} للمستوى ${Quran.digits(l + 1)}", (xp - from).toFloat() / (to - from).coerceAtLeast(1))
+            Meter("✨ المستوى ${Quran.digits(l)}", "${Quran.digits(xp)} ✨ · بقي ${Quran.digits(to - xp)} للمستوى ${Quran.digits(l + 1)}", (xp - from).toFloat() / (to - from).coerceAtLeast(1), P.gold)
             val b = Progress.bondPoints; val (bf, bt) = Progress.bondRange(b)
             Meter("${Friendship.heart} الصداقة: ${Progress.bondName(b)}", "${Quran.digits(b)} ❤" + if (bt > 0) " · بقي ${Quran.digits(bt - b)} للمرتبة التالية" else " · أعلى المراتب",
-                if (bt > 0) (b - bf).toFloat() / (bt - bf) else 1f)
-            Sub("اليوم: ${Quran.digits(Progress.todayTotal())} / ${Quran.digits(Progress.DAY_MAX)} ✨ · ${Quran.digits(Progress.bondToday())} / ${Quran.digits(Progress.BOND_DAY)} ❤", size = 12.sp)
+                if (bt > 0) (b - bf).toFloat() / (bt - bf) else 1f, androidx.compose.ui.graphics.Color(0xFFE25C83))
+            // Today's points, each in its own colour (they were in the muted grey and hard to read).
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Sub("اليوم:", size = 13.sp)
+                val rose = androidx.compose.ui.graphics.Color(0xFFE25C83)
+                Text("✨ ${Quran.digits(Progress.todayTotal())} / ${Quran.digits(Progress.DAY_MAX)}", color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(L.shape(10.dp)).background(P.gold.copy(alpha = .16f)).padding(horizontal = 10.dp, vertical = 4.dp))
+                Text("❤ ${Quran.digits(Progress.bondToday())} / ${Quran.digits(Progress.BOND_DAY)}", color = rose, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(L.shape(10.dp)).background(rose.copy(alpha = .16f)).padding(horizontal = 10.dp, vertical = 4.dp))
+            }
             val days = Pet.since.takeIf { it > 0 }?.let { java.time.temporal.ChronoUnit.DAYS.between(Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate(), LocalDate.now()) + 1 }
             Sub(listOfNotNull(days?.let { "معًا منذ ${Quran.digits(it.toInt())} ${if (it in 3..10) "أيام" else "يومًا"}" },
                 "سلسلة الأيام الطيبة ${Quran.digits(Pet.streak())} (أفضلها ${Quran.digits(maxOf(Pet.bestStreak(), Pet.streak()))})").joinToString(" · "), size = 12.sp)
@@ -191,12 +199,12 @@ private fun OpenedList(kind: String, l: Int) {
 }
 
 @Composable
-private fun Meter(title: String, sub: String, frac: Float) {
+private fun Meter(title: String, sub: String, frac: Float, tint: androidx.compose.ui.graphics.Color = P.accent) {
     Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).padding(12.dp)) {
         Text(title, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(8.dp).clip(L.shape(4.dp)).background(P.line)) {
-            Box(Modifier.fillMaxWidth(frac.coerceIn(0f, 1f)).height(8.dp).background(P.accent))
+            Box(Modifier.fillMaxWidth(frac.coerceIn(0f, 1f)).height(8.dp).background(tint))
         }
-        Sub(sub, size = 12.sp)
+        Text(sub, color = tint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
     }
 }
