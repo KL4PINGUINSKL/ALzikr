@@ -345,7 +345,12 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
                     Tile("▶", "استماع", Modifier.weight(1f)) { Recitation.play(ctx, s, visibleAyah().a) }
                     Tile("📖", if (study) "إخفاء التفسير" else "التفسير", Modifier.weight(1f), on = study) { study = !study }
                     Tile("🧠", if (hifz) "إنهاء الحفظ" else "وضع الحفظ", Modifier.weight(1f), on = hifz) { hifz = !hifz }
-                    Tile("📄", "صفحات", Modifier.weight(1f)) { visibleAyah().let { Nav.reading = it.s to it.a } }
+                    Tile("📄", "صفحات", Modifier.weight(1f)) {
+                        // Chosen here, pages become how the mushaf opens from now on (surahs, «ختمتك»…), until changed in
+                        // «طريقة عرض المصحف»; it used to open in verses again every time.
+                        MushafView.openAs = "pages"; Reading.pages = true
+                        visibleAyah().let { Nav.reading = it.s to it.a }
+                    }
                     Tile("Aa", "الخط", Modifier.weight(1f)) { sheet = "font" }
                 }
                 }

@@ -154,7 +154,13 @@ object Reading {
     /** The mushaf as pages turned sideways (true) or one continuous scroll. */
     var pages: Boolean
         get() = p.getBoolean("read_pager", false)
-        set(v) { p.edit().putBoolean("read_pager", v).apply(); Store.bump() }
+        set(v) {
+            p.edit().putBoolean("read_pager", v).apply()
+            // Choosing pages / scroll inside the reader is also how the mushaf opens from now on (surahs, «ختمتك»…);
+            // it used to be overwritten by «طريقة عرض المصحف» each time the mushaf opened.
+            if (Store.prefs.getString("mushaf_open_as", "verses") != "verses") Store.prefs.edit().putString("mushaf_open_as", if (v) "pages" else "scroll").apply()
+            Store.bump()
+        }
     /** Today's wird in pages: it comes from the khatma plan (setting it changes the plan). */
     var goal: Int
         get() = Data.wirdToday()
