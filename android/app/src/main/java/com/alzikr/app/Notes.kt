@@ -101,14 +101,15 @@ object Md {
     }
 
     /** Without any marks (notifications, the first line as a title). */
-    fun plain(md: String): String = md.lines().joinToString("\n") { l ->
+    fun plain(source: String): String = tidy(source).lines().joinToString("\n") { l ->
         l.replace(Regex("^#{1,3} "), "").replace(Regex("^- \\[[ xX]\\] "), "☐ ").replace(Regex("^> "), "").replace(Regex("^- "), "• ")
     }.replace(Regex("""\{c:\w+\}|\{/c\}|\{s:\w+\}|\{/s\}"""), "").replace(Regex("""\*\*|__|~~|=="""), "").replace(Regex("""(?<!\S)\*|\*(?!\S)"""), "")
 
     fun title(md: String): String = plain(md).lineSequence().firstOrNull { it.isNotBlank() }?.trim()?.take(60) ?: "ملاحظة"
 
     /** For the widget and the bubble: Android spans (bold, colours, sizes, struck, ticks). */
-    fun spanned(md: String, ink: Int): CharSequence {
+    fun spanned(source: String, ink: Int): CharSequence {
+        val md = tidy(source)
         val sb = android.text.SpannableStringBuilder()
         md.lines().forEachIndexed { n, raw ->
             if (n > 0) sb.append('\n')
@@ -150,14 +151,61 @@ object Md {
         if (i != line) l else if (l.startsWith("- [ ] ")) "- [x] " + l.drop(6) else if (Regex("^- \\[[xX]\\] ").containsMatchIn(l)) "- [ ] " + l.drop(6) else l
     }.joinToString("\n")
 
+    /**
+     * The text as written, styled in place for the editor: the same characters (so the cursor stays right), with the
+     * marks nearly invisible and what they hold bold, coloured, bigger…, so writing looks like the result.
+     */
+    fun editing(text: String, ink: Color): AnnotatedString = buildAnnotatedString {
+        append(text)
+        val hide = SpanStyle(color = Color.Transparent, fontSize = 1.sp)
+        val dim = SpanStyle(color = ink.copy(alpha = .35f))
+        fun mark(r: IntRange) { if (!r.isEmpty()) addStyle(hide, r.first, r.last + 1) }
+        // Headings: the «# » fades, the line grows.
+        var at = 0
+        for (line in text.split('\n')) {
+            val h = when { line.startsWith("### ") -> 4; line.startsWith("## ") -> 3; line.startsWith("# ") -> 2; else -> 0 }
+            if (h > 0) { addStyle(dim, at, at + h); addStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = when (h) { 2 -> 24.sp; 3 -> 20.sp; else -> 17.sp }), at + h, at + line.length) }
+            if (line.startsWith("> ")) { addStyle(dim, at, at + 2); addStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Color(0xFFC9962E)), at + 2, at + line.length) }
+            at += line.length + 1
+        }
+        fun each(r: Regex, open: Int, close: Int, style: (MatchResult) -> SpanStyle) = r.findAll(text).forEach { m ->
+            val s = m.range.first; val e = m.range.last + 1
+            mark(s until s + open); mark(e - close until e)
+            if (e - close > s + open) addStyle(style(m), s + open, e - close)
+        }
+        each(Regex("""\*\*(.+?)\*\*"""), 2, 2) { SpanStyle(fontWeight = FontWeight.Bold) }
+        each(Regex("""__(.+?)__"""), 2, 2) { SpanStyle(textDecoration = TextDecoration.Underline) }
+        each(Regex("""~~(.+?)~~"""), 2, 2) { SpanStyle(textDecoration = TextDecoration.LineThrough) }
+        each(Regex("""==(.+?)=="""), 2, 2) { SpanStyle(background = Color(0x55F2C94C)) }
+        each(Regex("""(?<![*])\*(?![*\s])(.+?)(?<![*\s])\*(?![*])"""), 1, 1) { SpanStyle(fontStyle = FontStyle.Italic) }
+        Regex("""\{c:(\w+)\}(.*?)\{/c\}""").findAll(text).forEach { m ->
+            val s = m.range.first; val e = m.range.last + 1; val open = m.groupValues[1].length + 4
+            mark(s until s + open); mark(e - 4 until e)
+            if (e - 4 > s + open) addStyle(SpanStyle(color = colors[m.groupValues[1]] ?: ink), s + open, e - 4)
+        }
+        Regex("""\{s:(\w+)\}(.*?)\{/s\}""").findAll(text).forEach { m ->
+            val s = m.range.first; val e = m.range.last + 1; val open = m.groupValues[1].length + 4
+            mark(s until s + open); mark(e - 4 until e)
+            if (e - 4 > s + open) addStyle(SpanStyle(fontSize = (16 * (sizes[m.groupValues[1]] ?: 1f)).sp), s + open, e - 4)
+        }
+    }
+
+    /** Takes out marks that hold nothing («{c:blue}{/c}», «****»), left when a mark was pressed with nothing selected. */
+    fun tidy(md: String): String = md.replace(Regex("""\{c:\w+\}\{/c\}|\{s:\w+\}\{/s\}|\*\*\*\*|____|~~~~|===="""), "")
+
     /** The papers a note can be written on. */
-    val papers = listOf(Color(0xFFFFF4B8), Color(0xFFFFE0E6), Color(0xFFDDF3E4), Color(0xFFDCEBFF), Color(0xFFEDE3FF), Color(0xFFFFFFFF))
-    val paperNames = listOf("أصفر", "وردي", "أخضر", "أزرق", "بنفسجي", "أبيض")
+    val papers = listOf(
+        Color(0xFFFFF4B8), Color(0xFFFFE0E6), Color(0xFFDDF3E4), Color(0xFFDCEBFF), Color(0xFFEDE3FF), Color(0xFFFFFFFF),
+        Color(0xFFFFE2C2), Color(0xFFFFD6D6), Color(0xFFD5F5F0), Color(0xFFE3F7C8), Color(0xFFF6E7D2), Color(0xFFE8E8EC),
+        Color(0xFFFFF0F7), Color(0xFFD9F1FF), Color(0xFFFDF6E3), Color(0xFFEAD9C6), Color(0xFFDDE6D3), Color(0xFFF3D9FA))
+    /** The note's paper (index kept within the list). */
+    fun paper(i: Int) = papers[i.coerceIn(0, papers.size - 1)]
 }
 
 /** A note shown formatted; [onToggle] ticks a box (line index), [scale] for small previews, [maxLines] to cut long ones. */
 @Composable
-fun NoteText(md: String, ink: Color = P.ink, scale: Float = 1f, maxLines: Int = Int.MAX_VALUE, onToggle: ((Int) -> Unit)? = null) {
+fun NoteText(source: String, ink: Color = P.ink, scale: Float = 1f, maxLines: Int = Int.MAX_VALUE, onToggle: ((Int) -> Unit)? = null) {
+    val md = Md.tidy(source)
     val lines = md.lines()
     Column(verticalArrangement = Arrangement.spacedBy((3 * scale).dp)) {
         var number = 0
@@ -203,7 +251,14 @@ fun NoteEditor(note: Store.Note?, close: () -> Unit) {
     var colorsOpen by remember { mutableStateOf(false) }
     /** Puts [a]…[b] around the selection (or at the cursor). */
     fun wrap(a: String, b: String) {
-        val s = v.selection; val t = v.text
+        var s = v.selection; val t = v.text
+        if (s.collapsed) {
+            // Nothing selected: the mark goes around the line the cursor is on (after its «# », «- » …), not into empty space.
+            val from = t.lastIndexOf('\n', (s.min - 1).coerceAtLeast(0)).let { if (it < 0 || s.min == 0) 0 else it + 1 }
+            val to = t.indexOf('\n', s.min).let { if (it < 0) t.length else it }
+            val lead = Regex("^(#{1,3} |- \\[[ xX]\\] |- |> |\\d+\\. )").find(t.substring(from, to))?.value?.length ?: 0
+            if (to > from + lead) s = TextRange(from + lead, to)
+        }
         val mid = t.substring(s.min, s.max)
         v = TextFieldValue(t.substring(0, s.min) + a + mid + b + t.substring(s.max), TextRange(s.min + a.length, s.min + a.length + mid.length))
     }
@@ -224,7 +279,8 @@ fun NoteEditor(note: Store.Note?, close: () -> Unit) {
             Text(if (note == null) "ملاحظة جديدة" else "تعديل الملاحظة", color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text(if (preview) "✎ كتابة" else "👁 معاينة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { preview = !preview }.padding(8.dp))
             Text("حفظ", color = P.onAccent, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(10.dp)).background(P.accent).clickable {
-                if (v.text.isNotBlank()) Store.saveNote(note?.id, v.text.trimEnd()) else Toast.makeText(ctx, "الملاحظة فارغة", Toast.LENGTH_SHORT).show()
+                val text = Md.tidy(v.text).trimEnd()
+                if (text.isNotBlank()) Store.saveNote(note?.id, text) else Toast.makeText(ctx, "الملاحظة فارغة", Toast.LENGTH_SHORT).show()
                 close()
             }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
@@ -240,12 +296,17 @@ fun NoteEditor(note: Store.Note?, close: () -> Unit) {
         }
         if (colorsOpen) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Md.colors.forEach { (k, c) -> Box(Modifier.size(30.dp).clip(CircleShape).background(c).clickable { wrap("{c:$k}", "{/c}"); colorsOpen = false }) }
-            Sub("اختر نصًا ثم لونًا", size = 11.sp)
+            Sub("اختر كلمات ثم لونًا، أو يلوَّن السطر كله", size = 11.sp)
         }
         Box(Modifier.weight(1f).fillMaxWidth().padding(12.dp)) {
             if (preview) Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) { NoteText(v.text) { i -> v = v.copy(text = Md.toggleBox(v.text, i)) } }
-            else OutlinedTextField(v, { v = it }, modifier = Modifier.fillMaxSize(), placeholder = { Text("اكتب هنا… واستعمل الشريط للعناوين والخط العريض والألوان وقوائم المهام") },
-                textStyle = androidx.compose.ui.text.TextStyle(color = P.ink, fontSize = 16.sp, lineHeight = 26.sp))
+            else {
+                val ink = P.ink
+                OutlinedTextField(v, { v = it }, modifier = Modifier.fillMaxSize(), placeholder = { Text("اكتب هنا… واستعمل الشريط للعناوين والخط العريض والألوان وقوائم المهام") },
+                    textStyle = androidx.compose.ui.text.TextStyle(color = ink, fontSize = 16.sp, lineHeight = 26.sp),
+                    // What you write shows formatted as you write it (same characters, so the cursor stays right).
+                    visualTransformation = { t -> androidx.compose.ui.text.input.TransformedText(Md.editing(t.text, ink), androidx.compose.ui.text.input.OffsetMapping.Identity) })
+            }
         }
     }
 }
@@ -259,7 +320,7 @@ fun NoteSheet(id: Long, edit: () -> Unit, close: () -> Unit) {
     var del by remember { mutableStateOf(false) }
     AppSheet(onDismissRequest = close) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Column(Modifier.fillMaxWidth().shadow(3.dp, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp)).background(Md.papers[n.paper.coerceIn(0, 5)]).padding(16.dp)) {
+            Column(Modifier.fillMaxWidth().shadow(3.dp, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp)).background(Md.paper(n.paper)).padding(16.dp)) {
                 NoteText(n.text, ink = Color(0xFF2A2A2A)) { i -> Store.updateNote(n.id) { it.copy(text = Md.toggleBox(it.text, i)) } }
             }
             Wrap(gap = 6.dp) {
@@ -275,7 +336,7 @@ fun NoteSheet(id: Long, edit: () -> Unit, close: () -> Unit) {
                 }
             }
             Title("لون الورقة")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Wrap(gap = 8.dp) {
                 Md.papers.forEachIndexed { i, c -> Box(Modifier.size(32.dp).clip(RoundedCornerShape(6.dp)).background(c).border(if (n.paper == i) 3.dp else 1.dp, if (n.paper == i) P.accent else P.line, RoundedCornerShape(6.dp)).clickable { Store.updateNote(n.id) { it.copy(paper = i) } }) }
             }
             Title("خارج التطبيق")
@@ -327,7 +388,7 @@ fun PinnedScraps(place: String, modifier: Modifier = Modifier) {
                 rotationZ = (if (k % 2 == 0) 3f else -2.5f) + if (com.alzikr.app.pets.PetPerf.reduceMotion) 0f else a
             }) {
                 if (!folded) Column(Modifier.padding(top = 9.dp).widthIn(max = 150.dp).heightIn(max = 130.dp).shadow(4.dp, RoundedCornerShape(3.dp))
-                    .background(Brush.verticalGradient(listOf(Md.papers[n.paper.coerceIn(0, 5)], Md.papers[n.paper.coerceIn(0, 5)].copy(alpha = .92f))))
+                    .background(Brush.verticalGradient(listOf(Md.paper(n.paper), Md.paper(n.paper).copy(alpha = .92f))))
                     .clickable { open = n.id }.padding(start = 10.dp, end = 10.dp, top = 12.dp, bottom = 8.dp)) {
                     NoteText(n.text, ink = Color(0xFF2A2A2A), scale = .72f, maxLines = 6)
                 }

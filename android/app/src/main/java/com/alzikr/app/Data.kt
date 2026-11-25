@@ -205,11 +205,18 @@ object Data {
             saveHabits(list); return list
         }
         val a = JSONArray(raw)
-        return (0 until a.length()).map { a.getJSONObject(it).let { o ->
+        val list = (0 until a.length()).map { a.getJSONObject(it).let { o ->
             val d = o.optJSONArray("days") ?: JSONArray()
             Habit(o.getLong("id"), o.getString("name"), (0 until d.length()).map(d::getString).toSet())
         } }
+        // The same deed twice (e.g. «الضحى» next to «صلاة الضحى»): kept once, under the first name, with both records.
+        val merged = LinkedHashMap<String, Habit>()
+        list.forEach { h -> val k = habitKey(h.name); merged[k] = merged[k]?.let { it.copy(days = it.days + h.days) } ?: h }
+        if (merged.size != list.size) saveHabits(merged.values.toList())
+        return merged.values.toList()
     }
+    /** A habit's name reduced to the deed: no «صلاة»/«سنة», letter forms and marks ignored. */
+    fun habitKey(name: String) = Quran.normalize(name).replace(Regex("^(صلاه|سنه|صيام) "), "").replace(" ", "")
     private fun saveHabits(list: List<Habit>) {
         val keep = LocalDate.now().minusDays(400).toString()
         val a = JSONArray(); list.forEach { h -> a.put(JSONObject().put("id", h.id).put("name", h.name).put("days", JSONArray(h.days.filter { it >= keep }.sorted()))) }
@@ -219,7 +226,7 @@ object Data {
         val t = today()
         saveHabits(habits().map { if (it.id == id) it.copy(days = if (t in it.days) it.days - t else it.days + t) else it })
     }
-    fun addHabit(name: String) = saveHabits(habits() + Habit(System.currentTimeMillis(), name, emptySet()))
+    fun addHabit(name: String) { if (habits().none { habitKey(it.name) == habitKey(name) }) saveHabits(habits() + Habit(System.currentTimeMillis(), name, emptySet())) }
     fun deleteHabit(id: Long) = saveHabits(habits().filterNot { it.id == id })
 
     // ----------------------------------------------------------------- Quran khatma (Madinah mushaf, 604 pages)

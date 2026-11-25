@@ -83,6 +83,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         if (savedInstanceState == null) Nav.tab = Nav.home
         intent?.getStringExtra("tab")?.let(::openTab)
+        runCatching { NoteBubble.refresh(this) }
         openPlace(intent)
         AppUpdate.onFound = { Store.bump() }
         // Installed before methods followed the country: look the country up once.

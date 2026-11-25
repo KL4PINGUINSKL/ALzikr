@@ -79,7 +79,7 @@ private fun NotesList() {
         if (all.size > 3) item { OutlinedTextField(find, { find = it }, placeholder = { Text("ابحث في ملاحظاتك") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
         if (notes.isEmpty()) item { Sub("اكتب ما يخطر ببالك: فائدة، آية، فكرة، قائمة مشتريات…", Modifier.padding(8.dp)) }
         items(notes, key = { it.id }) { n ->
-            Column(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(Md.papers[n.paper.coerceIn(0, 5)]).border(1.dp, if (n.pinned) P.gold else P.line, L.shape(10.dp))
+            Column(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(Md.paper(n.paper)).border(1.dp, if (n.pinned) P.gold else P.line, L.shape(10.dp))
                 .clickable { open = n.id }.padding(14.dp)) {
                 NoteText(n.text, ink = androidx.compose.ui.graphics.Color(0xFF2A2A2A), scale = .9f, maxLines = 8) { i -> Store.updateNote(n.id) { it.copy(text = Md.toggleBox(it.text, i)) } }
                 val tags = listOfNotNull("📌 أعلى".takeIf { n.pinned }, ("📍 " + placeName(n.place)).takeIf { n.place.isNotEmpty() }, "📋 الشاشة الرئيسية".takeIf { n.widget }, "🫧 فقاعة".takeIf { n.bubble })

@@ -53,8 +53,8 @@ fun HabitsList() {
         item { Hint("habits2", "🔥", "اضغط على العادة عندما تنجزها اليوم. كل يوم متتالٍ يزيد سلسلتك 🔥، وتحتها كم يومًا أنجزتها من آخر ٣٠. وتجدها أيضًا في «اليوم» لتأشّرها بسرعة. اضغط مطولًا للحذف.") }
         // A ready list of good daily deeds to add with one tap.
         item {
-            val have = habits.map { it.name }.toSet()
-            val ideas = listOf("الوتر", "السنن الرواتب", "الضحى", "صلة الرحم", "صدقة", "قراءة صفحة من القرآن", "الاستغفار ١٠٠", "قيام الليل", "بر الوالدين", "الصلاة على النبي ﷺ").filter { it !in have }
+            val have = habits.map { Data.habitKey(it.name) }.toSet()
+            val ideas = listOf("الوتر", "السنن الرواتب", "الضحى", "صلة الرحم", "صدقة", "قراءة صفحة من القرآن", "الاستغفار ١٠٠", "قيام الليل", "بر الوالدين", "الصلاة على النبي ﷺ").filter { Data.habitKey(it) !in have }
             if (ideas.isNotEmpty()) Column {
                 Sub("أضف بلمسة:", size = 12.sp)
                 Wrap(Modifier.padding(top = 4.dp), gap = 6.dp) { ideas.take(6).forEach { n -> Choice("+ $n", false) { Data.addHabit(n) } } }
