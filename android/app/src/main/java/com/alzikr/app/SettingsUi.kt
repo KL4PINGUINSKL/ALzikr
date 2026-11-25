@@ -45,12 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsSheet(close: () -> Unit) {
+/** [start] opens one section directly (from «المزيد»); then «back» closes instead of showing the list. */
+fun SettingsSheet(start: String? = null, close: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val reschedule = { Alerts.reschedule(ctx) }
-    var section by remember { mutableStateOf<String?>(null) }
-    val back = { if (section != null) section = null else close() }
+    var section by remember { mutableStateOf(start) }
+    val back = { if (section != null && start == null) section = null else close() }
     BackHandler(onBack = back)
     val pickSound = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         @Suppress("DEPRECATION") val uri = r.data?.getParcelableExtra<Uri>(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
@@ -59,7 +60,7 @@ fun SettingsSheet(close: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (section != null) Text("→", color = P.accent, fontSize = 21.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { section = null }.padding(horizontal = 10.dp, vertical = 6.dp))
+            if (section != null) Text("→", color = P.accent, fontSize = 21.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { back() }.padding(horizontal = 10.dp, vertical = 6.dp))
             Text(when (section) { "times" -> "الموقع والحساب"; "alerts" -> "التنبيهات والأذان"; "prayer" -> "الصلاة والتركيز"; "look" -> "المظهر"; "recite" -> "التلاوة"; "help" -> "المساعدة"; "about" -> "عن التطبيق"; else -> "الإعدادات" },
                 color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text("تم", color = P.accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = close).padding(horizontal = 14.dp, vertical = 8.dp))

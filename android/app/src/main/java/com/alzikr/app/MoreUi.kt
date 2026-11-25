@@ -64,7 +64,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
-fun MoreScreen(openSettings: () -> Unit) {
+fun MoreScreen(openSettings: (String) -> Unit) {
     val stack = remember { androidx.compose.runtime.mutableStateListOf<String>() }
     // A page opened from another tab (a shortcut) goes back to that tab; one opened here goes back to More.
     var fromOutside by remember { mutableStateOf(false) }
@@ -119,7 +119,7 @@ fun MoreScreen(openSettings: () -> Unit) {
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
-        Hint("more3", "☰", "خمس مجموعات: عباداتي، وتعلّم، والتقويم والمواسم، وأدوات، والتطبيق (وفيه الإعدادات والثيمات). وأسماء الشهور من بطاقة التاريخ.")
+        Hint("more4", "☰", "ست مجموعات: عباداتي، وتعلّم، والتقويم والمواسم، وأدوات، والإعدادات، والتطبيق (وفيه صديقك والثيمات وعن التطبيق). وأسماء الشهور من بطاقة التاريخ.")
         Panel(Modifier.clickable { open("months") }, color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -152,9 +152,17 @@ fun MoreScreen(openSettings: () -> Unit) {
             Triple("🧭", "القبلة") { open("qibla") }, Triple("📅", "مواقيت الشهر") { open("month") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
             Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث عن حديث") { open("hsearch") },
         ))
+        val ctx = LocalContext.current
+        // The settings sections, one tap away (there is no gear in the top bar any more).
+        MoreGroup("الإعدادات", listOf(
+            Triple("📍", "الموقع والحساب") { openSettings("times") }, Triple("🔔", "التنبيهات والأذان") { openSettings("alerts") }, Triple("🕌", "الصلاة والتركيز") { openSettings("prayer") },
+            Triple("🖌", "المظهر") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("💡", "المساعدة") { openSettings("help") },
+        ))
         MoreGroup("التطبيق", listOf(
-            Triple("🐾", "صديقي") { open("pet") }, Triple("⚙️", "الإعدادات") { openSettings() }, Triple("🎨", "الثيمات") { open("themes") },
-            Triple("💾", "نسخ احتياطي") { open("backup") }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
+            Triple("🐾", "صديقي") { open("pet") }, Triple("🎨", "الثيمات") { open("themes") }, Triple("💾", "نسخ احتياطي") { open("backup") },
+            Triple("ℹ", "عن التطبيق") { openSettings("about") }, Triple("🌐", "صفحة التحميل") {
+                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("$APP_SITE/download.html"))) }
+            }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
             Triple("↗", "مشاركة التطبيق") { activity?.let { shareApp(it) } },
         ))
     }

@@ -198,7 +198,7 @@ private fun Root() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val look = Looks.byId(Data.look)
     val pal = look.pal(isSystemInDarkTheme(), Data.theme)
-    var settings by remember { mutableStateOf(false) }
+    var settings by remember { mutableStateOf<String?>(null) }   // null = closed, "" = the sections list, else one section
     // The home-screen widgets follow the theme too.
     val ctx = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx); MomentWidget.update(ctx); PetWidget.update(ctx) } }
@@ -215,7 +215,7 @@ private fun Root() {
                 val inPage = Nav.pages.isNotEmpty() || Reading.open > 0
                 Column(Modifier.fillMaxSize()) {
                     if (inPage) Spacer(Modifier.statusBarsPadding())
-                    else Header { settings = true }
+                    else Header()
                     if (look.nav == NavStyle.TOP && !inPage) TopTabs()
                     if (look.nav == NavStyle.LANTERNS && !inPage) LanternTabs()
                     Row(Modifier.weight(1f)) {
@@ -225,10 +225,10 @@ private fun Root() {
                             "adhkar" -> AdhkarScreen()
                             "library" -> LibraryScreen()
                             "daily" -> TasksScreen()
-                            "more" -> MoreScreen(openSettings = { settings = true })
+                            "more" -> MoreScreen(openSettings = { settings = it })
                             "kids" -> KidsHome()
                             "pet" -> PetPage()   // «صديقي» as its own section (it stays in «المزيد» too)
-                            else -> PrayerScreen(openSettings = { settings = true })
+                            else -> PrayerScreen(openSettings = { settings = it })
                         }
                     }
                     }
@@ -254,7 +254,7 @@ private fun Root() {
             UpdateDialog()
             PetIntro()
             ProgressCelebration()
-            if (settings) SettingsSheet { settings = false }
+            settings?.let { s -> SettingsSheet(s.ifEmpty { null }) { settings = null } }
         }
     }
 }
@@ -276,7 +276,7 @@ private fun Overlays() {
 }
 
 @Composable
-private fun Header(openSettings: () -> Unit) {
+private fun Header() {
     Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         val pet = Pet.species != null && Pet.place == "top"
         // The friend gets its own fixed space (it used to get only what the date line left, a few dp on long dates).
@@ -284,10 +284,8 @@ private fun Header(openSettings: () -> Unit) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
-        if (pet) PetStage(Modifier.width(124.dp).padding(horizontal = 4.dp), height = 72)
-        Box(Modifier.size(44.dp).clip(L.shape(12.dp)).clickable(onClick = openSettings), contentAlignment = Alignment.Center) {
-            if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("⚙", tint = P.muted, size = 22.dp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
-        }
+        // The settings live in «المزيد» now, so the friend takes the gear's place and is a little bigger.
+        if (pet) PetStage(Modifier.width(172.dp).padding(start = 4.dp), height = 88)
     }
 }
 

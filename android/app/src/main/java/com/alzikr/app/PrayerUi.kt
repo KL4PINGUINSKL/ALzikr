@@ -91,7 +91,7 @@ fun window(now: LocalDateTime = LocalDateTime.now()): Window {
 }
 
 @Composable
-fun PrayerScreen(openSettings: () -> Unit) {
+fun PrayerScreen(openSettings: (String) -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     if (!Store.hasLocation) { LocationSetup(); return }
     val ctx = LocalContext.current
@@ -215,9 +215,9 @@ fun PrayerScreen(openSettings: () -> Unit) {
         Home.order.filter { it !in Home.hidden }.forEach { parts[it]?.invoke() }
         GText("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
     }
-    if (options) TimesOptions(openSettings) { options = false }
+    if (options) TimesOptions({ openSettings("times") }) { options = false }
     if (editing) HomeEditor { editing = false }
-    sheetFor?.let { p -> PrayerSheet(p, { options = true }, openSettings) { sheetFor = null } }
+    sheetFor?.let { p -> PrayerSheet(p, { options = true }, { openSettings("alerts") }) { sheetFor = null } }
 }
 
 /** Other useful times: imsak, duha, the middle of the night and its last third. */
