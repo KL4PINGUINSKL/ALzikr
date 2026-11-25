@@ -9,7 +9,8 @@ export default {
     if (url.pathname.startsWith("/_upload/")) return upload(req, env, url);
     if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
     if (key === "" ) key = "index.html";
-    if (key === "download" || key === "about") key += ".html";
+    if (key === "download") key = "download.html";
+    if (key === "about" || key === "about.html" || key === "index") key = "index.html";
     if (key === "ALzikr.apk") {   // fixed link: always the newest APK
       const l = await env.BUCKET.get("latest.json");
       if (!l) return new Response("Not found", { status: 404 });
