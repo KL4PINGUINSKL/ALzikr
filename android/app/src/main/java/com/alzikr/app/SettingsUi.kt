@@ -61,7 +61,7 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
     Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             if (section != null) Text("→", color = P.accent, fontSize = 21.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { back() }.padding(horizontal = 10.dp, vertical = 6.dp))
-            Text(when (section) { "times" -> "الموقع والحساب"; "alerts" -> "التنبيهات والأذان"; "prayer" -> "الصلاة والتركيز"; "look" -> "المظهر"; "recite" -> "التلاوة"; "help" -> "المساعدة"; "about" -> "عن التطبيق"; else -> "الإعدادات" },
+            Text(when (section) { "times" -> "الموقع والحساب"; "alerts" -> "التنبيهات والأذان"; "prayer" -> "الصلاة والتركيز"; "look" -> "راحة العين والقراءة"; "recite" -> "التلاوة"; "help" -> "المساعدة"; "about" -> "عن التطبيق"; else -> "الإعدادات" },
                 color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text("تم", color = P.accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = close).padding(horizontal = 14.dp, vertical = 8.dp))
         }
@@ -70,7 +70,7 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                 Sub("اختر قسمًا:", size = 13.sp)
                 listOf(
                     listOf(Triple("📍", "الموقع والحساب", "times"), Triple("🔔", "التنبيهات والأذان", "alerts"), Triple("🕌", "الصلاة والتركيز", "prayer")),
-                    listOf(Triple("🎨", "المظهر", "look"), Triple("🎙", "التلاوة", "recite"), Triple("💡", "المساعدة", "help")),
+                    listOf(Triple("👁", "راحة العين", "look"), Triple("🎙", "التلاوة", "recite"), Triple("💡", "المساعدة", "help")),
                     listOf(Triple("ℹ", "عن التطبيق", "about")),
                 ).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -216,11 +216,30 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
 
             if (section == "look") {
                 Panel {
-                    Title("الثيم والمظهر")
-                    Sub("الثيم يغيّر الألوان والأشكال والخطوط وترتيب الصفحات والأيقونات وشكل العدّاد.", Modifier.padding(bottom = 8.dp), size = 12.sp)
-                    ModeChoice()
-                    Box(Modifier.padding(top = 10.dp)) { ColorChoice() }
-                    Box(Modifier.padding(top = 10.dp)) { ThemeGallery() }
+                    Title("🌙 نور الليل")
+                    Sub("ضوء دافئ كضوء القنديل يغطي التطبيق من العشاء حتى الفجر حسب مواقيت مدينتك، فتريح عينيك في قراءة القرآن والأذكار ليلًا.", Modifier.padding(bottom = 8.dp), size = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(0 to "متوقف", 1 to "من العشاء إلى الفجر", 2 to "دائمًا").forEach { (n, l) -> Choice(l, Comfort.nightLight == n) { Comfort.nightLight = n } }
+                    }
+                    if (Comfort.nightLight > 0) {
+                        Sub("الدفء", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(1 to "خفيف", 2 to "متوسط", 3 to "قوي").forEach { (n, l) -> Choice(l, Comfort.warmth == n) { Comfort.warmth = n } }
+                        }
+                        Sub("تعتيم إضافي (أخفض من أقل سطوع للهاتف)", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(0 to "بدون", 1 to "قليل", 2 to "أكثر").forEach { (n, l) -> Choice(l, Comfort.dim == n) { Comfort.dim = n } }
+                        }
+                        Text(Comfort.status(), color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
+                    }
+                }
+                Panel {
+                    Title("القراءة")
+                    Sub("حجم خط القراءة (الأذكار والأحاديث وشروحها والتفسير)", Modifier.padding(top = 4.dp, bottom = 6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(0 to "عادي", 1 to "كبير", 2 to "أكبر").forEach { (n, l) -> Choice(l, Data.textSize == n) { Data.textSize = n } }
+                    }
+                    Text("نموذج: سبحان الله وبحمده، سبحان الله العظيم", color = P.ink, fontSize = (17 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
                     Sub("عرض الخيارات الكثيرة (التفسير، القارئ، الخط…)", Modifier.padding(top = 10.dp, bottom = 6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Choice("بعضها وزر «المزيد»", !Data.pickScroll) { Data.pickScroll = false }
@@ -233,10 +252,6 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                         Choice("عربية (المغرب)", !Quran.easternDigits) { Quran.easternDigits = false }
                     }
                     Sub("مثال: " + Quran.digits(1234567890), size = 12.sp)
-                    Sub("حجم خط الأذكار", Modifier.padding(top = 10.dp, bottom = 6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(0 to "عادي", 1 to "كبير", 2 to "أكبر").forEach { (n, l) -> Choice(l, Data.textSize == n) { Data.textSize = n } }
-                    }
                     Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("تعديل التاريخ الهجري", color = P.ink, fontSize = 15.sp)
@@ -245,6 +260,9 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                         Stepper(Data.hijriAdjust) { Data.hijriAdjust = it; reschedule() }
                     }
                 }
+                // The theme, its colours and day / night live in «الثيمات» (they used to be repeated here).
+                Text("🎨 الثيم والألوان والوضع النهاري والليلي في «الثيمات» ›", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clip(L.shape(10.dp)).clickable { Nav.morePage = "themes"; if (Nav.tab != "more") Nav.go("more"); close() }.padding(8.dp))
             }
 
             if (section == "recite") {

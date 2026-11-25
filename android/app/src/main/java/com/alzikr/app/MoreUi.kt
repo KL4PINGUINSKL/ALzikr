@@ -162,7 +162,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         // The settings sections, one tap away (there is no gear in the top bar any more).
         MoreGroup("الإعدادات", listOf(
             Triple("📍", "الموقع والحساب") { openSettings("times") }, Triple("🔔", "التنبيهات والأذان") { openSettings("alerts") }, Triple("🕌", "الصلاة والتركيز") { openSettings("prayer") },
-            Triple("🖌", "المظهر") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("💡", "المساعدة") { openSettings("help") },
+            Triple("👁", "راحة العين") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("💡", "المساعدة") { openSettings("help") },
         ))
         MoreGroup("التطبيق", listOf(
             Triple("🐾", "صديقي") { open("pet") }, Triple("🎨", "الثيمات") { open("themes") }, Triple("💾", "نسخ احتياطي") { open("backup") },

@@ -255,6 +255,7 @@ private fun Root() {
             PetIntro()
             ProgressCelebration()
             settings?.let { s -> SettingsSheet(s.ifEmpty { null }) { settings = null } }
+            ComfortOverlay()   // «نور الليل»: over everything, letting touches through
         }
     }
 }
