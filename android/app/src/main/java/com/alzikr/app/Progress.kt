@@ -169,7 +169,7 @@ object Progress {
     }
     fun bonded(key: String) = sp.getString(pk("bond_day"), "") == today() && key in (sp.getStringSet(pk("bond_keys"), emptySet()) ?: emptySet())
     val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
-    private val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ")
+    private val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ", 4000 to "وفاء", 6000 to "خُلّة صافية", 10000 to "صحبة لا تنقطع")
     fun bondName(b: Int = bondPoints) = bondSteps.last { b >= it.first }.second
     fun bondStage(b: Int = bondPoints) = bondSteps.indexOfLast { b >= it.first }
     /** (from, to) of the current friendship stage, for its bar; to = -1 at the last stage. */

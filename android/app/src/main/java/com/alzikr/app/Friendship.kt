@@ -18,19 +18,35 @@ object Friendship {
 
     val gifts: List<Gift> = listOf(
         Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لأداة صديقك على الشاشة الرئيسية"),
+        Gift("theme_lantern", 75, "🏮", Kind.THEME, "ثيم «مشكاة»", "قنديل معلّق يتوهّج ويتنفّس كاللهب، وجمرات صاعدة"),
         Gift("greet", 100, "🌅", Kind.PERK, "تحية الصباح باسمك", "يحيّيك صديقك صباحًا باسمك ويذكّرك بأذكار الصباح"),
         Gift("theme_breeze", 150, "🎨", Kind.THEME, "ثيم «نسيم»", "نعناعي وسماوي هادئ"),
         Gift("frame_gold", 225, "🖼", Kind.FRAME, "إطار «الذهبي»", "لأداة صديقك"),
+        Gift("theme_garden", 250, "🌿", Kind.THEME, "ثيم «روضة»", "كروم وأوراق تتسلّق جانبي الشاشة وتتمايل"),
         Gift("joy", 300, "😊", Kind.PERK, "الفرح فوق التطبيقات", "يقفز صديقك العائم وتطير القلوب حين تمتلئ قلوب يومك"),
         Gift("certificate", 375, "📜", Kind.PERK, "شهادة الصداقة", "صورة باسم صديقك وأيامكما تشاركها إن شئت"),
+        Gift("nightdua", 450, "🌙", Kind.PERK, "دعاء المساء باسمك", "بعد العشاء يدعو لك صديقك باسمك ويذكّرك بأذكار النوم"),
         Gift("theme_dusk", 500, "🎨", Kind.THEME, "ثيم «غسق»", "بنفسجي المغيب وذهب خافت"),
+        Gift("theme_zellige", 575, "✵", Kind.THEME, "ثيم «زليج»", "شبكة نجوم ثمانية كبلاط الأندلس"),
         Gift("frame_pattern", 625, "🖼", Kind.FRAME, "إطار «الزخرفة»", "لأداة صديقك"),
         Gift("letter", 750, "💌", Kind.PERK, "رسالة الجمعة", "كل جمعة يكتب لك صديقك كلمة عن أسبوعكما معًا"),
+        Gift("theme_rain", 875, "🌧", Kind.THEME, "ثيم «غيث»", "مطر لطيف يهطل ودوائر تتّسع حيث يسقط"),
         Gift("frame_dawn", 1000, "🖼", Kind.FRAME, "إطار «الفجر»", "لأداة صديقك"),
+        Gift("theme_aurora", 1125, "🌌", Kind.THEME, "ثيم «شفق»", "أشرطة الشفق القطبي تتموّج فوق ليل عميق"),
         Gift("anniversary", 1250, "🎂", Kind.PERK, "ذكرى صداقتكما", "يحتفل صديقك بكل شهر يمرّ على صداقتكما"),
+        Gift("memory", 1375, "🏅", Kind.PERK, "ذاكرة الصديق", "يتذكّر صديقك أطول سلسلة أيام طيبة لكما ويحتفل حين تبلغها من جديد"),
         Gift("theme_moon", 1500, "🎨", Kind.THEME, "ثيم «ضوء القمر»", "فضّي ليلي وذهب القمر"),
+        Gift("theme_illuminated", 1750, "📖", Kind.THEME, "ثيم «مخطوطة مذهّبة»", "إطار مذهّب بوريدات كصفحة مخطوطة مزخرفة"),
         Gift("nick", 2000, "🏷", Kind.PERK, "لقب من اختيارك", "تكتب لصديقك لقبًا يظهر مكان لقبه في الأداة وصفحته"),
+        Gift("hilal", 2250, "🌙", Kind.PERK, "تهنئة الهلال والعيد", "يهنّئك صديقك بأول كل شهر هجري بدعاء الهلال، وبالعيدين"),
         Gift("golden", 2500, "💛", Kind.PERK, "القلوب الذهبية", "قلوب صديقك في الأداة وصفحته تصير ذهبية"),
+        Gift("theme_sky", 3000, "🌤", Kind.THEME, "ثيم «سماء الوقت»", "ثيم حيّ تتبدّل ألوانه وسماؤه مع أوقات الصلاة في مدينتك"),
+        Gift("badge_long", 3500, "🎖", Kind.BADGE, "وسام «الرفقة الطويلة»", "لصداقة ثبتت على الأيام"),
+        Gift("theme_stars", 4000, "✨", Kind.THEME, "ثيم «سَحَر»", "نجوم الثلث الأخير من الليل تتلألأ وشهاب يعبر"),
+        Gift("diamond", 5000, "💎", Kind.PERK, "قلوب الماس", "قلوب صديقك في الأداة وصفحته تصير ماسية"),
+        Gift("badge_loyal", 6000, "🏆", Kind.BADGE, "وسام «الخِلّ الوفيّ»", "لمن لم يترك صديقه"),
+        Gift("theme_light", 7500, "🌟", Kind.THEME, "ثيم «نور»", "أشعّة نور ذهبية تنسكب من أعلى وتدور ببطء"),
+        Gift("badge_pure", 10000, "👑", Kind.BADGE, "وسام «صفاء الودّ الذهبي»", "أعلى أوسمة الصداقة"),
     )
     fun gift(id: String) = gifts.firstOrNull { it.id == id }
     /** Is this gift open? (Unknown ids are open, so nothing breaks.) */
@@ -52,7 +68,7 @@ object Friendship {
     /** The title under the friend's name: the one you chose (when open), or the level's title. */
     fun title(): String = nick.takeIf { it.isNotBlank() && has("nick") } ?: Progress.title()
 
-    val heart: String get() = if (has("golden")) "💛" else "❤"
+    val heart: String get() = if (has("diamond")) "💎" else if (has("golden")) "💛" else "❤"
 
     // ---- words that only friendship opens (one a day each)
     fun line(): Pet.Say? {
@@ -63,6 +79,30 @@ object Friendship {
             return Pet.Say("💌 جمعة مباركة${Pet.userName.takeIf { it.isNotBlank() }?.let { " يا $it" } ?: ""}! " +
                 (if (good > 0) "أيامنا الطيبة متتالية منذ ${Quran.digits(good)} ${if (good in 3..10) "أيام" else "يوم"}. " else "") +
                 "لا تنسَ سورة الكهف والصلاة على النبي ﷺ")
+        }
+        val who = Pet.userName.takeIf { it.isNotBlank() }?.let { " يا $it" } ?: ""
+        val nowMin = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+        if (has("hilal") && sp.getString("pet_hilal_day", "") != today.toString()) {
+            val h = Data.hijri(today)
+            val say = when {
+                h.month == 10 && h.day == 1 -> "🌙 عيد مبارك$who! تقبّل الله منا ومنك"
+                h.month == 12 && h.day == 10 -> "🐑 عيد أضحى مبارك$who! تقبّل الله منا ومنك"
+                h.day == 1 -> "🌙 هلّ هلال ${h.monthName}: اللهم أهلّه علينا باليُمن والإيمان، والسلامة والإسلام، ربي وربك الله"
+                else -> null
+            }
+            if (say != null) { sp.edit().putString("pet_hilal_day", today.toString()).apply(); return Pet.Say(say) }
+        }
+        if (has("nightdua") && sp.getString("pet_nightdua_day", "") != today.toString() &&
+            runCatching { nowMin >= Store.times().getValue(Prayer.ISHA) }.getOrDefault(nowMin >= 20 * 60)) {
+            sp.edit().putString("pet_nightdua_day", today.toString()).apply()
+            return Pet.Say("🌙 تصبح على خير$who. اللهم احفظه في نومه ويقظته، وبارك له في يومه. لا تنسَ أذكار النوم وآية الكرسي")
+        }
+        if (has("memory") && sp.getString("pet_memory_day", "") != today.toString()) {
+            val st = Pet.streak()
+            if (st >= 3 && st >= Pet.bestStreak()) {
+                sp.edit().putString("pet_memory_day", today.toString()).apply()
+                return Pet.Say("🏅 أتذكّر كل أيامنا: هذه أطول سلسلة أيام طيبة لنا، ${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يومًا"} متتالية! بارك الله فيك$who")
+            }
         }
         val since = Pet.since
         if (has("anniversary") && since > 0 && sp.getString("pet_anniv_day", "") != today.toString()) {

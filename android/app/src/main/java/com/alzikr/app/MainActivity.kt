@@ -204,6 +204,9 @@ private fun Root() {
             // Back returns to the previous page (inner pages handle back first).
             androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != Nav.home) { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
+                ThemeBackdrop(look.backdrop, pal)
+                // «سماء الوقت»: the colors follow the hour, checked each minute.
+                if (look.sky) androidx.compose.runtime.LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(60_000); Sky.tick++ } }
                 RestoreOffer()
                 // While a reading screen is open the app's header, tabs, bar and friend step aside (full screen).
                 val inPage = Nav.pages.isNotEmpty() || Reading.open > 0

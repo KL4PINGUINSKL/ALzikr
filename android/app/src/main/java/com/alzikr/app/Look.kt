@@ -36,6 +36,10 @@ data class Look(
     val flat: Boolean = false, val ornament: String = "",
     /** The theme for children: the kids section is the first tab, text is larger, the friend speaks to a child. */
     val kids: Boolean = false,
+    /** A living background drawn behind the app (Backdrops.kt). */
+    val backdrop: Backdrop = Backdrop.NONE,
+    /** The colors follow the hour of the day by the real prayer times (Sky). */
+    val sky: Boolean = false,
 ) {
     fun basePal(systemDark: Boolean, mode: Int): Pal = when {
         day == null -> night!!
@@ -52,7 +56,7 @@ data class Look(
     fun pal(systemDark: Boolean, mode: Int, color: Int = Data.lookColor(id), hue: Float = Data.lookHue(id),
             back: Int = Data.lookBack(id), ink: Int = Data.lookInk(id)): Pal {
         val b = Backs.list.getOrNull(back)?.takeIf { back > 0 }
-        var p = if (b == null) basePal(systemDark, mode) else (if (b.dark) night ?: day else day ?: night)!!
+        var p = if (b == null) (if (sky) Sky.pal() else basePal(systemDark, mode)) else (if (b.dark) night ?: day else day ?: night)!!
         if (b != null) p = p.copy(dark = b.dark, bg = Color(b.bg), surface = Color(b.surface), card = Color(b.card), line = Color(b.line),
             ink = if (b.dark) Color(0xFFF2F2F2) else Color(0xFF151515), muted = if (b.dark) Color(0xFF9A9A9A) else Color(0xFF6A6A6A))
         p = Tints.apply(p, color, hue, keepBg = b != null || p.bg.luminance() < 0.004f)
@@ -151,6 +155,39 @@ object Looks {
         Look("moon", "ضوء القمر", "ليل فضّي وذهب القمر، خط النسخ وعناوين كوفية، شريط عائم وسبحة خرز · هدية الصداقة",
             null, pal(true, 0xFF0C0F16, 0xFF141925, 0xFF1C2232, 0xFF2C3447, 0xFFEDEFF5, 0xFF9AA3B8, 0xFFC9D3E6, 0xFF0C0F16, 0xFFE8C877),
             Corners.ROUND, 26.dp, Fonts.naskh, Fonts.kufi, NavStyle.DOCK, IconStyle.GLYPH, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "☽"),
+        // Friendship themes with living backgrounds (Backdrops.kt).
+        Look("lantern", "مشكاة", "توهّج قنديل معلّق يتنفّس كاللهب وجمرات صاعدة، كهرماني دافئ، خط النسخ وعناوين كوفية وسبحة خرز · هدية الصداقة",
+            pal(false, 0xFFFBF3E4, 0xFFFFFAF0, 0xFFF3E2C2, 0xFFE4CB9C, 0xFF3A2410, 0xFF85674A, 0xFFB8641A, 0xFFFFF8EE, 0xFFC9922A),
+            pal(true, 0xFF120C06, 0xFF1B130A, 0xFF251A0E, 0xFF3D2B17, 0xFFF6E7CC, 0xFFBFA27C, 0xFFF0A040, 0xFF1E1002, 0xFFF5C35A),
+            Corners.ROUND, 24.dp, Fonts.naskh, Fonts.kufi, NavStyle.DOCK, IconStyle.GLYPH, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "✺", backdrop = Backdrop.LANTERN),
+        Look("garden", "روضة", "كروم وأوراق تتسلّق جانبي الشاشة وتتمايل وأزهار صغيرة، أخضر الربيع، خط المسيري · هدية الصداقة",
+            pal(false, 0xFFF2F8EE, 0xFFFFFFFF, 0xFFE2F0DA, 0xFFC9E2BC, 0xFF1C3A18, 0xFF5E7A56, 0xFF3E8E2E, 0xFFFFFFFF, 0xFFD46A8A),
+            pal(true, 0xFF0A1508, 0xFF10200D, 0xFF172B12, 0xFF24421D, 0xFFE6F4DE, 0xFF97B48C, 0xFF7CD65E, 0xFF0A1A05, 0xFFF08FB0),
+            Corners.ROUND, 24.dp, Fonts.messiri, Fonts.messiri, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.RING, ornament = "❦", backdrop = Backdrop.VINES),
+        Look("zellige", "زليج", "شبكة نجوم ثمانية كبلاط الأندلس، أزرق كوبالتي وطيني، زوايا مقصوصة وتبويبات علوية وخط زمني · هدية الصداقة",
+            pal(false, 0xFFF1F4FA, 0xFFFFFFFF, 0xFFDFE7F5, 0xFFC2D0EA, 0xFF102347, 0xFF51648A, 0xFF1F4FA8, 0xFFFFFFFF, 0xFFC0622F),
+            pal(true, 0xFF070D1C, 0xFF0D1529, 0xFF131E38, 0xFF223255, 0xFFE3EBFA, 0xFF8FA0C6, 0xFF6E9BFF, 0xFF020818, 0xFFE58A55),
+            Corners.CUT, 12.dp, null, Fonts.kufi, NavStyle.TOP, IconStyle.SHARP, PrayerLayout.TIMELINE, CounterStyle.RING, ornament = "✵", backdrop = Backdrop.GIRIH),
+        Look("rain", "غيث", "مطر لطيف يهطل ودوائر تتّسع حيث يسقط، رمادي أزرق هادئ، خط شنغا وعدّاد رقمي · هدية الصداقة",
+            pal(false, 0xFFEFF3F6, 0xFFFFFFFF, 0xFFDFE7EE, 0xFFC7D4DF, 0xFF1A2A38, 0xFF5C6E7E, 0xFF2F6E9E, 0xFFFFFFFF, 0xFF6E9E5A),
+            pal(true, 0xFF0D1319, 0xFF141C24, 0xFF1B2530, 0xFF2A3846, 0xFFE4ECF3, 0xFF94A6B6, 0xFF6FB2E8, 0xFF04121E, 0xFF9ACB7E),
+            Corners.SOFT, 18.dp, Fonts.changa, Fonts.changa, NavStyle.DOCK, IconStyle.OUTLINED, PrayerLayout.LIST, CounterStyle.PLAIN, ornament = "◌", backdrop = Backdrop.RAIN),
+        Look("aurora", "شفق", "أشرطة الشفق القطبي تتموّج أعلى الشاشة بالأخضر والبنفسجي فوق ليل عميق، عناوين كوفية · هدية الصداقة",
+            null, pal(true, 0xFF050B14, 0xFF0B1422, 0xFF111D30, 0xFF1D2E48, 0xFFE6F4F2, 0xFF8FA9B8, 0xFF3CE0A8, 0xFF02160F, 0xFFC77DFF),
+            Corners.ROUND, 28.dp, Fonts.modern, Fonts.kufi, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.TIMELINE, CounterStyle.BEADS, ornament = "✧", backdrop = Backdrop.AURORA),
+        Look("illuminated", "مخطوطة مذهّبة", "إطار مذهّب مزدوج بوريدات في الزوايا كصفحة مخطوطة مزخرفة، رقّ وحبر، خط النسخ كاملًا · هدية الصداقة",
+            pal(false, 0xFFF6EEDB, 0xFFFCF6E8, 0xFFEFE2C3, 0xFFDCC69A, 0xFF2A1C0C, 0xFF77603F, 0xFF8A2A1C, 0xFFFFF6E8, 0xFFB08A2E),
+            pal(true, 0xFF0D1220, 0xFF131A2C, 0xFF1A2238, 0xFF2C3654, 0xFFF1E8D2, 0xFFB0A486, 0xFFE0B050, 0xFF161002, 0xFFE8C468),
+            Corners.SQUARE, 2.dp, Fonts.naskh, Fonts.naskh, NavStyle.TOP, IconStyle.GLYPH, PrayerLayout.LIST, CounterStyle.BEADS, ornament = "❁", backdrop = Backdrop.ILLUMINATED),
+        Look("sky", "سماء الوقت", "ثيم حيّ تتبدّل ألوانه مع أوقات الصلاة الحقيقية في مدينتك: فجر وضحى وظهيرة وعصر وغروب وليل، بشمس تعبر السماء وقمر ونجوم · هدية الصداقة",
+            Day, Night, Corners.ROUND, 22.dp, null, Fonts.messiri, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.TIMELINE, CounterStyle.RING, ornament = "☀", backdrop = Backdrop.SKY, sky = true),
+        Look("stars", "سَحَر", "سماء الثلث الأخير من الليل: نجوم تتلألأ وشهاب يعبر بين حين وآخر، بنفسجي ليلي وفضّة · هدية الصداقة",
+            null, pal(true, 0xFF07060F, 0xFF0F0D1C, 0xFF16132A, 0xFF262043, 0xFFEDEAFB, 0xFFA29CC4, 0xFFB9C6FF, 0xFF0A0A1A, 0xFFF2D27A),
+            Corners.ROUND, 30.dp, Fonts.modern, Fonts.kufi, NavStyle.DOCK, IconStyle.OUTLINED, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "✦", backdrop = Backdrop.STARS),
+        Look("light", "نور", "أشعّة نور ذهبية تنسكب من أعلى وتدور ببطء، أبيض وذهب، خط المسيري · هدية الصداقة",
+            pal(false, 0xFFFFFCF4, 0xFFFFFFFF, 0xFFFBF1D8, 0xFFF0DFB2, 0xFF33280F, 0xFF7E6E48, 0xFFB8860B, 0xFFFFFFFF, 0xFFC9A02A),
+            pal(true, 0xFF14110A, 0xFF1C180E, 0xFF262013, 0xFF3D341F, 0xFFFAF2DC, 0xFFC4B48C, 0xFFF0C24A, 0xFF1A1300, 0xFFF5D67A),
+            Corners.ROUND, 26.dp, Fonts.messiri, Fonts.messiri, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.CARDS, CounterStyle.RING, ornament = "✺", backdrop = Backdrop.RAYS),
     ) }
 
     fun byId(id: String) = all.firstOrNull { it.id == id } ?: all.first()
