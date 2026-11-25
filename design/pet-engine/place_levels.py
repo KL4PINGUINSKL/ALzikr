@@ -1,11 +1,11 @@
 """Places every friend and every look on the levels (assets/pets/levels.json: "species" and "skins"), which the app applies
 over the packs (PetPacks.registry). The packs themselves stay untouched.
 
-  * Levels 1..40: a new friend at every level (1..14 as they always were, then the Studio's friends and the legendary ones
-    in the order of the Studio's levels).
-  * After 40: a new friend every two or three levels (2, 3, 2, 3 …); the levels between open a look.
+  * Up to DENSE: a new friend at every level (1..14 as they always were, then the Studio's friends and the legendary ones
+    in the order of the Studio's levels). Now DENSE = 68, so every friend: one a level, 2..68.
+  * After DENSE (if friends remain): a new friend every two or three levels; the levels between open a look.
   * When the friends are all open, a look a level; the legendary friends' extra looks come last, at the highest levels.
-  * Looks that already open by level 40 stay where they are, and every look of level 1 stays open to everyone.
+  * Looks that already open by DENSE stay where they are, and every look of level 1 stays open to everyone.
   * Each friend's first look opens with it; its other looks keep their order and never open before it.
 
   python design/pet-engine/place_levels.py
@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 
 PETS = Path(__file__).resolve().parents[2] / 'android' / 'app' / 'src' / 'main' / 'assets' / 'pets'
-DENSE = 40                     # one friend a level up to here
+DENSE = 68                     # one friend a level up to here (all of them)
 GAPS = [2, 3]                  # then a friend every 2 or 3 levels
 files = ('pack.json', 'originals/pack.json', 'legendary/pack.json', 'studio/pack.json')
 packs = [json.loads((PETS / p).read_text(encoding='utf-8')) for p in files]

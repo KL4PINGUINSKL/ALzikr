@@ -179,9 +179,9 @@ object Progress {
     data class Reward(val level: Int, val icon: String, val name: String)
     fun rewards(): List<Reward> = listOf(
         Reward(1, "🐾", "القطة والبطريق والغنمة، وأشكال لكل منها"),
-        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وكل مستوى حتى 40 يفتح صديقًا جديدًا، ثم صديق كل مستويين أو ثلاثة وبينها أشكال"),
+        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وكل مستوى حتى 68 يفتح صديقًا جديدًا، ثم شكلًا جديدًا حتى 158"),
         Reward(12, "👑", "لقب «صديق العمر»"),
-        Reward(15, "🌊", "أصدقاء الاستوديو: الملكيون والعناصر وما قبل التاريخ والبحر والآليون والحلوى والكون، آخرهم في المستوى 110"),
+        Reward(15, "🌊", "أصدقاء الاستوديو: الملكيون والعناصر وما قبل التاريخ والبحر والآليون والحلوى والكون، صديق جديد كل مستوى حتى 68"),
         Reward(25, "🐉", "الأصدقاء الأسطوريون بينهم، ولهم زينة ومؤثرات تُفتح مع المستوى"),
     ) + speciesLevels.filter { it.value > 1 }.map { (s, l) -> Reward(l, "🐾", "صديق جديد: ${s.ar}") }.sortedBy { it.level }
     /** Animals open with the level too (the cat, the penguin and the sheep from the start): the levels are in the pack data. */
