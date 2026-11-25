@@ -1,6 +1,8 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <group android:scaleX="0.42" android:scaleY="0.42" android:translateX="-9.84" android:translateY="-10.68">
-        <path android:fillColor="#FFFFFFFF" android:pathData="M53.16,30.01 A24,24 0 1,0 74.77,66.03 A21,21 0 0,1 53.16,30.01 Z"/>
-        <path android:fillColor="#FFFFFFFF" android:pathData="M68,42l2.6,5.4 5.9,0.8 -4.3,4.1 1,5.9 -5.2,-2.8 -5.2,2.8 1,-5.9 -4.3,-4.1 5.9,-0.8z"/>
+    <!-- The app icon's crescent and two shining stars (ic_launcher_monochrome), for the status bar -->
+    <group android:scaleX="0.36" android:scaleY="0.36" android:translateX="-8.70" android:translateY="-8.16">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M48.26,33.07 A23.0,23.0 0 1,0 71.39,64.46 A19.5,19.5 0 0,1 48.26,33.07 Z"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M73.50,32.00 Q75.03,38.97 82.00,40.50 Q75.03,42.03 73.50,49.00 Q71.97,42.03 65.00,40.50 Q71.97,38.97 73.50,32.00 Z"/>
+        <path android:fillColor="#FFFFFFFF" android:pathData="M79.00,53.00 Q79.90,57.10 84.00,58.00 Q79.90,58.90 79.00,63.00 Q78.10,58.90 74.00,58.00 Q78.10,57.10 79.00,53.00 Z"/>
     </group>
 </vector>

@@ -206,7 +206,7 @@ object Alerts {
                 .setContentIntent(PendingIntent.getActivity(c, 78, Intent(c, MainActivity::class.java).putExtra("adhkarsec", 3).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             Kind.SUHOOR -> Notification.Builder(c, CH_REMIND).setContentTitle("السحور").setContentText("الفجر بعد ${Data.suhoorBefore} دقيقة · تسحروا فإن في السحور بركة").setContentIntent(open(c, "prayer"))
         }
-        b.setSmallIcon(R.drawable.ic_stat_zikr).setAutoCancel(true).setColor(0xFF1F7A5A.toInt())
+        b.setSmallIcon(R.drawable.ic_stat_zikr).setAutoCancel(true).setColor(0xFF1A3274.toInt())
         nm.notify(when (kind) { Kind.PRAYER -> ID_PRAYER; Kind.FAST -> ID_EVE; Kind.OCCASION -> ID_DAY; else -> ID_REMIND }, b.build())
     }
 
@@ -234,7 +234,7 @@ object Alerts {
     fun testSound(c: Context) {
         if (!canPost(c)) return
         val n = Notification.Builder(c, prayerChannel(c)).setSmallIcon(R.drawable.ic_stat_zikr).setContentTitle("تجربة تنبيه الصلاة")
-            .setContentText(if (Store.silent) "اهتزاز فقط، بلا صوت" else "هكذا سيبدو تنبيه الأذان").setAutoCancel(true).setColor(0xFF1F7A5A.toInt()).build()
+            .setContentText(if (Store.silent) "اهتزاز فقط، بلا صوت" else "هكذا سيبدو تنبيه الأذان").setAutoCancel(true).setColor(0xFF1A3274.toInt()).build()
         c.getSystemService(NotificationManager::class.java).notify(ID_PRAYER, n)
     }
 
@@ -270,7 +270,7 @@ object Alerts {
         val title = if (Store.focusIsBreak) "استراحة" else Store.focusTitle.ifBlank { "جلسة تركيز" }
         val n = Notification.Builder(c, CH_FOCUS).setSmallIcon(R.drawable.ic_stat_zikr).setContentTitle(title)
             .setUsesChronometer(true).setChronometerCountDown(true).setWhen(Store.focusEnd).setShowWhen(true)
-            .setOngoing(true).setContentIntent(open(c, "focus")).setColor(0xFF1F7A5A.toInt())
+            .setOngoing(true).setContentIntent(open(c, "focus")).setColor(0xFF1A3274.toInt())
             .addAction(Notification.Action.Builder(null, "إيقاف", focusIntent(c, FocusReceiver.STOP)).build())
             .build()
         c.getSystemService(NotificationManager::class.java).notify(ID_FOCUS, n)
@@ -286,7 +286,7 @@ object Alerts {
         val n = Notification.Builder(c, CH_FOCUS_DONE).setSmallIcon(R.drawable.ic_stat_zikr)
             .setContentTitle(if (wasBreak) "انتهت الاستراحة" else "أحسنت! انتهت جلسة التركيز")
             .setContentText(if (wasBreak) "جاهز لجلسة جديدة؟" else "$minutes دقيقة من التركيز · خذ استراحة قصيرة")
-            .setAutoCancel(true).setContentIntent(open(c, "focus")).setColor(0xFF1F7A5A.toInt())
+            .setAutoCancel(true).setContentIntent(open(c, "focus")).setColor(0xFF1A3274.toInt())
         if (!wasBreak) n.addAction(Notification.Action.Builder(null, "استراحة 5 دقائق", focusIntent(c, FocusReceiver.BREAK)).build())
         c.getSystemService(NotificationManager::class.java).notify(ID_FOCUS, n.build())
     }

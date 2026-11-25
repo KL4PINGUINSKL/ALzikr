@@ -120,7 +120,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         val open = PendingIntent.getActivity(this, 95, Intent(this, MainActivity::class.java).putExtra("page", "pet").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         return Notification.Builder(this, CH).setSmallIcon(R.drawable.ic_stat_zikr)
             .setContentTitle("${Pet.name} يرافقك · ${Friendship.title()}").setContentText("يذكّرك كل ${if (Pet.every < 60) "${Pet.every} دقيقة" else "${Pet.every / 60} ساعة"}")
-            .setContentIntent(open).setOngoing(true).setColor(0xFF1F7A5A.toInt())
+            .setContentIntent(open).setOngoing(true).setColor(0xFF1A3274.toInt())
             .addAction(Notification.Action.Builder(null, "إخفاء ساعة", act(HIDE, 96)).build())
             .addAction(Notification.Action.Builder(null, "إيقاف", act(STOP, 97)).build())
             .build()

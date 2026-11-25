@@ -250,7 +250,7 @@ class RecitationService : Service() {
             return Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
                 .setContentTitle("سورة $name · الآية ${Quran.digits(a)}")
                 .setContentText(Recitation.reciterName() + " · " + Recitation.rangeText(Recitation.playing) + if (Recitation.repeat > 1) " · تكرار ×${Recitation.repeat}" else "")
-                .setContentIntent(open).setOngoing(true).setShowWhen(false).setColor(0xFF1F7A5A.toInt())
+                .setContentIntent(open).setOngoing(true).setShowWhen(false).setColor(0xFF1A3274.toInt())
                 .addAction(Notification.Action.Builder(null, if (Recitation.paused) "متابعة" else "إيقاف مؤقت", action(c, if (Recitation.paused) RESUME else PAUSE, 31)).build())
                 .addAction(Notification.Action.Builder(null, "إنهاء", action(c, STOP, 32)).build())
                 .setStyle(Notification.MediaStyle().setShowActionsInCompactView(0, 1))

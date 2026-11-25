@@ -129,7 +129,7 @@ class AdhanService : Service() {
         val n = Notification.Builder(this, CH).setSmallIcon(R.drawable.ic_stat_zikr)
             .setContentTitle(if (prayer != null) "الأذان · صلاة ${prayer.ar}" else "تجربة الأذان")
             .setContentText(Adhan.voice().name + if (takbirOnly) " · التكبيرات" else "")
-            .setOngoing(true).setDeleteIntent(stop).setColor(0xFF1F7A5A.toInt())
+            .setOngoing(true).setDeleteIntent(stop).setColor(0xFF1A3274.toInt())
             .addAction(Notification.Action.Builder(null, "إيقاف", stop).build()).build()
         if (Build.VERSION.SDK_INT >= 29) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK) else startForeground(ID, n)
         val v = Adhan.voice()

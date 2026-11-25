@@ -232,7 +232,7 @@ class AlarmService : Service() {
         val snooze = PendingIntent.getService(this, 86, Intent(this, AlarmService::class.java).setAction(SNOOZE), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = Notification.Builder(this, CH).setSmallIcon(R.drawable.ic_stat_zikr)
             .setContentTitle(PrayerAlarm.title(prayer)).setContentText(PrayerAlarm.line(prayer))
-            .setCategory(Notification.CATEGORY_ALARM).setOngoing(true).setColor(0xFF1F7A5A.toInt())
+            .setCategory(Notification.CATEGORY_ALARM).setOngoing(true).setColor(0xFF1A3274.toInt())
             .setFullScreenIntent(full, true).setContentIntent(full).setVisibility(Notification.VISIBILITY_PUBLIC)
             .addAction(Notification.Action.Builder(null, "إيقاف", stop).build())
             .addAction(Notification.Action.Builder(null, "غفوة ${PrayerAlarm.snooze} د", snooze).build())

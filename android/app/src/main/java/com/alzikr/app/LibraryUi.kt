@@ -219,6 +219,9 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
     val list = Quran.ofSurah(s)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = if (s == surah) (startAyah - 1).coerceAtLeast(0) else 0)
     var chosen by remember { mutableStateOf<Quran.Ayah?>(null) }
+    // The verse shown framed: the one opened, then any verse tapped; the frame fades after five seconds.
+    var focus by remember { mutableStateOf(if (mark) surah to startAyah else null) }
+    LaunchedEffect(focus) { if (focus != null) { kotlinx.coroutines.delay(5_000); focus = null } }
     LaunchedEffect(Unit) { if (Nav.quranSheet) { Nav.quranSheet = false; chosen = Quran.at(surah, startAyah) } }
     // Defaults from «طريقة عرض المصحف» in the library.
     var study by rememberSaveable { mutableStateOf(MushafView.studyDefault) }
@@ -272,7 +275,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
                     if (i > 0 && list[i - 1].page != a.page) Text("— صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)} —", color = P.muted, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
                     val marked = Quran.marked(a.s, a.a)
                     val reading = Recitation.now == (a.s to a.a)
-                    val focused = mark && a.s == surah && a.a == startAyah
+                    val focused = focus == (a.s to a.a)
                     val hidden = hifz && a.a !in shown
                     // Memorization mode: only the first word shows until you tap to check yourself.
                     @Suppress("UNUSED_VARIABLE") val mv = Mushafs.version
@@ -283,7 +286,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
                         modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp))
                             .background(when { hidden -> P.card; reading -> P.accent.copy(alpha = .18f); focused -> P.accent.copy(alpha = .12f); marked -> P.gold.copy(alpha = .14f); else -> P.bg })
                             .then(if (focused) Modifier.border(2.dp, P.accent, L.shape(10.dp)) else Modifier)
-                            .clickable { if (hidden) shown += a.a else chosen = a }.padding(horizontal = 6.dp, vertical = 4.dp))
+                            .clickable { if (hidden) shown += a.a else { chosen = a; focus = a.s to a.a } }.padding(horizontal = 6.dp, vertical = 4.dp))
                     if (study) Tafsir.get(ctx, Tafsir.selected, a.s, a.a)?.takeIf { it.from == a.a && it.text.isNotBlank() }?.let { e ->
                         Column(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(L.shape(12.dp)).background(P.card).padding(12.dp)) {
                             Sub(Tafsir.book(Tafsir.selected).name + if (e.to > e.from) " · الآيات ${Quran.digits(e.from)}–${Quran.digits(e.to)}" else "", color = P.gold, size = 11.sp)
