@@ -421,7 +421,7 @@ const val APP_SITE = "https://alzikr.alpharmasy.com"
 const val APP_LINK = "$APP_SITE/ALzikr.apk"
 
 fun shareApp(c: android.content.Context) {
-    val text = "تطبيق ALzikr: أوقات الصلاة وتنبيهها، والأذكار والأوراد، والقرآن الكريم مع التفاسير والتلاوة، وكتب الحديث وشروحها، والكتب الإسلامية. مجاني وبلا إعلانات.\n\nللتنزيل مباشرة (أندرويد):\n$APP_LINK\n\nعن التطبيق وكل الإصدارات:\n$APP_SITE"
+    val text = "تطبيق ALzikr: أوقات الصلاة وتنبيهها، والأذكار والأوراد، والقرآن الكريم مع التفاسير والتلاوة، وكتب الحديث وشروحها، والكتب الإسلامية. مجاني وبلا إعلانات.\n\nصفحة التطبيق والتحميل (أندرويد):\n$APP_SITE"
     c.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, text), "مشاركة ALzikr"))
 }
 
