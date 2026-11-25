@@ -41,6 +41,7 @@ object AboutAl {
 
     /** Newest first: version to what changed (shown under "What's new"). */
     val CHANGES: List<Pair<String, List<String>>> = listOf(
+        "1.4.9" to listOf("«عن التطبيق»: دعوة لأن تدعو لصاحب التطبيق ولوالديه ولأهله وللمسلمين، وزر لمشاركة التطبيق"),
         "1.4.8" to listOf("إصلاح: اختيار «صفحات» داخل المصحف صار يبقى، فتفتح السور و«ختمتك» بالصفحات كل مرة (كانت ترجع إلى عرض الآيات)، والتبديل بين «صفحات» و«تمرير» داخل وضع القراءة يبقى كذلك، وتغيّره متى شئت من «طريقة عرض المصحف» في المكتبة"),
         "1.4.7" to listOf("الضغط على بطاقة «ختمتك» يفتح المصحف مباشرة عند الصفحة التي وصلت إليها", "«سجل صديقي»: نقاط اليوم ملوّنة وأوضح (✨ المستوى بالذهبي و❤ الصداقة بالوردي)، وكذلك شريطا المستوى والصداقة", "الرجوع يعيدك إلى موضعك في القائمة لا إلى أولها، في كل التطبيق: قائمة السور والأجزاء، وأبواب الحديث وشروحه، والموسوعة، والكتب، والقصص (ومنها القصص الإسلامية)، والأذكار، والفقه، والحفظ، والتجويد، وقسم الأطفال، وصفحات «المزيد»", "الرجوع من شرح حديث يعيدك إلى موضع الحديث في الباب (أو إلى آخر حديث وصلت إليه بالتنقل) لا إلى أول الباب", "أصوات الأذان تُنزَّل من موقع التطبيق على Cloudflare أولًا ثم من GitHub، فتعمل حيث لا يصل GitHub (كسورية)", "إصلاح: «الشرح والدرجة» كان يفتح أحيانًا شرح حديث آخر (كإنما الأعمال بالنيات في الأربعين النووية وصحيح البخاري)؛ صار يطابق الكلمات المميِّزة للحديث لا افتتاحيته المتكررة، وإن لم يجد شرحه قال ذلك بدل فتح شرح غيره", "شرح الحديث: انتقل إلى الحديث التالي أو السابق بزرّين أو بسحبة جانبية، من الكتاب الذي فتحته منه أو من قائمة الموضوع في الموسوعة"),
         "1.4.6" to listOf("أقسام الإعدادات صارت في «المزيد» مباشرة (الموقع والحساب، التنبيهات والأذان، الصلاة والتركيز، المظهر، التلاوة، المساعدة)، فلم يبقَ زر الترس في الأعلى، وصار صديقك في الأعلى أكبر قليلًا", "«صفحة التحميل» بجانب «عن التطبيق» في «المزيد»، تفتح صفحة الإصدارات على alzikr.alpharmasy.com", "نافذة الآية: انتقل إلى الآية التالية أو السابقة بزرّين في أعلاها أو بسحبة جانبية، فتقرأ تفسير الآيات متتابعة دون إغلاق النافذة", "مشاركة التطبيق ترسل رابط صفحته alzikr.alpharmasy.com (عن التطبيق وزر التحميل) بدل GitHub، فيعمل لمن لا يصل إلى GitHub", "«عن التطبيق» يعرض عائلة ALprojects كاملة، ومعها ALpharmaSy (المساعد الصيدلي السوري، ويب) وALgeneral (منصة مودات Zero Hour، ويندوز)", "التحديثات تصل من موقع التطبيق alzikr.alpharmasy.com على Cloudflare إلى جانب GitHub، فتعمل حيث لا يصل GitHub (كسورية)، ويُتحقَّق من سلامة الملف المنزَّل قبل تثبيته", "ورد الختمة: بعد إتمام وردك اسحب لتتابع القراءة كما تشاء، وكل صفحة زائدة تُحسب لختمتك"),
@@ -155,10 +156,19 @@ fun AboutSection(ink: Color, muted: Color, accent: Color, card: Color, modifier:
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("${AboutAl.APP} $version", color = ink, fontWeight = FontWeight.Medium)
-                Text("من تطبيقات AL · التحديثات من KL4PINGUINSKL/ALapps", color = muted, fontSize = 12.sp)
+                Text("من عائلة ALprojects · التحديثات من alzikr.alpharmasy.com و GitHub", color = muted, fontSize = 12.sp)
             }
             Text("البحث عن تحديث", color = accent, fontSize = 13.sp, fontWeight = FontWeight.Medium,
                 modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { (context as? Activity)?.let { AppUpdate.checkNow(it) } }.padding(horizontal = 10.dp, vertical = 8.dp))
+        }
+
+        // A request for a dua for whoever made the app, and to share it.
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(accent.copy(alpha = .12f)).padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("🤲 لا تنسَنا من دعائك", color = accent, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text("إن نفعك هذا التطبيق فادعُ لصاحبه ولوالديه ولأهله وللمسلمين أجمعين بالمغفرة والرحمة والقبول، وأن يجعله الله صدقةً جاريةً لهم.", color = ink, fontSize = 14.sp, lineHeight = 22.sp)
+            Text("وشاركه مع أهلك وأحبابك، فالدالّ على الخير كفاعله.", color = ink, fontSize = 14.sp, lineHeight = 22.sp)
+            Text("↗ مشاركة التطبيق", color = accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { shareApp(context) }.padding(horizontal = 8.dp, vertical = 6.dp))
         }
 
         Text("الجديد", color = ink, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 4.dp))
