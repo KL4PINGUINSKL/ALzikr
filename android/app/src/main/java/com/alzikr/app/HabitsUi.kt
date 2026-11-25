@@ -1,5 +1,6 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -127,8 +128,11 @@ fun KhatmaPage() {
             Action(if (read >= wird) "📖 راجع ورد اليوم" else "📖 اقرأ وردك (${wird - read.coerceAtMost(wird)} صفحة)", Modifier.fillMaxWidth().padding(top = 8.dp)) { Nav.wird = true }
         }
 
-        // The whole khatma.
-        Panel(color = P.card) {
+        // The whole khatma: a tap opens the mushaf at the page reached (in the reading style chosen for the mushaf).
+        Panel(Modifier.clickable {
+            val at = Quran.firstOfPageSafe(ctx, page.coerceIn(1, Data.PAGES)).split(':').map { it.toInt() }
+            MushafView.open(at[0], at[1])
+        }, color = P.card) {
             Sub(if (Data.khatmaCount > 0) "الختمة ${Data.khatmaCount + 1}" else "ختمتك")
             Text(if (page == 0) "لم تبدأ بعد" else "الصفحة $page · الجزء ${Data.juzOf(page)}", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
@@ -136,6 +140,7 @@ fun KhatmaPage() {
                 Box(Modifier.fillMaxWidth(page.toFloat() / Data.PAGES).height(8.dp).clip(RoundedCornerShape(4.dp)).background(if (page >= Data.PAGES) P.gold else P.accent))
             }
             Sub("${(page * 100 / Data.PAGES)}% · بقي ${Data.PAGES - page} صفحة" + if (page < Data.PAGES) " · تختم يوم ${end.dayOfMonth}/${end.monthValue} (بعد ${Data.daysLeft()} يومًا)" else "", Modifier.padding(top = 6.dp), size = 12.sp)
+            Text(if (page == 0) "اضغط لتفتح المصحف من أوله ›" else "اضغط لتفتح المصحف عند الصفحة $page ›", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
         }
         if (page >= Data.PAGES) {
             GText("ختمت القرآن، تقبّل الله منك 🌙", color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
