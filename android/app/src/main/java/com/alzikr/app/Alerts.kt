@@ -316,6 +316,8 @@ object Alerts {
             .setContentText(if (wasBreak) "جاهز لجلسة جديدة؟" else "$minutes دقيقة من التركيز · خذ استراحة قصيرة")
             .setAutoCancel(true).setContentIntent(open(c, "focus")).setColor(0xFF1A3274.toInt())
         if (!wasBreak) n.addAction(Notification.Action.Builder(null, "استراحة 5 دقائق", focusIntent(c, FocusReceiver.BREAK)).build())
+        // A session for a task: tick it from here.
+        if (!wasBreak && Store.tasks().any { it.id == Store.focusTask && !it.done }) n.addAction(Notification.Action.Builder(null, "أنجزت المهمة ✓", focusIntent(c, FocusReceiver.TASK_DONE)).build())
         c.getSystemService(NotificationManager::class.java).notify(ID_FOCUS, n.build())
     }
 
@@ -398,9 +400,11 @@ class FocusReceiver : BroadcastReceiver() {
             END -> Alerts.focusEnded(c)
             STOP -> Alerts.stopFocus(c)
             BREAK -> Alerts.startFocus(c, 5, true, "")
+            TASK_DONE -> { Store.tasks().firstOrNull { it.id == Store.focusTask && !it.done }?.let { Store.toggleTask(it.id) }; Store.focusTask = 0
+                c.getSystemService(NotificationManager::class.java).cancel(Alerts.ID_FOCUS) }
         }
     }
-    companion object { const val END = "com.alzikr.app.FOCUS_END"; const val STOP = "com.alzikr.app.FOCUS_STOP"; const val BREAK = "com.alzikr.app.FOCUS_BREAK" }
+    companion object { const val END = "com.alzikr.app.FOCUS_END"; const val STOP = "com.alzikr.app.FOCUS_STOP"; const val BREAK = "com.alzikr.app.FOCUS_BREAK"; const val TASK_DONE = "com.alzikr.app.FOCUS_TASK_DONE" }
 }
 
 /** Reboot, app update, clock or time-zone change: alarms are gone or wrong, so set them again. */

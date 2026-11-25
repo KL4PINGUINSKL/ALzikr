@@ -46,10 +46,13 @@ import java.util.Locale
 fun TasksScreen() {
     Column(Modifier.fillMaxSize()) {
         Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-            TabGrid(listOf("✅" to "المهام", "🔁" to "العادات", "🎯" to "التركيز", "📖" to "الختمة", "📝" to "ملاحظات").mapIndexed { i, (ic, t) -> Triple(i.toString(), ic, t) },
-                Nav.daily.toString(), cols = 5) { Nav.daily = it.toInt() }
+            // «اليوم» first (it ties the others together), then the day's parts in the order a day goes.
+            TabGrid(listOf(Triple(Daily.TODAY, "☀", "اليوم"), Triple(Daily.TASKS, "✅", "المهام"), Triple(Daily.HABITS, "🔁", "العادات"), Triple(Daily.KHATMA, "📖", "الختمة"),
+                Triple(Daily.FOCUS, "🎯", "التركيز"), Triple(Daily.NOTES, "📝", "ملاحظات")).map { (i, ic, t) -> Triple(i.toString(), ic, t) },
+                Nav.daily.toString(), cols = 6) { Nav.daily = it.toInt() }
         }
         when (Nav.daily) {
+            Daily.TODAY -> DayOverview()
             1 -> HabitsList()
             2 -> FocusScreen()
             3 -> KhatmaPage()
@@ -66,14 +69,15 @@ private fun TaskList() {
     var after by rememberSaveable { mutableStateOf<String?>(null) }
     var showDone by rememberSaveable { mutableStateOf(false) }
     var remindAt by rememberSaveable { mutableStateOf(0L) }
+    var repeat by rememberSaveable { mutableStateOf(false) }
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val all = Store.tasks()
     val open = all.filter { !it.done }
     val done = all.filter { it.done }
-    fun add() { if (text.isNotBlank()) { Store.addTask(text.trim(), after?.let(Prayer::valueOf), remindAt); text = ""; remindAt = 0; TaskReminders.schedule(ctx) } }
+    fun add() { if (text.isNotBlank()) { Store.addTask(text.trim(), after?.let(Prayer::valueOf), remindAt, repeat); text = ""; remindAt = 0; repeat = false; TaskReminders.schedule(ctx) } }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Hint("tasks2", "✅", "اكتب المهمة ثم اضغط «إضافة». اختر «⏰ تذكير في وقت…» ليصلك إشعار بها في اليوم والساعة التي تريد، أو اربطها بصلاة (مثل «بعد العصر») ليذكّرك بها إشعار الأذان. وتغيّر التذكير من ⏰ بجانب المهمة.") }
+        item { Hint("tasks3", "✅", "اكتب المهمة ثم «إضافة». ⏰ تذكير في اليوم والساعة التي تريد، أو اربطها بصلاة (مثل «بعد العصر»)، و🔁 لمهمة تتكرر كل يوم. وبجانب كل مهمة: 🎯 لتبدأ جلسة تركيز عليها، و⏰ لتذكيرها، و🔁 لتكرارها.") }
         item {
             Panel(pad = 12.dp) {
                 OutlinedTextField(text, { text = it }, placeholder = { Text("مهمة جديدة…") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
@@ -81,6 +85,7 @@ private fun TaskList() {
                 Wrap(Modifier.padding(top = 8.dp), gap = 6.dp) {
                     Choice("بلا وقت", after == null) { after = null }
                     Prayer.entries.filter { it.alertable }.forEach { p -> Choice("بعد ${p.ar}", after == p.name) { after = p.name } }
+                    Choice("🔁 كل يوم", repeat) { repeat = !repeat }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Choice(if (remindAt > 0) "⏰ " + TaskReminders.label(remindAt) else "⏰ تذكير في وقت…", remindAt > 0) { pickReminder(ctx, remindAt) { remindAt = it } }
@@ -125,30 +130,43 @@ private fun TaskRow(t: Store.Task) {
             Text(t.text, color = if (t.done) P.muted else P.ink, fontSize = 15.sp, textDecoration = if (t.done) TextDecoration.LineThrough else null)
             t.after?.let { Sub("بعد ${it.ar}", size = 12.sp, color = P.gold) }
             if (t.remindAt > 0 && !t.done) Sub("⏰ " + TaskReminders.label(t.remindAt), size = 12.sp, color = P.accent)
+            if (t.repeat) Sub("🔁 كل يوم", size = 12.sp, color = P.gold)
         }
+        // Focus on this task: the timer carries its name, and the session's end offers to mark it done.
+        if (!t.done) Text("🎯", fontSize = 16.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { focusOn(t) }.padding(horizontal = 6.dp, vertical = 2.dp))
         // To-do style: a reminder at any date and time, set or changed from the task itself.
         if (!t.done) Text("⏰", color = if (t.remindAt > 0) P.accent else P.muted, fontSize = 16.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
             pickReminder(ctx, t.remindAt) { at -> Store.setTaskReminder(t.id, at); TaskReminders.schedule(ctx) }
         }.padding(horizontal = 8.dp, vertical = 2.dp))
-        Text("✕", color = P.muted, fontSize = 15.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.deleteTask(t.id) }.padding(horizontal = 8.dp, vertical = 2.dp))
+        Text(if (t.repeat) "🔁" else "↻", color = if (t.repeat) P.gold else P.muted, fontSize = 15.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.toggleRepeat(t.id) }.padding(horizontal = 6.dp, vertical = 2.dp))
+        Text("✕", color = P.muted, fontSize = 15.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.deleteTask(t.id); TaskReminders.cancelNotice(ctx, t.id) }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
 
 @Composable
 private fun NotesList() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     var editing by remember { mutableStateOf<Store.Note?>(null) }
     var adding by remember { mutableStateOf(false) }
-    val notes = Store.notes()
+    var find by rememberSaveable { mutableStateOf("") }
+    val all = Store.notes()
+    val notes = if (find.isBlank()) all else { val m = HadithSearch.matcher(find); all.filter { m(it.text) } }
     val fmt = remember { SimpleDateFormat("d MMM · h:mm a", Locale("ar")) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Hint("notes", "📝", "اضغط «ملاحظة جديدة» لتكتب، واضغط على أي ملاحظة لتعديلها أو حذفها.") }
         item { Action("+ ملاحظة جديدة", Modifier.fillMaxWidth(), filled = false) { adding = true } }
+        if (all.size > 3) item { OutlinedTextField(find, { find = it }, placeholder = { Text("ابحث في ملاحظاتك") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
         if (notes.isEmpty()) item { Sub("اكتب ما يخطر ببالك: فائدة، آية، فكرة…", Modifier.padding(8.dp)) }
         items(notes, key = { it.id }) { n ->
-            Panel(Modifier.clickable { editing = n }, pad = 14.dp) {
+            Panel(Modifier.clickable { editing = n }, pad = 14.dp, color = if (n.pinned) P.gold.copy(alpha = .10f) else P.surface) {
                 Text(n.text, color = P.ink, fontSize = 15.sp, maxLines = 6, lineHeight = 22.sp)
-                Sub(fmt.format(Date(n.at)), Modifier.padding(top = 6.dp), size = 11.sp)
+                Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Sub(fmt.format(Date(n.at)), Modifier.weight(1f), size = 11.sp)
+                    // Pinned notes stay at the top; a note can become a task.
+                    Text("✅ مهمة", color = P.muted, fontSize = 12.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.addTask(n.text.lineSequence().first().take(120), null); android.widget.Toast.makeText(ctx, "أُضيفت إلى المهام", android.widget.Toast.LENGTH_SHORT).show() }.padding(6.dp))
+                    Text(if (n.pinned) "📌 مثبّتة" else "📌", color = if (n.pinned) P.gold else P.muted, fontSize = 12.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.togglePin(n.id) }.padding(6.dp))
+                }
             }
         }
     }

@@ -66,7 +66,17 @@ fun FocusScreen() {
 
         if (!running) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf(15, 25, 45, 60).forEach { m -> Choice("$m د", minutes == m) { minutes = m } } }
-            OutlinedTextField(title, { title = it }, placeholder = { Text("على ماذا ستركّز؟ (اختياري)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            // Focus on one of the open tasks: its name goes on the timer and its end offers to tick it.
+            val openTasks = Store.tasks().filter { !it.done }
+            if (openTasks.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
+                Sub("ركّز على مهمة:", size = 12.sp)
+                Wrap(Modifier.padding(top = 4.dp), gap = 6.dp) {
+                    openTasks.take(8).forEach { t -> Choice((if (Store.focusTask == t.id) "✓ " else "") + t.text.take(30), Store.focusTask == t.id) {
+                        if (Store.focusTask == t.id) { Store.focusTask = 0; title = "" } else { Store.focusTask = t.id; title = t.text }
+                    } }
+                }
+            }
+            OutlinedTextField(title, { title = it; if (Store.focusTask != 0L && Store.tasks().none { t -> t.id == Store.focusTask && t.text == it }) Store.focusTask = 0 }, placeholder = { Text("على ماذا ستركّز؟ (اختياري)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             // The adhan comes first? Say so before starting.
             if (Store.hasLocation) {
                 val w = window()
@@ -95,9 +105,19 @@ fun FocusScreen() {
             Sub("يبقى المؤقت في قائمة الإشعارات، ويعمل حتى لو أغلقت التطبيق.", size = 12.sp)
         }
 
+        // The task this session was for: tick it when done.
+        val forTask = Store.tasks().firstOrNull { it.id == Store.focusTask && !it.done }
+        if (!running && forTask != null && sessions > 0) Panel(pad = 14.dp, color = P.accent.copy(alpha = .10f)) {
+            Text("هل أنجزت «${forTask.text}»؟", color = P.ink, fontSize = 15.sp)
+            Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Action("✓ أنجزتها") { Store.toggleTask(forTask.id); Store.focusTask = 0; title = "" }
+                Action("ليس بعد", filled = false) { Store.focusTask = 0 }
+            }
+        }
         Panel(pad = 14.dp) {
             Title("اليوم")
             Sub(if (sessions == 0) "لم تبدأ أي جلسة بعد. ابدأ بخمس وعشرين دقيقة." else "$sessions جلسات · $total دقيقة من التركيز", size = 14.sp)
+            Box(Modifier.padding(top = 10.dp)) { WeekBars(Store.focusWeek(), "دقيقة", P.gold) }
         }
     }
 }

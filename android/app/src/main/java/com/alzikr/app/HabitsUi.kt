@@ -50,7 +50,16 @@ fun HabitsList() {
     var deleting by remember { mutableStateOf<Data.Habit?>(null) }
     val habits = Data.habits()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Hint("habits", "🔥", "اضغط على العادة عندما تنجزها اليوم. كل يوم متتالٍ يزيد سلسلتك 🔥. اضغط مطولًا للحذف.") }
+        item { Hint("habits2", "🔥", "اضغط على العادة عندما تنجزها اليوم. كل يوم متتالٍ يزيد سلسلتك 🔥، وتحتها كم يومًا أنجزتها من آخر ٣٠. وتجدها أيضًا في «اليوم» لتأشّرها بسرعة. اضغط مطولًا للحذف.") }
+        // A ready list of good daily deeds to add with one tap.
+        item {
+            val have = habits.map { it.name }.toSet()
+            val ideas = listOf("الوتر", "السنن الرواتب", "الضحى", "صلة الرحم", "صدقة", "قراءة صفحة من القرآن", "الاستغفار ١٠٠", "قيام الليل", "بر الوالدين", "الصلاة على النبي ﷺ").filter { it !in have }
+            if (ideas.isNotEmpty()) Column {
+                Sub("أضف بلمسة:", size = 12.sp)
+                Wrap(Modifier.padding(top = 4.dp), gap = 6.dp) { ideas.take(6).forEach { n -> Choice("+ $n", false) { Data.addHabit(n) } } }
+            }
+        }
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -77,7 +86,12 @@ fun HabitsList() {
                         }
                     }
                 }
-                if (h.streak > 1) GText("${h.streak} 🔥", color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Column(horizontalAlignment = Alignment.End) {
+                    if (h.streak > 1) GText("${h.streak} 🔥", color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    // How steady it is: the days done in the last 30.
+                    val month = (0 until 30).count { LocalDate.now().minusDays(it.toLong()).toString() in h.days }
+                    Sub("${Quran.digits(month)}/٣٠ يومًا", size = 10.sp)
+                }
             }
         }
         item { Sub("اضغط لتسجيل اليوم، واضغط مطولًا للحذف.", Modifier.padding(6.dp), size = 12.sp) }
@@ -126,6 +140,12 @@ fun KhatmaPage() {
             Text("من الصفحة $from إلى $to", color = P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Sub("$wird صفحة (${"%.1f".format(wird / 20.0)} جزء) · قرأت منها ${read.coerceAtMost(wird)}" + if (read >= wird) " ✓ أتممت وردك، تقبّل الله" else "", color = if (read >= wird) P.accent else P.ink)
             Action(if (read >= wird) "📖 راجع ورد اليوم" else "📖 اقرأ وردك (${wird - read.coerceAtMost(wird)} صفحة)", Modifier.fillMaxWidth().padding(top = 8.dp)) { Nav.wird = true }
+            if (read < wird) Sub("يستغرق نحو ${Quran.digits(((wird - read) * 2).coerceAtLeast(1))} دقيقة (دقيقتان للصفحة تقريبًا)", Modifier.padding(top = 6.dp), size = 12.sp)
+        }
+        // The week's reading, day by day.
+        Panel(pad = 14.dp) {
+            Title("قراءتك هذا الأسبوع")
+            Box(Modifier.padding(top = 8.dp)) { WeekBars(Data.pagesWeek(), "صفحة") }
         }
 
         // The whole khatma: a tap opens the mushaf at the page reached (in the reading style chosen for the mushaf).

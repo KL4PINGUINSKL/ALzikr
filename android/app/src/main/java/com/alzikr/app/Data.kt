@@ -245,6 +245,11 @@ object Data {
     var khatmaRemindAt: Int
         get() = sp.getInt("khatma_remind", -1)
         set(v) = edit { putInt("khatma_remind", v) }
+    /** Khatma pages read on each of the last 7 days, oldest first. */
+    fun pagesWeek(): List<Pair<LocalDate, Int>> {
+        val log = JSONObject(sp.getString("khatma_log", "{}")!!)
+        return (6 downTo 0).map { LocalDate.now().minusDays(it.toLong()) }.map { it to log.optInt(it.toString()).coerceAtLeast(0) }
+    }
     fun pagesToday() = JSONObject(sp.getString("khatma_log", "{}")!!).optInt(today()).coerceIn(0, khatmaPage)
     fun juzOf(page: Int) = if (page <= 1) 1 else ((page - 2) / 20 + 1).coerceIn(1, 30)
     fun newKhatma() { khatmaCount = khatmaCount + if (khatmaPage >= PAGES) 1 else 0; edit { putInt("khatma_page", 0).putString("khatma_started", today()).putString("khatma_log", "{}") } }

@@ -169,19 +169,27 @@ object Store {
     // ----------------------------------------------------------------- tasks
 
     /** [after]: a prayer the task belongs after ("after Asr"), or null. */
-    data class Task(val id: Long, val text: String, val done: Boolean, val after: Prayer?, val doneAt: Long, val remindAt: Long = 0)
+    /** [repeat]: a daily task, open again each new day (done only for the day it was done). */
+    data class Task(val id: Long, val text: String, val done: Boolean, val after: Prayer?, val doneAt: Long, val remindAt: Long = 0, val repeat: Boolean = false)
 
     fun tasks(): List<Task> {
         val a = JSONArray(sp.getString("tasks", "[]"))
+        val today = LocalDate.now()
         return (0 until a.length()).map { a.getJSONObject(it).let { o ->
-            Task(o.getLong("id"), o.getString("text"), o.optBoolean("done"), o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, o.optLong("doneAt"), o.optLong("remindAt"))
+            val repeat = o.optBoolean("repeat")
+            val doneAt = o.optLong("doneAt")
+            // A daily task done on an earlier day is open again today.
+            val done = o.optBoolean("done") && (!repeat || java.time.Instant.ofEpochMilli(doneAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == today)
+            Task(o.getLong("id"), o.getString("text"), done, o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, doneAt, o.optLong("remindAt"), repeat)
         } }
     }
     private fun saveTasks(list: List<Task>) {
-        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("done", it.done).put("after", it.after?.name ?: "").put("doneAt", it.doneAt).put("remindAt", it.remindAt)) }
+        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("done", it.done).put("after", it.after?.name ?: "").put("doneAt", it.doneAt).put("remindAt", it.remindAt).put("repeat", it.repeat)) }
         sp.edit().putString("tasks", a.toString()).apply(); changed()
     }
-    fun addTask(text: String, after: Prayer?, remindAt: Long = 0) = saveTasks(listOf(Task(System.currentTimeMillis(), text, false, after, 0, remindAt)) + tasks())
+    fun addTask(text: String, after: Prayer?, remindAt: Long = 0, repeat: Boolean = false) = saveTasks(listOf(Task(System.currentTimeMillis(), text, false, after, 0, remindAt, repeat)) + tasks())
+    fun toggleRepeat(id: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(repeat = !it.repeat) else it })
+    fun renameTask(id: Long, text: String) = saveTasks(tasks().map { if (it.id == id) it.copy(text = text) else it })
     /** A to-do reminder at [at] (epoch ms; 0 = none). Call TaskReminders.schedule afterwards. */
     fun setTaskReminder(id: Long, at: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(remindAt = at) else it })
     fun toggleTask(id: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(done = !it.done, doneAt = if (!it.done) System.currentTimeMillis() else 0) else it })
@@ -191,22 +199,24 @@ object Store {
 
     // ----------------------------------------------------------------- notes
 
-    data class Note(val id: Long, val text: String, val at: Long)
+    data class Note(val id: Long, val text: String, val at: Long, val pinned: Boolean = false)
 
     fun notes(): List<Note> {
         val a = JSONArray(sp.getString("notes", "[]"))
-        return (0 until a.length()).map { a.getJSONObject(it).let { o -> Note(o.getLong("id"), o.getString("text"), o.optLong("at")) } }
+        return (0 until a.length()).map { a.getJSONObject(it).let { o -> Note(o.getLong("id"), o.getString("text"), o.optLong("at"), o.optBoolean("pinned")) } }.sortedByDescending { it.pinned }
     }
     private fun saveNotes(list: List<Note>) {
-        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("at", it.at)) }
+        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("at", it.at).put("pinned", it.pinned)) }
         sp.edit().putString("notes", a.toString()).apply(); changed()
     }
     fun saveNote(id: Long?, text: String) {
         val now = System.currentTimeMillis()
         val list = notes()
-        saveNotes(if (id == null) listOf(Note(now, text, now)) + list else listOf(Note(id, text, now)) + list.filterNot { it.id == id })
+        val pinned = list.firstOrNull { it.id == id }?.pinned ?: false
+        saveNotes(if (id == null) listOf(Note(now, text, now)) + list else listOf(Note(id, text, now, pinned)) + list.filterNot { it.id == id })
     }
     fun deleteNote(id: Long) = saveNotes(notes().filterNot { it.id == id })
+    fun togglePin(id: Long) = saveNotes(notes().map { if (it.id == id) it.copy(pinned = !it.pinned) else it })
 
     // ----------------------------------------------------------------- focus
 
@@ -230,6 +240,18 @@ object Store {
     }
     fun addFocus(minutes: Int) {
         val (s, m) = focusToday()
-        sp.edit().putString("focus_day", LocalDate.now().toString()).putInt("focus_sessions", s + 1).putInt("focus_total", m + minutes).apply(); changed()
+        val hist = JSONObject(sp.getString("focus_hist", "{}")!!)
+        val day = LocalDate.now().toString()
+        hist.put(day, hist.optInt(day) + minutes)
+        sp.edit().putString("focus_day", day).putInt("focus_sessions", s + 1).putInt("focus_total", m + minutes).putString("focus_hist", hist.toString()).apply(); changed()
     }
+    /** Focus minutes on each of the last 7 days, oldest first. */
+    fun focusWeek(): List<Pair<LocalDate, Int>> {
+        val hist = JSONObject(sp.getString("focus_hist", "{}")!!)
+        return (6 downTo 0).map { LocalDate.now().minusDays(it.toLong()) }.map { d -> d to (hist.optInt(d.toString()) + if (d == LocalDate.now() && hist.optInt(d.toString()) == 0) focusToday().second else 0) }
+    }
+    /** The task a focus session is for (0 = none): its end offers «أنجزت المهمة». */
+    var focusTask: Long
+        get() = sp.getLong("focus_task", 0)
+        set(v) { sp.edit().putLong("focus_task", v).apply(); changed() }
 }

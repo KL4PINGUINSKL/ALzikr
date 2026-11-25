@@ -156,7 +156,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         ))
         MoreGroup("أدوات", listOf(
             Triple("🧭", "القبلة") { open("qibla") }, Triple("📅", "مواقيت الشهر") { open("month") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
-            Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث عن حديث") { open("hsearch") },
+            Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث الشامل") { Nav.search = true },
         ))
         val ctx = LocalContext.current
         // The settings sections, one tap away (there is no gear in the top bar any more).

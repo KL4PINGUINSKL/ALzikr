@@ -127,6 +127,7 @@ class MainActivity : ComponentActivity() {
             "focus" -> { Nav.tab = "daily"; Nav.daily = 2 }
             "tasks" -> { Nav.tab = "daily"; Nav.daily = 0 }
             "khatma" -> { Nav.tab = "daily"; Nav.daily = 3 }
+            "today" -> { Nav.tab = "daily"; Nav.daily = Daily.TODAY }
             "wird" -> Nav.wird = true
             else -> Nav.tab = t
         }

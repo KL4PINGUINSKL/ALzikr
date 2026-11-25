@@ -15,7 +15,7 @@ object Nav {
     /** Open an explained hadith (HadeethEnc id). */
     var sharh by mutableStateOf<String?>(null)
     /** Sub-section inside the daily tab (0 tasks, 1 habits, 2 focus, 3 khatma, 4 notes). */
-    var daily by mutableStateOf(0)
+    var daily by mutableStateOf(5)   // Daily.TODAY
     /** Library section to show (0 Quran … 6 favorites), a "More" page, and a Quran story by index. */
     var library by mutableStateOf<Int?>(null)
     var morePage by mutableStateOf<String?>(null)

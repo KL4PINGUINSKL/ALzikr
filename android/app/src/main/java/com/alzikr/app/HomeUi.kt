@@ -202,9 +202,9 @@ object Home {
         Short("salah", "💧", "صفة الصلاة") { Nav.morePage = "salah"; Nav.go("more") },
         Short("tajweed", "🎙", "التجويد") { Nav.morePage = "tajweed"; Nav.go("more") },
         Short("stats", "📊", "إحصائياتي") { Nav.morePage = "stats"; Nav.go("more") },
-        Short("tasks", "☑", "المهام") { Nav.daily = 0; Nav.go("daily") },
-        Short("focus", "⏱", "التركيز") { Nav.daily = 2; Nav.go("daily") },
-        Short("khatma", "📗", "الختمة") { Nav.daily = 3; Nav.go("daily") },
+        Short("tasks", "☑", "المهام") { Nav.daily = Daily.TASKS; Nav.go("daily") },
+        Short("focus", "⏱", "التركيز") { Nav.daily = Daily.FOCUS; Nav.go("daily") },
+        Short("khatma", "📗", "الختمة") { Nav.daily = Daily.KHATMA; Nav.go("daily") },
     )
     private val defaultShorts = listOf("qibla", "adhkar", "quran", "khatma", "tasbih")
     val names = listOf("الصلاة", "الرئيسية", "وقتي", "البداية")

@@ -55,7 +55,10 @@ object TaskReminders {
         val now = System.currentTimeMillis()
         Store.tasks().filter { !it.done && it.remindAt in 1..(now + 30_000) }.forEach { t ->
             notify(c, t)
-            Store.setTaskReminder(t.id, 0)   // said once; a snooze sets it again
+            // Said once; a daily task is reminded again tomorrow at the same time (a snooze sets it again too).
+            var next = 0L
+            if (t.repeat) { next = t.remindAt; while (next <= now) next += 86_400_000L }
+            Store.setTaskReminder(t.id, next)
         }
         schedule(c)
     }
