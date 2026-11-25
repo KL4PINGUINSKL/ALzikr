@@ -29,14 +29,14 @@ object Progress {
 
     /** How each kind is earned, in plain words (shown under «كيف أكسب النقاط؟»). */
     fun how(k: Kind): String = when (k) {
-        Kind.PAGE -> "كل صفحة قرآن تقرؤها، من وردك أو خارجه: تبقى عليها ٢٠ ثانية في المصحف، أو تقلّبها في وضع القراءة أو في «اقرأ وردك»"
+        Kind.PAGE -> "كل صفحة قرآن تقرؤها، من وردك أو خارجه: تبقى عليها 20 ثانية في المصحف، أو تقلّبها في وضع القراءة أو في «اقرأ وردك»"
         Kind.LISTEN -> "كل آية تسمعها حتى آخرها بصوت أي قارئ"
         Kind.WIRD -> "إتمام ورد اليوم من ختمتك (يُحسب عند آخر صفحة منه، أينما قرأته بالترتيب)"
-        Kind.KHATMA -> "ختم القرآن كاملًا (يكمّل نقاط يومك حتى ٣٠٠ ولا يتجاوزها)"
-        Kind.HADITH -> "كل حديث تقرؤه ١٥ ثانية"
+        Kind.KHATMA -> "ختم القرآن كاملًا (يكمّل نقاط يومك حتى 300 ولا يتجاوزها)"
+        Kind.HADITH -> "كل حديث تقرؤه 15 ثانية"
         Kind.SHARH -> "كل شرح حديث تبقى عليه دقيقة"
         Kind.STUDY -> "كل درس تجويد تتمّه، وكل مقطع تحفظه أو تراجعه"
-        Kind.DEED -> "كل صلاة تعلّمها ✓، وإتمام أذكار، وصدقة، وكل ٣٣ تسبيحة"
+        Kind.DEED -> "كل صلاة تعلّمها ✓، وإتمام أذكار، وصدقة، وكل 33 تسبيحة"
     }
 
     /** Records one thing done today; returns the experience it earned (0 if counted already or the cap is reached). */
@@ -240,21 +240,21 @@ object Progress {
     val badges: List<Badge> get() = listOf(
         Badge("khatma1", "📗", "الختمة الأولى", "أتمّ ختمة", 1) { maxOf(Data.khatmaCount, total(Kind.KHATMA)) },
         Badge("khatma10", "📚", "قارئ", "أتمّ عشر ختمات", 10) { maxOf(Data.khatmaCount, total(Kind.KHATMA)) },
-        Badge("pages1000", "📖", "ألف صفحة", "اقرأ ١٠٠٠ صفحة مع صديقك", 1000) { total(Kind.PAGE) },
-        Badge("hadith100", "🎒", "طالب الحديث", "اقرأ ١٠٠ حديث مختلف", 100) { total(Kind.HADITH) },
-        Badge("hadith500", "🌿", "محبّ الحديث", "اقرأ ٥٠٠ حديث", 500) { total(Kind.HADITH) },
+        Badge("pages1000", "📖", "ألف صفحة", "اقرأ 1000 صفحة مع صديقك", 1000) { total(Kind.PAGE) },
+        Badge("hadith100", "🎒", "طالب الحديث", "اقرأ 100 حديث مختلف", 100) { total(Kind.HADITH) },
+        Badge("hadith500", "🌿", "محبّ الحديث", "اقرأ 500 حديث", 500) { total(Kind.HADITH) },
         Badge("streak7", "🔥", "أسبوع طيب", "سبعة أيام طيبة متتالية", 7) { Pet.bestStreak() },
         Badge("streak30", "🏵", "صديق الأيام الطيبة", "ثلاثون يومًا طيبًا متتاليًا", 30) { Pet.bestStreak() },
         Badge("days30", "🌙", "شهر معًا", "ثلاثون يومًا على صداقتكما", 30) { Pet.daysTogether() },
         Badge("days100", "🎖", "مئة يوم", "مئة يوم على صداقتكما", 100) { Pet.daysTogether() },
         Badge("days365", "🌳", "سنة معًا", "سنة كاملة على صداقتكما", 365) { Pet.daysTogether() },
         Badge("challenges30", "🎯", "صاحب التحديات", "أتمّ ثلاثين تحديًا يوميًا", 30) { sp.getInt("pet_ch_count", 0) },
-        Badge("level10", "⭐", "المستوى العاشر", "بلغ صديقك المستوى ١٠", 10) { level() },
+        Badge("level10", "⭐", "المستوى العاشر", "بلغ صديقك المستوى 10", 10) { level() },
         // Friendship badges (time together, not worship).
-        Badge("bond20", "🤝", "أول ألفة", "اجمع ٥٠ ❤ من وقتك مع صديقك", 50) { bondPoints },
-        Badge("bond150", "💞", "صحبة", "اجمع ٣٧٥ ❤", 375) { bondPoints },
-        Badge("bond600", "🫶", "رفقة العمر", "اجمع ١٥٠٠ ❤", 1500) { bondPoints },
-        Badge("bond1000", "💛", "صفاء الودّ", "اجمع ٢٥٠٠ ❤", 2500) { bondPoints },
+        Badge("bond20", "🤝", "أول ألفة", "اجمع 50 ❤ من وقتك مع صديقك", 50) { bondPoints },
+        Badge("bond150", "💞", "صحبة", "اجمع 375 ❤", 375) { bondPoints },
+        Badge("bond600", "🫶", "رفقة العمر", "اجمع 1500 ❤", 1500) { bondPoints },
+        Badge("bond1000", "💛", "صفاء الودّ", "اجمع 2500 ❤", 2500) { bondPoints },
         Badge("chest4", "🎁", "أسابيع مكتملة", "افتح صندوق الأسبوع أربع مرات", 4) { sp.getInt("miss_chests", 0) },
         Badge("questions30", "💡", "الباحث", "أجب عن ثلاثين سؤالًا من أسئلة اليوم", 30) { sp.getInt("q_count", 0) },
         Badge("learn30", "📚", "طالب العلم", "أتمم «تعلّم اليوم» ثلاثين يومًا", 30) { sp.getInt("learn_count", 0) },

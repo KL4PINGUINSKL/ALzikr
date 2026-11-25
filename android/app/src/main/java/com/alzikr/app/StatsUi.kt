@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,9 +77,9 @@ object Stats {
         val col = listOf("morning" to "الصباح", "evening" to "المساء", "sleep" to "النوم").joinToString("، ") { (id, n) -> "$n ${days.count { colDoneOn(id, it) }}/7" }
         return buildString {
             appendLine("إحصائياتي في ALzikr 🌙")
-            appendLine("• الصلوات في آخر ٧ أيام: $w من $p")
+            appendLine("• الصلوات في آخر 7 أيام: $w من $p")
             appendLine("• أيام متتالية بالصلوات الخمس: ${prayerStreak()}")
-            appendLine("• الرواتب هذا الأسبوع: ${days.sumOf { rawatibOn(it) }} من ٢٨ · الوتر: ${days.count { Data.extra(it, "witr") }}/7")
+            appendLine("• الرواتب هذا الأسبوع: ${days.sumOf { rawatibOn(it) }} من 28 · الوتر: ${days.count { Data.extra(it, "witr") }}/7")
             appendLine("• الأذكار هذا الأسبوع: $col")
             appendLine("• الختمة: ${Data.khatmaPage * 100 / Data.PAGES}٪" + if (Data.khatmaCount > 0) " (ختمات مكتملة: ${Data.khatmaCount})" else "")
             appendLine("• صيام هذا الشهر الهجري: ${fastsThisMonth()} يومًا")
@@ -108,7 +107,7 @@ object Stats {
         text("${hj.day} ${hj.monthName} ${hj.year} هـ", 225f, 36f, pal.gold.toArgb())
         val (wk, pos) = Data.week()
         val rows = listOf(
-            "الصلوات في آخر ٧ أيام" to "$wk / $pos", "أيام متتالية بالصلوات الخمس" to "${prayerStreak()}",
+            "الصلوات في آخر 7 أيام" to "$wk / $pos", "أيام متتالية بالصلوات الخمس" to "${prayerStreak()}",
             "الختمة" to "${Data.khatmaPage * 100 / Data.PAGES}٪", "صيام هذا الشهر" to "${fastsThisMonth()}",
         )
         var y = 330f
@@ -163,7 +162,7 @@ fun StatsPage() {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Big("🔥", "${Stats.prayerStreak()}", "أيام متتالية بالصلوات الخمس", Modifier.weight(1f))
             val (w, p) = Data.week()
-            Big("🕌", "$w/$p", "صلوات آخر ٧ أيام", Modifier.weight(1f))
+            Big("🕌", "$w/$p", "صلوات آخر 7 أيام", Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Big("📗", "${Data.khatmaPage * 100 / Data.PAGES}٪", "من ختمتك" + if (Data.khatmaCount > 0) " · ختمات: ${Data.khatmaCount}" else "", Modifier.weight(1f))
@@ -188,7 +187,7 @@ fun StatsPage() {
 
         // Which prayer is missed most (last 30 days).
         Panel(pad = 14.dp) {
-            Title("كل صلاة في آخر ٣٠ يومًا")
+            Title("كل صلاة في آخر 30 يومًا")
             Stats.perPrayer(30).forEach { (p, n) ->
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(p.ar, color = P.ink, fontSize = 14.sp, modifier = Modifier.width(64.dp))

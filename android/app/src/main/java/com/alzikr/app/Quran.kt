@@ -65,7 +65,7 @@ object Quran {
     private val fillers = setOf("سوره", "سورت", "سور", "السوره", "ايه", "الايه", "ايات", "الايات", "رقم", "اقرا", "افتح", "قراءه", "من")
 
     /**
-     * Reads what people type: «سورة الكهف», «الكهف 10», «سورة البقرة آية 255», «2:255», «١٨»,
+     * Reads what people type: «سورة الكهف», «الكهف 10», «سورة البقرة آية 255», «2:255», «18»,
      * «آية الكرسي», «خواتيم البقرة», «جزء عم», «الجزء 30». The «ال» and the letter forms are optional.
      */
     fun jumps(q: String): List<Jump> {
@@ -78,8 +78,8 @@ object Quran {
             if (a in 1..sur.count) out += Jump(label ?: "سورة ${sur.name} · الآية ${digits(a)}", s, a, false)
         }
         Regex("^(\\d{1,3})\\s*[:/\\-]\\s*(\\d{1,3})$").find(n)?.let { m -> verse(m.groupValues[1].toInt(), m.groupValues[2].toInt()); return out }
-        if (n.contains("الكرسي")) verse(2, 255, "آية الكرسي · البقرة ٢٥٥")
-        if (n.contains("البقره") && (n.contains("خواتيم") || n.contains("اخر") || n.contains("خاتمه"))) verse(2, 285, "خواتيم سورة البقرة · ٢٨٥")
+        if (n.contains("الكرسي")) verse(2, 255, "آية الكرسي · البقرة 255")
+        if (n.contains("البقره") && (n.contains("خواتيم") || n.contains("اخر") || n.contains("خاتمه"))) verse(2, 285, "خواتيم سورة البقرة · 285")
         Regex("(?:^|\\s)(?:ال)?جزء\\s*(\\d{1,2}|عم|تبارك)(?:\\s|$)").find(n)?.let { m ->
             val j = when (val g = m.groupValues[1]) { "عم" -> 30; "تبارك" -> 29; else -> g.toInt() }
             if (j in 1..30) firstOfJuz(j).let { a -> out += Jump("الجزء ${digits(j)} · ${surahs[a.s - 1].name} ${digits(a.a)}", a.s, a.a, false) }
@@ -111,7 +111,7 @@ object Quran {
         return ayahs.asSequence().filter { it.plain.contains(n) }.take(limit).toList()
     }
 
-    /** The app's digits: ١٢٣ (Arabic-Indic, the default) or 123, chosen in Settings → Appearance. */
+    /** The app's digits: 123 (Arabic-Indic, the default) or 123, chosen in Settings → Appearance. */
     var easternDigits: Boolean
         get() = Store.prefs.getBoolean("digits_eastern", true)
         set(v) { Store.prefs.edit().putBoolean("digits_eastern", v).apply(); Store.bump() }

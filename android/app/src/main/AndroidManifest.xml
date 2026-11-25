@@ -24,7 +24,8 @@
     </queries>
 
     <application android:label="ALzikr" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher"
-        android:supportsRtl="true" android:theme="@style/Theme.ALzikr">
+        android:supportsRtl="true" android:theme="@style/Theme.ALzikr"
+        android:allowBackup="true" android:backupAgent=".AlzikrBackupAgent" android:restoreAnyVersion="true">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

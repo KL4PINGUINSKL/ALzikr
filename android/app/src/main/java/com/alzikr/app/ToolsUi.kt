@@ -16,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,10 +97,10 @@ fun AlarmPage() {
                 }
                 if (on) {
                     Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Choice("− ٥", false) { PrayerAlarm.setOffset(ctx, p, off - 5) }
+                        Choice("− 5", false) { PrayerAlarm.setOffset(ctx, p, off - 5) }
                         Text(when { off < 0 -> "قبل الوقت بـ ${-off} د"; off > 0 -> "بعد الوقت بـ $off د"; else -> "عند دخول الوقت" },
                             color = P.ink, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.width(130.dp))
-                        Choice("+ ٥", false) { PrayerAlarm.setOffset(ctx, p, off + 5) }
+                        Choice("+ 5", false) { PrayerAlarm.setOffset(ctx, p, off + 5) }
                     }
                     val days = PrayerAlarm.days(p)
                     Wrap(Modifier.padding(top = 6.dp), gap = 4.dp) {

@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,25 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
 
-/** The phone's own Arabic voice reads letters and words aloud (nothing to download from us). */
+/**
+ * The kids section is read, not spoken: the phone's synthetic Arabic voice made many mistakes, so it was removed.
+ * Only «قصار السور» has sound, recited by a real reciter. [say] stays as a no-op so the pages keep their taps.
+ */
 object Speak {
-    private var tts: TextToSpeech? = null
-    private var ready = false
-    private var failed = false
-    fun say(c: Context, text: String) {
-        val t = tts
-        if (t == null) {
-            tts = TextToSpeech(c.applicationContext) { st ->
-                val r = if (st == TextToSpeech.SUCCESS) tts?.setLanguage(Locale("ar")) ?: TextToSpeech.LANG_NOT_SUPPORTED else TextToSpeech.LANG_NOT_SUPPORTED
-                ready = r >= TextToSpeech.LANG_AVAILABLE
-                failed = !ready
-                if (ready) tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "k") else hint(c)
-            }
-            return
-        }
-        if (ready) t.speak(text, TextToSpeech.QUEUE_FLUSH, null, "k") else if (failed) hint(c)
-    }
-    private fun hint(c: Context) = Toast.makeText(c, "لا يوجد صوت عربي في الهاتف. ثبّته من الإعدادات › تحويل النص إلى كلام", Toast.LENGTH_LONG).show()
+    @Suppress("UNUSED_PARAMETER") fun say(c: Context, text: String) = Unit
 }
 
 /** What the kids section teaches. Sunni sources, simple words. */
@@ -143,17 +129,17 @@ object Kids {
         Card("🚶", "الخروج من المسجد", "أخرج برجلي اليسرى وأقول: «اللهم إني أسألك من فضلك»", "مسلم"),
         Card("🤧", "العطاس", "أقول: «الحمد لله»، فيقول من سمعني: «يرحمك الله»، فأرد: «يهديكم الله ويصلح بالكم»", "البخاري"),
         Card("👕", "لبس الثوب", "«الحمد لله الذي كساني هذا الثوب ورزقنيه من غير حول مني ولا قوة»", "أبو داود والترمذي، وحسّنه الألباني"),
-        Card("🚗", "ركوب السيارة", "«سبحان الذي سخّر لنا هذا وما كنا له مقرنين، وإنا إلى ربنا لمنقلبون»", "الزخرف ١٣–١٤، ورواه مسلم"),
+        Card("🚗", "ركوب السيارة", "«سبحان الذي سخّر لنا هذا وما كنا له مقرنين، وإنا إلى ربنا لمنقلبون»", "الزخرف 13–14، ورواه مسلم"),
     )
     val manners = listOf(
         Card("👋", "أُلقي السلام", "أقول «السلام عليكم» لمن عرفت ومن لم أعرف.", "«أفشوا السلام بينكم» — مسلم"),
         Card("🍽️", "آداب الطعام", "أسمّي الله، وآكل بيميني، ومما يليني.", "«يا غلام، سمِّ الله، وكُل بيمينك، وكُل مما يليك» — البخاري ومسلم"),
-        Card("👨‍👩‍👧", "أبرّ والديّ", "أطيعهما وأكلّمهما بلطف وأساعدهما.", "﴿وبالوالدين إحسانًا﴾ — الإسراء ٢٣"),
+        Card("👨‍👩‍👧", "أبرّ والديّ", "أطيعهما وأكلّمهما بلطف وأساعدهما.", "﴿وبالوالدين إحسانًا﴾ — الإسراء 23"),
         Card("✅", "أصدق دائمًا", "الصدق يهدي إلى الخير والجنة.", "«عليكم بالصدق» — البخاري ومسلم"),
         Card("😊", "أبتسم", "الابتسامة في وجه أخي صدقة.", "«تبسّمك في وجه أخيك لك صدقة» — الترمذي، وصححه الألباني"),
         Card("🐱", "أرحم الحيوان", "غفر الله لرجل سقى كلبًا عطشان.", "البخاري ومسلم"),
         Card("🪥", "أحب النظافة", "أستعمل السواك وأنظّف أسناني.", "«السواك مطهرة للفم مرضاة للرب» — النسائي، وصححه الألباني"),
-        Card("🚪", "أستأذن", "أطرق الباب وأستأذن قبل أن أدخل غرفة غيري.", "النور ٢٧"),
+        Card("🚪", "أستأذن", "أطرق الباب وأستأذن قبل أن أدخل غرفة غيري.", "النور 27"),
         Card("🤐", "أحفظ لساني", "أقول الكلام الطيب أو أسكت.", "«من كان يؤمن بالله واليوم الآخر فليقل خيرًا أو ليصمت» — البخاري ومسلم"),
         Card("🤝", "أساعد غيري", "الله في عون العبد ما كان العبد في عون أخيه.", "مسلم"),
     )
@@ -255,12 +241,11 @@ private fun LettersPage() {
     sel?.let { i ->
         val l = Kids.letters[i]
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(l.c, color = P.accent, fontSize = 120.sp, fontFamily = Fonts.naskh, modifier = Modifier.clip(L.shape(30.dp)).clickable { Speak.say(ctx, l.name) }.padding(horizontal = 30.dp))
-            Text("حرف ${l.name}  🔊", color = P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(12.dp)).clickable { Speak.say(ctx, l.name) }.padding(6.dp))
-            Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(P.card).clickable { Speak.say(ctx, l.word) }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(l.c, color = P.accent, fontSize = 120.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(horizontal = 30.dp))
+            Text("حرف ${l.name}", color = P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
+            Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(P.card).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(l.emoji, fontSize = 56.sp)
                 Text(l.word, color = P.ink, fontSize = 34.sp, fontFamily = Fonts.naskh, modifier = Modifier.weight(1f).padding(start = 12.dp))
-                Text("🔊", fontSize = 24.sp)
             }
             Text("أشكال الحرف في الكلمة", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -276,7 +261,7 @@ private fun LettersPage() {
                 listOf("َ", "ِ", "ُ", "ْ").forEach { m ->
                     val s = if (l.c == "ا") "أ$m" else l.c + m
                     Text(s, color = P.ink, fontSize = 38.sp, fontFamily = Fonts.naskh, textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1f).clip(L.shape(18.dp)).background(P.card).clickable { Speak.say(ctx, s) }.padding(vertical = 6.dp))
+                        modifier = Modifier.weight(1f).clip(L.shape(18.dp)).background(P.card).padding(vertical = 6.dp))
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -288,12 +273,12 @@ private fun LettersPage() {
         return
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("اضغط على حرف لتسمعه وترى كلمة تبدأ به.", color = P.muted, fontSize = 15.sp)
+        Text("اضغط على حرف لترى اسمه وكلمة تبدأ به.", color = P.muted, fontSize = 15.sp)
         Kids.letters.chunked(4).forEachIndexed { r, row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 row.forEachIndexed { k, l ->
                     val colors = Kids.topics.map { it.color }
-                    Column(Modifier.weight(1f).clip(L.shape(22.dp)).background(Color(colors[(r * 4 + k) % colors.size])).clickable { sel = r * 4 + k; Speak.say(ctx, l.name) }.padding(vertical = 8.dp),
+                    Column(Modifier.weight(1f).clip(L.shape(22.dp)).background(Color(colors[(r * 4 + k) % colors.size])).clickable { sel = r * 4 + k }.padding(vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(l.c, color = Color(0xFF1D2B5A), fontSize = 40.sp, fontFamily = Fonts.naskh)
                         Text(l.emoji, fontSize = 18.sp)
@@ -311,26 +296,25 @@ private fun HarakatPage() {
     var letter by rememberSaveable { mutableIntStateOf(1) }
     val c = Kids.letters[letter].c.let { if (it == "ا") "أ" else it }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("الحركات تخبرنا كيف ننطق الحرف. اختر حرفًا ثم اضغط على كل حركة لتسمعها:", color = P.muted, fontSize = 15.sp)
+        Text("الحركات تخبرنا كيف ننطق الحرف. اختر حرفًا وانظر كيف يتغيّر مع كل حركة:", color = P.muted, fontSize = 15.sp)
         Wrap(gap = 6.dp) {
             Kids.letters.forEachIndexed { i, l -> Choice(l.c, letter == i) { letter = i } }
         }
         Kids.harakat.forEach { h ->
             val s = c + h.mark
-            Row(Modifier.fillMaxWidth().clip(L.shape(20.dp)).background(P.card).clickable { Speak.say(ctx, if (h.mark == "ْ") "أَ$s" else s) }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(20.dp)).background(P.card).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(s, color = P.accent, fontSize = 44.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(horizontal = 12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(h.name, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text(h.about, color = P.muted, fontSize = 14.sp)
                 }
-                Text("🔊", fontSize = 22.sp)
             }
         }
         Text("حروف المدّ: نمدّ الصوت قليلًا", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.Bold)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("َا" to "مدّ بالألف", "ُو" to "مدّ بالواو", "ِي" to "مدّ بالياء").forEach { (m, n) ->
                 val s = c + m
-                Column(Modifier.weight(1f).clip(L.shape(18.dp)).background(P.surface).border(1.dp, P.line, L.shape(18.dp)).clickable { Speak.say(ctx, s) }.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.weight(1f).clip(L.shape(18.dp)).background(P.surface).border(1.dp, P.line, L.shape(18.dp)).padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(s, color = P.ink, fontSize = 36.sp, fontFamily = Fonts.naskh)
                     Text(n, color = P.muted, fontSize = 12.sp)
                 }
@@ -349,9 +333,9 @@ private fun LetterGame() {
     val (l, opts) = q
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("بأي حرف تبدأ هذه الكلمة؟", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Column(Modifier.clip(L.shape(30.dp)).background(P.card).clickable { Speak.say(ctx, l.word) }.padding(horizontal = 30.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.clip(L.shape(30.dp)).background(P.card).padding(horizontal = 30.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(l.emoji, fontSize = 80.sp)
-            Text(if (picked == null) "ـ" + l.word.drop(1) + "  🔊" else l.word + "  🔊", color = P.ink, fontSize = 30.sp, fontFamily = Fonts.naskh)
+            Text(if (picked == null) "ـ" + l.word.drop(1) else l.word, color = P.ink, fontSize = 30.sp, fontFamily = Fonts.naskh)
         }
         opts.chunked(2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -361,7 +345,7 @@ private fun LetterGame() {
                     Text(o.c, color = if (picked != null && right) P.onAccent else P.ink, fontSize = 48.sp, fontFamily = Fonts.naskh, textAlign = TextAlign.Center,
                         modifier = Modifier.weight(1f).clip(L.shape(24.dp)).background(bg).border(2.dp, P.line, L.shape(24.dp)).clickable(enabled = picked == null) {
                             picked = o.c
-                            if (right) { Pet.stars = Pet.stars + 1; streak++; Haptics.tap(ctx, true); Speak.say(ctx, "أحسنت") ; if (streak % 5 == 0) Pet.cheer("رائع! $streak إجابات صحيحة") } else { streak = 0; Speak.say(ctx, l.name) }
+                            if (right) { Pet.stars = Pet.stars + 1; streak++; Haptics.tap(ctx, true); if (streak % 5 == 0) Pet.cheer("رائع! $streak إجابات صحيحة") } else { streak = 0 }
                         }.padding(vertical = 10.dp))
                 }
             }
@@ -383,7 +367,7 @@ private fun KidsTajweed() {
         K("📖", "ما هو التجويد؟", "أن نقرأ القرآن كما قرأه النبي ﷺ: نُخرج كل حرف من مكانه، ونعطيه حقّه. قال الله: ﴿ورتّل القرآن ترتيلًا﴾.", listOf(Tajweed.Ex("ورتل القرآن ترتيلا", 73, 4))),
         K("👃", "الغنّة", "صوت جميل يخرج من الأنف مع النون والميم المشدّدتين. أمسك أنفك وقل «إنّ» فستشعر بها! نمدّها بمقدار حركتين.", listOf(Tajweed.Ex("إنا أعطيناك", 108, 1), Tajweed.Ex("ثم", 2, 28))),
         K("🏀", "القلقلة", "خمسة حروف تجمعها كلمة «قُطْبُ جَدٍّ». إذا سكنت ارتدّ صوتها مثل الكرة: «الفلقْ»، «أحدْ».", listOf(Tajweed.Ex("الفلق", 113, 1), Tajweed.Ex("أحد", 112, 1), Tajweed.Ex("يقطعون", 2, 27))),
-        K("🐍", "المدّ", "نمدّ الصوت بالألف والواو والياء. حركتان في «قال»، وأطول إذا جاءت بعدها همزة مثل «جاء»، وأطول وأطول (٦ حركات) في «الضّالّين».", listOf(Tajweed.Ex("قال", 2, 30), Tajweed.Ex("جاء", 110, 1), Tajweed.Ex("الضالين", 1, 7))),
+        K("🐍", "المدّ", "نمدّ الصوت بالألف والواو والياء. حركتان في «قال»، وأطول إذا جاءت بعدها همزة مثل «جاء»، وأطول وأطول (6 حركات) في «الضّالّين».", listOf(Tajweed.Ex("قال", 2, 30), Tajweed.Ex("جاء", 110, 1), Tajweed.Ex("الضالين", 1, 7))),
         K("☀️", "اللام الشمسية والقمرية", "في «ال»: إذا اختفت اللام وشُدّد الحرف بعدها فهي شمسية مثل «الشّمس». وإذا ظهرت اللام فهي قمرية مثل «القَمَر». العب لعبة الشمس والقمر تحت!", listOf(Tajweed.Ex("والشمس", 91, 1), Tajweed.Ex("القمر", 54, 1))),
         K("🟢", "النون الساكنة: تظهر", "إذا جاء بعدها حرف من حروف الحلق (ء هـ ع ح غ خ) نقولها واضحة: «مَنْ آمن». هذا هو الإظهار.", listOf(Tajweed.Ex("من آمن", 2, 62))),
         K("🫥", "النون الساكنة: تختبئ", "إذا جاء بعدها حرف من «يرملون» دخلت فيه واختفت: «مَن يقول». هذا هو الإدغام.", listOf(Tajweed.Ex("من يقول", 2, 8))),
@@ -418,7 +402,7 @@ private fun SunMoonGame(back: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("‹ رجوع", color = P.accent, fontSize = 15.sp, modifier = Modifier.align(Alignment.Start).clip(L.shape(10.dp)).clickable(onClick = back).padding(6.dp))
         Text("هل اللام في هذه الكلمة شمسية أم قمرية؟", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Text(w, color = P.ink, fontSize = 56.sp, fontFamily = Fonts.naskh, modifier = Modifier.clip(L.shape(26.dp)).background(P.card).clickable { Speak.say(ctx, w) }.padding(horizontal = 26.dp))
+        Text(w, color = P.ink, fontSize = 56.sp, fontFamily = Fonts.naskh, modifier = Modifier.clip(L.shape(26.dp)).background(P.card).padding(horizontal = 26.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(true to "☀️\nشمسية", false to "🌙\nقمرية").forEach { (isSun, label) ->
                 val right = isSun == sun
@@ -498,8 +482,7 @@ private fun StepsPage(steps: List<Kids.Step>, finish: String, id: String) {
         Text("${Quran.digits(i + 1)} / ${Quran.digits(steps.size)}", color = P.muted, fontSize = 15.sp)
         Text(s.emoji, fontSize = 96.sp)
         Text(s.title, color = P.accent, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Text(s.text, color = P.ink, fontSize = 20.sp, lineHeight = 32.sp, textAlign = TextAlign.Center, modifier = Modifier.clip(L.shape(16.dp)).clickable { Speak.say(ctx, s.text) }.padding(6.dp))
-        Text("🔊 اسمع", color = P.accent, fontSize = 15.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { Speak.say(ctx, s.title + ". " + s.text) }.padding(6.dp))
+        Text(s.text, color = P.ink, fontSize = 20.sp, lineHeight = 32.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             if (i > 0) BigButton("› السابق", Modifier.weight(1f), filled = false) { i-- }
             BigButton(if (i == steps.lastIndex) "انتهيت 🎉" else "التالي ‹", Modifier.weight(1f)) {
@@ -518,7 +501,7 @@ private fun CardsPage(groups: List<Pair<String, List<Kids.Card>>>, footer: Strin
             Text(title, color = P.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             cards.forEachIndexed { k, c ->
                 val colors = Kids.topics.map { it.color }
-                Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(Color(colors[k % colors.size])).clickable { Speak.say(ctx, c.title + ". " + c.text) }.padding(14.dp),
+                Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(Color(colors[k % colors.size])).padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Text(c.emoji, fontSize = 40.sp)
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
@@ -530,6 +513,5 @@ private fun CardsPage(groups: List<Pair<String, List<Kids.Card>>>, footer: Strin
             }
         }
         if (footer.isNotBlank()) Text(footer, color = P.muted, fontSize = 12.sp)
-        Text("اضغط على أي بطاقة لتسمعها 🔊", color = P.muted, fontSize = 13.sp)
     }
 }

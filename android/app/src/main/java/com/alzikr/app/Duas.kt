@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -152,7 +151,7 @@ fun DuasPage() {
             Title("التذكير في أوقات الإجابة")
             val re = { Alerts.reschedule(ctx) }
             SettingRow("الثلث الأخير من الليل", "«ينزل ربنا… فيقول: من يدعوني فأستجيب له» (البخاري ومسلم)") { Switch(Duas.remindLastThird, { Duas.remindLastThird = it; re() }) }
-            SettingRow("آخر ساعة يوم الجمعة", "قبل المغرب بـ ٤٥ دقيقة (أبو داود والنسائي)") { Switch(Duas.remindFriday, { Duas.remindFriday = it; re() }) }
+            SettingRow("آخر ساعة يوم الجمعة", "قبل المغرب بـ 45 دقيقة (أبو داود والنسائي)") { Switch(Duas.remindFriday, { Duas.remindFriday = it; re() }) }
             Sub("بين الأذان والإقامة (الترمذي وأبو داود): لصلاة", Modifier.padding(top = 8.dp))
             Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                 Choice("لا", Duas.remindAfterAdhan == null) { Duas.remindAfterAdhan = null; re() }

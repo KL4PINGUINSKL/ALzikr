@@ -53,7 +53,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -393,7 +392,7 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
     val mark = Quran.marked(top.s, top.a)
     ReadingShell(
         title = "سورة ${Quran.surahs[top.s - 1].name}",
-        info = "الجزء ${Quran.digits(top.juz)} · صفحة ${Quran.digits(cur)} من ٦٠٤",
+        info = "الجزء ${Quran.digits(top.juz)} · صفحة ${Quran.digits(cur)} من 604",
         back = back, progress = cur / 604f,
         status = "ورد اليوم: ${Quran.digits(Reading.todayPages())} من ${Quran.digits(Reading.goal)} صفحات · الختمة ${Quran.digits(Reading.far * 100 / 604)}٪",
         scroll = if (paged) null else list, quran = true,
@@ -418,7 +417,7 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
             Choice("📖 آيات وتفسير من هذه الصفحة", false) { back(); Nav.openQuran(top.s, top.a) }
             Sub("الورد اليومي", Modifier.padding(top = 8.dp))
             Wrap(gap = 6.dp) {
-                listOf(2, 4, 5, 10, 20).forEach { n -> Choice(if (n == 20) "جزء (٢٠ صفحة)" else "${Quran.digits(n)} صفحات", Reading.goal == n) { Reading.goal = n } }
+                listOf(2, 4, 5, 10, 20).forEach { n -> Choice(if (n == 20) "جزء (20 صفحة)" else "${Quran.digits(n)} صفحات", Reading.goal == n) { Reading.goal = n } }
             }
             val left = 604 - Reading.far
             Sub("الختمة: وصلت الصفحة ${Quran.digits(Reading.far)}" + (if (Reading.khatmas > 0) " · ختمات مكتملة: ${Quran.digits(Reading.khatmas)}" else "") +
@@ -453,7 +452,7 @@ fun QuranReading(s0: Int, a0: Int, back: () -> Unit) {
         AlertDialog(onDismissRequest = { index = false }, containerColor = P.surface, title = { Text("الفهرس", color = P.ink) },
             text = {
                 Column {
-                    OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, placeholder = { Text("رقم الصفحة ١ – ٦٠٤") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, placeholder = { Text("رقم الصفحة 1 – 604") }, modifier = Modifier.fillMaxWidth())
                     Sub("الأجزاء", Modifier.padding(top = 8.dp, bottom = 4.dp))
                     Wrap(gap = 6.dp) {
                         (1..30).forEach { j -> Choice(Quran.digits(j), top.juz == j) { go(Quran.firstOfJuz(j).page); index = false } }

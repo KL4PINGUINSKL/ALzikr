@@ -88,7 +88,12 @@ object Tafsir {
         val text = if (raw.startsWith("=")) m[start] ?: "" else raw
         var end = start
         while (m[end + 1] == "=$start") end++
-        return Entry(text, start, end)
+        val key = "$id/$s/$start"
+        val clean = fixed[key] ?: TafsirFix.repair(text, s).also { if (Quran.ready) fixed[key] = it }
+        return Entry(clean, start, end)
+    }
+    private val fixed = object : LinkedHashMap<String, String>(64, .75f, true) {
+        override fun removeEldestEntry(e: MutableMap.MutableEntry<String, String>?) = size > 200
     }
 
     /** Fetches one surah's tafsir. Blocking: call off the main thread. */
@@ -142,4 +147,43 @@ object Tafsir {
 
     /** The 1.1.0 single-file Jalalayn is replaced by the per-surah store. */
     fun cleanup(c: Context) { File(c.filesDir, "tafsir_jalalayn.txt").delete() }
+}
+
+/**
+ * Mends slips in the downloaded books' text. A verse quoted between ﴿﴾ is checked against the verse itself:
+ * when its first word lost its start («أَيُّهَا» for «يَٰٓأَيُّهَا», «ولوا» for «قولوا») the missing letters are put back.
+ * A quote that simply begins after «و» or «ف» or «ال» is left as it is, as the authors often quote that way.
+ * Known typos of the sources are corrected too («إلى لناس»).
+ */
+object TafsirFix {
+    private val typos = listOf(Regex("(?<=^|[\\s،؛.(«])لناس(?=$|[\\s،؛.)»])") to "الناس")
+    private val quote = Regex("﴿([^﴾]{3,600})﴾")
+    private val number = Regex("\\([^)]*\\)")
+    private val marks = Regex("[\\u064B-\\u0652]")
+    /** Prefixes an author may leave out on purpose: and, so, with, to, as, will, the. */
+    private val glue = setOf("و", "ف", "ب", "ل", "ك", "س", "ال", "وال", "فال", "بال", "كال", "لل", "ول", "فل", "وب", "فب", "وس", "فس", "ا", "او", "اف")
+    private fun fold(t: String) = Quran.normalize(t).replace('ؤ', 'و').replace('ئ', 'ي').replace("ء", "")
+
+    fun repair(text: String, s: Int): String {
+        var t = text
+        typos.forEach { (r, w) -> t = t.replace(r, w) }
+        if (!t.contains('﴿') || !Quran.ready || s !in 1..114) return t
+        val words = Quran.ofSurah(s).flatMap { fold(it.plain).split(' ') }
+        return quote.replace(t) { m ->
+            val q = m.groupValues[1]
+            val toks = fold(q.replace(number, " ")).split(' ').filter { it.isNotEmpty() }
+            if (toks.size < 2) return@replace m.value
+            val at = (0 until words.size - 1).filter { words[it] == toks[0] && words[it + 1] == toks[1] }
+            if (at.isNotEmpty()) {
+                // «أيها …» where the verse always has «يا أيها …»: the vocative was dropped.
+                if (toks[0] == "ايها" && at.all { words.getOrNull(it - 1) == "يا" }) return@replace "﴿" + (if (marks.containsMatchIn(q)) "\u064A\u064E\u0670\u0653" else "يا") + q + "﴾"
+                return@replace m.value
+            }
+            if (toks[0].length < 3) return@replace m.value
+            val cand = (0 until words.size - 1).filter { words[it].length > toks[0].length && words[it].endsWith(toks[0]) && words[it + 1] == toks[1] }.map { words[it] }.distinct()
+            if (cand.size != 1) return@replace m.value
+            val missing = cand[0].dropLast(toks[0].length)
+            if (missing in glue) m.value else "﴿" + missing + q + "﴾"
+        }
+    }
 }

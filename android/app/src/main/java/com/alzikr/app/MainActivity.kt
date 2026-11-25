@@ -30,7 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -72,6 +71,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Store.init(this)
+        AutoBackup.onLaunch(this)
         // Create every shared Compose state on the main thread first. If a background thread (the Quran
         // loading below) is the first to touch one of these objects, its state is born outside the
         // composition's snapshot and Compose can crash with "Reading a state that was created after the snapshot was taken".
@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
         openPlace(intent)
     }
 
-    override fun onPause() { super.onPause(); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.APP, false); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.KIDS, false); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.GRID, false); PetOverlay.appVisible(this, false); val app = applicationContext; Thread { runCatching { PetWidget.update(app) } }.start() }
+    override fun onPause() { super.onPause(); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.APP, false); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.KIDS, false); com.alzikr.app.pets.PetPerf.setVisible(com.alzikr.app.pets.Place.GRID, false); PetOverlay.appVisible(this, false); val app = applicationContext; Thread { runCatching { PetWidget.update(app) }; runCatching { AutoBackup.save(app) } }.start() }
 
     override fun onResume() {
         PetOverlay.appVisible(this, true)
@@ -204,6 +204,7 @@ private fun Root() {
             // Back returns to the previous page (inner pages handle back first).
             androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != Nav.home) { Nav.back() }
             Box(Modifier.fillMaxSize().background(pal.bg)) {
+                RestoreOffer()
                 // While a reading screen is open the app's header, tabs, bar and friend step aside (full screen).
                 val inPage = Nav.pages.isNotEmpty() || Reading.open > 0
                 Column(Modifier.fillMaxSize()) {

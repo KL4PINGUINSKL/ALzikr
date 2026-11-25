@@ -35,7 +35,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
@@ -407,11 +406,12 @@ private fun BackupPage() {
         if (ok) Alerts.reschedule(ctx)
         Toast.makeText(ctx, if (ok) "استُعيدت بياناتك" else "هذا الملف ليس نسخة من ALzikr", Toast.LENGTH_LONG).show()
     }
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Sub("تُحفظ كل بياناتك في ملف واحد: الأوراد والأذكار المخصصة، المهام والملاحظات، العادات والختمة، سجل الصلوات والإعدادات. احفظه في Google Drive أو في الهاتف.", size = 13.sp)
         Action("حفظ نسخة احتياطية", Modifier.fillMaxWidth()) { save.launch("ALzikr-${LocalDate.now()}.json") }
         Action("استعادة من ملف", Modifier.fillMaxWidth(), filled = false) { load.launch(arrayOf("application/json", "application/octet-stream", "*/*")) }
         Sub("الاستعادة تستبدل كل ما في التطبيق الآن بما في الملف.", color = P.gold, size = 12.sp)
+        AutoBackupSection()
     }
 }
 

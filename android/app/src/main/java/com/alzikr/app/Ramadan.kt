@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -142,7 +141,7 @@ fun RamadanPage() {
                 Choice("+", false) { people += 1 }
             }
             Text("${people} صاع ≈ ${"%.1f".format(people * 2.5)} كغ من غالب قوت البلد (أرز أو تمر…)", color = P.accent, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-            Sub("الصاع نحو ٢٫٥ إلى ٣ كغ بحسب نوع الطعام. وقتها: قبل صلاة العيد، ويجوز قبله بيوم أو يومين.", size = 11.sp)
+            Sub("الصاع نحو 2.5 إلى 3 كغ بحسب نوع الطعام. وقتها: قبل صلاة العيد، ويجوز قبله بيوم أو يومين.", size = 11.sp)
         }
         Action("دليل العشر الأواخر وليلة القدر", Modifier.fillMaxWidth(), filled = false) { Nav.morePage = "season:lastten"; Nav.go("more") }
     }

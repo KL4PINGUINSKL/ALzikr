@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -100,7 +99,7 @@ object Moments {
             h.month == 12 && h.day in 10..13 -> Moment("🐑", if (h.day == 10) "عيد الأضحى" else "أيام التشريق", "«أيام التشريق أيام أكل وشرب وذكر لله». أكثر من التكبير.", "مسلم", "دليل الأضحى", go = guide("adha"))
             h.month == 12 && h.day <= 8 -> Moment("🕋", "عشر ذي الحجة", "«ما من أيام العمل الصالح فيهن أحب إلى الله من هذه الأيام». أكثر من التكبير والتهليل والتحميد والصيام.", "أبو داود والترمذي بهذا اللفظ، وأصله في البخاري", "دليل العشر", go = guide("dhul"))
             h.month == 1 && h.day in 9..10 -> Moment("📿", "عاشوراء", "«صيام يوم عاشوراء أحتسب على الله أن يكفّر السنة التي قبله»، وصم يومًا قبله.", "مسلم", "دليل محرم", go = guide("muharram"))
-            h.month != 9 && h.day in 13..15 -> Moment("🌕", "الأيام البيض", "«صوم ثلاثة أيام من كل شهر صوم الدهر كله». هي ١٣ و١٤ و١٥ من الشهر الهجري.", "البخاري ومسلم", "عن الأيام البيض", go = guide("white"))
+            h.month != 9 && h.day in 13..15 -> Moment("🌕", "الأيام البيض", "«صوم ثلاثة أيام من كل شهر صوم الدهر كله». هي 13 و14 و15 من الشهر الهجري.", "البخاري ومسلم", "عن الأيام البيض", go = guide("white"))
             else -> null
         }
         val bigDay = season != null && (season.title.startsWith("عيد") || season.title == "يوم عرفة" || season.title == "عاشوراء")
@@ -135,8 +134,8 @@ object Moments {
 
         val inLastThird = if (lastThird < fajr) min in lastThird until fajr else (min >= lastThird || min < fajr)
         val daytime = when {
-            min in fajr until dhuhr - 30 -> Moment("🌅", "أذكار الصباح", "﴿وَسَبِّحْ بِحَمْدِ رَبِّكَ قَبْلَ طُلُوعِ الشَّمْسِ وَقَبْلَ غُرُوبِهَا﴾. وقتها من الفجر إلى الضحى.", "طه: ١٣٠", "ابدأ أذكار الصباح", "morning")
-            min in asr until isha -> Moment("🌇", "أذكار المساء", "﴿فَسُبْحَانَ اللَّهِ حِينَ تُمْسُونَ وَحِينَ تُصْبِحُونَ﴾. وقتها من العصر إلى الليل.", "الروم: ١٧", "ابدأ أذكار المساء", "evening")
+            min in fajr until dhuhr - 30 -> Moment("🌅", "أذكار الصباح", "﴿وَسَبِّحْ بِحَمْدِ رَبِّكَ قَبْلَ طُلُوعِ الشَّمْسِ وَقَبْلَ غُرُوبِهَا﴾. وقتها من الفجر إلى الضحى.", "طه: 130", "ابدأ أذكار الصباح", "morning")
+            min in asr until isha -> Moment("🌇", "أذكار المساء", "﴿فَسُبْحَانَ اللَّهِ حِينَ تُمْسُونَ وَحِينَ تُصْبِحُونَ﴾. وقتها من العصر إلى الليل.", "الروم: 17", "ابدأ أذكار المساء", "evening")
             inLastThird -> Moment("✨", "الثلث الأخير من الليل", "«ينزل ربنا تبارك وتعالى كل ليلة إلى السماء الدنيا حين يبقى ثلث الليل الآخر، يقول: من يدعوني فأستجيب له، من يسألني فأعطيه، من يستغفرني فأغفر له».", "البخاري ومسلم", "أذكار الاستيقاظ", "wake")
             min >= isha + 45 || min < fajr -> Moment("🌙", "أذكار النوم", "«إذا أتيت مضجعك فتوضأ وضوءك للصلاة، ثم اضطجع على شقك الأيمن…».", "البخاري ومسلم", "أذكار النوم", "sleep")
             else -> Moment("📿", "ذكر الله", "«ألا أنبئكم بخير أعمالكم… ذكر الله». قل: سبحان الله وبحمده، سبحان الله العظيم.", "الترمذي وابن ماجه، وصححه الألباني؛ والتسبيح في البخاري ومسلم", "السبحة") { Nav.adhkar = 2; Nav.go("adhkar") }

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -250,7 +249,7 @@ fun SeasonPage(id: String, open: (String) -> Unit) {
         }
         if (id == "ramadan") item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Tile("📜", "ختمة: ٢٠ صفحة يوميًا", Modifier.weight(1f)) {
+                Tile("📜", "ختمة: 20 صفحة يوميًا", Modifier.weight(1f)) {
                     Reading.goal = 20; val (s, a) = Quran.last ?: (1 to 1); Nav.reading = s to a
                 }
                 Tile("🟢", "السبحة", Modifier.weight(1f)) { Nav.adhkar = 2; Nav.go("adhkar") }

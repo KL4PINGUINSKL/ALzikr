@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -135,7 +134,7 @@ fun PickOne(options: List<Pair<String, String>>, selected: String, title: String
     val open = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val cur = options.firstOrNull { it.first == selected } ?: options.firstOrNull()
     val quick = (listOfNotNull(cur) + options.filter { it.first != cur?.first }).take(shown)
-    // Wraps instead of squeezing: a squeezed chip cut its number off («٥ صفحات» showed as «صفحات»).
+    // Wraps instead of squeezing: a squeezed chip cut its number off («5 صفحات» showed as «صفحات»).
     Wrap(modifier, gap = 6.dp, lines = Int.MAX_VALUE) {
         quick.forEach { (k, l) -> Choice(l, k == cur?.first) { pick(k) } }
         if (options.size > quick.size) MoreChip("المزيد ▾") { open.value = true }

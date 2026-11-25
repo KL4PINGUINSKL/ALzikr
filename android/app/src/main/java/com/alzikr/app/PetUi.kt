@@ -35,7 +35,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -535,7 +534,7 @@ fun PetPage() {
             Slider(a, { a = it }, valueRange = .35f..1f, onValueChangeFinished = { Pet.floatAlpha = a; PetOverlay.refresh(ctx) })
             SettingRow("يتحرك دائمًا", "متوقف: صورة ثابتة تتحرك فقط حين يتكلم (أوفر للبطارية)") { Switch(Pet.floatMove, { Pet.floatMove = it }) }
             SettingRow("يتجوّل على حافة الشاشة", "يمشي قليلًا صعودًا ونزولًا كل نصف دقيقة تقريبًا ثم يستريح") { Switch(Pet.wander, { Pet.wander = it }) }
-            SettingRow("ضغطتان = تسبيحة", "تُحسب مع سبحتك: ٣٣ سبحان الله، ٣٣ الحمد لله، ٣٤ الله أكبر") { Switch(Pet.floatTasbih, { Pet.floatTasbih = it }) }
+            SettingRow("ضغطتان = تسبيحة", "تُحسب مع سبحتك: 33 سبحان الله، 33 الحمد لله، 34 الله أكبر") { Switch(Pet.floatTasbih, { Pet.floatTasbih = it }) }
             SettingRow("ينبّهك قبل الصلاة", "كلمة قبل كل صلاة بعشر دقائق") { Switch(Pet.prayerNudge, { Pet.prayerNudge = it }) }
             SettingRow("ساعات الهدوء", if (Pet.quietFrom < 0) "متوقفة" else "لا فقاعات من ${Alerts.timeText(Pet.quietFrom)} إلى ${Alerts.timeText(Pet.quietTo)}") {
                 Switch(Pet.quietFrom >= 0, { Pet.quietFrom = if (it) 23 * 60 else -1 })
@@ -613,9 +612,9 @@ fun FriendshipPanel() {
     Text(if (how) "▴ كيف تكبر الصداقة؟" else "❓ كيف تكبر الصداقة؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
         modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
     if (how) Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        listOf("زيارة صفحة صديقك" to "+٢ مرة في اليوم", "لمسه أو الحديث معه (في التطبيق أو العائم أو الأداة)" to "+١ كل نصف ساعة",
-            "اللعب معه: كلّمني، العب معي، تمشَّ، نم" to "+١ كل نصف ساعة", "كل وظيفة يومية" to "+٤", "كل تحدٍّ (ثلاثة كل يوم)" to "+٥",
-            "سؤال اليوم: تقرأ جوابه في التطبيق" to "+٦", "تعلّم اليوم: ثلاث معلومات" to "+٥", "صندوق الأسبوع: خمسة أيام كاملة" to "+٢٠ فوق الحد").forEach { (a, b) ->
+        listOf("زيارة صفحة صديقك" to "+2 مرة في اليوم", "لمسه أو الحديث معه (في التطبيق أو العائم أو الأداة)" to "+1 كل نصف ساعة",
+            "اللعب معه: كلّمني، العب معي، تمشَّ، نم" to "+1 كل نصف ساعة", "كل وظيفة يومية" to "+4", "كل تحدٍّ (ثلاثة كل يوم)" to "+5",
+            "سؤال اليوم: تقرأ جوابه في التطبيق" to "+6", "تعلّم اليوم: ثلاث معلومات" to "+5", "صندوق الأسبوع: خمسة أيام كاملة" to "+20 فوق الحد").forEach { (a, b) ->
             Row(Modifier.fillMaxWidth()) { Sub(a, Modifier.weight(1f), size = 12.sp); Text(b, color = P.accent, fontSize = 12.sp) }
         }
         Sub("الحد اليومي ${Quran.digits(Progress.BOND_DAY)} ❤، وصندوق الأسبوع فوقه.", size = 11.sp)

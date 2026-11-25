@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Tafsir text, easier to read: Quran quoted inside ﴿…﴾ in the theme colour, references such as [القمر: ٣٤] in gold,
+ * Tafsir text, easier to read: Quran quoted inside ﴿…﴾ in the theme colour, references such as [القمر: 34] in gold,
  * and footnotes ([[…]] in the source) folded into a small coloured number; tapping it shows the note.
  */
 object TafsirFormat {

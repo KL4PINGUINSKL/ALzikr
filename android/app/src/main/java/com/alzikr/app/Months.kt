@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -81,7 +80,7 @@ fun MonthsPage() {
                 if (tab == 0) {
                     Text("سمّت العرب شهورها قبل الإسلام بحسب أحوالها وأزمنة السنة حين وُضعت الأسماء، فبقيت الأسماء وإن تنقّلت الشهور بين الفصول، لأن السنة القمرية أقصر من الشمسية بنحو أحد عشر يومًا.",
                         color = P.ink, fontSize = 14.sp, lineHeight = 23.sp)
-                    Text("﴿إِنَّ عِدَّةَ الشُّهُورِ عِندَ اللَّهِ اثْنَا عَشَرَ شَهْرًا فِي كِتَابِ اللَّهِ يَوْمَ خَلَقَ السَّمَاوَاتِ وَالْأَرْضَ مِنْهَا أَرْبَعَةٌ حُرُمٌ﴾ [التوبة: ٣٦]، والحُرُم: ذو القعدة وذو الحجة والمحرّم ورجب.",
+                    Text("﴿إِنَّ عِدَّةَ الشُّهُورِ عِندَ اللَّهِ اثْنَا عَشَرَ شَهْرًا فِي كِتَابِ اللَّهِ يَوْمَ خَلَقَ السَّمَاوَاتِ وَالْأَرْضَ مِنْهَا أَرْبَعَةٌ حُرُمٌ﴾ [التوبة: 36]، والحُرُم: ذو القعدة وذو الحجة والمحرّم ورجب.",
                         color = P.gold, fontSize = 14.sp, lineHeight = 24.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
                 } else {
                     Text("الأسماء الميلادية المستعملة (يناير، فبراير…) لاتينية رومانية الأصل، أغلبها نسبة إلى شخصيات من أساطير الرومان أو إلى أباطرتهم أو إلى أرقام ترتيبها القديم، وتُذكر هنا معرفةً بأصل الكلمات. وفي بلاد الشام والعراق تُستعمل أسماء سريانية قديمة (كانون، شباط، آذار…) تجدها بجانب كل شهر.",

@@ -20,7 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -136,7 +135,7 @@ fun HifzPage() {
     reviewing?.let { c -> HifzReader(c.s, c.from, c.to, review = c) { reviewing = null }; return }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("hifz", "🧠", "كل يوم آيات قليلة جديدة، ثم مراجعة ما حفظته بعد يوم، ثم ٣ أيام، ثم أسبوع، ثم أسبوعين، ثم شهر… حتى يثبت. اضغط «حفظتها» بعد أن تحفظ، و«أتقنتها» أو «أعدها» بعد كل مراجعة.")
+        Hint("hifz", "🧠", "كل يوم آيات قليلة جديدة، ثم مراجعة ما حفظته بعد يوم، ثم 3 أيام، ثم أسبوع، ثم أسبوعين، ثم شهر… حتى يثبت. اضغط «حفظتها» بعد أن تحفظ، و«أتقنتها» أو «أعدها» بعد كل مراجعة.")
         if (!Hifz.started) {
             Panel(color = P.card, pad = 16.dp) {
                 Title("ابدأ برنامج الحفظ")

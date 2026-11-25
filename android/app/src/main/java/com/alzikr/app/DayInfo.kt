@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,7 +57,7 @@ object DayInfo {
                 G("صلاة التراويح: «من قام رمضان إيمانًا واحتسابًا غُفر له ما تقدم من ذنبه».", "البخاري ومسلم")), "ramadan")
             h.month == 9 && h.day == 21 -> out += Part("✨", "أول العشر الأواخر", listOf(
                 G("«تحرّوا ليلة القدر في الوتر من العشر الأواخر من رمضان».", "البخاري"),
-                G("﴿لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ﴾.", "القدر: ٣")), listOf(
+                G("﴿لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ﴾.", "القدر: 3")), listOf(
                 G("«كان رسول الله ﷺ إذا دخل العشر أحيا الليل، وأيقظ أهله، وجدّ وشدّ المئزر».", "البخاري ومسلم"),
                 G("الاعتكاف، والإكثار من: «اللهم إنك عفوّ تحب العفو فاعفُ عني».", "الترمذي، وصححه الألباني")), "lastten")
             h.month == 9 && h.day in listOf(23, 25, 27, 29) -> out += Part("✨", "ليلة ${h.day} من رمضان (وترية)", listOf(
@@ -67,7 +66,7 @@ object DayInfo {
                 G("القيام والدعاء في ليلتها (وهي الليلة التي تسبق هذا اليوم)، والإكثار من: «اللهم إنك عفوّ تحب العفو فاعفُ عني».", "الترمذي، وصححه الألباني")), "lastten")
             h.month == 1 && h.day == 1 -> out += Part("🌙", "أول المحرّم", listOf(
                 G("«أفضل الصيام بعد رمضان شهر الله المحرّم».", "مسلم"),
-                G("المحرّم من الأشهر الحرم: ﴿منها أربعة حرم فلا تظلموا فيهن أنفسكم﴾.", "التوبة: ٣٦")), listOf(
+                G("المحرّم من الأشهر الحرم: ﴿منها أربعة حرم فلا تظلموا فيهن أنفسكم﴾.", "التوبة: 36")), listOf(
                 G("الإكثار من الصيام في الشهر، ولا يُخصّ أول العام بعبادة لم ترد.", "")), "muharram")
             h.month == 10 && h.day == 1 -> out += Part("🎉", "عيد الفطر", listOf(
                 G("يوم فرح بإتمام الصيام، ولا يُصام: «نهى رسول الله ﷺ عن صيام يومين: يوم الفطر ويوم النحر».", "البخاري ومسلم")), listOf(

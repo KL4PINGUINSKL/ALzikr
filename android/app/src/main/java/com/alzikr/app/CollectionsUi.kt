@@ -36,7 +36,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -329,7 +328,7 @@ private fun TasbihScreen() {
             Tile("🌙", "سبحة الشاشة المظلمة", Modifier.weight(1f)) { TasbihDarkActivity.open(ctx) }
             Tile("🔔", if (CounterNotice.on) "إزالتها من الإشعارات" else "في الإشعارات وعلى القفل", Modifier.weight(1f), on = CounterNotice.on) { CounterNotice.on = !CounterNotice.on; CounterNotice.update(ctx) }
         }
-        Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «في الإشعارات»: إشعار مستقل للسبحة بعدّادها وزر «سبّح +١» يعمل دون فتح القفل، منفصل عن إشعار الصلاة القادمة.", size = 11.sp)
+        Sub("«الشاشة المظلمة»: شاشة سوداء خافتة تظهر فوق قفل الهاتف، تسبّح بلمسها أو بأزرار الصوت. «في الإشعارات»: إشعار مستقل للسبحة بعدّادها وزر «سبّح +1» يعمل دون فتح القفل، منفصل عن إشعار الصلاة القادمة.", size = 11.sp)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             GText("📳", fontSize = 16.sp)
             Haptics.names.forEachIndexed { i, n -> Choice(n, Haptics.level == i) { Haptics.level = i; Haptics.tap(ctx) } }

@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -139,14 +138,14 @@ object Goals {
     val all = listOf(
         Goal("five", "🕌", "الصلوات الخمس كل يوم", 35) { a, b -> days(a, b).sumOf { Stats.prayedOn(it) } },
         Goal("witr", "🌙", "الوتر كل ليلة", 7) { a, b -> days(a, b).count { Data.extra(it, "witr") } },
-        Goal("rawatib", "🤲", "السنن الرواتب (٤ في اليوم)", 28) { a, b -> days(a, b).sumOf { Stats.rawatibOn(it) } },
-        Goal("duha", "☀", "صلاة الضحى ٣ مرات", 3) { a, b -> days(a, b).count { Data.extra(it, "duha") } },
+        Goal("rawatib", "🤲", "السنن الرواتب (4 في اليوم)", 28) { a, b -> days(a, b).sumOf { Stats.rawatibOn(it) } },
+        Goal("duha", "☀", "صلاة الضحى 3 مرات", 3) { a, b -> days(a, b).count { Data.extra(it, "duha") } },
         Goal("qiyam", "✨", "قيام الليل مرتين", 2) { a, b -> days(a, b).count { Data.extra(it, "qiyam") } },
         Goal("fast", "🍽", "صيام يومين", 2) { a, b -> days(a, b).count { Data.extra(it, "fast") } },
         Goal("morning", "🌅", "أذكار الصباح كل يوم", 7) { a, b -> days(a, b).count { Stats.colDoneOn("morning", it) } },
         Goal("evening", "🌇", "أذكار المساء كل يوم", 7) { a, b -> days(a, b).count { Stats.colDoneOn("evening", it) } },
         Goal("quran", "📖", "قراءة القرآن كل يوم", 7) { a, b -> days(a, b).count { d -> runCatching { JSONObject(Store.prefs.getString("khatma_log", "{}")!!).optInt(d.toString()) > 0 }.getOrDefault(false) } },
-        Goal("juz", "📗", "جزء في الأسبوع (٢٠ صفحة)", 20) { a, b -> runCatching { val j = JSONObject(Store.prefs.getString("khatma_log", "{}")!!); days(a, b).sumOf { j.optInt(it.toString()) } }.getOrDefault(0) },
+        Goal("juz", "📗", "جزء في الأسبوع (20 صفحة)", 20) { a, b -> runCatching { val j = JSONObject(Store.prefs.getString("khatma_log", "{}")!!); days(a, b).sumOf { j.optInt(it.toString()) } }.getOrDefault(0) },
         Goal("mulk", "📖", "سورة الملك كل ليلة", 7) { a, b -> days(a, b).count { Data.extra(it, "mulk") } },
         Goal("baqarah", "📗", "خواتيم البقرة كل ليلة", 7) { a, b -> days(a, b).count { Data.extra(it, "baqarah") } },
         Goal("sadaqa", "💰", "صدقة مرة على الأقل", 1) { a, b -> Sadaqa.countBetween(a, b) },

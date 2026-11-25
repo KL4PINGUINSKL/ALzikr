@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +56,7 @@ fun RewardsPage() {
                     Text("${Quran.digits(got)} / ${Quran.digits(k.cap)}", color = if (got >= k.cap) P.accent else P.muted, fontSize = 13.sp)
                 }
             }
-            Sub("لكل عمل نقاطه مرة في اليوم، ولكل نوع حدّ يومي، حتى يكبر صديقك بهدوء. الصفحة تُحسب بعد عشر ثوانٍ عليها في وضع القراءة أو عشرين في المصحف، أو بأزرار الختمة لمن يقرأ في مصحف ورقي. والحديث بعد ١٥ ثانية عليه، والشرح بعد دقيقة.", size = 11.sp)
+            Sub("لكل عمل نقاطه مرة في اليوم، ولكل نوع حدّ يومي، حتى يكبر صديقك بهدوء. الصفحة تُحسب بعد عشر ثوانٍ عليها في وضع القراءة أو عشرين في المصحف، أو بأزرار الختمة لمن يقرأ في مصحف ورقي. والحديث بعد 15 ثانية عليه، والشرح بعد دقيقة.", size = 11.sp)
         }
         Panel(pad = 14.dp) {
             Title("ما يُفتح لك")
@@ -71,7 +70,7 @@ fun RewardsPage() {
                     }
                 }
             }
-            Sub("وكل مستوى من ٢ إلى ١٢٥ يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
+            Sub("وكل مستوى من 2 إلى 125 يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
         }
         Panel(pad = 14.dp) {
             Title("جوائز الصداقة ${Friendship.heart}")

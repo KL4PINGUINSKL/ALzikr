@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,7 +96,7 @@ class TasbihDarkActivity : ComponentActivity() {
 }
 
 /**
- * ALzikr's lasting notification: the next prayer with a live countdown, and the tasbih («سبّح +١»)
+ * ALzikr's lasting notification: the next prayer with a live countdown, and the tasbih («سبّح +1»)
  * usable on the lock screen. Swiping it away brings it back; only «إخفاء» (or the switch) removes it.
  */
 object TasbihNotice {
@@ -152,7 +151,7 @@ object TasbihNotice {
     }
 }
 
-/** The tasbih in its own lasting notification: the count with a bar, «سبّح +١» (works on the lock screen), reset, hide (Android shows three buttons). */
+/** The tasbih in its own lasting notification: the count with a bar, «سبّح +1» (works on the lock screen), reset, hide (Android shows three buttons). */
 object CounterNotice {
     private const val CH = "tasbih_counter"
     private const val ID = 42
@@ -177,12 +176,12 @@ object CounterNotice {
         val back = PendingIntent.getBroadcast(c, 69, Intent(c, AlertReceiver::class.java).setAction(BACK), flags)
         val open = PendingIntent.getActivity(c, 70, Intent(c, MainActivity::class.java).putExtra("adhkarsec", 2).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP), flags)
         val notice = Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr)
-            .setContentTitle("السبحة: ${n % set} من $set")
-            .setContentText("المجموع $n · اضغط «سبّح +١» حتى وهاتفك مقفل")
+            .setContentTitle(Quran.numerals("السبحة: ${n % set} من $set"))
+            .setContentText(Quran.numerals("المجموع $n · اضغط «سبّح +1» حتى وهاتفك مقفل"))
             .setProgress(set, n % set, false)
             .setOngoing(true).setOnlyAlertOnce(true).setShowWhen(false).setVisibility(Notification.VISIBILITY_PUBLIC).setColor(0xFF1F7A5A.toInt())
             .setContentIntent(open).setDeleteIntent(back)
-            .addAction(Notification.Action.Builder(null, "سبّح +١", tap).build())
+            .addAction(Notification.Action.Builder(null, Quran.numerals("سبّح +1"), tap).build())
             .addAction(Notification.Action.Builder(null, "تصفير", reset).build())
             .addAction(Notification.Action.Builder(null, "إخفاء", hide).build())
             // Its own group: Android would otherwise bundle it with the prayer notification.

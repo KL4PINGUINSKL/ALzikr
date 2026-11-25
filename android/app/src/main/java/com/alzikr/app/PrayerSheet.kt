@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,9 +111,9 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
                     Switch(alarm, { PrayerAlarm.setOn(ctx, p, it) })
                 }
                 if (alarm) Row(Modifier.padding(start = 36.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Choice("− ٥", false) { PrayerAlarm.setOffset(ctx, p, off - 5) }
+                    Choice("− 5", false) { PrayerAlarm.setOffset(ctx, p, off - 5) }
                     Text(when { off < 0 -> "قبل الوقت بـ ${-off} د"; off > 0 -> "بعده بـ $off د"; else -> "عند الوقت" }, color = P.ink, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.width(110.dp))
-                    Choice("+ ٥", false) { PrayerAlarm.setOffset(ctx, p, off + 5) }
+                    Choice("+ 5", false) { PrayerAlarm.setOffset(ctx, p, off + 5) }
                     Text("المزيد ›", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { close(); Nav.morePage = "alarms"; Nav.go("more") }.padding(6.dp))
                 }
                 if (p.alertable) {
