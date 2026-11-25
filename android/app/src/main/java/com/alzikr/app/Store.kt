@@ -169,19 +169,21 @@ object Store {
     // ----------------------------------------------------------------- tasks
 
     /** [after]: a prayer the task belongs after ("after Asr"), or null. */
-    data class Task(val id: Long, val text: String, val done: Boolean, val after: Prayer?, val doneAt: Long)
+    data class Task(val id: Long, val text: String, val done: Boolean, val after: Prayer?, val doneAt: Long, val remindAt: Long = 0)
 
     fun tasks(): List<Task> {
         val a = JSONArray(sp.getString("tasks", "[]"))
         return (0 until a.length()).map { a.getJSONObject(it).let { o ->
-            Task(o.getLong("id"), o.getString("text"), o.optBoolean("done"), o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, o.optLong("doneAt"))
+            Task(o.getLong("id"), o.getString("text"), o.optBoolean("done"), o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, o.optLong("doneAt"), o.optLong("remindAt"))
         } }
     }
     private fun saveTasks(list: List<Task>) {
-        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("done", it.done).put("after", it.after?.name ?: "").put("doneAt", it.doneAt)) }
+        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("done", it.done).put("after", it.after?.name ?: "").put("doneAt", it.doneAt).put("remindAt", it.remindAt)) }
         sp.edit().putString("tasks", a.toString()).apply(); changed()
     }
-    fun addTask(text: String, after: Prayer?) = saveTasks(listOf(Task(System.currentTimeMillis(), text, false, after, 0)) + tasks())
+    fun addTask(text: String, after: Prayer?, remindAt: Long = 0) = saveTasks(listOf(Task(System.currentTimeMillis(), text, false, after, 0, remindAt)) + tasks())
+    /** A to-do reminder at [at] (epoch ms; 0 = none). Call TaskReminders.schedule afterwards. */
+    fun setTaskReminder(id: Long, at: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(remindAt = at) else it })
     fun toggleTask(id: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(done = !it.done, doneAt = if (!it.done) System.currentTimeMillis() else 0) else it })
     fun deleteTask(id: Long) = saveTasks(tasks().filterNot { it.id == id })
     fun clearDone() = saveTasks(tasks().filterNot { it.done })

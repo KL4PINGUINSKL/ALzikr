@@ -234,6 +234,20 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                     }
                 }
                 Panel {
+                    Title("👁 استراحة العين")
+                    Sub("بعد مدة من النظر إلى التطبيق تظهر بطاقة صغيرة في الأعلى تذكّرك أن تنظر إلى شيء بعيد عشرين ثانية، تعدّها لك ثم تختفي. والابتعاد عن التطبيق خمس دقائق يُحسب استراحة.", Modifier.padding(bottom = 8.dp), size = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(0 to "متوقف", 20 to "كل ٢٠ دقيقة", 30 to "كل ٣٠", 45 to "كل ٤٥").forEach { (n, l) -> Choice(l, Comfort.breakEvery == n) { Comfort.breakEvery = n } }
+                    }
+                    Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("تقليل الحركة", color = P.ink, fontSize = 15.sp)
+                            Sub("تسكن الخلفيات الحيّة وحركة صديقك، أهدأ للعين وأوفر للبطارية", size = 12.sp)
+                        }
+                        Switch(Comfort.calm, { Comfort.calm = it })
+                    }
+                }
+                Panel {
                     Title("القراءة")
                     Sub("حجم خط القراءة (الأذكار والأحاديث وشروحها والتفسير)", Modifier.padding(top = 4.dp, bottom = 6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

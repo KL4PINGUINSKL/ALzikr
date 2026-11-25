@@ -65,13 +65,15 @@ private fun TaskList() {
     var text by rememberSaveable { mutableStateOf("") }
     var after by rememberSaveable { mutableStateOf<String?>(null) }
     var showDone by rememberSaveable { mutableStateOf(false) }
+    var remindAt by rememberSaveable { mutableStateOf(0L) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val all = Store.tasks()
     val open = all.filter { !it.done }
     val done = all.filter { it.done }
-    fun add() { if (text.isNotBlank()) { Store.addTask(text.trim(), after?.let(Prayer::valueOf)); text = "" } }
+    fun add() { if (text.isNotBlank()) { Store.addTask(text.trim(), after?.let(Prayer::valueOf), remindAt); text = ""; remindAt = 0; TaskReminders.schedule(ctx) } }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Hint("tasks", "✅", "اكتب المهمة ثم اضغط «إضافة». اربطها بصلاة (مثل «بعد العصر») ليذكّرك بها إشعار الأذان.") }
+        item { Hint("tasks2", "✅", "اكتب المهمة ثم اضغط «إضافة». اختر «⏰ تذكير في وقت…» ليصلك إشعار بها في اليوم والساعة التي تريد، أو اربطها بصلاة (مثل «بعد العصر») ليذكّرك بها إشعار الأذان. وتغيّر التذكير من ⏰ بجانب المهمة.") }
         item {
             Panel(pad = 12.dp) {
                 OutlinedTextField(text, { text = it }, placeholder = { Text("مهمة جديدة…") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
@@ -80,7 +82,12 @@ private fun TaskList() {
                     Choice("بلا وقت", after == null) { after = null }
                     Prayer.entries.filter { it.alertable }.forEach { p -> Choice("بعد ${p.ar}", after == p.name) { after = p.name } }
                 }
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) { Action("إضافة") { add() } }
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Choice(if (remindAt > 0) "⏰ " + TaskReminders.label(remindAt) else "⏰ تذكير في وقت…", remindAt > 0) { pickReminder(ctx, remindAt) { remindAt = it } }
+                    if (remindAt > 0) Text("✕", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { remindAt = 0 }.padding(8.dp))
+                    Spacer(Modifier.weight(1f))
+                    Action("إضافة") { add() }
+                }
             }
         }
         if (open.isEmpty()) item { Sub("لا مهام مفتوحة. أضف مهمة، واربطها بصلاة لتذكّرك بها عند الأذان.", Modifier.padding(8.dp)) }
@@ -95,8 +102,20 @@ private fun TaskList() {
     }
 }
 
+/** Date, then time (Android's own pickers); [done] gets the moment in epoch ms. */
+private fun pickReminder(c: android.content.Context, current: Long, done: (Long) -> Unit) {
+    val z = java.time.Instant.ofEpochMilli(if (current > 0) current else System.currentTimeMillis() + 3_600_000L).atZone(java.time.ZoneId.systemDefault())
+    android.app.DatePickerDialog(c, { _, y, m, d ->
+        android.app.TimePickerDialog(c, { _, h, min ->
+            val at = java.time.LocalDateTime.of(y, m + 1, d, h, min).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            if (at <= System.currentTimeMillis()) android.widget.Toast.makeText(c, "اختر وقتًا لم يمضِ بعد", android.widget.Toast.LENGTH_SHORT).show() else done(at)
+        }, z.hour, z.minute, android.text.format.DateFormat.is24HourFormat(c)).show()
+    }, z.year, z.monthValue - 1, z.dayOfMonth).apply { datePicker.minDate = System.currentTimeMillis() - 1000 }.show()
+}
+
 @Composable
 private fun TaskRow(t: Store.Task) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).border(1.dp, P.line, L.shape(14.dp))
         .clickable { Store.toggleTask(t.id) }.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(22.dp).clip(L.shape(6.dp)).background(if (t.done) P.accent else P.surface).border(2.dp, if (t.done) P.accent else P.muted, L.shape(6.dp)),
@@ -105,7 +124,12 @@ private fun TaskRow(t: Store.Task) {
         Column(Modifier.weight(1f)) {
             Text(t.text, color = if (t.done) P.muted else P.ink, fontSize = 15.sp, textDecoration = if (t.done) TextDecoration.LineThrough else null)
             t.after?.let { Sub("بعد ${it.ar}", size = 12.sp, color = P.gold) }
+            if (t.remindAt > 0 && !t.done) Sub("⏰ " + TaskReminders.label(t.remindAt), size = 12.sp, color = P.accent)
         }
+        // To-do style: a reminder at any date and time, set or changed from the task itself.
+        if (!t.done) Text("⏰", color = if (t.remindAt > 0) P.accent else P.muted, fontSize = 16.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
+            pickReminder(ctx, t.remindAt) { at -> Store.setTaskReminder(t.id, at); TaskReminders.schedule(ctx) }
+        }.padding(horizontal = 8.dp, vertical = 2.dp))
         Text("✕", color = P.muted, fontSize = 15.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.deleteTask(t.id) }.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }

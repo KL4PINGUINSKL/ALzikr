@@ -75,6 +75,7 @@ fun LibraryScreen() {
     Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a, back = { Nav.quran = null; Nav.closeOpened() }, mark = true) else Loading(); return }
     Nav.hadith?.let { (b, n) -> HadithReader(b, n, back = { Nav.hadith = null; Nav.closeOpened() }); return }
     Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
+    Nav.book?.let { b -> BookOpen(b) { Nav.book = null; Nav.closeOpened() }; return }
     Nav.hadithQuery?.let { q -> HadithSearchPage(initial = q) { Nav.hadithQuery = null }; return }
     keep.SaveableStateProvider("main") {
     var section by rememberSaveable { mutableStateOf(0) }

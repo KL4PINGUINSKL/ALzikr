@@ -70,6 +70,13 @@ object Nav {
     var openedFrom: String? = null
     fun openQuran(surah: Int, ayah: Int, sheet: Boolean = false, tadabbur: Boolean = false) { quranSheet = sheet; openTadabbur = tadabbur; quran = surah to ayah; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
+    fun openBook(b: Books.Book) { book = b; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
+    /** A book opened from the global search. */
+    var book by mutableStateOf<Books.Book?>(null)
+    /** The global search page is open (🔍 in the header). */
+    var search by mutableStateOf(false)
+    /** A settings section asked for from outside the settings (the global search). */
+    var settingsReq by mutableStateOf<String?>(null)
     /** Closing a verse or hadith opened from another tab goes back to that tab. */
     fun closeOpened() { openedFrom?.let { tab = it }; openedFrom = null }
 }

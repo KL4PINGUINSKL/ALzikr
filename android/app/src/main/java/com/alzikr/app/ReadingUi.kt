@@ -417,6 +417,32 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
     }
 }
 
+/** One book opened from the global search: read it if it is on the phone, else its details and «download». */
+@Composable
+fun BookOpen(b: Books.Book, back: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    @Suppress("UNUSED_VARIABLE") val bv = Books.version
+    var reading by remember(b.id) { mutableStateOf(Books.has(ctx, b.id)) }
+    if (reading) { PdfReader(b.id, b.title, back); return }
+    Subpage("الكتب الإسلامية", back) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(b.title, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = Fonts.naskh)
+            if (b.authors.isNotBlank()) Sub(b.authors, color = P.gold)
+            if (b.description.isNotBlank()) Text(b.description, color = P.ink, fontSize = 14.sp, lineHeight = 22.sp)
+            if (Books.downloading == b.id) Sub("جارٍ التنزيل… ${(Books.progress * 100).toInt()}%", color = P.accent)
+            if (b.pdf == null) Sub("لا يوجد ملف PDF لهذا الكتاب.", color = P.danger)
+            else if (Books.downloading == null) Action("تنزيل (${b.size}) ثم القراءة", Modifier.fillMaxWidth()) {
+                scope.launch {
+                    val ok = withContext(Dispatchers.IO) { Books.download(ctx, b) }
+                    if (ok) reading = true else Toast.makeText(ctx, "تعذّر التنزيل، تحقق من الإنترنت", Toast.LENGTH_LONG).show()
+                }
+            }
+            Sub("المصدر: IslamHouse.com (دار الإسلام).", size = 11.sp)
+        }
+    }
+}
+
 /** Reads a downloaded PDF: pages drawn by Android's PdfRenderer, zoom, and the last page remembered. */
 @Composable
 private fun PdfReader(id: String, title: String, back: () -> Unit) {

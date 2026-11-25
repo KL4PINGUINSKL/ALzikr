@@ -1,0 +1,90 @@
+package com.alzikr.app
+
+import android.app.AlarmManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+/**
+ * Task reminders, to-do-list style: a task can carry a date and time; at that time a notification says it, with
+ * «تم ✓» and «بعد ١٠ دقائق». One exact alarm for the nearest reminder, set again after each one and after a reboot.
+ * It does not need a location (unlike the prayer alerts).
+ */
+object TaskReminders {
+    private const val CH = "task_remind"
+    private const val ACTION_FIRE = "com.alzikr.app.TASK_FIRE"
+    const val ACTION_DONE = "com.alzikr.app.TASK_DONE"
+    const val ACTION_SNOOZE = "com.alzikr.app.TASK_SNOOZE"
+
+    /** «اليوم 4:30 م», «غدًا 9:00 ص», «الخميس 27/11 8:00 م». */
+    fun label(at: Long): String {
+        val z = Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault())
+        val day = when (z.toLocalDate()) {
+            LocalDate.now() -> "اليوم"
+            LocalDate.now().plusDays(1) -> "غدًا"
+            else -> z.format(DateTimeFormatter.ofPattern("EEEE d/M", Locale("ar")))
+        }
+        return "$day ${Alerts.timeText(z.hour * 60 + z.minute)}"
+    }
+
+    private fun pi(c: Context, action: String, id: Long = 0) = PendingIntent.getBroadcast(c, (action + id).hashCode(),
+        Intent(c, TaskReceiver::class.java).setAction(action).putExtra("id", id), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+    /** Sets the alarm for the nearest open task's reminder (or clears it). */
+    fun schedule(c: Context) {
+        Store.init(c)
+        val am = c.getSystemService(AlarmManager::class.java)
+        val p = pi(c, ACTION_FIRE)
+        am.cancel(p)
+        val next = Store.tasks().filter { !it.done && it.remindAt > System.currentTimeMillis() }.minOfOrNull { it.remindAt } ?: return
+        Alerts.exact(am, next, p)
+    }
+
+    /** The alarm went off: every task now due gets its notification, and the next alarm is set. */
+    fun fire(c: Context) {
+        Store.init(c)
+        val now = System.currentTimeMillis()
+        Store.tasks().filter { !it.done && it.remindAt in 1..(now + 30_000) }.forEach { t ->
+            notify(c, t)
+            Store.setTaskReminder(t.id, 0)   // said once; a snooze sets it again
+        }
+        schedule(c)
+    }
+
+    private fun notify(c: Context, t: Store.Task) {
+        if (!Alerts.canPost(c)) return
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (nm.getNotificationChannel(CH) == null) nm.createNotificationChannel(NotificationChannel(CH, "تذكير المهام", NotificationManager.IMPORTANCE_HIGH))
+        val open = PendingIntent.getActivity(c, 71, Intent(c, MainActivity::class.java).putExtra("tab", "tasks").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr).setContentTitle("✅ ${t.text}")
+            .setContentText("تذكير بمهمتك" + (t.after?.let { " · بعد ${it.ar}" } ?: "")).setAutoCancel(true).setContentIntent(open).setColor(0xFF1A3274.toInt())
+            .addAction(Notification.Action.Builder(null, "تم ✓", pi(c, ACTION_DONE, t.id)).build())
+            .addAction(Notification.Action.Builder(null, "بعد ١٠ دقائق", pi(c, ACTION_SNOOZE, t.id)).build())
+            .build()
+        nm.notify(("task" + t.id).hashCode(), n)
+    }
+
+    fun cancelNotice(c: Context, id: Long) = c.getSystemService(NotificationManager::class.java).cancel(("task$id").hashCode())
+}
+
+class TaskReceiver : BroadcastReceiver() {
+    override fun onReceive(c: Context, i: Intent) {
+        Store.init(c)
+        val id = i.getLongExtra("id", 0)
+        when (i.action) {
+            TaskReminders.ACTION_DONE -> { if (Store.tasks().any { it.id == id && !it.done }) Store.toggleTask(id); TaskReminders.cancelNotice(c, id) }
+            TaskReminders.ACTION_SNOOZE -> { Store.setTaskReminder(id, System.currentTimeMillis() + 10 * 60_000L); TaskReminders.cancelNotice(c, id); TaskReminders.schedule(c) }
+            else -> TaskReminders.fire(c)
+        }
+    }
+}

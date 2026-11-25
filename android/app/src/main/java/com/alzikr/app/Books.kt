@@ -30,6 +30,29 @@ object Books {
     private fun dir(c: Context) = File(c.filesDir, "books").apply { mkdirs() }
     private fun cacheDir(c: Context) = File(c.cacheDir, "islamhouse").apply { mkdirs() }
     fun file(c: Context, id: String) = File(dir(c), "$id.pdf")
+
+    /**
+     * Every Arabic book title on IslamHouse (about 5,000), for the global search: an index made on the developer's machine
+     * and kept on ALzikr's site (reachable where GitHub is not), fetched once and refreshed every two weeks. Blocking.
+     */
+    @Volatile private var indexCache: List<Book>? = null
+    fun index(c: Context): List<Book> {
+        indexCache?.let { return it }
+        val f = File(dir(c), "index.json")
+        val fresh = f.exists() && System.currentTimeMillis() - f.lastModified() < 14 * 86_400_000L
+        if (!fresh) runCatching {
+            val conn = java.net.URL("https://alzikr.alpharmasy.com/data/books.json").openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 15_000; conn.readTimeout = 60_000; conn.setRequestProperty("User-Agent", "ALzikr")
+            try { if (conn.responseCode == 200) { val t = conn.inputStream.bufferedReader().readText(); if (t.contains("\"books\"")) f.writeText(t) } } finally { conn.disconnect() }
+        }
+        if (!f.exists()) return emptyList()
+        val list = runCatching {
+            val a = JSONObject(f.readText()).getJSONArray("books")
+            (0 until a.length()).map { i -> a.getJSONArray(i).let { x -> Book(x.getString(0), x.getString(1), x.optString(5), x.optString(2), x.optString(3).ifBlank { null }, x.optString(4)) } }
+        }.getOrDefault(emptyList())
+        if (list.isNotEmpty()) indexCache = list
+        return list
+    }
     fun has(c: Context, id: String) = file(c, id).exists()
 
     private fun get(url: String): String? = runCatching {

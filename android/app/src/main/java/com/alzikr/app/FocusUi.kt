@@ -22,6 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
@@ -70,9 +73,25 @@ fun FocusScreen() {
                 val inMs = w.nextAt - now
                 if (w.next.alertable && inMs < minutes * 60_000L) Sub("تنبيه: يحين ${w.next.ar} بعد ${durationText(inMs)}، أثناء الجلسة.", color = P.gold)
             }
+            // Quiet phone for the session (Do Not Disturb, alarms only); the earlier mode comes back at the end.
+            val nm = ctx.getSystemService(android.app.NotificationManager::class.java)
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("🔕 إسكات الهاتف أثناء الجلسة", color = P.ink, fontSize = 15.sp)
+                    Sub("بلا رنين ولا صوت إشعارات ولا اهتزاز حتى تنتهي الجلسة أو توقفها، ثم يعود الهاتف كما كان", size = 12.sp)
+                }
+                androidx.compose.material3.Switch(Data.focusSilent, {
+                    Data.focusSilent = it; Store.bump()
+                    if (it && !nm.isNotificationPolicyAccessGranted) runCatching { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) }
+                })
+            }
+            if (Data.focusSilent && !nm.isNotificationPolicyAccessGranted)
+                Text("اسمح لـ ALzikr بالوصول إلى «عدم الإزعاج» ليُسكت الهاتف ›", color = P.gold, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp))
+                    .clickable { runCatching { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) } }.padding(6.dp))
             Action("ابدأ التركيز", Modifier.fillMaxWidth()) { Alerts.startFocus(ctx, minutes, false, title.trim()) }
         } else {
             Action("إيقاف", Modifier.fillMaxWidth(), filled = false, color = P.danger) { Alerts.stopFocus(ctx) }
+            if (!Store.focusIsBreak && ctx.getSharedPreferences("alzikr_alarm", android.content.Context.MODE_PRIVATE).getBoolean("focus_quiet", false)) Sub("🔕 الهاتف صامت حتى تنتهي الجلسة", color = P.accent, size = 13.sp)
             Sub("يبقى المؤقت في قائمة الإشعارات، ويعمل حتى لو أغلقت التطبيق.", size = 12.sp)
         }
 

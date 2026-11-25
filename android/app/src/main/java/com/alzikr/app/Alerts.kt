@@ -250,11 +250,38 @@ object Alerts {
         Store.focusIsBreak = isBreak; Store.focusTitle = title
         val end = System.currentTimeMillis() + minutes * 60_000L
         Store.focusEnd = end
+        if (isBreak) unquietFocus(c) else quietFocus(c)
         exact(c.getSystemService(AlarmManager::class.java), end, focusIntent(c, FocusReceiver.END))
         focusNotification(c)
     }
 
+    /**
+     * The phone falls silent for the session: no ringing, no notification sound, no vibration (Do Not Disturb, «alarms
+     * only», so an alarm still sounds). The mode it was in is kept and put back when the session ends or is stopped;
+     * if the user changed the mode meanwhile, theirs is left alone. Needs the «Do Not Disturb» access.
+     */
+    private fun quietFocus(c: Context) {
+        if (!Data.focusSilent) return
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (!nm.isNotificationPolicyAccessGranted) return
+        val sp = c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE)
+        val cur = nm.currentInterruptionFilter
+        if (sp.getBoolean("focus_quiet", false) || cur == NotificationManager.INTERRUPTION_FILTER_ALARMS || cur == NotificationManager.INTERRUPTION_FILTER_NONE) return
+        sp.edit().putBoolean("focus_quiet", true).putInt("focus_prev_filter", cur).apply()
+        runCatching { nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALARMS) }
+    }
+
+    fun unquietFocus(c: Context) {
+        val sp = c.getSharedPreferences("alzikr_alarm", Context.MODE_PRIVATE)
+        if (!sp.getBoolean("focus_quiet", false)) return
+        val prev = sp.getInt("focus_prev_filter", NotificationManager.INTERRUPTION_FILTER_ALL)
+        sp.edit().putBoolean("focus_quiet", false).apply()
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (nm.isNotificationPolicyAccessGranted && nm.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALARMS) runCatching { nm.setInterruptionFilter(prev) }
+    }
+
     fun stopFocus(c: Context) {
+        unquietFocus(c)
         Store.focusEnd = 0
         c.getSystemService(AlarmManager::class.java).cancel(focusIntent(c, FocusReceiver.END))
         c.getSystemService(NotificationManager::class.java).cancel(ID_FOCUS)
@@ -279,6 +306,7 @@ object Alerts {
     fun focusEnded(c: Context) {
         val wasBreak = Store.focusIsBreak
         val minutes = Store.focusMinutes
+        unquietFocus(c)
         Store.focusEnd = 0
         if (!wasBreak) Store.addFocus(minutes)
         if (!canPost(c)) return
@@ -379,6 +407,7 @@ class FocusReceiver : BroadcastReceiver() {
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent) {
         Store.init(c)
+        runCatching { TaskReminders.schedule(c) }
         Alerts.reschedule(c)
         runCatching { PetOverlay.start(c) }
         if (Store.focusEnd > System.currentTimeMillis()) {

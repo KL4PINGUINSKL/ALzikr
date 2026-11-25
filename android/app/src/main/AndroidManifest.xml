@@ -48,6 +48,7 @@
             android:excludeFromRecents="true" android:taskAffinity="com.alzikr.app.alarm" android:launchMode="singleTask"
             android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
         <receiver android:name=".FocusReceiver" android:exported="false" />
+        <receiver android:name=".TaskReceiver" android:exported="false" />
         <receiver android:name=".AppUpdateReceiver" android:exported="false" />
         <service android:name=".RecitationService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
         <service android:name=".AdhanService" android:exported="false" android:foregroundServiceType="mediaPlayback" />

@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -255,6 +256,9 @@ private fun Root() {
             PetIntro()
             ProgressCelebration()
             settings?.let { s -> SettingsSheet(s.ifEmpty { null }) { settings = null } }
+            Nav.settingsReq?.let { s -> settings = s; Nav.settingsReq = null }
+            if (Nav.search) GlobalSearchPage { Nav.search = false }
+            EyeBreak()         // «استراحة العين»: a short reminder card at the top
             ComfortOverlay()   // «نور الليل»: over everything, letting touches through
         }
     }
@@ -286,7 +290,11 @@ private fun Header() {
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
         // The settings live in «المزيد» now, so the friend takes the gear's place and is a little bigger.
-        if (pet) PetStage(Modifier.width(172.dp).padding(start = 4.dp), height = 88)
+        if (pet) PetStage(Modifier.width(150.dp).padding(start = 4.dp), height = 88)
+        // The search over everything: one small, quiet button at the header's end.
+        Box(Modifier.size(40.dp).clip(L.shape(12.dp)).clickable { Nav.search = true }, contentAlignment = Alignment.Center) {
+            if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("🔍", tint = P.muted, size = 20.dp) else Icon(Icons.Filled.Search, "البحث في كل التطبيق", tint = P.muted)
+        }
     }
 }
 
