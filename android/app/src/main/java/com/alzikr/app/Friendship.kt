@@ -17,19 +17,26 @@ object Friendship {
     data class Gift(val id: String, val bond: Int, val icon: String, val kind: Kind, val name: String, val about: String)
 
     val gifts: List<Gift> = listOf(
-Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لأداة صديقك على الشاشة الرئيسية"),
+Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخضر القبة وبياض الحرم"),
+        Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لأداة صديقك على الشاشة الرئيسية"),
+        Gift("theme_sea", 60, "🌊", Kind.THEME, "ثيم «البحر»", "أزرق عميق وزبد أبيض"),
         Gift("theme_lantern", 75, "🏮", Kind.THEME, "ثيم «مشكاة»", "قنديل معلّق يتوهّج ويتنفّس كاللهب، وجمرات صاعدة"),
+        Gift("theme_fajr", 90, "🌅", Kind.THEME, "ثيم «الفجر»", "ألوان الشروق الهادئة"),
         Gift("greet", 100, "🌅", Kind.PERK, "تحية الصباح باسمك", "يحيّيك صديقك صباحًا باسمك ويذكّرك بأذكار الصباح"),
+        Gift("theme_rose", 110, "🌸", Kind.THEME, "ثيم «ورد»", "وردي وعنابي بسبحة خرز"),
         Gift("frame_rose", 125, "🖼", Kind.FRAME, "إطار «الورد»", "وردي فاتح بإطار مزدوج"),
         Gift("theme_breeze", 150, "🎨", Kind.THEME, "ثيم «نسيم»", "نعناعي وسماوي هادئ"),
+        Gift("theme_kaaba", 175, "🕋", Kind.THEME, "ثيم «الكعبة»", "سواد الكسوة وذهب الحزام"),
         Gift("badge_first", 200, "🎗", Kind.BADGE, "وسام «بداية الطريق»", "أول خطوات صداقتكما"),
         Gift("frame_gold", 225, "🖼", Kind.FRAME, "إطار «الذهبي»", "لأداة صديقك"),
         Gift("theme_garden", 250, "🌿", Kind.THEME, "ثيم «روضة»", "كروم وأوراق تتسلّق جانبي الشاشة وتتمايل"),
+        Gift("theme_minimal", 275, "◻", Kind.THEME, "ثيم «بسيط»", "أبيض وأسود بخطوط فاصلة فقط"),
         Gift("joy", 300, "😊", Kind.PERK, "الفرح فوق التطبيقات", "يقفز صديقك العائم وتطير القلوب حين تمتلئ قلوب يومك"),
         Gift("theme_snow", 325, "❄", Kind.THEME, "ثيم «ثلج»", "ندف ثلج تتساقط على أزرق جليدي"),
         Gift("frame_ocean", 350, "🖼", Kind.FRAME, "إطار «البحر»", "أزرق عميق بموج متقطّع"),
         Gift("certificate", 375, "📜", Kind.PERK, "شهادة الصداقة", "صورة باسم صديقك وأيامكما تشاركها إن شئت"),
         Gift("theme_cactus", 400, "🌵", Kind.THEME, "ثيم «صبّار»", "تصميم جديد كليًا: صبّارات تُزهر بصلاتك وأقسام على قوس"),
+        Gift("theme_amoled", 425, "⚫", Kind.THEME, "ثيم «أسود نقي»", "أسود حقيقي يوفّر البطارية"),
         Gift("nightdua", 450, "🌙", Kind.PERK, "دعاء المساء باسمك", "بعد العشاء يدعو لك صديقك باسمك ويذكّرك بأذكار النوم"),
         Gift("theme_dusk", 500, "🎨", Kind.THEME, "ثيم «غسق»", "بنفسجي المغيب وذهب خافت"),
         Gift("frame_desert", 525, "🖼", Kind.FRAME, "إطار «الكثبان»", "رملي دافئ"),
@@ -87,7 +94,7 @@ Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّ�
     /** Themes that friendship opens (the other themes are open to everyone). */
     fun themeGift(lookId: String): Gift? = gift("theme_$lookId")
     /** TEMPORARY, for trying the themes before publishing: every theme open. Must be false in a published version. */
-    const val TRY_ALL_THEMES = true
+    const val TRY_ALL_THEMES = false
     fun themeOpen(lookId: String) = TRY_ALL_THEMES || (themeGift(lookId)?.let { Progress.bondPoints >= it.bond } ?: true)
 
     /** The widget frame's gift. */
