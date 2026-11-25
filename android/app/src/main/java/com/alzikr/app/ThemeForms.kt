@@ -93,7 +93,8 @@ fun FancyPanel(modifier: Modifier, pad: Dp, color: Color, content: @Composable C
     }
     val edge = when (style) { PanelStyle.FRAMED -> gold.copy(alpha = .8f); PanelStyle.GLASS -> Color.White.copy(alpha = if (dark) .22f else .7f)
         PanelStyle.ARCH -> gold.copy(alpha = .55f); PanelStyle.PEBBLE -> accent.copy(alpha = .3f); else -> line }
-    Column(modifier.fillMaxWidth().clip(shape).background(back).border(if (style == PanelStyle.FRAMED) 1.5.dp else 1.dp, edge, shape)
+    // Drawn, never clipped (see Panel): a clip by this outline would also decide where taps land.
+    Column(modifier.fillMaxWidth().background(back, shape).border(if (style == PanelStyle.FRAMED) 1.5.dp else 1.dp, edge, shape)
         .drawBehind { decorate(style, gold, accent) }
         .padding(start = pad, end = pad, top = pad + top, bottom = pad + bottom), content = content)
 }

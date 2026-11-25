@@ -59,7 +59,9 @@ fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surfa
         return
     }
     val shape = look.shape()
-    Column(modifier.fillMaxWidth().clip(shape).background(color).border(1.dp, P.line, shape).padding(pad), content = content)
+    // The shape is drawn, not used as a clip: a clip with a cut or arched outline is also a touch boundary, and far down a
+    // tall panel (the theme list) Android's test against that outline fails, so taps there were lost.
+    Column(modifier.fillMaxWidth().background(color, shape).border(1.dp, P.line, shape).padding(pad), content = content)
 }
 
 @Composable
