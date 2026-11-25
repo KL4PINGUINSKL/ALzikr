@@ -38,7 +38,8 @@ object Adhan {
         Voice("aaqib-azeez", "عاقب عزيز", "تسجيل Atcovi · رخصة CC BY-SA 4.0 · ويكيميديا كومنز", 1_448_294, 11_200),
         Voice("sabah-fakhri", "صباح فخري", "ملك عام · ويكيميديا كومنز", 2_530_742, 30_000),
     )
-    private const val BASE = "https://github.com/KL4PINGUINSKL/ALzikr/releases/download/adhan-v1/adhan-"
+    /** ALzikr's Cloudflare site first (reachable where GitHub is not, e.g. Syria), then the GitHub release. */
+    private val BASES = listOf("https://alzikr.alpharmasy.com/adhan/adhan-", "https://github.com/KL4PINGUINSKL/ALzikr/releases/download/adhan-v1/adhan-")
 
     /** 0 = the notification sound only, 1 = the whole adhan, 2 = the takbirs only. */
     var mode: Int
@@ -71,26 +72,30 @@ object Adhan {
     fun download(c: Context, v: Voice): Boolean {
         downloading = v.id; progress = 0f
         val tmp = File(file(c, v).parentFile, "${v.id}.part")
-        return try {
-            var u = URL(BASE + v.id + ".mp3"); var conn: HttpURLConnection; var hops = 0
-            while (true) {
-                conn = u.openConnection() as HttpURLConnection
-                conn.instanceFollowRedirects = false; conn.connectTimeout = 15_000; conn.readTimeout = 60_000
-                val code = conn.responseCode
-                if (code in 300..399 && hops++ < 5) { u = URL(u, conn.getHeaderField("Location")); conn.disconnect(); continue }
-                if (code != 200) { conn.disconnect(); return false }
-                break
-            }
-            var done = 0L
-            conn.inputStream.use { input -> tmp.outputStream().use { out ->
-                val buf = ByteArray(64 * 1024)
-                while (true) { val n = input.read(buf); if (n < 0) break; out.write(buf, 0, n); done += n; progress = done.toFloat() / v.bytes }
-            } }
-            conn.disconnect()
-            (tmp.length() == v.bytes && tmp.renameTo(file(c, v))).also { Store.bump() }
-        } catch (e: Exception) {
-            android.util.Log.w("ALzikr", "adhan ${v.id}", e); false
-        } finally { tmp.delete(); downloading = null }
+        return try { BASES.any { base -> fetch(URL(base + v.id + ".mp3"), tmp, v) && tmp.renameTo(file(c, v)) }.also { Store.bump() } }
+        finally { tmp.delete(); downloading = null }
+    }
+
+    /** One source: true when the whole recording arrived. */
+    private fun fetch(start: URL, tmp: File, v: Voice): Boolean = try {
+        var u = start; var conn: HttpURLConnection; var hops = 0
+        while (true) {
+            conn = u.openConnection() as HttpURLConnection
+            conn.instanceFollowRedirects = false; conn.connectTimeout = 15_000; conn.readTimeout = 60_000
+            val code = conn.responseCode
+            if (code in 300..399 && hops++ < 5) { u = URL(u, conn.getHeaderField("Location")); conn.disconnect(); continue }
+            if (code != 200) { conn.disconnect(); throw IllegalStateException("http $code") }
+            break
+        }
+        var done = 0L; progress = 0f
+        conn.inputStream.use { input -> tmp.outputStream().use { out ->
+            val buf = ByteArray(64 * 1024)
+            while (true) { val n = input.read(buf); if (n < 0) break; out.write(buf, 0, n); done += n; progress = done.toFloat() / v.bytes }
+        } }
+        conn.disconnect()
+        tmp.length() == v.bytes
+    } catch (e: Exception) {
+        android.util.Log.w("ALzikr", "adhan ${v.id} from ${start.host}: $e"); false
     }
 
     /** Will the adhan sound for this prayer now? (Not during a call, not when muted if asked.) */

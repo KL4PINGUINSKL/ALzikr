@@ -1,6 +1,6 @@
 // alzikr.alpharmasy.com: serves the R2 bucket "alzikr-downloads" (page, latest.json, APKs),
 // and accepts chunked (multipart) uploads from the release script, guarded by the UPLOAD_KEY secret.
-const TYPES = { html: "text/html; charset=utf-8", json: "application/json; charset=utf-8", apk: "application/vnd.android.package-archive", png: "image/png", svg: "image/svg+xml", css: "text/css", js: "text/javascript" };
+const TYPES = { html: "text/html; charset=utf-8", json: "application/json; charset=utf-8", apk: "application/vnd.android.package-archive", png: "image/png", svg: "image/svg+xml", css: "text/css", js: "text/javascript", mp3: "audio/mpeg", sig: "text/plain; charset=utf-8", zip: "application/zip" };
 
 export default {
   async fetch(req, env) {

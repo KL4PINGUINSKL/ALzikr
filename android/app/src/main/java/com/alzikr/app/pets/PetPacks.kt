@@ -83,15 +83,19 @@ object PetPacks {
      * catalog-signing key (ECDSA P-256, X.509, Base64). Until a catalog is published, the list is simply empty.
      */
     const val CATALOG_URL = "https://raw.githubusercontent.com/KL4PINGUINSKL/ALzikr/main/petpacks/catalog.json"
+    /** The same signed catalog on ALzikr's Cloudflare site, tried first (GitHub is out of reach in some countries, e.g. Syria). */
+    const val CATALOG_URL_CF = "https://alzikr.alpharmasy.com/petpacks/catalog.json"
     const val PUBLIC_KEY = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEwaQgsRTbSmMYApOiu1V2YtkjfJ35nJoDRoHHbQr1flKROaNL8f5Z4JOzxGaU3mmC7E19+6JGsHYD0BfVPLmSvw=="
 
     data class Available(val entry: Catalog.Entry, val installed: Int?)
     /** Fetches and verifies the catalog; null when offline, unsigned or tampered. */
     fun fetchCatalog(): List<Available>? = runCatching {
         if (PUBLIC_KEY.isBlank()) return emptyList()
-        val body = get(CATALOG_URL) ?: return null
-        val sig = get("$CATALOG_URL.sig")?.toString(Charsets.UTF_8) ?: return null
-        if (!Catalog.verify(body, sig, PUBLIC_KEY)) return null
+        val (body, sig) = listOf(CATALOG_URL_CF, CATALOG_URL).firstNotNullOfOrNull { u ->
+            val b = runCatching { get(u) }.getOrNull() ?: return@firstNotNullOfOrNull null
+            val g = runCatching { get("$u.sig") }.getOrNull()?.toString(Charsets.UTF_8) ?: return@firstNotNullOfOrNull null
+            (b to g).takeIf { Catalog.verify(b, g, PUBLIC_KEY) }
+        } ?: return null
         val st = store()
         Catalog.parse(body).map { Available(it, st?.activeVersion(it.id)) }
     }.getOrNull()

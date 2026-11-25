@@ -112,7 +112,7 @@ class PackStore(private val root: File) {
 object Catalog {
     data class Entry(val id: String, val version: Int, val title: String, val url: String, val sha256: String, val size: Long, val schema: Int)
     /** Hosts a pack may be downloaded from. */
-    val hosts = setOf("github.com", "objects.githubusercontent.com", "raw.githubusercontent.com", "cdn.jsdelivr.net")
+    val hosts = setOf("alzikr.alpharmasy.com", "github.com", "objects.githubusercontent.com", "raw.githubusercontent.com", "cdn.jsdelivr.net")
 
     fun verify(catalog: ByteArray, signatureB64: String, publicKeyB64: String): Boolean = runCatching {
         val key = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyB64.trim())))
