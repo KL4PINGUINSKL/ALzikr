@@ -285,7 +285,7 @@ object Progress {
     fun checkBadges() {
         val o = JSONObject(sp.getString(pk("prog_badges"), "{}")!!)
         var fresh: Badge? = null
-        badges.forEach { b -> if (!o.has(b.id) && runCatching { b.now() }.getOrDefault(0) >= b.target) { o.put(b.id, today()); fresh = b; Journal.add(b.icon, "وسام: ${b.name}") } }
+        badges.forEach { b -> if (!o.has(b.id) && runCatching { b.now() }.getOrDefault(0) >= b.target) { o.put(b.id, today()); fresh = b; Journal.add(b.icon, "وسام: ${b.name} — ${b.how}") } }
         if (fresh != null) { sp.edit().putString(pk("prog_badges"), o.toString()).putString(pk("prog_newbadge"), fresh!!.id).apply() }
     }
     fun newBadge(): Badge? = sp.getString(pk("prog_newbadge"), null)?.let { id -> badges.firstOrNull { it.id == id } }?.takeIf { showLevels }
