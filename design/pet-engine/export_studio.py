@@ -10,6 +10,7 @@ The levels go to assets/pets/levels.json ("species"), which the app applies over
 with their friend (same spacing), and the new friends' looks get placed later with spread_levels.py.
 
   python design/pet-engine/export_studio.py
+  python design/pet-engine/place_levels.py      (then: the final places of friends and looks)
 """
 import json, shutil, subprocess
 from pathlib import Path
