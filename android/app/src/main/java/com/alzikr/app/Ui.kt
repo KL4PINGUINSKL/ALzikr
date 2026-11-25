@@ -1,5 +1,9 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+
+import androidx.compose.foundation.horizontalScroll
+
 import androidx.compose.foundation.verticalScroll
 
 import androidx.compose.foundation.layout.heightIn
@@ -132,10 +136,20 @@ fun TabGrid(tabs: List<Triple<String, String, String>>, current: String, cols: I
  * One choice out of many, compact: the chosen one, then [shown]-1 others, then «المزيد ▾» which opens the full list.
  * For long lists such as the tafsir books (a wrapped list of a dozen names looks untidy).
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun PickOne(options: List<Pair<String, String>>, selected: String, title: String, shown: Int = 2, modifier: Modifier = Modifier, pick: (String) -> Unit) {
     val open = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val cur = options.firstOrNull { it.first == selected } ?: options.firstOrNull()
+    if (Data.pickScroll) {
+        // Every option in one row that scrolls sideways (the chosen one is brought into view).
+        val sel = androidx.compose.runtime.remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+        Row(modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            options.forEach { (k, l) -> Choice(l, k == cur?.first, if (k == cur?.first) Modifier.bringIntoViewRequester(sel) else Modifier) { pick(k) } }
+        }
+        androidx.compose.runtime.LaunchedEffect(cur?.first) { runCatching { sel.bringIntoView() } }
+        return
+    }
     val quick = (listOfNotNull(cur) + options.filter { it.first != cur?.first }).take(shown)
     // Wraps instead of squeezing: a squeezed chip cut its number off («5 صفحات» showed as «صفحات»).
     Wrap(modifier, gap = 6.dp, lines = Int.MAX_VALUE) {

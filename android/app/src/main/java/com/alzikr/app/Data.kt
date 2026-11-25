@@ -40,6 +40,10 @@ object Data {
     var look: String
         get() = sp.getString("look", "emerald") ?: "emerald"
         set(v) = edit { putString("look", v) }
+    /** How a choice among many is shown: false = a few and «المزيد», true = all of them in a row that scrolls sideways. */
+    var pickScroll: Boolean
+        get() = sp.getBoolean("pick_scroll", false)
+        set(v) = edit { putBoolean("pick_scroll", v) }
     /** 0 follow the phone, 1 day, 2 night. */
     var theme: Int
         get() = sp.getInt("theme", 0)

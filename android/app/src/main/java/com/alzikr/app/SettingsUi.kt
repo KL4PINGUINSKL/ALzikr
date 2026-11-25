@@ -220,6 +220,11 @@ fun SettingsSheet(close: () -> Unit) {
                     ModeChoice()
                     Box(Modifier.padding(top = 10.dp)) { ColorChoice() }
                     Box(Modifier.padding(top = 10.dp)) { ThemeGallery() }
+                    Sub("عرض الخيارات الكثيرة (التفسير، القارئ، الخط…)", Modifier.padding(top = 10.dp, bottom = 6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Choice("بعضها وزر «المزيد»", !Data.pickScroll) { Data.pickScroll = false }
+                        Choice("كلها في شريط يُمرَّر", Data.pickScroll) { Data.pickScroll = true }
+                    }
                     Sub("الأرقام في التطبيق", Modifier.padding(top = 10.dp, bottom = 6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         // Labels without digits: every digit on screen follows this very choice.

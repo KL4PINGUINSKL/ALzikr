@@ -102,7 +102,7 @@ Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخ
     /** Themes that friendship opens (the other themes are open to everyone). */
     fun themeGift(lookId: String): Gift? = gift("theme_$lookId")
     /** TEMPORARY, for trying the themes before publishing: every theme open. Must be false in a published version. */
-    const val TRY_ALL_THEMES = false
+    const val TRY_ALL_THEMES = true
     fun themeOpen(lookId: String) = TRY_ALL_THEMES || (themeGift(lookId)?.let { Progress.bondPoints >= it.bond } ?: true)
 
     /** The widget frame's gift. */

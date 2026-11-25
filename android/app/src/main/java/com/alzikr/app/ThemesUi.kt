@@ -89,13 +89,15 @@ private fun ThemeTile(look: Look, dark: Boolean, modifier: Modifier, focused: Bo
         .border(if (chosen) 3.dp else if (focused) 2.dp else 1.dp, if (chosen) pal.accent else if (focused) pal.gold else pal.line, shape)
         .clickable(onClick = onTap).padding(8.dp), verticalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(look.ornament.ifEmpty { "◦" }, color = pal.gold, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Text(if (chosen) "✓" else if (!open) "🔒" else "", color = pal.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text(look.ornament.ifEmpty { "◦" }, color = pal.gold, fontSize = 14.sp, maxLines = 1)
+            Spacer(Modifier.weight(1f))
+            if (chosen) Text("✓", color = pal.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            else if (!open) Text("🔒${Quran.digits(Friendship.themeGift(look.id)!!.bond)}", color = pal.ink, fontSize = 10.sp, maxLines = 1, softWrap = false,
+                modifier = Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(pal.surface.copy(alpha = .85f)).padding(horizontal = 4.dp, vertical = 1.dp))
         }
         Text(look.name, color = pal.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body, maxLines = 2, lineHeight = 17.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
             listOf(pal.surface, pal.accent, pal.gold).forEach { c -> Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(c).border(1.dp, pal.line, androidx.compose.foundation.shape.CircleShape)) }
-            if (!open) Text(" ${Quran.digits(Friendship.themeGift(look.id)!!.bond)}❤", color = pal.muted, fontSize = 10.sp, maxLines = 1)
         }
     }
 }
@@ -112,8 +114,8 @@ private fun ThemeCard(look: Look, dark: Boolean, onPick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text((if (look.ornament.isNotEmpty()) look.ornament + " " else "") + look.name, color = pal.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body, modifier = Modifier.weight(1f))
                 if (chosen) Text("✓ المستخدم", color = pal.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                else if (!open) Text("🔒 ${Quran.digits(Friendship.themeGift(look.id)!!.bond)} ❤ صداقة", color = pal.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
+            if (!open) Text("🔒 يُفتح بـ ${Quran.digits(Friendship.themeGift(look.id)!!.bond)} ❤ صداقة", color = pal.gold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             Text(look.about, color = pal.muted, fontSize = 12.sp, fontFamily = look.body)
             Spacer(Modifier.height(10.dp))
             // A miniature: a panel, a choice, a button and the counter's shape.
