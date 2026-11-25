@@ -27,11 +27,11 @@ class OriginalsTest {
         listOf(Species.CELESTIAL_DRAGON to 50, Species.WINGED_UNICORN to 60, Species.GRIFFIN to 70, Species.PHOENIX to 80, Species.COSMIC_DRAGON to 100).forEach { (s, l) ->
             assertEquals(l, Progress.speciesLevel(s)); assertTrue(PetLooks.of(s).isNotEmpty() && PetLooks.of(s).all { it.level >= 50 })
         }
-        // Steps grow by 75 up to level 25, by 125 to level 50, then by 150.
+        // Every step is 75 more than the one before, at every level.
         assertEquals(150, Progress.step(2))
-        (3..120).forEach { n -> assertEquals(if (n <= 25) 75 else if (n <= 50) 125 else 150, Progress.step(n) - Progress.step(n - 1)) }
-        assertEquals(24_300, Progress.need(25)); assertEquals(111_800, Progress.need(50)); assertEquals(553_050, Progress.need(100))
-        assertEquals(49, Progress.level(111_799)); assertEquals(50, Progress.level(111_800))
+        (3..120).forEach { n -> assertEquals(75, Progress.step(n) - Progress.step(n - 1)) }
+        assertEquals(24_300, Progress.need(25)); assertEquals(95_550, Progress.need(50)); assertEquals(378_675, Progress.need(100))
+        assertEquals(49, Progress.level(95_549)); assertEquals(50, Progress.level(95_550))
         // Every level from 2 to 125 opens a friend or a look (levels.json), and each friend's looks open in order.
         val opened = Species.entries.flatMap { s -> listOf(Progress.speciesLevel(s)) + PetLooks.of(s).filter { !it.hidden }.map { it.level } }.toSet()
         (2..125).forEach { l -> assertTrue("level $l opens nothing", l in opened) }

@@ -393,7 +393,7 @@ fun PetPage() {
                         color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
                 }
-                Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه (٧٥ حتى المستوى ٢٥، ثم ١٢٥ حتى ٥٠، ثم ١٥٠): المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
+                Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
                 Action("🎁 مكافآتي وأوسمتي", Modifier.fillMaxWidth().padding(top = 10.dp)) { Nav.morePage = "rewards"; Nav.go("more") }
             }
             val st = Pet.streak()

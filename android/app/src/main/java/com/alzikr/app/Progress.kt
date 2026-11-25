@@ -92,14 +92,12 @@ object Progress {
      * than the one before it: 75 more up to level 25, 125 more from 26 to 50, and 150 more after 50.
      * Steps: 150, 225 … 1875 (L25), 2000 … 5000 (L50), 5150 … 12500 (L100).
      */
-    fun stepGrowth(n: Int): Int = when { n <= 25 -> 75; n <= 50 -> 125; else -> 150 }
+    fun stepGrowth(n: Int): Int = 75
     fun step(n: Int): Int = when {
         n <= 1 -> 0
-        n <= 25 -> 75 * n
-        n <= 50 -> 1875 + 125 * (n - 25)
-        else -> 5000 + 150 * (n - 50)
+        else -> 75 * n
     }
-    /** Total points at which level [n] begins: 0, 150, 375 … 24 300 (L25), 111 800 (L50), 553 050 (L100). */
+    /** Total points at which level [n] begins: 0, 150, 375 … 24 300 (L25), 95 550 (L50), 378 675 (L100). */
     private val needs: IntArray by lazy { IntArray(1001).also { a -> for (n in 2..1000) a[n] = a[n - 1] + step(n) } }
     fun need(n: Int): Int = if (n <= 1) 0 else if (n <= 1000) needs[n] else needs[1000] + (1001..n).sumOf { step(it) }
     fun level(x: Int = xp): Int { var n = 1; while (need(n + 1) <= x) n++; return n }
