@@ -84,7 +84,7 @@ object Stats {
             appendLine("• الختمة: ${Data.khatmaPage * 100 / Data.PAGES}٪" + if (Data.khatmaCount > 0) " (ختمات مكتملة: ${Data.khatmaCount})" else "")
             appendLine("• صيام هذا الشهر الهجري: ${fastsThisMonth()} يومًا")
             appendLine("• التسبيح هذا الأسبوع: ${Data.tasbihHistory(7).sumOf { it.second }}")
-            append("\nALzikr: https://github.com/KL4PINGUINSKL/ALzikr/releases/latest/download/ALzikr.apk")
+            append("\nALzikr: $APP_LINK")
         }
     }
 

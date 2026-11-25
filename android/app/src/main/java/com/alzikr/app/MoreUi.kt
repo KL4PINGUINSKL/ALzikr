@@ -416,11 +416,12 @@ private fun BackupPage() {
 }
 
 
-/** The same link always gives the newest version (the public ALzikr repo keeps a fixed-name copy). */
-const val APP_LINK = "https://github.com/KL4PINGUINSKL/ALzikr/releases/latest/download/ALzikr.apk"
+/** ALzikr's own site on Cloudflare (reachable where GitHub is not); /ALzikr.apk always gives the newest version. */
+const val APP_SITE = "https://alzikr.alpharmasy.com"
+const val APP_LINK = "$APP_SITE/ALzikr.apk"
 
 fun shareApp(c: android.content.Context) {
-    val text = "تطبيق ALzikr: أوقات الصلاة وتنبيهها، والأذكار والأوراد، والقرآن الكريم مع التفاسير والتلاوة، وكتب الحديث وشروحها، والكتب الإسلامية. مجاني وبلا إعلانات.\n\nللتنزيل مباشرة (أندرويد):\n$APP_LINK"
+    val text = "تطبيق ALzikr: أوقات الصلاة وتنبيهها، والأذكار والأوراد، والقرآن الكريم مع التفاسير والتلاوة، وكتب الحديث وشروحها، والكتب الإسلامية. مجاني وبلا إعلانات.\n\nللتنزيل مباشرة (أندرويد):\n$APP_LINK\n\nعن التطبيق وكل الإصدارات:\n$APP_SITE"
     c.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, text), "مشاركة ALzikr"))
 }
 
