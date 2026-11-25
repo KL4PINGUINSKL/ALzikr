@@ -663,7 +663,9 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
     sharhId?.let { id -> SharhOpen(id) { sharhId = null }; return }
     // An explanation opened from the list walks the hadiths around it (next / previous).
     var walk by remember(bookId) { mutableStateOf<Triple<List<Hadith.Item>, Int, String>?>(null) }
-    walk?.let { (list, i, id) -> BookSharh(Hadith.info(bookId)?.title ?: "", list, i, id) { walk = null }; return }
+    // Back from an explanation: the list returns to the hadith last read there, not to the top of the chapter.
+    var returnTo by remember(bookId) { mutableStateOf<Hadith.Item?>(null) }
+    walk?.let { (list, i, id) -> BookSharh(Hadith.info(bookId)?.title ?: "", list, i, id) { at -> returnTo = list.getOrNull(at); walk = null }; return }
     val b = book
     var readMode by rememberSaveable(bookId) { mutableStateOf(false) }
     if (readMode && b != null) {
@@ -694,7 +696,15 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
         }
         val start = remember(shown, focus) { if (focus != null && shown != null) shown.indexOfFirst { it.number == focus }.coerceAtLeast(0) else 0 }
         val state = rememberLazyListState()
-        LaunchedEffect(shown, focus) { if (focus != null && shown != null && q.isEmpty()) runCatching { state.scrollToItem(start + 2 + (if (chapter != null) 1 else 0)) } }
+        LaunchedEffect(shown, focus) {
+            val back = returnTo
+            if (back != null && shown != null) {
+                returnTo = null
+                val k = shown.indexOf(back)
+                // Items above the hadiths: the hint, the search field, «read» (without a query) and the chapter title.
+                if (k >= 0) runCatching { state.scrollToItem(k + 2 + (if (query.isEmpty()) 1 else 0) + (if (chapter != null && q.isEmpty()) 1 else 0)) }
+            } else if (focus != null && shown != null && q.isEmpty()) runCatching { state.scrollToItem(start + 2 + (if (chapter != null) 1 else 0)) }
+        }
         LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { Hint("hadithreader", "🔍", "اختر بابًا لتقرأ أحاديثه، أو ابحث في الكتاب كله. اضغط ☆ لحفظ حديث في «المفضلة».") }
             item { OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في الكتاب") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }

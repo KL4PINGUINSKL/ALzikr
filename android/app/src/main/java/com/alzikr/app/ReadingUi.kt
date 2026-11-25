@@ -204,9 +204,10 @@ internal fun Modifier.sharhSwipe(nav: SharhNav?): Modifier = if (nav == null) th
  * previous go to the neighbouring hadiths of [list]; one the encyclopedia does not explain shows its text and says so.
  */
 @Composable
-fun BookSharh(bookTitle: String, list: List<Hadith.Item>, start: Int, firstId: String, back: () -> Unit) {
+fun BookSharh(bookTitle: String, list: List<Hadith.Item>, start: Int, firstId: String, back: (Int) -> Unit) {
     val ctx = LocalContext.current
     var i by remember { mutableStateOf(start) }
+    val done = { back(i) }   // back to the list, at the hadith reached
     var id by remember { mutableStateOf<String?>(firstId) }
     var searched by remember { mutableStateOf(true) }
     LaunchedEffect(i) {
@@ -218,8 +219,8 @@ fun BookSharh(bookTitle: String, list: List<Hadith.Item>, start: Int, firstId: S
     val num = h.number.toIntOrNull()?.let { Quran.digits(it) } ?: h.number
     val nav = SharhNav("$bookTitle · $num", prev = if (i > 0) ({ i-- }) else null, next = if (i < list.size - 1) ({ i++ }) else null)
     val found = id
-    if (found != null) { SharhPage(found, nav, back); return }
-    Subpage("شرح الحديث", back) {
+    if (found != null) { SharhPage(found, nav, done); return }
+    Subpage("شرح الحديث", done) {
         Column(Modifier.fillMaxSize().sharhSwipe(nav).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SharhNavRow(nav)
             Panel(color = P.card) { Text(h.text, color = P.ink, fontSize = (18 * Data.textScale).sp, lineHeight = (32 * Data.textScale).sp, fontFamily = Fonts.naskh) }
