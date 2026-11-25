@@ -251,8 +251,10 @@ class RecitationService : Service() {
                 .setContentTitle("سورة $name · الآية ${Quran.digits(a)}")
                 .setContentText(Recitation.reciterName() + " · " + Recitation.rangeText(Recitation.playing) + if (Recitation.repeat > 1) " · تكرار ×${Recitation.repeat}" else "")
                 .setContentIntent(open).setOngoing(true).setShowWhen(false).setColor(0xFF1A3274.toInt())
-                .addAction(Notification.Action.Builder(null, if (Recitation.paused) "متابعة" else "إيقاف مؤقت", action(c, if (Recitation.paused) RESUME else PAUSE, 31)).build())
-                .addAction(Notification.Action.Builder(null, "إنهاء", action(c, STOP, 32)).build())
+                // With icons: the media style shows its buttons as icons only (without them the buttons did not show at all).
+                .addAction(Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(c, if (Recitation.paused) R.drawable.ic_n_play else R.drawable.ic_n_pause),
+                    if (Recitation.paused) "متابعة" else "إيقاف مؤقت", action(c, if (Recitation.paused) RESUME else PAUSE, 31)).build())
+                .addAction(Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(c, R.drawable.ic_n_stop), "إيقاف التلاوة", action(c, STOP, 32)).build())
                 .setStyle(Notification.MediaStyle().setShowActionsInCompactView(0, 1))
                 .build()
         }

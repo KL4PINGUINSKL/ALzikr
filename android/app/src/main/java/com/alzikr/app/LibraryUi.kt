@@ -451,13 +451,22 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
             var tafsirShown by remember { mutableStateOf(!Store.prefs.getBoolean("sheet_tafsir_hidden", false)) }
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 GText("📖 التفسير:", color = P.muted, fontSize = 13.sp)
-                PickOne(Tafsir.books.map { it.id to it.name }, sel, "اختر التفسير", shown = 1, modifier = Modifier.weight(1f).padding(start = 8.dp)) { Tafsir.selected = it; tafsirShown = true }
-                Choice(if (tafsirShown) "إخفاء ▴" else "إظهار ▾", false, Modifier.padding(start = 6.dp)) {
-                    tafsirShown = !tafsirShown; Store.prefs.edit().putBoolean("sheet_tafsir_hidden", !tafsirShown).apply()
-                }
+                PickOne(Tafsir.books.map { it.id to it.name }, sel, "اختر التفسير", shown = 1, modifier = Modifier.padding(start = 8.dp)) { Tafsir.selected = it; tafsirShown = true }
+            }
+            val fold = { tafsirShown = !tafsirShown; Store.prefs.edit().putBoolean("sheet_tafsir_hidden", !tafsirShown).apply() }
+            // Folded: a small bubble, as wide as its words.
+            if (!tafsirShown) Row(Modifier.padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).clickable(onClick = fold).padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text("  ·  إظهار ▾", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
             if (tafsirShown) Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
-                Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                // The name, and «إخفاء» at the bubble's top left.
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    Text("إخفاء ▴", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clip(L.shape(8.dp)).clickable(onClick = fold).padding(horizontal = 8.dp, vertical = 4.dp))
+                }
                 when {
                     entry != null && entry.text.isNotBlank() -> {
                         if (entry.to > entry.from) Sub("يشمل الآيات ${Quran.digits(entry.from)}–${Quran.digits(entry.to)}", size = 12.sp)
