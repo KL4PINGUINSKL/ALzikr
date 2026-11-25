@@ -67,7 +67,8 @@ object Pet {
         set(v) { sp.edit().putLong("pet_since", v).apply() }
     fun daysTogether() = if (since == 0L) 0 else (java.time.temporal.ChronoUnit.DAYS.between(java.time.Instant.ofEpochMilli(since).atZone(java.time.ZoneId.systemDefault()).toLocalDate(), LocalDate.now()) + 1).toInt()
     fun cheerNow(): String? = sp.getString("pet_cheer", null)?.takeIf { System.currentTimeMillis() - sp.getLong("pet_cheer_at", 0) < 6000 }
-    fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة"; Species.COW -> "زهرة"; Species.ELEPHANT -> "فيلو"; Species.GIRAFFE -> "طويلة"; Species.BIRD -> "زقزوق"; Species.BEAR -> "دبدوب"; Species.PANDA -> "بمبو"; Species.TURTLE -> "صبورة"; Species.FOX -> "ثعلوب"; Species.OWL -> "بومي"; Species.CELESTIAL_DRAGON -> "سماء"; Species.WINGED_UNICORN -> "جناح"; Species.GRIFFIN -> "عُقاب"; Species.PHOENIX -> "شُعلة"; Species.COSMIC_DRAGON -> "نجم" }
+    fun defaultName(s: Species) = when (s) { Species.CAT -> "لؤلؤة"; Species.PENGUIN -> "بطبوط"; Species.ALBATROSS -> "رحّال"; Species.SWALLOW -> "سنونة"; Species.RABBIT -> "قطن"; Species.SHEEP -> "غيمة"; Species.CHICKEN -> "كتكوتة"; Species.COW -> "زهرة"; Species.ELEPHANT -> "فيلو"; Species.GIRAFFE -> "طويلة"; Species.BIRD -> "زقزوق"; Species.BEAR -> "دبدوب"; Species.PANDA -> "بمبو"; Species.TURTLE -> "صبورة"; Species.FOX -> "ثعلوب"; Species.OWL -> "بومي"; Species.CELESTIAL_DRAGON -> "سماء"; Species.WINGED_UNICORN -> "جناح"; Species.GRIFFIN -> "عُقاب"; Species.PHOENIX -> "شُعلة"; Species.COSMIC_DRAGON -> "نجم"
+        else -> com.alzikr.app.pets.PetPacks.registry().species(s.name)?.defaultName?.takeIf { it.isNotEmpty() } ?: s.ar }
     /** For children: encouragement and lessons instead of reminders. */
     var kids: Boolean
         get() = Data.look == "kids" || sp.getBoolean("pet_kids", false)

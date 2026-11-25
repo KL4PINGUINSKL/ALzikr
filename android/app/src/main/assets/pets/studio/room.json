@@ -1,0 +1,202 @@
+{
+ "homes": {
+  "ROYAL_PEACOCK": {
+   "name": "جناح الحديقة المرصّعة",
+   "path": "studio/homes/royal-room-peacock.webp"
+  },
+  "ROYAL_LION": {
+   "name": "قاعة الرخام المشمسة",
+   "path": "studio/homes/royal-room-lion.webp"
+  },
+  "ROYAL_TIGER": {
+   "name": "قصر الثلج الياقوتي",
+   "path": "studio/homes/royal-room-tiger.webp"
+  },
+  "ROYAL_STAG": {
+   "name": "بلاط الغابة الزمرّدي",
+   "path": "studio/homes/royal-room-stag.webp"
+  },
+  "ROYAL_PANTHER": {
+   "name": "قصر القمر البنفسجي",
+   "path": "studio/homes/royal-room-panther.webp"
+  },
+  "ROYAL_EAGLE": {
+   "name": "وكر الجبل",
+   "path": "studio/homes/royal-room-eagle.webp"
+  },
+  "ELEMENTAL_SALAMANDER": {
+   "name": "الجزيرة البركانية",
+   "path": "studio/homes/elemental-room-salamander.webp"
+  },
+  "ELEMENTAL_WOLF": {
+   "name": "عرين الجبل المتجمّد",
+   "path": "studio/homes/elemental-room-wolf.webp"
+  },
+  "ELEMENTAL_TURTLE": {
+   "name": "حديقة كهف البلّور",
+   "path": "studio/homes/elemental-room-turtle.webp"
+  },
+  "ELEMENTAL_BUTTERFLY": {
+   "name": "الغابة المضيئة",
+   "path": "studio/homes/elemental-room-butterfly.webp"
+  },
+  "ELEMENTAL_ELEPHANT": {
+   "name": "الملاذ الحجري",
+   "path": "studio/homes/elemental-room-elephant.webp"
+  },
+  "ELEMENTAL_HORSE": {
+   "name": "مرج العاصفة",
+   "path": "studio/homes/elemental-room-horse.webp"
+  },
+  "PREHISTORIC_DODO": {
+   "name": "بستان السرخس",
+   "path": "studio/homes/prehistoric-room-dodo.webp"
+  },
+  "PREHISTORIC_BRACHIOSAURUS": {
+   "name": "وادي الديناصورات",
+   "path": "studio/homes/prehistoric-room-brachiosaurus.webp"
+  },
+  "PREHISTORIC_TYRANNOSAURUS": {
+   "name": "كهف النهر",
+   "path": "studio/homes/prehistoric-room-tyrannosaurus.webp"
+  },
+  "PREHISTORIC_MAMMOTH": {
+   "name": "ملجأ العصر الجليدي",
+   "path": "studio/homes/prehistoric-room-mammoth.webp"
+  },
+  "PREHISTORIC_TRICERATOPS": {
+   "name": "الفسحة المزهرة",
+   "path": "studio/homes/prehistoric-room-triceratops.webp"
+  },
+  "PREHISTORIC_SABER_TIGER": {
+   "name": "عرين الوادي",
+   "path": "studio/homes/prehistoric-room-saber-tiger.webp"
+  },
+  "PREHISTORIC_PTERANODON": {
+   "name": "وكر الشلال",
+   "path": "studio/homes/prehistoric-room-pteranodon.webp"
+  },
+  "PREHISTORIC_ANKYLOSAURUS": {
+   "name": "غابة الطحلب القديمة",
+   "path": "studio/homes/prehistoric-room-ankylosaurus.webp"
+  },
+  "OCEAN_OCTOPUS": {
+   "name": "مغارة المرجان",
+   "path": "studio/homes/ocean-room-octopus.webp"
+  },
+  "OCEAN_DOLPHIN": {
+   "name": "البحيرة المشمسة",
+   "path": "studio/homes/ocean-room-dolphin.webp"
+  },
+  "OCEAN_SEAHORSE": {
+   "name": "حضانة عشب البحر",
+   "path": "studio/homes/ocean-room-seahorse.webp"
+  },
+  "OCEAN_SHARK": {
+   "name": "ملجأ الشعاب",
+   "path": "studio/homes/ocean-room-shark.webp"
+  },
+  "OCEAN_WHALE": {
+   "name": "قاعة المحيط",
+   "path": "studio/homes/ocean-room-whale.webp"
+  },
+  "OCEAN_JELLYFISH": {
+   "name": "الكهف المتوهّج",
+   "path": "studio/homes/ocean-room-jellyfish.webp"
+  },
+  "OCEAN_ORCA": {
+   "name": "القوس القطبي",
+   "path": "studio/homes/ocean-room-orca.webp"
+  },
+  "OCEAN_NARWHAL": {
+   "name": "قصر اللؤلؤ",
+   "path": "studio/homes/ocean-room-narwhal.webp"
+  },
+  "OCEAN_CRYSTAL_OCTOPUS": {
+   "name": "السفينة الغارقة البنفسجية",
+   "path": "studio/homes/ocean-room-crystal-octopus.webp"
+  },
+  "CYBER_CAT": {
+   "name": "شقة القطة الذكية",
+   "path": "studio/homes/cyber-room-cat.webp"
+  },
+  "CYBER_PENGUIN": {
+   "name": "محطة الأبحاث القطبية",
+   "path": "studio/homes/cyber-room-penguin.webp"
+  },
+  "CYBER_WOLF": {
+   "name": "مرصد الجبل التقني",
+   "path": "studio/homes/cyber-room-wolf.webp"
+  },
+  "CYBER_PANDA": {
+   "name": "مختبر الخيزران",
+   "path": "studio/homes/cyber-room-panda.webp"
+  },
+  "CYBER_EAGLE": {
+   "name": "محطة السماء",
+   "path": "studio/homes/cyber-room-eagle.webp"
+  },
+  "CYBER_DRAGON": {
+   "name": "المرصد النحاسي",
+   "path": "studio/homes/cyber-room-dragon.webp"
+  },
+  "CANDY_RABBIT": {
+   "name": "كوخ غيمة المارشملو",
+   "path": "studio/homes/candy-room-rabbit.webp"
+  },
+  "CANDY_BEAR": {
+   "name": "كوخ الكاكاو",
+   "path": "studio/homes/candy-room-bear.webp"
+  },
+  "CANDY_CAT": {
+   "name": "حديقة الفراولة",
+   "path": "studio/homes/candy-room-cat.webp"
+  },
+  "CANDY_PANDA": {
+   "name": "بيت البسكويت",
+   "path": "studio/homes/candy-room-panda.webp"
+  },
+  "CANDY_PENGUIN": {
+   "name": "قلعة المثلّجات",
+   "path": "studio/homes/candy-room-penguin.webp"
+  },
+  "CANDY_DRAGON": {
+   "name": "وادي حلوى قوس قزح",
+   "path": "studio/homes/candy-room-dragon.webp"
+  },
+  "COSMIC_MOON_OWL": {
+   "name": "الحديقة القمرية",
+   "path": "studio/homes/cosmic-room-moon-owl.webp"
+  },
+  "COSMIC_STAR_STAG": {
+   "name": "مرصد النجوم",
+   "path": "studio/homes/cosmic-room-star-stag.webp"
+  },
+  "COSMIC_NEBULA_BUTTERFLY": {
+   "name": "مرج السديم",
+   "path": "studio/homes/cosmic-room-nebula-butterfly.webp"
+  },
+  "COSMIC_GALAXY_WHALE": {
+   "name": "محيط السماء الطافي",
+   "path": "studio/homes/cosmic-room-galaxy-whale.webp"
+  },
+  "COSMIC_AURORA_WOLF": {
+   "name": "عرين جبل الشفق",
+   "path": "studio/homes/cosmic-room-aurora-wolf.webp"
+  },
+  "COSMIC_GALACTIC_BIRD": {
+   "name": "قفص الكواكب",
+   "path": "studio/homes/cosmic-room-galactic-bird.webp"
+  },
+  "COSMIC_UNIVERSE_TURTLE": {
+   "name": "البركة السماوية",
+   "path": "studio/homes/cosmic-room-universe-turtle.webp"
+  },
+  "COSMIC_INFINITY_DRAGON": {
+   "name": "قصر المدارات",
+   "path": "studio/homes/cosmic-room-infinity-dragon.webp"
+  }
+ },
+ "furniture": [],
+ "upgrades": []
+}

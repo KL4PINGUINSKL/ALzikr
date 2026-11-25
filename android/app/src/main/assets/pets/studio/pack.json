@@ -1,0 +1,2907 @@
+{
+ "schema": 1,
+ "id": "studio",
+ "version": 1,
+ "title": "أصدقاء الاستوديو",
+ "builtin": true,
+ "licenses": [
+  {
+   "id": "alzikr-original",
+   "name": "ALzikr original artwork (ALzikr Pet Studio)",
+   "commercial": true
+  }
+ ],
+ "species": [
+  {
+   "id": "ROYAL_PEACOCK",
+   "ar": "الطاووس الملكي",
+   "about": "يفرد ذيله المرصّع بالألوان",
+   "defaultName": "تاج",
+   "unlock": {
+    "level": 18
+   },
+   "collection": "royal",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.4,
+    "playful": 0.4,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "royal-peacock",
+     "name": "الطاووس الملكي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 18
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/royal-peacock.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-peacock.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-peacock.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-peacock.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-peacock.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ROYAL_LION",
+   "ar": "الأسد الذهبي",
+   "about": "مهيب الطلعة، رحيم بأصحابه",
+   "defaultName": "ضرغام",
+   "unlock": {
+    "level": 21
+   },
+   "collection": "royal",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.4,
+    "playful": 0.4,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "royal-lion",
+     "name": "الأسد الذهبي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 21
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/royal-lion.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-lion.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-lion.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-lion.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-lion.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ROYAL_TIGER",
+   "ar": "النمر الأبيض",
+   "about": "يمشي بهدوء في قصر الثلج",
+   "defaultName": "ثلج",
+   "unlock": {
+    "level": 26
+   },
+   "collection": "royal",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.4,
+    "playful": 0.4,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "royal-tiger",
+     "name": "النمر الأبيض",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 26
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/royal-tiger.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-tiger.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-tiger.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-tiger.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-tiger.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ROYAL_STAG",
+   "ar": "الأيّل الملكي",
+   "about": "قرونه كأغصان الغابة",
+   "defaultName": "أغصان",
+   "unlock": {
+    "level": 31
+   },
+   "collection": "royal",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.4,
+    "playful": 0.4,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "royal-stag",
+     "name": "الأيّل الملكي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 31
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/royal-stag.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-stag.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-stag.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-stag.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-stag.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ROYAL_PANTHER",
+   "ar": "الفهد الأسود",
+   "about": "رشيق هادئ كليلة مقمرة",
+   "defaultName": "ليل",
+   "unlock": {
+    "level": 34
+   },
+   "collection": "royal",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.4,
+    "playful": 0.4,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "royal-panther",
+     "name": "الفهد الأسود",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 34
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/royal-panther.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-panther.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-panther.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-panther.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-panther.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ROYAL_EAGLE",
+   "ar": "العُقاب الملكي",
+   "about": "يحلّق عاليًا فوق الجبال",
+   "defaultName": "باز",
+   "unlock": {
+    "level": 38
+   },
+   "collection": "royal",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.4,
+    "playful": 0.4,
+    "chatty": 0.4,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "royal-eagle",
+     "name": "العُقاب الملكي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 38
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/royal-eagle.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-eagle.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-eagle.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-eagle.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/royal-eagle.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEMENTAL_SALAMANDER",
+   "ar": "سمندل النار",
+   "about": "دافئ كجمرة لطيفة لا تحرق",
+   "defaultName": "جمرة",
+   "unlock": {
+    "level": 43
+   },
+   "collection": "elemental",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "elemental-salamander",
+     "name": "سمندل النار",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 43
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/elemental-salamander.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-salamander.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-salamander.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-salamander.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-salamander.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEMENTAL_WOLF",
+   "ar": "ذئب الجليد",
+   "about": "فروه يلمع كالصقيع",
+   "defaultName": "صقيع",
+   "unlock": {
+    "level": 46
+   },
+   "collection": "elemental",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "elemental-wolf",
+     "name": "ذئب الجليد",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 46
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/elemental-wolf.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-wolf.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-wolf.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-wolf.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-wolf.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEMENTAL_TURTLE",
+   "ar": "السلحفاة البلّورية",
+   "about": "على ظهرها بلّورات مضيئة",
+   "defaultName": "بلّورة",
+   "unlock": {
+    "level": 50
+   },
+   "collection": "elemental",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "elemental-turtle",
+     "name": "السلحفاة البلّورية",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 50
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/elemental-turtle.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-turtle.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-turtle.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-turtle.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-turtle.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEMENTAL_BUTTERFLY",
+   "ar": "فراشة الماس",
+   "about": "جناحاها يعكسان الضوء كالماس",
+   "defaultName": "ماسة",
+   "unlock": {
+    "level": 52
+   },
+   "collection": "elemental",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "elemental-butterfly",
+     "name": "فراشة الماس",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 52
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/elemental-butterfly.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-butterfly.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-butterfly.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-butterfly.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-butterfly.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEMENTAL_ELEPHANT",
+   "ar": "الفيل الحجري",
+   "about": "ثابت كالصخر، حنون رفيق",
+   "defaultName": "صخر",
+   "unlock": {
+    "level": 55
+   },
+   "collection": "elemental",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "elemental-elephant",
+     "name": "الفيل الحجري",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 55
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/elemental-elephant.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-elephant.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-elephant.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-elephant.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-elephant.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "ELEMENTAL_HORSE",
+   "ar": "حصان البرق",
+   "about": "سريع كالبرق في المرج",
+   "defaultName": "برق",
+   "unlock": {
+    "level": 58
+   },
+   "collection": "elemental",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "elemental-horse",
+     "name": "حصان البرق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 58
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/elemental-horse.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-horse.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-horse.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-horse.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/elemental-horse.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_DODO",
+   "ar": "طائر الدودو",
+   "about": "طائر قديم لا يطير، يمشي متمايلًا",
+   "defaultName": "دودو",
+   "unlock": {
+    "level": 16
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-dodo",
+     "name": "طائر الدودو",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 16
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-dodo.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-dodo.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-dodo.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-dodo.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-dodo.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_BRACHIOSAURUS",
+   "ar": "البراكيوصور الصغير",
+   "about": "عنقه طويل يطال أعالي الشجر",
+   "defaultName": "سامق",
+   "unlock": {
+    "level": 22
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-brachiosaurus",
+     "name": "البراكيوصور الصغير",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 22
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-brachiosaurus.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-brachiosaurus.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-brachiosaurus.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-brachiosaurus.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-brachiosaurus.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_TYRANNOSAURUS",
+   "ar": "التيرانوصور الصغير",
+   "about": "يقفز بحماس بذراعيه القصيرتين",
+   "defaultName": "رعد",
+   "unlock": {
+    "level": 27
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-tyrannosaurus",
+     "name": "التيرانوصور الصغير",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 27
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-tyrannosaurus.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-tyrannosaurus.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-tyrannosaurus.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-tyrannosaurus.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-tyrannosaurus.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_MAMMOTH",
+   "ar": "الماموث الصوفي",
+   "about": "صوفه الكثيف يدفئه في البرد",
+   "defaultName": "صوف",
+   "unlock": {
+    "level": 35
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-mammoth",
+     "name": "الماموث الصوفي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 35
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-mammoth.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-mammoth.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-mammoth.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-mammoth.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-mammoth.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_TRICERATOPS",
+   "ar": "الترايسيراتوبس",
+   "about": "ثلاثة قرون ودرع على رأسه",
+   "defaultName": "قرون",
+   "unlock": {
+    "level": 39
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-triceratops",
+     "name": "الترايسيراتوبس",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 39
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-triceratops.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-triceratops.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-triceratops.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-triceratops.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-triceratops.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_SABER_TIGER",
+   "ar": "النمر سيفيّ الأنياب",
+   "about": "نابان طويلان وقلب طيب",
+   "defaultName": "ناب",
+   "unlock": {
+    "level": 44
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-saber-tiger",
+     "name": "النمر سيفيّ الأنياب",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 44
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-saber-tiger.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-saber-tiger.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-saber-tiger.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-saber-tiger.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-saber-tiger.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_PTERANODON",
+   "ar": "التيرانودون",
+   "about": "زاحف طائر بجناحين عريضين",
+   "defaultName": "شراع",
+   "unlock": {
+    "level": 51
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-pteranodon",
+     "name": "التيرانودون",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 51
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-pteranodon.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-pteranodon.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-pteranodon.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-pteranodon.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-pteranodon.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "PREHISTORIC_ANKYLOSAURUS",
+   "ar": "الأنكيلوصور",
+   "about": "مدرّع بذيل كالمطرقة",
+   "defaultName": "درع",
+   "unlock": {
+    "level": 56
+   },
+   "collection": "prehistoric",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.4,
+    "curious": 0.8
+   },
+   "skins": [
+    {
+     "id": "prehistoric-ankylosaurus",
+     "name": "الأنكيلوصور",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 56
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/prehistoric-ankylosaurus.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-ankylosaurus.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-ankylosaurus.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-ankylosaurus.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/prehistoric-ankylosaurus.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_OCTOPUS",
+   "ar": "الأخطبوط الصغير",
+   "about": "ثمانية أذرع تحب الاستكشاف",
+   "defaultName": "مرجان",
+   "unlock": {
+    "level": 15
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-octopus",
+     "name": "الأخطبوط الصغير",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 15
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-octopus.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-octopus.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-octopus.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-octopus.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-octopus.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_DOLPHIN",
+   "ar": "الدلفين",
+   "about": "ذكي مرح يقفز فوق الموج",
+   "defaultName": "موجة",
+   "unlock": {
+    "level": 19
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-dolphin",
+     "name": "الدلفين",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 19
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-dolphin.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-dolphin.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-dolphin.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-dolphin.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-dolphin.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_SEAHORSE",
+   "ar": "فرس البحر",
+   "about": "يسبح منتصبًا بين الأعشاب",
+   "defaultName": "فُرَيس",
+   "unlock": {
+    "level": 23
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-seahorse",
+     "name": "فرس البحر",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 23
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-seahorse.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-seahorse.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-seahorse.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-seahorse.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-seahorse.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_SHARK",
+   "ar": "القرش الصغير",
+   "about": "سبّاح سريع بزعنفة شامخة",
+   "defaultName": "زعنف",
+   "unlock": {
+    "level": 28
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-shark",
+     "name": "القرش الصغير",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 28
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-shark.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-shark.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-shark.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-shark.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-shark.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_WHALE",
+   "ar": "الحوت الأزرق",
+   "about": "أكبر المخلوقات، هادئ عظيم",
+   "defaultName": "محيط",
+   "unlock": {
+    "level": 36
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-whale",
+     "name": "الحوت الأزرق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 36
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-whale.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-whale.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-whale.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-whale.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-whale.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_JELLYFISH",
+   "ar": "قنديل البحر المضيء",
+   "about": "يتوهّج في أعماق البحر",
+   "defaultName": "قنديل",
+   "unlock": {
+    "level": 41
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-jellyfish",
+     "name": "قنديل البحر المضيء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 41
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-jellyfish.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-jellyfish.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-jellyfish.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-jellyfish.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-jellyfish.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_ORCA",
+   "ar": "الأوركا",
+   "about": "أسود وأبيض، يحب عائلته",
+   "defaultName": "قطب",
+   "unlock": {
+    "level": 47
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-orca",
+     "name": "الأوركا",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 47
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-orca.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-orca.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-orca.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-orca.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-orca.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_NARWHAL",
+   "ar": "كركدن البحر",
+   "about": "في رأسه ناب طويل كالرمح",
+   "defaultName": "رمح",
+   "unlock": {
+    "level": 53
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-narwhal",
+     "name": "كركدن البحر",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 53
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-narwhal.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-narwhal.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-narwhal.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-narwhal.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-narwhal.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "OCEAN_CRYSTAL_OCTOPUS",
+   "ar": "الأخطبوط البلّوري",
+   "about": "أذرعه شفافة تلمع كالجمشت",
+   "defaultName": "جمشت",
+   "unlock": {
+    "level": 59
+   },
+   "collection": "ocean",
+   "personality": {
+    "energy": 0.6,
+    "sleepy": 0.4,
+    "playful": 0.7,
+    "chatty": 0.5,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "ocean-crystal-octopus",
+     "name": "الأخطبوط البلّوري",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 59
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/ocean-crystal-octopus.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-crystal-octopus.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-crystal-octopus.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-crystal-octopus.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/ocean-crystal-octopus.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CYBER_CAT",
+   "ar": "القطة الآلية",
+   "about": "تموء بصوت معدني لطيف",
+   "defaultName": "ترس",
+   "unlock": {
+    "level": 45
+   },
+   "collection": "cyber",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cyber-cat",
+     "name": "القطة الآلية",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 45
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cyber-cat.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-cat.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-cat.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-cat.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-cat.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CYBER_PENGUIN",
+   "ar": "البطريق الآلي",
+   "about": "يتمايل في محطة الأبحاث القطبية",
+   "defaultName": "بُرغي",
+   "unlock": {
+    "level": 48
+   },
+   "collection": "cyber",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cyber-penguin",
+     "name": "البطريق الآلي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 48
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cyber-penguin.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-penguin.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-penguin.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-penguin.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-penguin.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CYBER_WOLF",
+   "ar": "الذئب الآلي",
+   "about": "عيناه تضيئان كالمصابيح",
+   "defaultName": "ومضة",
+   "unlock": {
+    "level": 54
+   },
+   "collection": "cyber",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cyber-wolf",
+     "name": "الذئب الآلي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 54
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cyber-wolf.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-wolf.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-wolf.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-wolf.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-wolf.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CYBER_PANDA",
+   "ar": "الباندا الآلية",
+   "about": "تتدحرج في مختبر الخيزران",
+   "defaultName": "بكسل",
+   "unlock": {
+    "level": 60
+   },
+   "collection": "cyber",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cyber-panda",
+     "name": "الباندا الآلية",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 60
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cyber-panda.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-panda.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-panda.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-panda.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-panda.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CYBER_EAGLE",
+   "ar": "النسر المعدني",
+   "about": "جناحاه من صفائح لامعة",
+   "defaultName": "فولاذ",
+   "unlock": {
+    "level": 62
+   },
+   "collection": "cyber",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cyber-eagle",
+     "name": "النسر المعدني",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 62
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cyber-eagle.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-eagle.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-eagle.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-eagle.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-eagle.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CYBER_DRAGON",
+   "ar": "التنين الميكانيكي",
+   "about": "تروس نحاسية وقلب دافئ",
+   "defaultName": "نحاس",
+   "unlock": {
+    "level": 63
+   },
+   "collection": "cyber",
+   "personality": {
+    "energy": 0.7,
+    "sleepy": 0.3,
+    "playful": 0.6,
+    "chatty": 0.6,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cyber-dragon",
+     "name": "التنين الميكانيكي",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 63
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cyber-dragon.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-dragon.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-dragon.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-dragon.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cyber-dragon.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CANDY_RABBIT",
+   "ar": "أرنب المارشملو",
+   "about": "طريّ كالحلوى، يقفز بخفّة",
+   "defaultName": "ملبّس",
+   "unlock": {
+    "level": 17
+   },
+   "collection": "candy",
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.9,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "candy-rabbit",
+     "name": "أرنب المارشملو",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 17
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/candy-rabbit.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-rabbit.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-rabbit.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-rabbit.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-rabbit.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CANDY_BEAR",
+   "ar": "دب الشوكولاتة",
+   "about": "بنّي حلو يحب الدفء",
+   "defaultName": "كاكاو",
+   "unlock": {
+    "level": 20
+   },
+   "collection": "candy",
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.9,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "candy-bear",
+     "name": "دب الشوكولاتة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 20
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/candy-bear.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-bear.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-bear.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-bear.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-bear.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CANDY_CAT",
+   "ar": "قطة الفراولة",
+   "about": "وردية بلون الفراولة",
+   "defaultName": "فراولة",
+   "unlock": {
+    "level": 24
+   },
+   "collection": "candy",
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.9,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "candy-cat",
+     "name": "قطة الفراولة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 24
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/candy-cat.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-cat.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-cat.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-cat.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-cat.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CANDY_PANDA",
+   "ar": "باندا البسكويت",
+   "about": "مقرمشة لطيفة",
+   "defaultName": "بسكوتة",
+   "unlock": {
+    "level": 29
+   },
+   "collection": "candy",
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.9,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "candy-panda",
+     "name": "باندا البسكويت",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 29
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/candy-panda.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-panda.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-panda.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-panda.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-panda.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CANDY_PENGUIN",
+   "ar": "بطريق المثلّجات",
+   "about": "بارد حلو كالبوظة",
+   "defaultName": "بوظة",
+   "unlock": {
+    "level": 32
+   },
+   "collection": "candy",
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.9,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "candy-penguin",
+     "name": "بطريق المثلّجات",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 32
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/candy-penguin.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-penguin.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-penguin.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-penguin.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-penguin.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "CANDY_DRAGON",
+   "ar": "تنين الحلوى",
+   "about": "بألوان قوس قزح والحلوى",
+   "defaultName": "قزح",
+   "unlock": {
+    "level": 40
+   },
+   "collection": "candy",
+   "personality": {
+    "energy": 0.8,
+    "sleepy": 0.4,
+    "playful": 0.9,
+    "chatty": 0.6,
+    "curious": 0.7
+   },
+   "skins": [
+    {
+     "id": "candy-dragon",
+     "name": "تنين الحلوى",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 40
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/candy-dragon.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-dragon.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-dragon.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-dragon.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/candy-dragon.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_MOON_OWL",
+   "ar": "بومة القمر",
+   "about": "تسهر مع القمر في حديقته",
+   "defaultName": "هلال",
+   "unlock": {
+    "level": 49
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-moon-owl",
+     "name": "بومة القمر",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 49
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-moon-owl.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-moon-owl.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-moon-owl.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-moon-owl.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-moon-owl.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_STAR_STAG",
+   "ar": "أيّل النجوم",
+   "about": "قرونه تحمل النجوم",
+   "defaultName": "ثريّا",
+   "unlock": {
+    "level": 57
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-star-stag",
+     "name": "أيّل النجوم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 57
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-star-stag.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-star-stag.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-star-stag.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-star-stag.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-star-stag.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_NEBULA_BUTTERFLY",
+   "ar": "فراشة السديم",
+   "about": "جناحاها من غبار النجوم",
+   "defaultName": "سديم",
+   "unlock": {
+    "level": 61
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-nebula-butterfly",
+     "name": "فراشة السديم",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 61
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-nebula-butterfly.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-nebula-butterfly.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-nebula-butterfly.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-nebula-butterfly.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-nebula-butterfly.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_GALAXY_WHALE",
+   "ar": "حوت المجرّة",
+   "about": "يسبح في محيط السماء",
+   "defaultName": "مجرّة",
+   "unlock": {
+    "level": 64
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-galaxy-whale",
+     "name": "حوت المجرّة",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 64
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-galaxy-whale.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galaxy-whale.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galaxy-whale.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galaxy-whale.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galaxy-whale.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_AURORA_WOLF",
+   "ar": "ذئب الشفق",
+   "about": "فروه يتلوّن كالشفق القطبي",
+   "defaultName": "شفق",
+   "unlock": {
+    "level": 65
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-aurora-wolf",
+     "name": "ذئب الشفق",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 65
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-aurora-wolf.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-aurora-wolf.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-aurora-wolf.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-aurora-wolf.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-aurora-wolf.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_GALACTIC_BIRD",
+   "ar": "طائر الكواكب",
+   "about": "يطير بين الكواكب",
+   "defaultName": "كوكب",
+   "unlock": {
+    "level": 66
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-galactic-bird",
+     "name": "طائر الكواكب",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 66
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-galactic-bird.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galactic-bird.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galactic-bird.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galactic-bird.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-galactic-bird.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_UNIVERSE_TURTLE",
+   "ar": "سلحفاة الفضاء",
+   "about": "على ظهرها نجوم وكواكب صغيرة",
+   "defaultName": "مدار",
+   "unlock": {
+    "level": 67
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-universe-turtle",
+     "name": "سلحفاة الفضاء",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 67
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-universe-turtle.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-universe-turtle.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-universe-turtle.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-universe-turtle.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-universe-turtle.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "COSMIC_INFINITY_DRAGON",
+   "ar": "تنين المدارات",
+   "about": "أبهى الأصدقاء وآخرهم",
+   "defaultName": "بهاء",
+   "unlock": {
+    "level": 68
+   },
+   "collection": "cosmic",
+   "personality": {
+    "energy": 0.5,
+    "sleepy": 0.5,
+    "playful": 0.5,
+    "chatty": 0.4,
+    "curious": 0.9
+   },
+   "skins": [
+    {
+     "id": "cosmic-infinity-dragon",
+     "name": "تنين المدارات",
+     "by": "ALzikr Pet Studio",
+     "license": "alzikr-original",
+     "rarity": "epic",
+     "unlock": {
+      "level": 68
+     },
+     "fallback": {
+      "kind": "png",
+      "path": "studio/art/cosmic-infinity-dragon.webp"
+     },
+     "states": {
+      "idle": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-infinity-dragon.json",
+       "anim": "idle",
+       "loop": true
+      },
+      "walk": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-infinity-dragon.json",
+       "anim": "walk",
+       "loop": true
+      },
+      "happy": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-infinity-dragon.json",
+       "anim": "happy",
+       "loop": true
+      },
+      "sleep": {
+       "kind": "rig",
+       "path": "studio/rigs/cosmic-infinity-dragon.json",
+       "anim": "sleep",
+       "loop": true
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

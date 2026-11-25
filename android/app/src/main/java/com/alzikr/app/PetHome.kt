@@ -139,7 +139,7 @@ object PetRoomItems {
     /** [stages]: a home that changes with the level (legendary friends): level → (name, picture). */
     class Room(val homes: Map<String, Pair<String, String>>, val items: List<RoomItem>, val upgrades: List<Pair<Int, List<String>>>,
                val stages: Map<String, List<Triple<Int, String, String>>> = emptyMap())
-    val room: Room by lazy { listOf("originals/room.json", "legendary/room.json").mapNotNull(::read).reduce { a, b ->
+    val room: Room by lazy { listOf("originals/room.json", "legendary/room.json", "studio/room.json").mapNotNull(::read).reduce { a, b ->
         Room(a.homes + b.homes, a.items + b.items, a.upgrades + b.upgrades, a.stages + b.stages) } }
     private fun read(path: String): Room? {
         val o = runCatching { org.json.JSONObject(com.alzikr.app.pets.PetPacks.open("room", path)!!.use { it.readBytes().toString(Charsets.UTF_8) }) }.getOrNull()

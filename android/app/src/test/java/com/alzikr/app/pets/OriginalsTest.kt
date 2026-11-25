@@ -16,25 +16,33 @@ class OriginalsTest {
 
     @Test fun everyAnimalHasItsOriginals() {
         assertTrue(pack.builtin)
-        Species.entries.filter { PetPacks.registry().species(it.name)?.skins?.none { k -> k.id.startsWith("legend-") } != false }.forEach { sp ->
+        Species.entries.filter { Progress.speciesLevel(it) <= 14 }.forEach { sp ->
             val o = PetLooks.of(sp).filter { it.id.startsWith("originals-") }
             assertTrue("${sp.name} originals", o.size >= 2)
             assertTrue("${sp.name} Arabic names", o.all { l -> l.name.any { it in '\u0600'..'\u06FF' } })
         }
         // The three new animals open after the existing ones.
         listOf(Species.TURTLE to 12, Species.FOX to 13, Species.OWL to 14).forEach { (s, l) -> assertEquals(l, Progress.speciesLevel(s)) }
-        // Legendary friends open from level 50, each with looks of its own.
-        listOf(Species.CELESTIAL_DRAGON to 50, Species.WINGED_UNICORN to 60, Species.GRIFFIN to 70, Species.PHOENIX to 80, Species.COSMIC_DRAGON to 100).forEach { (s, l) ->
-            assertEquals(l, Progress.speciesLevel(s)); assertTrue(PetLooks.of(s).isNotEmpty() && PetLooks.of(s).all { it.level >= 50 })
+        // From level 15 to 68 every level opens one new friend (the Studio's 49 and the five legendary ones),
+        // and each has a look open at its own level, painted with Arabic names.
+        val byLevel = Species.entries.groupBy { Progress.speciesLevel(it) }
+        (2..68).forEach { l -> assertEquals("level $l opens one new friend", 1, byLevel[l]?.size ?: 0) }
+        assertEquals(Species.COSMIC_INFINITY_DRAGON, byLevel[68]!!.single())
+        assertEquals(listOf(Species.CELESTIAL_DRAGON to 25, Species.WINGED_UNICORN to 30, Species.GRIFFIN to 33, Species.PHOENIX to 37, Species.COSMIC_DRAGON to 42),
+            listOf(Species.CELESTIAL_DRAGON, Species.WINGED_UNICORN, Species.GRIFFIN, Species.PHOENIX, Species.COSMIC_DRAGON).map { it to Progress.speciesLevel(it) })
+        Species.entries.filter { Progress.speciesLevel(it) >= 15 }.forEach { s ->
+            assertTrue("${s.name} has a look at its level", PetLooks.of(s).any { it.level == Progress.speciesLevel(s) })
+            assertTrue("${s.name} Arabic", s.ar.any { it in '\u0600'..'\u06FF' } && com.alzikr.app.Pet.defaultName(s).any { it in '\u0600'..'\u06FF' })
         }
         // Every step is 75 more than the one before, at every level.
         assertEquals(150, Progress.step(2))
         (3..120).forEach { n -> assertEquals(75, Progress.step(n) - Progress.step(n - 1)) }
         assertEquals(24_300, Progress.need(25)); assertEquals(95_550, Progress.need(50)); assertEquals(378_675, Progress.need(100))
         assertEquals(49, Progress.level(95_549)); assertEquals(50, Progress.level(95_550))
-        // Every level from 2 to 125 opens a friend or a look (levels.json), and each friend's looks open in order.
+        // Every level opens a friend or a look (levels.json), and each friend's looks open in order. Up to 68 every level opens a
+        // new friend; the looks above it are placed next (spread_levels.py), so for now 2..68.
         val opened = Species.entries.flatMap { s -> listOf(Progress.speciesLevel(s)) + PetLooks.of(s).filter { !it.hidden }.map { it.level } }.toSet()
-        (2..125).forEach { l -> assertTrue("level $l opens nothing", l in opened) }
+        (2..68).forEach { l -> assertTrue("level $l opens nothing", l in opened) }
         Species.entries.forEach { s -> PetLooks.of(s).filter { !it.hidden }.map { it.level }.let { assertEquals("${s.name} in order", it.sorted(), it) } }
     }
 

@@ -106,6 +106,32 @@
   "cat-m17": 121,
   "cat-m20": 122,
   "originals-mishmish": 123,
-  "originals-bristle": 124
+  "originals-bristle": 124,
+  "legend-celestial-blue": 25,
+  "legend-emerald": 30,
+  "legend-golden": 35,
+  "legend-frost": 40,
+  "legend-flame": 45,
+  "legend-lunar": 50,
+  "legend-crystal": 60,
+  "legend-cloudsilk": 30,
+  "legend-briar-rose": 38,
+  "legend-glacier-plume": 50,
+  "legend-honeycrag": 33,
+  "legend-storm-ruff": 41,
+  "legend-copper-kestrel": 53,
+  "legend-emberbloom": 37,
+  "legend-blue-hour": 45,
+  "legend-gilded-fan": 53,
+  "legend-deep-orbit": 42,
+  "legend-nebula-veil": 52,
+  "legend-pulsar": 67
+ },
+ "species": {
+  "CELESTIAL_DRAGON": 25,
+  "WINGED_UNICORN": 30,
+  "GRIFFIN": 33,
+  "PHOENIX": 37,
+  "COSMIC_DRAGON": 42
  }
 }

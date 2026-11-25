@@ -10,11 +10,12 @@ import org.junit.Test
 /** The app's live tables (PetLooks, Progress) and the core pack must agree: same looks, fit, order and unlock levels. */
 class LegacyParityTest {
     private val core = PackParser.parse(File("src/main/assets/pets/pack.json").readText())
+    private val studio = PackParser.parse(File("src/main/assets/pets/studio/pack.json").readText()).skins().map { it.id }.toSet()
 
     @Test fun liveLooksEqualCorePack() {
         Species.entries.forEach { sp ->
             // Core looks first, in their old order; the built-in originals follow them.
-            val live = PetLooks.of(sp).filter { !it.id.startsWith("originals-") && !it.id.startsWith("legend-") }
+            val live = PetLooks.of(sp).filter { !it.id.startsWith("originals-") && !it.id.startsWith("legend-") && it.id !in studio }
             val pack = core.species.firstOrNull { it.id == sp.name }?.skins.orEmpty().filter { !it.hidden }   // hidden looks are not offered
             assertEquals("${sp.name} count", live.size, pack.size)
             live.zip(pack).forEachIndexed { i, (l, s) ->

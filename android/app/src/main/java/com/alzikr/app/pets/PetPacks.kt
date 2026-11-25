@@ -37,7 +37,7 @@ object PetPacks {
     }
 
     /** Packs inside the app besides the core one (paths under assets/pets/). */
-    val BUILTIN = listOf("originals/pack.json", "legendary/pack.json")
+    val BUILTIN = listOf("originals/pack.json", "legendary/pack.json", "studio/pack.json")
 
     fun init(c: Context) { if (ctx == null) ctx = c.applicationContext }
     /** One store per process: its staging area is cleared once, so an install running on another thread is never wiped. */
@@ -50,7 +50,12 @@ object PetPacks {
             fun asset(p: String) = ctx?.assets?.open("pets/$p")?.use { it.readBytes().toString(Charsets.UTF_8) } ?: File("src/main/assets/pets/$p").readText()
             // assets/pets/levels.json (design/pet-engine/spread_levels.py) moves looks so every level opens something.
             val levels: Map<String, Int> = runCatching { org.json.JSONObject(asset("levels.json")).getJSONObject("skins").let { o -> o.keys().asSequence().associateWith { o.getInt(it) } } }.getOrDefault(emptyMap())
-            fun leveled(p: Pack) = if (levels.isEmpty()) p else p.copy(species = p.species.map { s -> s.copy(skins = s.skins.map { k -> levels[k.id]?.let { k.copy(unlock = k.unlock.copy(level = it)) } ?: k }) })
+            // …and gives friends their place in the line (export_studio.py: one new friend a level).
+            val speciesLevels: Map<String, Int> = runCatching { org.json.JSONObject(asset("levels.json")).getJSONObject("species").let { o -> o.keys().asSequence().associateWith { o.getInt(it) } } }.getOrDefault(emptyMap())
+            fun leveled(p: Pack) = p.copy(species = p.species.map { s ->
+                s.copy(unlock = speciesLevels[s.id]?.let { s.unlock.copy(level = it) } ?: s.unlock,
+                    skins = s.skins.map { k -> levels[k.id]?.let { k.copy(unlock = k.unlock.copy(level = it)) } ?: k })
+            })
             val core = leveled(PackParser.parse(asset("pack.json")))
             val builtin = BUILTIN.mapNotNull { p -> runCatching { leveled(PackParser.parse(asset(p))) }.getOrNull() }
             val known = (listOf(core) + builtin).flatMap { it.skins() }.map { it.id }.toSet()

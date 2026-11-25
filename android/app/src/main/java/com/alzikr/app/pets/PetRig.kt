@@ -77,7 +77,7 @@ object PetRig {
                 add(r.near, 33f, 58f, stride * s, -lift * max(0f, c))
                 add(r.far, 32f, 56f, -stride * s, -lift * max(0f, -c))
                 add(r.head, 68f, 73f, (if (r.gait == "peck") 6f else 2f) * s, (if (r.gait == "stride") 3f else 1.5f) * c)
-                add(r.tip, 50f, 49f, sin(a - .7f) * 4f, (if (r.gait in setOf("waddle", "glide", "dart")) 7f else 3f) * s)
+                add(r.tip, 50f, 49f, sin(a - .7f) * 4f, (if (r.gait in setOf("waddle", "glide", "dart", "swim", "orbit")) 7f else 3f) * s)
                 add(r.tail, 48f, 64f, 2f * s, 5f * sin(a - .7f))
                 if (hopping) { sy = 1f - .018f * max(0f, -c); sx = 1f + .012f * max(0f, -c) }
             }
