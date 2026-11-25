@@ -610,13 +610,16 @@ fun WirdReader(back: () -> Unit) {
     Column(Modifier.fillMaxSize().background(Color.Black).windowInsetsPadding(WindowInsets.systemBars)) {
         val (from, to) = plan ?: (0 to -1)
         val count = (to - from + 1).coerceAtLeast(0)
-        val pager = rememberPagerState { count + 1 }
+        // After the «done» page the mushaf goes on (to+1 … 604) for whoever wants to read more than the wird.
+        val extra = if (plan == null) 0 else (Data.PAGES - to).coerceAtLeast(0)
+        fun pageAt(i: Int) = if (i < count) from + i else if (i > count) to + (i - count) else -1
+        val pager = rememberPagerState { count + 1 + extra }
         // Header: back, where you are in the wird, and a thin progress line.
         Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("→ رجوع", color = muted, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { back() }.padding(10.dp))
-            Text(if (plan == null) "ختمت القرآن" else if (pager.currentPage < count) "ورد اليوم · ${Quran.digits(pager.currentPage + 1)} من ${Quran.digits(count)}" else "ورد اليوم",
+            Text(if (plan == null) "ختمت القرآن" else if (pager.currentPage < count) "ورد اليوم · ${Quran.digits(pager.currentPage + 1)} من ${Quran.digits(count)}" else if (pager.currentPage > count) "زيادة على الورد · ${Quran.digits(pager.currentPage - count)}" else "ورد اليوم",
                 color = Color(black.ink), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-            Text(if (plan != null && pager.currentPage < count) "ص ${Quran.digits(from + pager.currentPage)}" else "", color = muted, fontSize = 13.sp, modifier = Modifier.padding(10.dp))
+            Text(if (plan != null && pageAt(pager.currentPage) > 0) "ص ${Quran.digits(pageAt(pager.currentPage))}" else "", color = muted, fontSize = 13.sp, modifier = Modifier.padding(10.dp))
         }
         Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(muted.copy(alpha = .25f))) {
             Box(Modifier.fillMaxWidth(if (count == 0) 1f else (pager.currentPage.coerceAtMost(count)).toFloat() / count).height(3.dp).background(acc))
@@ -631,23 +634,25 @@ fun WirdReader(back: () -> Unit) {
         // Turning past a page counts it; the last page counts after ten seconds on it.
         LaunchedEffect(pager) {
             snapshotFlow { pager.currentPage }.collect { i ->
-                val done = from + i - 1
-                if (done > Data.khatmaPage && done <= to) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = done }
+                val done = if (i == count + 1) to else pageAt(i - 1)
+                if (done > Data.khatmaPage && done <= Data.PAGES) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString(); Data.khatmaPage = done }
             }
         }
         LaunchedEffect(pager.currentPage) {
             if (pager.currentPage == count - 1) { delay(10_000); if (to > Data.khatmaPage) Data.khatmaPage = to }
             if (pager.currentPage == count && to > Data.khatmaPage) Data.khatmaPage = to
             if (pager.currentPage == count && count > 0) runCatching { Progress.wirdDone() }
+            if (pager.currentPage > count && pageAt(pager.currentPage) == Data.PAGES) { delay(10_000); if (Data.khatmaPage < Data.PAGES) Data.khatmaPage = Data.PAGES }
         }
         var chosen by remember { mutableStateOf<Quran.Ayah?>(null) }
         HorizontalPager(pager, Modifier.fillMaxSize(), key = { it }) { i ->
-            if (i < count) Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = 24.dp)) {
-                QuranPage(from + i, starts, {}, { chosen = it }, black)
+            if (i != count) Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = 24.dp)) {
+                QuranPage(pageAt(i), starts, {}, { chosen = it }, black)
             } else Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("✓", color = acc, fontSize = 64.sp)
                 Text("أتممت ورد اليوم، تقبّل الله منك", color = Color(black.ink), fontSize = 21.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Text("قرأت من الصفحة ${Quran.digits(from)} إلى ${Quran.digits(to)} · ختمتك ${Quran.digits(Data.khatmaPage * 100 / Data.PAGES)}٪", color = muted, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+                if (extra > 0) Text("تريد المزيد؟ اسحب لتتابع القراءة من الصفحة ${Quran.digits(to + 1)}، وتُحسب لختمتك", color = acc, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 14.dp))
                 Text("رجوع", color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(acc).clickable { back() }.padding(vertical = 14.dp))
             }

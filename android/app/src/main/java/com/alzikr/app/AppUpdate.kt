@@ -22,7 +22,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * The app updates itself, without needing ALhub: on start it reads the public
+ * The app updates itself, without needing ALhub: on start it reads ALzikr's own site on Cloudflare
+ * (https://alzikr.alpharmasy.com/latest.json, reachable where GitHub is not, e.g. Syria) and the public
  * KL4PINGUINSKL/ALapps releases (asset "<App>-<ver>-Android.apk"), and when a newer build exists it
  * asks the user. "Update" downloads the APK and hands it to Android's PackageInstaller (Android asks
  * once more to confirm). "Later" stays quiet about that version for a day.
@@ -36,7 +37,8 @@ object AppUpdate {
     private val main = Handler(Looper.getMainLooper())
     @Volatile private var busy = false
 
-    private data class Release(val version: String, val url: String, val size: Long, val notes: String)
+    private data class Release(val version: String, val url: String, val size: Long, val notes: String, val sha256: String = "", val mirror: String = "")
+    private const val SITE = "https://alzikr.alpharmasy.com/latest.json"
 
     /** The offer on screen (drawn in the app's theme by UpdateDialog): your version, the new one, and what is new in each version since yours. */
     data class Offer(val current: String, val version: String, val news: List<Pair<String, List<String>>>, val required: Boolean = false)
@@ -79,7 +81,7 @@ object AppUpdate {
         return v.takeIf { compare(it, cur) > 0 }
     }
 
-    /** "Check for updates" in Settings › About: always asks GitHub, and says when there is nothing new. */
+    /** "Check for updates" in Settings › About: always asks the update servers (Cloudflare and GitHub), and says when there is nothing new. */
     fun checkNow(activity: Activity) {
         Toast.makeText(activity, "جارٍ البحث عن تحديث…", Toast.LENGTH_SHORT).show()
         doCheck(activity, force = true)
@@ -93,7 +95,7 @@ object AppUpdate {
         fun say(text: String) { if (force) main.post { Toast.makeText(activity.applicationContext, text, Toast.LENGTH_LONG).show() } }
         Thread {
             try {
-                val latest = latest() ?: run { say("تعذّر الوصول إلى GitHub الآن"); return@Thread }
+                val latest = latest() ?: run { say("تعذّر الوصول إلى خادم التحديثات الآن"); return@Thread }
                 prefs.edit().putLong("checked_at", now).putString("latest_version", latest.version).apply()
                 main.post { onFound?.invoke() }
                 val current = installedVersion(activity) ?: return@Thread
@@ -114,17 +116,50 @@ object AppUpdate {
         info.versionName
     } catch (_: Exception) { null }
 
-    /** The newest release of this app across every page of ALapps releases. */
+    /** The newest release of this app: Cloudflare's latest.json and every page of ALapps releases (either may be unreachable). */
     private fun latest(): Release? {
-        var best: Release? = null
         all.clear()
-        for (page in 1..10) {
-            val (found, count) = latestOn(page) ?: return best
-            if (found != null && (best == null || compare(found.version, best.version) > 0)) best = found
-            if (count < 100) break
+        val site = runCatching { fromSite() }.onFailure { Log.i(TAG, "site: $it") }.getOrNull()
+        runCatching {
+            for (page in 1..10) {
+                val (_, count) = latestOn(page) ?: break
+                if (count < 100) break
+            }
+        }.onFailure { Log.i(TAG, "github: $it") }
+        val github = all.toList()
+        all.clear()
+        // One entry per version; the Cloudflare file is preferred for downloading, GitHub's copy is the fallback.
+        val merged = LinkedHashMap<String, Release>()
+        for (r in site.orEmpty()) merged[r.version] = r
+        for (g in github) {
+            val c = merged[g.version]
+            merged[g.version] = if (c == null) g else c.copy(notes = c.notes.ifBlank { g.notes }, mirror = g.url)
         }
-        seen = all.sortedWith { a, b -> compare(b.version, a.version) }
-        return best
+        if (merged.isEmpty()) return null
+        seen = merged.values.sortedWith { a, b -> compare(b.version, a.version) }
+        return seen.firstOrNull { it.url.isNotEmpty() }
+    }
+
+    /** latest.json on alzikr.alpharmasy.com: the newest APK, and the notes of recent versions. */
+    private fun fromSite(): List<Release>? {
+        val c = URL(SITE).openConnection() as HttpURLConnection
+        c.connectTimeout = 10_000; c.readTimeout = 15_000; c.useCaches = false
+        c.setRequestProperty("User-Agent", APP); c.setRequestProperty("Cache-Control", "no-cache")
+        try {
+            if (c.responseCode != 200) { Log.i(TAG, "site http=${c.responseCode}"); return null }
+            val j = org.json.JSONObject(c.inputStream.bufferedReader().use { it.readText() })
+            val version = j.getString("version")
+            val out = ArrayList<Release>()
+            val rels = j.optJSONArray("releases") ?: JSONArray()
+            for (i in 0 until rels.length()) {
+                val r = rels.getJSONObject(i)
+                val notes = r.optJSONArray("notes")?.let { a -> (0 until a.length()).joinToString("\n") { "- " + a.getString(it) } } ?: ""
+                out += Release(r.getString("version"), "", 0, notes)
+            }
+            val top = Release(version, j.getString("downloadUrl"), j.optLong("size"), out.firstOrNull { it.version == version }?.notes ?: "", j.optString("sha256"))
+            out.removeAll { it.version == version }; out.add(0, top)
+            return out
+        } finally { c.disconnect() }
     }
     private val all = ArrayList<Release>()
 
@@ -184,7 +219,12 @@ object AppUpdate {
         val app = activity.applicationContext
         Thread {
             try {
-                val file = download(app, release) { f -> main.post { progress = f } }
+                val file = try { download(app, release) { f -> main.post { progress = f } } }
+                    catch (e: Exception) {
+                        if (release.mirror.isEmpty()) throw e
+                        Log.i(TAG, "main download failed ($e), trying the mirror")
+                        download(app, release.copy(url = release.mirror, sha256 = "")) { f -> main.post { progress = f } }
+                    }
                 main.post { stage = "جارٍ التثبيت…"; progress = -1f }
                 commit(app, file)
                 main.post { progress = null }
@@ -226,6 +266,11 @@ object AppUpdate {
             } }
         } finally { c.disconnect() }
         if (total != null && done != total) throw IllegalStateException("التنزيل لم يكتمل")
+        if (release.sha256.isNotEmpty()) {
+            val md = java.security.MessageDigest.getInstance("SHA-256")
+            out.inputStream().use { i -> val b = ByteArray(64 * 1024); while (true) { val n = i.read(b); if (n < 0) break; md.update(b, 0, n) } }
+            if (md.digest().joinToString("") { "%02x".format(it) } != release.sha256.lowercase()) { out.delete(); throw IllegalStateException("الملف المنزَّل تالف، حاول مرة أخرى") }
+        }
         return out
     }
 

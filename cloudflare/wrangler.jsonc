@@ -1,0 +1,8 @@
+{
+  "name": "alzikr-site",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  "routes": [{ "pattern": "alzikr.alpharmasy.com", "custom_domain": true }],
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "alzikr-downloads" }]
+}
