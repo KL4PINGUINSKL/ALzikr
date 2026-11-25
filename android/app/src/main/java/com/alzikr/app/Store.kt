@@ -19,7 +19,11 @@ object Store {
     var version by mutableIntStateOf(0)
         private set
 
+    /** The application, so a change can refresh the home-screen widgets and the note bubble. */
+    private var app: Context? = null
+    val appContext: Context? get() = app
     fun init(c: Context) {
+        if (app == null) app = c.applicationContext
         if (!::sp.isInitialized) sp = c.applicationContext.getSharedPreferences("alzikr", Context.MODE_PRIVATE)
         // The Pet Engine: packs and the performance policy (both idempotent).
         com.alzikr.app.pets.PetPacks.init(c); com.alzikr.app.pets.PetPerf.init(c)
@@ -168,55 +172,94 @@ object Store {
 
     // ----------------------------------------------------------------- tasks
 
-    /** [after]: a prayer the task belongs after ("after Asr"), or null. */
-    /** [repeat]: a daily task, open again each new day (done only for the day it was done). */
-    data class Task(val id: Long, val text: String, val done: Boolean, val after: Prayer?, val doneAt: Long, val remindAt: Long = 0, val repeat: Boolean = false)
+    /** One step of a task (subtasks). */
+    data class Step(val text: String, val done: Boolean)
+    /**
+     * [after]: a prayer the task belongs after ("after Asr"), or null. [rule]: how it repeats ("" once, "daily",
+     * "days:1,4" ISO weekdays, "monthly:15", "white" = the white days 13-15 of the Hijri month); a repeating task done on an
+     * earlier day is open again. [due]: the day a one-off task is for ("" = any day). [cat]: its category.
+     */
+    data class Task(val id: Long, val text: String, val done: Boolean, val after: Prayer?, val doneAt: Long, val remindAt: Long = 0,
+                    val rule: String = "", val steps: List<Step> = emptyList(), val cat: String = "", val due: String = "") {
+        val repeat: Boolean get() = rule.isNotEmpty()
+        /** Is it a task for [date]? */
+        fun on(date: LocalDate): Boolean = when {
+            rule == "daily" -> true
+            rule.startsWith("days:") -> date.dayOfWeek.value.toString() in rule.removePrefix("days:").split(',')
+            rule.startsWith("monthly:") -> date.dayOfMonth == rule.removePrefix("monthly:").toIntOrNull()
+            rule == "white" -> runCatching { Data.hijri(date).day in 13..15 }.getOrDefault(false)
+            else -> due.isEmpty() || due <= date.toString()
+        }
+    }
 
     fun tasks(): List<Task> {
         val a = JSONArray(sp.getString("tasks", "[]"))
         val today = LocalDate.now()
         return (0 until a.length()).map { a.getJSONObject(it).let { o ->
-            val repeat = o.optBoolean("repeat")
+            val rule = o.optString("rule").ifEmpty { if (o.optBoolean("repeat")) "daily" else "" }
             val doneAt = o.optLong("doneAt")
-            // A daily task done on an earlier day is open again today.
-            val done = o.optBoolean("done") && (!repeat || java.time.Instant.ofEpochMilli(doneAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == today)
-            Task(o.getLong("id"), o.getString("text"), done, o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, doneAt, o.optLong("remindAt"), repeat)
+            // A repeating task done on an earlier day is open again today (its steps too).
+            val stale = rule.isNotEmpty() && java.time.Instant.ofEpochMilli(doneAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() != today
+            val done = o.optBoolean("done") && !stale
+            val steps = o.optJSONArray("steps")?.let { st -> (0 until st.length()).map { i -> st.getJSONObject(i).let { x -> Step(x.getString("t"), x.optBoolean("d") && !stale) } } } ?: emptyList()
+            Task(o.getLong("id"), o.getString("text"), done, o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, doneAt,
+                o.optLong("remindAt"), rule, steps, o.optString("cat"), o.optString("due"))
         } }
     }
     private fun saveTasks(list: List<Task>) {
-        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("done", it.done).put("after", it.after?.name ?: "").put("doneAt", it.doneAt).put("remindAt", it.remindAt).put("repeat", it.repeat)) }
+        val a = JSONArray(); list.forEach { t -> a.put(JSONObject().put("id", t.id).put("text", t.text).put("done", t.done).put("after", t.after?.name ?: "").put("doneAt", t.doneAt)
+            .put("remindAt", t.remindAt).put("rule", t.rule).put("cat", t.cat).put("due", t.due)
+            .put("steps", JSONArray().also { st -> t.steps.forEach { x -> st.put(JSONObject().put("t", x.text).put("d", x.done)) } })) }
         sp.edit().putString("tasks", a.toString()).apply(); changed()
+        app?.let { runCatching { DayWidget.update(it) } }
     }
-    fun addTask(text: String, after: Prayer?, remindAt: Long = 0, repeat: Boolean = false) = saveTasks(listOf(Task(System.currentTimeMillis(), text, false, after, 0, remindAt, repeat)) + tasks())
-    fun toggleRepeat(id: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(repeat = !it.repeat) else it })
-    fun renameTask(id: Long, text: String) = saveTasks(tasks().map { if (it.id == id) it.copy(text = text) else it })
+    fun addTask(text: String, after: Prayer?, remindAt: Long = 0, rule: String = "", cat: String = "", due: String = "") =
+        saveTasks(listOf(Task(System.currentTimeMillis() + (0..999).random(), text, false, after, 0, remindAt, rule, emptyList(), cat, due)) + tasks())
+    fun update(id: Long, f: (Task) -> Task) = saveTasks(tasks().map { if (it.id == id) f(it) else it })
+    fun toggleRepeat(id: Long) = update(id) { it.copy(rule = if (it.repeat) "" else "daily") }
+    fun renameTask(id: Long, text: String) = update(id) { it.copy(text = text) }
     /** A to-do reminder at [at] (epoch ms; 0 = none). Call TaskReminders.schedule afterwards. */
-    fun setTaskReminder(id: Long, at: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(remindAt = at) else it })
-    fun toggleTask(id: Long) = saveTasks(tasks().map { if (it.id == id) it.copy(done = !it.done, doneAt = if (!it.done) System.currentTimeMillis() else 0) else it })
+    fun setTaskReminder(id: Long, at: Long) = update(id) { it.copy(remindAt = at) }
+    fun toggleTask(id: Long) = update(id) { it.copy(done = !it.done, doneAt = if (!it.done) System.currentTimeMillis() else 0) }
+    fun toggleStep(id: Long, i: Int) = update(id) { t -> t.copy(steps = t.steps.mapIndexed { k, x -> if (k == i) x.copy(done = !x.done) else x }, doneAt = if (t.repeat) System.currentTimeMillis() else t.doneAt) }
+    fun addStep(id: Long, text: String) = update(id) { it.copy(steps = it.steps + Step(text, false)) }
+    fun removeStep(id: Long, i: Int) = update(id) { t -> t.copy(steps = t.steps.filterIndexed { k, _ -> k != i }) }
     fun deleteTask(id: Long) = saveTasks(tasks().filterNot { it.id == id })
     fun clearDone() = saveTasks(tasks().filterNot { it.done })
     fun openTasksAfter(p: Prayer) = tasks().filter { !it.done && it.after == p }
 
     // ----------------------------------------------------------------- notes
 
-    data class Note(val id: Long, val text: String, val at: Long, val pinned: Boolean = false)
+    /**
+     * A note (Markdown-like text, see NoteText). [pinned]: at the top of the notes. [place]: where it hangs as a paper
+     * scrap ("" none, "all", a tab id, or "calendar"). [widget]: shown on the home-screen widget; [bubble]: in the
+     * floating bubble over other apps. [paper]: the paper's colour (0..5).
+     */
+    data class Note(val id: Long, val text: String, val at: Long, val pinned: Boolean = false, val place: String = "", val widget: Boolean = false, val bubble: Boolean = false, val paper: Int = 0)
 
     fun notes(): List<Note> {
         val a = JSONArray(sp.getString("notes", "[]"))
-        return (0 until a.length()).map { a.getJSONObject(it).let { o -> Note(o.getLong("id"), o.getString("text"), o.optLong("at"), o.optBoolean("pinned")) } }.sortedByDescending { it.pinned }
+        return (0 until a.length()).map { a.getJSONObject(it).let { o -> Note(o.getLong("id"), o.getString("text"), o.optLong("at"), o.optBoolean("pinned"),
+            o.optString("place"), o.optBoolean("widget"), o.optBoolean("bubble"), o.optInt("paper")) } }.sortedByDescending { it.pinned }
     }
     private fun saveNotes(list: List<Note>) {
-        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("at", it.at).put("pinned", it.pinned)) }
+        val a = JSONArray(); list.forEach { a.put(JSONObject().put("id", it.id).put("text", it.text).put("at", it.at).put("pinned", it.pinned)
+            .put("place", it.place).put("widget", it.widget).put("bubble", it.bubble).put("paper", it.paper)) }
         sp.edit().putString("notes", a.toString()).apply(); changed()
+        app?.let { runCatching { NoteWidget.update(it); NoteBubble.refresh(it) } }
     }
     fun saveNote(id: Long?, text: String) {
         val now = System.currentTimeMillis()
         val list = notes()
-        val pinned = list.firstOrNull { it.id == id }?.pinned ?: false
-        saveNotes(if (id == null) listOf(Note(now, text, now)) + list else listOf(Note(id, text, now, pinned)) + list.filterNot { it.id == id })
+        val old = list.firstOrNull { it.id == id }
+        saveNotes(if (id == null || old == null) listOf(Note(now, text, now)) + list else listOf(old.copy(text = text, at = now)) + list.filterNot { it.id == id })
     }
     fun deleteNote(id: Long) = saveNotes(notes().filterNot { it.id == id })
     fun togglePin(id: Long) = saveNotes(notes().map { if (it.id == id) it.copy(pinned = !it.pinned) else it })
+    fun updateNote(id: Long, f: (Note) -> Note) = saveNotes(notes().map { if (it.id == id) f(it) else it })
+    /** Only one note on the widget, and one in the bubble: choosing one takes it from the other. */
+    fun noteOnWidget(id: Long, on: Boolean) = saveNotes(notes().map { it.copy(widget = if (it.id == id) on else it.widget && !on) })
+    fun noteInBubble(id: Long, on: Boolean) = saveNotes(notes().map { it.copy(bubble = if (it.id == id) on else it.bubble && !on) })
 
     // ----------------------------------------------------------------- focus
 

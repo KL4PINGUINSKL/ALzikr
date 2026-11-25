@@ -411,7 +411,7 @@ class FocusReceiver : BroadcastReceiver() {
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent) {
         Store.init(c)
-        runCatching { TaskReminders.schedule(c) }
+        runCatching { TaskReminders.schedule(c); TaskReminders.scheduleReview(c); NoteBubble.refresh(c) }
         Alerts.reschedule(c)
         runCatching { PetOverlay.start(c) }
         if (Store.focusEnd > System.currentTimeMillis()) {

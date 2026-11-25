@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «ملاحظتي»: the note chosen for the home screen, as a paper scrap with a pin. RemoteViews-safe classes only. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_frame"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:layoutDirection="rtl">
+    <LinearLayout android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:layout_marginTop="9dp" android:orientation="vertical" android:background="@drawable/widget_paper"
+        android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="14dp" android:paddingBottom="8dp">
+        <TextView android:id="@+id/n_text" android:layout_width="match_parent" android:layout_height="match_parent"
+            android:textColor="#FF2A2A2A" android:textSize="14sp" android:lineSpacingExtra="3dp" android:gravity="top|start" />
+    </LinearLayout>
+    <TextView android:id="@+id/n_pin" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal" android:text="📌" android:textSize="20sp" />
+</FrameLayout>

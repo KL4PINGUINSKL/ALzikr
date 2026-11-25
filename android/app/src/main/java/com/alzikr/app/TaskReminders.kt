@@ -22,6 +22,7 @@ import java.util.Locale
 object TaskReminders {
     private const val CH = "task_remind"
     private const val ACTION_FIRE = "com.alzikr.app.TASK_FIRE"
+    const val ACTION_REVIEW = "com.alzikr.app.TASK_REVIEW"
     const val ACTION_DONE = "com.alzikr.app.TASK_DONE"
     const val ACTION_SNOOZE = "com.alzikr.app.TASK_SNOOZE"
 
@@ -57,7 +58,12 @@ object TaskReminders {
             notify(c, t)
             // Said once; a daily task is reminded again tomorrow at the same time (a snooze sets it again too).
             var next = 0L
-            if (t.repeat) { next = t.remindAt; while (next <= now) next += 86_400_000L }
+            if (t.repeat) {
+                // The next day the rule applies, at the same hour.
+                next = t.remindAt
+                var guard = 0
+                do { next += 86_400_000L; guard++ } while (guard < 400 && (next <= now || !t.on(java.time.Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()).toLocalDate())))
+            }
             Store.setTaskReminder(t.id, next)
         }
         schedule(c)
@@ -77,6 +83,36 @@ object TaskReminders {
         nm.notify(("task" + t.id).hashCode(), n)
     }
 
+    /** The daily «مراجعة المساء» reminder at [Data.reviewAt] (or none). */
+    fun scheduleReview(c: Context) {
+        Store.init(c)
+        val am = c.getSystemService(AlarmManager::class.java)
+        val p = pi(c, ACTION_REVIEW)
+        am.cancel(p)
+        val m = Data.reviewAt
+        if (m < 0) return
+        var at = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).plusMinutes(m.toLong()).toInstant().toEpochMilli()
+        if (at <= System.currentTimeMillis()) at += 86_400_000L
+        Alerts.exact(am, at, p)
+    }
+
+    fun review(c: Context) {
+        Store.init(c)
+        scheduleReview(c)
+        if (!Alerts.canPost(c)) return
+        val today = LocalDate.now()
+        val tasks = Store.tasks().filter { it.on(today) }
+        val left = tasks.count { !it.done }
+        val nm = c.getSystemService(NotificationManager::class.java)
+        if (nm.getNotificationChannel(CH) == null) nm.createNotificationChannel(NotificationChannel(CH, "تذكير المهام", NotificationManager.IMPORTANCE_HIGH))
+        val open = PendingIntent.getActivity(c, 72, Intent(c, MainActivity::class.java).putExtra("tab", "today").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_stat_zikr).setContentTitle("🌙 مراجعة يومك")
+            .setContentText(if (tasks.isEmpty()) "كيف كان يومك؟ حاسب نفسك قبل النوم" else "أنجزت ${tasks.size - left} من ${tasks.size}" + if (left > 0) " · انقل الباقي إلى الغد" else " · بارك الله في يومك")
+            .setAutoCancel(true).setContentIntent(open).setColor(0xFF1A3274.toInt()).build()
+        nm.notify(73, n)
+    }
+
     fun cancelNotice(c: Context, id: Long) = c.getSystemService(NotificationManager::class.java).cancel(("task$id").hashCode())
 }
 
@@ -86,6 +122,7 @@ class TaskReceiver : BroadcastReceiver() {
         val id = i.getLongExtra("id", 0)
         when (i.action) {
             TaskReminders.ACTION_DONE -> { if (Store.tasks().any { it.id == id && !it.done }) Store.toggleTask(id); TaskReminders.cancelNotice(c, id) }
+            TaskReminders.ACTION_REVIEW -> TaskReminders.review(c)
             TaskReminders.ACTION_SNOOZE -> { Store.setTaskReminder(id, System.currentTimeMillis() + 10 * 60_000L); TaskReminders.cancelNotice(c, id); TaskReminders.schedule(c) }
             else -> TaskReminders.fire(c)
         }

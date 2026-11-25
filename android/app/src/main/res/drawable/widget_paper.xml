@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A paper scrap: tinted by the note's paper colour (Android 12+). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFF4B8" />
+    <corners android:radius="4dp" />
+</shape>

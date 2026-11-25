@@ -75,6 +75,8 @@ object Nav {
     var book by mutableStateOf<Books.Book?>(null)
     /** The global search page is open (🔍 in the header). */
     var search by mutableStateOf(false)
+    /** The page open on top in «المزيد» (null = its tiles), for scraps pinned to a page such as the calendar. */
+    var moreTop by mutableStateOf<String?>(null)
     /** A settings section asked for from outside the settings (the global search). */
     var settingsReq by mutableStateOf<String?>(null)
     /** Closing a verse or hadith opened from another tab goes back to that tab. */

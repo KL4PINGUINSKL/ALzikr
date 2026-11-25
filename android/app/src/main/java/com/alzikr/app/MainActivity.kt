@@ -128,6 +128,7 @@ class MainActivity : ComponentActivity() {
             "tasks" -> { Nav.tab = "daily"; Nav.daily = 0 }
             "khatma" -> { Nav.tab = "daily"; Nav.daily = 3 }
             "today" -> { Nav.tab = "daily"; Nav.daily = Daily.TODAY }
+            "notes" -> { Nav.tab = "daily"; Nav.daily = Daily.NOTES }
             "wird" -> Nav.wird = true
             else -> Nav.tab = t
         }
@@ -223,6 +224,8 @@ private fun Root() {
                     Row(Modifier.weight(1f)) {
                     if (look.nav == NavStyle.RAIL && !inPage) SideRail()
                     Box(Modifier.weight(1f)) {
+                        // Notes pinned to this page hang at its top corner (hidden over readers, shown on the calendar).
+                        val scrapPlace = if (Nav.tab == "more" && Nav.moreTop == "calendar") "calendar" else Nav.tab
                         when (Nav.tab) {
                             "adhkar" -> AdhkarScreen()
                             "library" -> LibraryScreen()
@@ -232,6 +235,7 @@ private fun Root() {
                             "pet" -> PetPage()   // «صديقي» as its own section (it stays in «المزيد» too)
                             else -> PrayerScreen(openSettings = { settings = it })
                         }
+                        if (!inPage || scrapPlace == "calendar") PinnedScraps(scrapPlace, Modifier.align(Alignment.TopEnd))
                     }
                     }
                     if (!inPage && Pet.species != null && Pet.place == "ground") Column(Modifier.fillMaxWidth()) {

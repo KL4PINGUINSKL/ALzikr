@@ -83,6 +83,10 @@ object Data {
     var silentAfterAdhan: Int
         get() = sp.getInt("silent_after", 0)
         set(v) = edit { putInt("silent_after", v) }
+    /** «مراجعة المساء» reminder, minutes after midnight (-1 = off). */
+    var reviewAt: Int
+        get() = sp.getInt("review_at", -1)
+        set(v) = edit { putInt("review_at", v) }
     /** Phone quiet during a focus session (Do Not Disturb «alarms only»), the earlier mode put back when it ends. */
     var focusSilent: Boolean
         get() = sp.getBoolean("focus_silent", true)

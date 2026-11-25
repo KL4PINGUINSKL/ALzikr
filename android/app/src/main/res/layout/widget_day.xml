@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «يومي اليوم»: the day's progress and up to five open tasks (a tap ticks one). RemoteViews-safe classes only. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/d_root"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
+    android:background="@drawable/widget_bg" android:padding="12dp" android:layoutDirection="rtl">
+    <TextView android:id="@+id/d_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#FFFFFFFF" android:textSize="16sp" android:textStyle="bold" />
+    <TextView android:id="@+id/d_sub" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#FFE7C66B" android:textSize="12sp" android:paddingBottom="4dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView android:id="@+id/d_t0" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="5dp" android:paddingBottom="5dp" android:textSize="14sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+        <TextView android:id="@+id/d_t1" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="5dp" android:paddingBottom="5dp" android:textSize="14sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+        <TextView android:id="@+id/d_t2" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="5dp" android:paddingBottom="5dp" android:textSize="14sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+        <TextView android:id="@+id/d_t3" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="5dp" android:paddingBottom="5dp" android:textSize="14sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+        <TextView android:id="@+id/d_t4" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="5dp" android:paddingBottom="5dp" android:textSize="14sp" android:textColor="#FFFFFFFF" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>

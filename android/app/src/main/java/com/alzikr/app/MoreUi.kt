@@ -76,6 +76,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         if (stack.isNotEmpty()) { keep.removeState(levelKey(stack.size, stack.last())); stack.removeAt(stack.lastIndex) }
         if (stack.isEmpty() && fromOutside) { fromOutside = false; Nav.back() }
     }
+    androidx.compose.runtime.SideEffect { Nav.moreTop = stack.lastOrNull() }
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
         keep.SaveableStateProvider(levelKey(stack.size, p)) {

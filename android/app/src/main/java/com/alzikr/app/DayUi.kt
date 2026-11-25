@@ -44,7 +44,7 @@ object Daily {
 fun DayOverview() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
-    val tasks = Store.tasks()
+    val tasks = Store.tasks().filter { it.on(LocalDate.now()) }
     val open = tasks.filter { !it.done }
     val doneToday = tasks.count { it.done && Instant.ofEpochMilli(it.doneAt).atZone(ZoneId.systemDefault()).toLocalDate() == LocalDate.now() }
     val habits = Data.habits()
@@ -130,6 +130,7 @@ fun DayOverview() {
             Title("عادات اليوم")
             Wrap(gap = 6.dp) { habitsLeft.forEach { h -> Choice("◻ ${h.name}" + if (h.streak > 1) " · ${Quran.digits(h.streak)}🔥" else "", false) { Data.toggleHabit(h.id) } } }
         }
+        EveningReview()
         if (parts.isEmpty() && slots.isEmpty()) Sub("أضف مهمة من «المهام»، أو عادة من «العادات»، أو اضبط خطة ختمتك من «الختمة»؛ وستجتمع كلها هنا.", size = 13.sp)
     }
 }

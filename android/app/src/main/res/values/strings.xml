@@ -2,4 +2,6 @@
 <resources>
     <string name="widget_desc">الصلاة القادمة وأوقات اليوم</string>
     <string name="widget_tasbih_desc">سبحة: اضغط للتسبيح من الشاشة الرئيسية</string>
+    <string name="widget_note_desc">ملاحظتي: ملاحظة تختارها، كقصاصة مثبتة بدبوس</string>
+    <string name="widget_day_desc">يومي اليوم: ما أنجزت ومهامك المفتوحة، تؤشّرها بلمسة</string>
 </resources>
