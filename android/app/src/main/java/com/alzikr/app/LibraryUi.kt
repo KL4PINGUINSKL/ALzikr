@@ -241,8 +241,14 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
         if (k < Data.PAGES && readPage in (k + 1)..(k + 3)) { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString(); Data.khatmaPage = readPage }
     }
     LaunchedEffect(s) { snapshotFlow { state.firstVisibleItemIndex }.collect { i -> list.getOrNull((i - header).coerceAtLeast(0))?.let { Quran.last = it.s to it.a } } }
+    // Follows the recitation as it moves on, while you read its surah (and into the next surah when it goes on there);
+    // opening the reader elsewhere, or reading another surah meanwhile, never pulls you back to the verse being recited.
+    var lastNow by remember { mutableStateOf(Recitation.now) }
     LaunchedEffect(Recitation.now) {
-        val (rs, ra) = Recitation.now ?: return@LaunchedEffect
+        val now = Recitation.now; val prev = lastNow; lastNow = now
+        if (now == null || prev == null || prev == now) return@LaunchedEffect
+        if (prev.first != s && now.first != s) return@LaunchedEffect
+        val (rs, ra) = now
         if (rs != s) { s = rs }
         runCatching { state.animateScrollToItem((ra - 1 + header).coerceAtLeast(0)) }
     }
@@ -419,35 +425,17 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
         Column(Modifier.fillMaxWidth().quickDismiss(sheetState, close).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
             Text(ref + " · صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)}" + if (a.sajda) " · موضع سجدة" else "", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Text(a.text, color = P.ink, fontSize = 22.sp, fontFamily = Fonts.quran, lineHeight = 40.sp, modifier = Modifier.padding(vertical = 4.dp))
-            // The actions in one short line.
+            // Listening first: play it, from here, memorize it, the reciter and how far «من هنا» goes.
             Wrap(Modifier.fillMaxWidth(), gap = 6.dp) {
                 Choice("▶ هذه الآية", true) { Recitation.play(ctx, a.s, a.a, only = Recitation.Range.AYAH); if (inContext == null) close() }
-                if (inContext != null) Choice("📖 في سياقها", false) { close(); inContext() }
                 Choice("⏩ من هنا: " + Recitation.rangeText(), false) { Recitation.play(ctx, a.s, a.a); if (inContext == null) close() }
-                Choice(if (Quran.marked(a.s, a.a)) "★ مُعلَّمة" else "☆ علامة", Quran.marked(a.s, a.a)) { Quran.toggleMark(a.s, a.a) }
-                Choice("📍 وصلت هنا", false) {
-                    Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString()
-                    Toast.makeText(ctx, "سُجّلت في ختمتك: الصفحة ${a.page}", Toast.LENGTH_SHORT).show()
-                }
-                Choice("⧉ نسخ", false) { copy(ctx, "${a.text}\n[$ref]") }
-                Choice("↗ مشاركة", false) { share(ctx, "${a.text}\n[$ref]") }
-                Choice("🖼 صورة", false) { ShareCard.share(ctx, ref, a.text, "", quran = true) }
-                // The verse with the tafsir shown below it (footnotes left out, at most ~700 letters).
-                entry?.text?.takeIf { it.isNotBlank() }?.let { t ->
-                    Choice("🖼 صورة مع التفسير", false) {
-                        val clean = t.replace(Regex("""\[\[.*?\]\]""", RegexOption.DOT_MATCHES_ALL), "").trim().let { if (it.length > 700) it.take(700).substringBeforeLast(' ') + "…" else it }
-                        ShareCard.share(ctx, ref, a.text, "", quran = true, note = clean, noteTitle = Tafsir.book(sel).name)
-                    }
-                }
                 Choice("🔁 حفظها ×5", false) { Recitation.repeat = 5; Recitation.play(ctx, a.s, a.a); if (inContext == null) close() }
-                Choice(if (VerseNotes.get(a.s, a.a).isEmpty()) "📝 ملاحظة" else "📝 ملاحظتي", VerseNotes.get(a.s, a.a).isNotEmpty()) { noteFor = true }
+                if (inContext != null) Choice("📖 في سياقها", false) { close(); inContext() }
             }
-            if (noteFor) VerseNoteDialog(a.s, a.a) { noteFor = false }
-            VerseNotes.get(a.s, a.a).takeIf { it.isNotEmpty() }?.let { n ->
-                Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.accent.copy(alpha = .10f)).clickable { noteFor = true }.padding(12.dp)) {
-                    Sub("📝 ملاحظتي", size = 12.sp, color = P.gold)
-                    Text(n, color = P.ink, fontSize = 15.sp, fontFamily = Fonts.naskh)
-                }
+            ReciterLine(Modifier.padding(top = 8.dp)) { pickReciter = true }
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("مدى «من هنا»: ", color = P.muted, fontSize = 13.sp)
+                RangeChoice()
             }
             Recitation.now?.takeIf { inContext != null }?.let { (ps, pa) ->
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.accent.copy(alpha = .12f)).padding(horizontal = 10.dp, vertical = 6.dp),
@@ -487,11 +475,33 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
             if (!compare) Action("📚 قارن التفاسير", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { compare = true }
             else compareSet.filter { it != sel }.forEach { TafsirCard(it, a.s, a.a) }
 
-            // Listening settings, last.
-            Text("الاستماع", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
-            ReciterLine { pickReciter = true }
-            Text("مدى «من هنا»:", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-            RangeChoice()
+            // The verse's other actions, after its tafsir.
+            Text("خيارات الآية", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
+            Wrap(Modifier.fillMaxWidth(), gap = 6.dp) {
+                Choice(if (Quran.marked(a.s, a.a)) "★ مُعلَّمة" else "☆ علامة", Quran.marked(a.s, a.a)) { Quran.toggleMark(a.s, a.a) }
+                Choice("📍 وصلت هنا", false) {
+                    Data.khatmaPage = a.page; if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = java.time.LocalDate.now().toString()
+                    Toast.makeText(ctx, "سُجّلت في ختمتك: الصفحة ${a.page}", Toast.LENGTH_SHORT).show()
+                }
+                Choice("⧉ نسخ", false) { copy(ctx, "${a.text}\n[$ref]") }
+                Choice("↗ مشاركة", false) { share(ctx, "${a.text}\n[$ref]") }
+                Choice("🖼 صورة", false) { ShareCard.share(ctx, ref, a.text, "", quran = true) }
+                // The verse with the tafsir shown below it (footnotes left out, at most ~700 letters).
+                entry?.text?.takeIf { it.isNotBlank() }?.let { t ->
+                    Choice("🖼 صورة مع التفسير", false) {
+                        val clean = t.replace(Regex("""\[\[.*?\]\]""", RegexOption.DOT_MATCHES_ALL), "").trim().let { if (it.length > 700) it.take(700).substringBeforeLast(' ') + "…" else it }
+                        ShareCard.share(ctx, ref, a.text, "", quran = true, note = clean, noteTitle = Tafsir.book(sel).name)
+                    }
+                }
+                Choice(if (VerseNotes.get(a.s, a.a).isEmpty()) "📝 ملاحظة" else "📝 ملاحظتي", VerseNotes.get(a.s, a.a).isNotEmpty()) { noteFor = true }
+            }
+            if (noteFor) VerseNoteDialog(a.s, a.a) { noteFor = false }
+            VerseNotes.get(a.s, a.a).takeIf { it.isNotEmpty() }?.let { n ->
+                Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.accent.copy(alpha = .10f)).clickable { noteFor = true }.padding(12.dp)) {
+                    Sub("📝 ملاحظتي", size = 12.sp, color = P.gold)
+                    Text(n, color = P.ink, fontSize = 15.sp, fontFamily = Fonts.naskh)
+                }
+            }
         }
     }
 }
