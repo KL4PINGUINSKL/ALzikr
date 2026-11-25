@@ -87,24 +87,37 @@ object AppUpdate {
         doCheck(activity, force = true)
     }
 
-    private fun doCheck(activity: Activity, force: Boolean) {
+    /** Automatic retries left after a failed check (weak internet), one a minute while the app stays open. */
+    private var retries = 0
+    private const val RETRY_MS = 60_000L
+
+    private fun doCheck(activity: Activity, force: Boolean, retry: Boolean = false) {
         val prefs = activity.getSharedPreferences("app_update", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
-        if (busy || !force && now - prefs.getLong("checked_at", 0) < CHECK_EVERY_MS) return
+        if (busy || !force && !retry && now - prefs.getLong("checked_at", 0) < CHECK_EVERY_MS) return
+        if (!retry) retries = 3
         busy = true
         fun say(text: String) { if (force) main.post { Toast.makeText(activity.applicationContext, text, Toast.LENGTH_LONG).show() } }
+        // A check counts as done (and waits CHECK_EVERY_MS before the next) only once its answer was given: up to date,
+        // put off with «later», or the offer actually on screen. A failed or unseen check is tried again soon.
+        fun done() = prefs.edit().putLong("checked_at", now).apply()
+        fun again() {
+            if (force || retries <= 0) return
+            retries--
+            main.postDelayed({ if (!activity.isFinishing && !activity.isDestroyed) doCheck(activity, force = false, retry = true) }, RETRY_MS)
+        }
         Thread {
             try {
-                val latest = latest() ?: run { say("تعذّر الوصول إلى خادم التحديثات الآن"); return@Thread }
-                prefs.edit().putLong("checked_at", now).putString("latest_version", latest.version).apply()
+                val latest = latest() ?: run { say("تعذّر الوصول إلى خادم التحديثات الآن"); again(); return@Thread }
+                prefs.edit().putString("latest_version", latest.version).apply()
                 main.post { onFound?.invoke() }
                 val current = installedVersion(activity) ?: return@Thread
-                if (compare(latest.version, current) <= 0) { say("لديك أحدث إصدار ($current)"); return@Thread }
+                if (compare(latest.version, current) <= 0) { done(); say("لديك أحدث إصدار ($current)"); return@Thread }
                 val must = seen.any { compare(it.version, current) > 0 && required(it) }
-                if (!must && !force && prefs.getString("later_version", null) == latest.version && now - prefs.getLong("later_at", 0) < LATER_MS) return@Thread
-                main.post { ask(activity, current, latest) }
+                if (!must && !force && prefs.getString("later_version", null) == latest.version && now - prefs.getLong("later_at", 0) < LATER_MS) { done(); return@Thread }
+                main.post { if (ask(activity, current, latest)) done() }
             } catch (e: Exception) {
-                Log.i(TAG, "check failed: $e"); say("تعذّر البحث عن تحديث")
+                Log.i(TAG, "check failed: $e"); say("تعذّر البحث عن تحديث"); again()
             } finally { busy = false }
         }.start()
     }
@@ -199,12 +212,14 @@ object AppUpdate {
         return 0
     }
 
-    private fun ask(activity: Activity, current: String, release: Release) {
-        if (activity.isFinishing || activity.isDestroyed) return
+    /** Puts the offer on screen; false when the activity is already gone (then it is asked again next time). */
+    private fun ask(activity: Activity, current: String, release: Release): Boolean {
+        if (activity.isFinishing || activity.isDestroyed) return false
         pending = release
         val news = seen.filter { compare(it.version, current) > 0 }.distinctBy { it.version }.take(8).map { it.version to lines(it.notes) }.filter { it.second.isNotEmpty() }
         val must = seen.any { compare(it.version, current) > 0 && required(it) } || required(release)
         offer = Offer(current, release.version, news.ifEmpty { listOf(release.version to lines(release.notes)) }, must)
+        return true
     }
 
     private fun start(activity: Activity, release: Release) {
