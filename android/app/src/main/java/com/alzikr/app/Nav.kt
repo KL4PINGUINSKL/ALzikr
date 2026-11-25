@@ -50,6 +50,7 @@ object Nav {
     val home: String get() = if (Looks.byId(Data.look).kids) "kids" else "prayer"
     fun go(t: String) {
         if (t == tab) return
+        openedFrom = null   // moving on by hand: «back» from a verse stays where it is
         history.remove(t); history += tab
         if (history.size > 12) history.removeAt(0)
         tab = t
@@ -65,6 +66,10 @@ object Nav {
     /** [sheet]: also open the verse's sheet; [tadabbur]: with its reflections already open. */
     var quranSheet by mutableStateOf(false)
     var openTadabbur = false
-    fun openQuran(surah: Int, ayah: Int, sheet: Boolean = false, tadabbur: Boolean = false) { quranSheet = sheet; openTadabbur = tadabbur; quran = surah to ayah; tab = "library" }
-    fun openHadith(book: String, number: Int) { hadith = book to number; tab = "library" }
+    /** The tab a verse or hadith was opened from (e.g. «ختمتك» in «يومي»): «back» from it returns there, not to the library. */
+    var openedFrom: String? = null
+    fun openQuran(surah: Int, ayah: Int, sheet: Boolean = false, tadabbur: Boolean = false) { quranSheet = sheet; openTadabbur = tadabbur; quran = surah to ayah; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
+    fun openHadith(book: String, number: Int) { hadith = book to number; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
+    /** Closing a verse or hadith opened from another tab goes back to that tab. */
+    fun closeOpened() { openedFrom?.let { tab = it }; openedFrom = null }
 }

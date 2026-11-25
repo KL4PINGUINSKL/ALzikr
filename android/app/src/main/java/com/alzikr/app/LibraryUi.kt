@@ -72,8 +72,8 @@ fun LibraryScreen() {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     // The verse asked for is framed; with Nav.quranSheet its sheet opens at once.
-    Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a, back = { Nav.quran = null }, mark = true) else Loading(); return }
-    Nav.hadith?.let { (b, n) -> HadithReader(b, n, back = { Nav.hadith = null }); return }
+    Nav.quran?.let { (s, a) -> if (Quran.ready) QuranReader(s, a, back = { Nav.quran = null; Nav.closeOpened() }, mark = true) else Loading(); return }
+    Nav.hadith?.let { (b, n) -> HadithReader(b, n, back = { Nav.hadith = null; Nav.closeOpened() }); return }
     Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
     Nav.hadithQuery?.let { q -> HadithSearchPage(initial = q) { Nav.hadithQuery = null }; return }
     keep.SaveableStateProvider("main") {
