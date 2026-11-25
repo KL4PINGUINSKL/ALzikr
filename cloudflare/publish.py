@@ -218,7 +218,7 @@ def render_download(rels, apks):
             arts.append('<h2 class="section">الإصدارات السابقة</h2>')
     body = f"""<main class="card">
 {brand("التحميل والتحديثات")}
-<p class="lede">أحدث إصدار في الأعلى. التطبيق المثبّت يبحث عن التحديثات بنفسه من هذا الموقع ومن GitHub، ويعرض عليك الجديد قبل التحديث. الإصدارات الأقدم معروضة بملاحظاتها، وتبقى ملفات آخر {KEEP} إصدارات للتحميل.</p>
+<p class="lede">أحدث إصدار في الأعلى. التطبيق المثبّت يبحث عن التحديثات بنفسه من هذا الموقع ومن GitHub، ويعرض عليك الجديد قبل التحديث. هنا آخر {KEEP} إصدارات، كلٌّ منها قابل للتحميل مع ملاحظاته.</p>
 {"".join(arts)}
 </main>
 <script>
@@ -232,45 +232,53 @@ def upload(path, key, ctype):
     subprocess.run([sys.executable, os.path.join(HERE, "upload.py"), path, key, ctype], check=True)
 
 
+def vkey(v): return [int(x) for x in v.split(".")]
+
+
 def main():
     render_only = "--render" in sys.argv
     version, code = gradle_version()
+    if "--version" in sys.argv:   # publish an older build than the one in build.gradle (e.g. while the next batch is in progress)
+        version = sys.argv[sys.argv.index("--version") + 1]; code = None
     apks_path = os.path.join(HERE, "apks.json")
     apks = json.load(open(apks_path, encoding="utf-8")) if os.path.exists(apks_path) else {}
-    local = os.path.join(ROOT, "dist", f"ALzikr-{version}-Android.apk")
-    if version not in apks:
-        if not os.path.exists(local): raise SystemExit(f"missing {local}")
+    ch = {v: n for v, n in changes() if vkey(v) <= vkey(version)}
+    if version not in ch: raise SystemExit(f"{version} is not in AboutAl.CHANGES")
+    order = sorted(ch, key=vkey, reverse=True)
+    # The newest KEEP versions that have an APK in dist/ are the ones offered for download.
+    keep = [v for v in order if os.path.exists(os.path.join(ROOT, "dist", f"ALzikr-{v}-Android.apk"))][:KEEP]
+    if not keep or keep[0] != version: raise SystemExit(f"missing dist/ALzikr-{version}-Android.apk")
+    for v in keep:
+        if v in apks: continue
+        local = os.path.join(ROOT, "dist", f"ALzikr-{v}-Android.apk")
         name = os.path.basename(local)
         if not render_only: upload(local, name, "application/vnd.android.package-archive")
-        apks[version] = {"file": name, "size": os.path.getsize(local), "sha256": sha256(local), "versionCode": code}
-    ch = dict(changes())
+        apks[v] = {"file": name, "size": os.path.getsize(local), "sha256": sha256(local), "versionCode": code if v == version else None}
     dd = dates()
     dd.setdefault(version, datetime.date.today().isoformat())
-    order = sorted(ch, key=lambda v: [int(x) for x in v.split(".")], reverse=True)
     rels = [(v, ch[v], dd.get(v, "")) for v in order]
-    if rels[0][0] != version: raise SystemExit(f"AboutAl.CHANGES starts with {rels[0][0]}, build is {version}")
     cur = apks[version]
     latest = {
-        "app": "ALzikr", "version": version, "versionCode": cur.get("versionCode", code),
+        "app": "ALzikr", "version": version, "versionCode": cur.get("versionCode"),
         "downloadPage": f"{HOST}/download.html", "downloadUrl": f"{HOST}/{cur['file']}",
         "sha256": cur["sha256"], "size": cur["size"], "releaseDate": dd.get(version, ""),
         "releases": [{"version": v, "date": d, "notes": n} for v, n, d in rels[:10]],
     }
     os.makedirs(SITE, exist_ok=True)
     files = {"index.html": render_index({"version": version, "size": cur["size"]}),
-             "download.html": render_download(rels, apks),
+             "download.html": render_download([r for r in rels if r[0] in keep], apks),
              "latest.json": json.dumps(latest, ensure_ascii=False, indent=1)}
     for name, text in files.items():
         open(os.path.join(SITE, name), "w", encoding="utf-8", newline="\n").write(text)
     if render_only: print("rendered into", SITE); return
-    # Old APKs beyond KEEP leave the bucket (their notes stay on the page).
-    for v in sorted(apks, key=lambda v: [int(x) for x in v.split(".")], reverse=True)[KEEP:]:
+    for name, ctype in [("index.html", "text/html; charset=utf-8"), ("download.html", "text/html; charset=utf-8"), ("latest.json", "application/json; charset=utf-8")]:
+        upload(os.path.join(SITE, name), name, ctype)
+    # APKs no longer offered leave the bucket.
+    for v in [v for v in apks if v not in keep]:
         subprocess.run(["npx", "-y", "wrangler@latest", "r2", "object", "delete", f"alzikr-downloads/{apks[v]['file']}", "--remote"], cwd=HERE, shell=os.name == "nt")
         del apks[v]
     json.dump(apks, open(apks_path, "w", encoding="utf-8"), indent=1)
-    for name, ctype in [("index.html", "text/html; charset=utf-8"), ("download.html", "text/html; charset=utf-8"), ("latest.json", "application/json; charset=utf-8")]:
-        upload(os.path.join(SITE, name), name, ctype)
-    print("published", version, "->", HOST)
+    print("published", version, "->", HOST, "downloads:", ", ".join(keep))
 
 
 if __name__ == "__main__":
