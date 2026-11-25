@@ -37,54 +37,111 @@ private fun describe(l: Look): String = listOf(
     when (l.corners) { Corners.ROUND -> "زوايا مستديرة"; Corners.SOFT -> "زوايا ناعمة"; Corners.SQUARE -> "زوايا حادة"; Corners.CUT -> "زوايا مقصوصة" },
 ).joinToString(" · ")
 
-/** Every theme as a small card drawn in its own colors, corners and fonts. Tap to apply. */
+/** The kinds of themes, to find one quickly. */
+private val filters = listOf("all" to "الكل", "open" to "المفتوحة لي", "living" to "خلفيات حيّة", "form" to "تغيّر الشكل", "time" to "تتبدّل مع الوقت", "locked" to "المقفلة")
+private fun Look.reshapes() = panel != PanelStyle.CARD || nav in setOf(NavStyle.LANTERNS, NavStyle.RAIL, NavStyle.ARC) ||
+    prayers in setOf(PrayerLayout.LANTERNS, PrayerLayout.SUNDIAL, PrayerLayout.GARDEN) || counter in setOf(CounterStyle.LANTERN, CounterStyle.FLOWER, CounterStyle.CRESCENT)
+
+/**
+ * Choosing a theme: the chosen (or the tapped) theme in full at the top, then every theme as a small tile in a grid of
+ * three, drawn in its own colors and background, with filters by kind. A tap on an open tile applies it at once; a tap
+ * on a locked one shows it above with the friendship points it needs. No long scrolling to reach the last themes.
+ */
 @Composable
 fun ThemeGallery() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val dark = isSystemInDarkTheme()
+    var filter by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("all") }
+    var shown by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(Data.look) }
+    val list = Looks.all.filter { l ->
+        val open = Friendship.themeOpen(l.id)
+        when (filter) { "open" -> open; "locked" -> !open; "living" -> l.backdrop != Backdrop.NONE; "form" -> l.reshapes(); "time" -> l.sky || l.palFor != null; else -> true }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Looks.all.forEach { look ->
-            val pal = look.pal(dark, Data.theme)
-            val chosen = Data.look == look.id
-            val open = Friendship.themeOpen(look.id)
-            CompositionLocalProvider(LocalPal provides pal, LocalLook provides look) {
-                Column(Modifier.fillMaxWidth().alpha(if (open) 1f else .6f).clip(look.shape()).background(pal.bg).drawBehind { drawBackdrop(look.backdrop, pal, 4f) }.border(if (chosen) 3.dp else 1.dp, if (chosen) pal.accent else pal.line, look.shape())
-                    .clickable(enabled = open) { Data.look = look.id }.padding(14.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text((if (look.ornament.isNotEmpty()) look.ornament + " " else "") + look.name, color = pal.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body, modifier = Modifier.weight(1f))
-                        if (chosen) Text("✓ المستخدم", color = pal.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        else if (!open) Text("🔒 ${Quran.digits(Friendship.themeGift(look.id)!!.bond)} ❤ صداقة", color = pal.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                    Text(look.about, color = pal.muted, fontSize = 12.sp, fontFamily = look.body)
-                    Spacer(Modifier.height(10.dp))
-                    // A miniature: a panel, a choice, a button and the counter's shape.
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        val ps = panelShape(look.panel, look.radius)
-                        Column(Modifier.weight(1f).clip(ps).background(if (look.flat) pal.bg else pal.surface).border(1.dp, if (look.panel == PanelStyle.CARD) pal.line else pal.gold.copy(alpha = .6f), ps)
-                            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = if (look.panel == PanelStyle.ARCH) 22.dp else 10.dp)) {
-                            Text("العصر", color = pal.ink, fontSize = 14.sp, fontFamily = look.head ?: look.body, fontWeight = FontWeight.SemiBold)
-                            Text("3:12 م", color = pal.gold, fontSize = 16.sp, fontFamily = look.body, fontWeight = FontWeight.Bold)
-                        }
-                        Box(Modifier.clip(look.shape(10.dp)).background(pal.accent).padding(horizontal = 12.dp, vertical = 8.dp)) {
-                            Text("سبحان الله", color = pal.onAccent, fontSize = 13.sp, fontFamily = look.body)
-                        }
-                        Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) {
-                            when (look.counter) {
-                                CounterStyle.BEADS -> Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) { repeat(5) { Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (it < 3) pal.accent else pal.line)) } }
-                                CounterStyle.PLAIN -> Text("33", color = pal.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body)
-                                CounterStyle.LANTERN -> Text("🏮", fontSize = 26.sp)
-                                CounterStyle.FLOWER -> Text("🌸", fontSize = 26.sp)
-                                CounterStyle.CRESCENT -> Text("🌙", fontSize = 26.sp)
-                                CounterStyle.RING -> Box(Modifier.size(38.dp).clip(androidx.compose.foundation.shape.CircleShape).border(5.dp, pal.accent, androidx.compose.foundation.shape.CircleShape))
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(describe(look), color = pal.muted, fontSize = 11.sp, fontFamily = look.body)
-                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        listOf(pal.bg, pal.surface, pal.card, pal.accent, pal.gold, pal.ink).forEach { c -> Box(Modifier.width(22.dp).height(10.dp).clip(look.shape(3.dp)).background(c).border(1.dp, pal.line, look.shape(3.dp))) }
+        val focus = Looks.byId(shown)
+        ThemeCard(focus, dark) { Data.look = focus.id }
+        val open = Friendship.themeOpen(focus.id)
+        if (!open) Sub("🔒 يُفتح بـ ${Quran.digits(Friendship.themeGift(focus.id)!!.bond)} ❤ صداقة · معك الآن ${Quran.digits(Progress.bondPoints)} ❤", size = 12.sp, color = P.gold)
+        else if (Data.look != focus.id) Action("استعمل «${focus.name}»", Modifier.fillMaxWidth()) { Data.look = focus.id }
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            filters.forEach { (id, name) -> Choice(name, filter == id) { filter = id } }
+        }
+        Sub("${Quran.digits(list.size)} ثيمًا · المفتوحة ${Quran.digits(Looks.all.count { Friendship.themeOpen(it.id) })} من ${Quran.digits(Looks.all.size)}", size = 11.sp)
+        list.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { look -> ThemeTile(look, dark, Modifier.weight(1f), shown == look.id) {
+                    shown = look.id
+                    if (Friendship.themeOpen(look.id)) Data.look = look.id
+                } }
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+/** A small tile: the theme's background, its name in its font, its colors, and ✓ or 🔒. */
+@Composable
+private fun ThemeTile(look: Look, dark: Boolean, modifier: Modifier, focused: Boolean, onTap: () -> Unit) {
+    val pal = look.pal(dark, Data.theme)
+    val chosen = Data.look == look.id; val open = Friendship.themeOpen(look.id)
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
+    Column(modifier.height(104.dp).clip(shape).background(pal.bg).drawBehind { drawBackdrop(look.backdrop, pal, 4f) }
+        .border(if (chosen) 3.dp else if (focused) 2.dp else 1.dp, if (chosen) pal.accent else if (focused) pal.gold else pal.line, shape)
+        .clickable(onClick = onTap).padding(8.dp), verticalArrangement = Arrangement.SpaceBetween) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(look.ornament.ifEmpty { "◦" }, color = pal.gold, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(if (chosen) "✓" else if (!open) "🔒" else "", color = pal.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        }
+        Text(look.name, color = pal.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body, maxLines = 2, lineHeight = 17.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+            listOf(pal.surface, pal.accent, pal.gold).forEach { c -> Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(c).border(1.dp, pal.line, androidx.compose.foundation.shape.CircleShape)) }
+            if (!open) Text(" ${Quran.digits(Friendship.themeGift(look.id)!!.bond)}❤", color = pal.muted, fontSize = 10.sp, maxLines = 1)
+        }
+    }
+}
+
+/** One theme in full: drawn in its own colors, corners and fonts, with a miniature of a panel, a button and the counter. */
+@Composable
+private fun ThemeCard(look: Look, dark: Boolean, onPick: () -> Unit) {
+    val pal = look.pal(dark, Data.theme)
+    val chosen = Data.look == look.id
+    val open = Friendship.themeOpen(look.id)
+    CompositionLocalProvider(LocalPal provides pal, LocalLook provides look) {
+        Column(Modifier.fillMaxWidth().alpha(if (open) 1f else .6f).clip(look.shape()).background(pal.bg).drawBehind { drawBackdrop(look.backdrop, pal, 4f) }.border(if (chosen) 3.dp else 1.dp, if (chosen) pal.accent else pal.line, look.shape())
+            .clickable(enabled = open) { onPick() }.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text((if (look.ornament.isNotEmpty()) look.ornament + " " else "") + look.name, color = pal.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body, modifier = Modifier.weight(1f))
+                if (chosen) Text("✓ المستخدم", color = pal.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                else if (!open) Text("🔒 ${Quran.digits(Friendship.themeGift(look.id)!!.bond)} ❤ صداقة", color = pal.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            }
+            Text(look.about, color = pal.muted, fontSize = 12.sp, fontFamily = look.body)
+            Spacer(Modifier.height(10.dp))
+            // A miniature: a panel, a choice, a button and the counter's shape.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                val ps = panelShape(look.panel, look.radius)
+                Column(Modifier.weight(1f).clip(ps).background(if (look.flat) pal.bg else pal.surface).border(1.dp, if (look.panel == PanelStyle.CARD) pal.line else pal.gold.copy(alpha = .6f), ps)
+                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = if (look.panel == PanelStyle.ARCH) 22.dp else 10.dp)) {
+                    Text("العصر", color = pal.ink, fontSize = 14.sp, fontFamily = look.head ?: look.body, fontWeight = FontWeight.SemiBold)
+                    Text("3:12 م", color = pal.gold, fontSize = 16.sp, fontFamily = look.body, fontWeight = FontWeight.Bold)
+                }
+                Box(Modifier.clip(look.shape(10.dp)).background(pal.accent).padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Text("سبحان الله", color = pal.onAccent, fontSize = 13.sp, fontFamily = look.body)
+                }
+                Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) {
+                    when (look.counter) {
+                        CounterStyle.BEADS -> Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) { repeat(5) { Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (it < 3) pal.accent else pal.line)) } }
+                        CounterStyle.PLAIN -> Text("33", color = pal.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body)
+                        CounterStyle.LANTERN -> Text("🏮", fontSize = 26.sp)
+                        CounterStyle.FLOWER -> Text("🌸", fontSize = 26.sp)
+                        CounterStyle.CRESCENT -> Text("🌙", fontSize = 26.sp)
+                        CounterStyle.RING -> Box(Modifier.size(38.dp).clip(androidx.compose.foundation.shape.CircleShape).border(5.dp, pal.accent, androidx.compose.foundation.shape.CircleShape))
                     }
                 }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(describe(look), color = pal.muted, fontSize = 11.sp, fontFamily = look.body)
+            Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf(pal.bg, pal.surface, pal.card, pal.accent, pal.gold, pal.ink).forEach { c -> Box(Modifier.width(22.dp).height(10.dp).clip(look.shape(3.dp)).background(c).border(1.dp, pal.line, look.shape(3.dp))) }
             }
         }
     }
@@ -94,6 +151,7 @@ fun ThemeGallery() {
 @Composable
 fun ModeChoice() {
     val look = Looks.byId(Data.look)
+    if (look.palFor != null || look.sky) { Sub("ألوان هذا الثيم تتبدّل وحدها مع ${if (look.id == "seasons") "الفصول والمناسبات" else "أوقات الصلاة"}.", size = 12.sp); return }
     if (look.day == null || look.night == null) { Sub("هذا الثيم ${if (look.day == null) "ليلي" else "نهاري"} دائمًا.", size = 12.sp); return }
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf(0 to "حسب الهاتف", 1 to "نهاري", 2 to "ليلي").forEach { (n, l) -> Choice(l, Data.theme == n) { Data.theme = n } }

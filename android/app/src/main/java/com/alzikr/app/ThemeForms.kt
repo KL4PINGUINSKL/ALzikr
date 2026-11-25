@@ -59,7 +59,7 @@ import kotlin.math.sin
  *  - the five prayers as lanterns that light up, a sundial the sun travels, or a garden that blooms with each prayer;
  *  - the dhikr counter as a lantern filling with light, a flower opening petal by petal, or a crescent growing full.
  */
-enum class PanelStyle { CARD, ARCH, PETAL, PEBBLE, FRAMED, GLASS, SCROLL }
+enum class PanelStyle { CARD, ARCH, PETAL, PEBBLE, FRAMED, GLASS, SCROLL, LEATHER, PAPER, MARBLE }
 
 /** The panel's outline. The arch rises to a point at the top, like a mihrab's window. */
 fun panelShape(s: PanelStyle, r: Dp): Shape = when (s) {
@@ -75,6 +75,9 @@ fun panelShape(s: PanelStyle, r: Dp): Shape = when (s) {
     PanelStyle.FRAMED -> RoundedCornerShape(3.dp)
     PanelStyle.SCROLL -> RoundedCornerShape(2.dp)
     PanelStyle.GLASS -> RoundedCornerShape(r.coerceAtLeast(18.dp))
+    PanelStyle.LEATHER -> RoundedCornerShape(8.dp)
+    PanelStyle.PAPER -> RoundedCornerShape(4.dp)
+    PanelStyle.MARBLE -> RoundedCornerShape(6.dp)
     PanelStyle.CARD -> RoundedCornerShape(r)
 }
 
@@ -89,12 +92,17 @@ fun FancyPanel(modifier: Modifier, pad: Dp, color: Color, content: @Composable C
         PanelStyle.GLASS -> Brush.verticalGradient(listOf(Color.White.copy(alpha = if (dark) .10f else .55f), color.copy(alpha = if (dark) .45f else .55f)))
         PanelStyle.PETAL -> Brush.linearGradient(listOf(color, Tints.mix(color, accent, .08f)))
         PanelStyle.PEBBLE -> Brush.radialGradient(listOf(Tints.mix(color, Color.White, if (dark) .03f else .25f), color))
+        PanelStyle.MARBLE -> Brush.linearGradient(listOf(Tints.mix(color, Color.White, if (dark) .04f else .5f), color, Tints.mix(color, Color.Gray, .06f)))
         else -> Brush.verticalGradient(listOf(color, color))
     }
-    val edge = when (style) { PanelStyle.FRAMED -> gold.copy(alpha = .8f); PanelStyle.GLASS -> Color.White.copy(alpha = if (dark) .22f else .7f)
+    val edge = when (style) { PanelStyle.FRAMED, PanelStyle.MARBLE -> gold.copy(alpha = .8f); PanelStyle.LEATHER -> Color(0xFF7A4A24)
+        PanelStyle.PAPER -> line.copy(alpha = .5f); PanelStyle.GLASS -> Color.White.copy(alpha = if (dark) .22f else .7f)
         PanelStyle.ARCH -> gold.copy(alpha = .55f); PanelStyle.PEBBLE -> accent.copy(alpha = .3f); else -> line }
     // Drawn, never clipped (see Panel): a clip by this outline would also decide where taps land.
-    Column(modifier.fillMaxWidth().background(back, shape).border(if (style == PanelStyle.FRAMED) 1.5.dp else 1.dp, edge, shape)
+    Column(modifier.fillMaxWidth()
+        .drawBehind { if (style == PanelStyle.PAPER) drawRoundRect(Color.Black.copy(alpha = if (dark) .35f else .12f), Offset(3.dp.toPx(), 4.dp.toPx()), size,
+            androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())) }      // a cut paper's shadow, under it
+        .background(back, shape).border(if (style == PanelStyle.FRAMED) 1.5.dp else 1.dp, edge, shape)
         .drawBehind { decorate(style, gold, accent) }
         .padding(start = pad, end = pad, top = pad + top, bottom = pad + bottom), content = content)
 }
@@ -125,6 +133,24 @@ private fun DrawScope.decorate(style: PanelStyle, gold: Color, accent: Color) {
         }
         PanelStyle.PETAL -> drawLine(accent.copy(alpha = .18f), Offset(size.width * .08f, size.height * .92f), Offset(size.width * .92f, size.height * .08f), 1.dp.toPx())
         PanelStyle.GLASS -> drawLine(Color.White.copy(alpha = .35f), Offset(size.width * .1f, 1.dp.toPx()), Offset(size.width * .6f, 1.dp.toPx()), 1.5.dp.toPx())
+        PanelStyle.LEATHER -> {        // a leather binding's band and its stitching
+            val b = 5.dp.toPx()
+            drawRoundRect(Color(0xFF6A3E1E).copy(alpha = .55f), Offset.Zero, size, androidx.compose.ui.geometry.CornerRadius(8.dp.toPx()), style = Stroke(b))
+            drawRoundRect(gold.copy(alpha = .6f), Offset(b + 2f, b + 2f), Size(size.width - 2 * b - 4f, size.height - 2 * b - 4f), androidx.compose.ui.geometry.CornerRadius(5.dp.toPx()),
+                style = Stroke(1.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 7f))))
+        }
+        PanelStyle.MARBLE -> {         // a few veins, a gold rule inside and emerald corners
+            for (k in 0 until 3) {
+                val y0 = size.height * (.2f + k * .3f)
+                val v = Path().apply { moveTo(0f, y0); cubicTo(size.width * .3f, y0 - 30f, size.width * .6f, y0 + 40f, size.width, y0 - 10f) }
+                drawPath(v, Color.Gray.copy(alpha = .10f), style = Stroke(1.2f))
+            }
+            val m = 4.dp.toPx(); drawRect(gold.copy(alpha = .4f), Offset(m, m), Size(size.width - 2 * m, size.height - 2 * m), style = Stroke(.8.dp.toPx()))
+            val q = 7.dp.toPx()
+            listOf(Offset(0f, 0f), Offset(size.width - q, 0f), Offset(0f, size.height - q), Offset(size.width - q, size.height - q)).forEach { o ->
+                drawRect(Color(0xFF174D43).copy(alpha = .7f), o, Size(q, q)); drawRect(gold.copy(alpha = .7f), o, Size(q, q), style = Stroke(1f))
+            }
+        }
         else -> Unit
     }
 }

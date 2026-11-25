@@ -35,6 +35,7 @@ enum class Backdrop(val moving: Boolean) {
     NONE(false), LANTERN(true), VINES(true), GIRIH(false), RAIN(true), AURORA(true), ILLUMINATED(false), SKY(true), STARS(true), RAYS(true),
     SNOW(true), PETALS(true), FIREFLIES(true), BUBBLES(true), DUNES(true), ROSETTE(true), SKYLINE(true),
     BUNTING(true), MESA(true), DAMASK(false), ORBS(true), INK(true), CACTI(true),
+    RIWAQ(true), MANUSCRIPT(false), OASIS(true), STAINED(true), PAPER(true), OBSERVATORY(true), SEASONS(true), MARBLE(false),
 }
 
 @Composable
@@ -73,6 +74,14 @@ fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
             Backdrop.ORBS -> orbs(p, t)
             Backdrop.INK -> ink(p, t)
             Backdrop.CACTI -> cacti(p, t)
+            Backdrop.RIWAQ -> riwaq(p, t)
+            Backdrop.MANUSCRIPT -> manuscript(p)
+            Backdrop.OASIS -> oasis(p, t)
+            Backdrop.STAINED -> stained(p, t)
+            Backdrop.PAPER -> paper(p, t)
+            Backdrop.OBSERVATORY -> observatory(p, t)
+            Backdrop.SEASONS -> seasons(p, t)
+            Backdrop.MARBLE -> marble(p)
             Backdrop.NONE -> Unit
         }
 }

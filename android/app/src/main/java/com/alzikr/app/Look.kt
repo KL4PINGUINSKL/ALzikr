@@ -43,6 +43,8 @@ data class Look(
     /** The panels' form (ThemeForms.kt), and what grows in the prayers' garden ("rose", "cactus", "crystal"). */
     val panel: PanelStyle = PanelStyle.CARD,
     val motif: String = "rose",
+    /** A palette that follows the time or the season (رواق النور، حديقة الفصول), checked each minute. */
+    val palFor: (() -> Pal)? = null,
 ) {
     fun basePal(systemDark: Boolean, mode: Int): Pal = when {
         day == null -> night!!
@@ -59,7 +61,7 @@ data class Look(
     fun pal(systemDark: Boolean, mode: Int, color: Int = Data.lookColor(id), hue: Float = Data.lookHue(id),
             back: Int = Data.lookBack(id), ink: Int = Data.lookInk(id)): Pal {
         val b = Backs.list.getOrNull(back)?.takeIf { back > 0 }
-        var p = if (b == null) (if (sky) Sky.pal() else basePal(systemDark, mode)) else (if (b.dark) night ?: day else day ?: night)!!
+        var p = if (b == null) (palFor?.invoke() ?: if (sky) Sky.pal() else basePal(systemDark, mode)) else (if (b.dark) night ?: day else day ?: night)!!
         if (b != null) p = p.copy(dark = b.dark, bg = Color(b.bg), surface = Color(b.surface), card = Color(b.card), line = Color(b.line),
             ink = if (b.dark) Color(0xFFF2F2F2) else Color(0xFF151515), muted = if (b.dark) Color(0xFF9A9A9A) else Color(0xFF6A6A6A))
         p = Tints.apply(p, color, hue, keepBg = b != null || p.bg.luminance() < 0.004f)
@@ -97,6 +99,10 @@ object Fonts {
 object Looks {
     private fun pal(dark: Boolean, bg: Long, surface: Long, card: Long, line: Long, ink: Long, muted: Long, accent: Long, onAccent: Long, gold: Long, danger: Long = 0xFFD9534F) =
         Pal(dark, Color(bg), Color(surface), Color(card), Color(line), Color(ink), Color(muted), Color(accent), Color(onAccent), Color(gold), Color(danger))
+
+    /** The same without onAccent: black or white text on the accent, whichever reads. */
+    private fun pal(dark: Boolean, bg: Long, surface: Long, card: Long, line: Long, ink: Long, muted: Long, accent: Long, gold: Long) =
+        pal(dark, bg, surface, card, line, ink, muted, accent, if (Tints.on(Color(accent)) == Color.White) 0xFFFFFFFF else 0xFF111111, gold)
 
     val all: List<Look> by lazy { listOf(
         Look("emerald", "زمرّد", "الأخضر الهادئ مع الذهبي، بطاقات مستديرة وشريط سفلي",
@@ -251,6 +257,41 @@ object Looks {
             null, pal(true, 0xFF1A060C, 0xFF240A12, 0xFF2F0E18, 0xFF4E1A28, 0xFFF8E8DA, 0xFFC8A090, 0xFFE6C35C, 0xFF1A1000, 0xFFE6C35C),
             Corners.SQUARE, 3.dp, Fonts.naskh, Fonts.kufi, NavStyle.RAIL, IconStyle.GLYPH, PrayerLayout.SUNDIAL, CounterStyle.BEADS, ornament = "♛",
             backdrop = Backdrop.DAMASK, panel = PanelStyle.FRAMED),
+        // From the themes the user described (رواق النور and the others).
+        Look("riwaq", "رواق النور", "عمارة أندلسية: أقواس أمام حديقة تتبدّل إضاءتها مع كل صلاة (فجر بنفسجي، شروق ذهبي بين الأقواس، ظهر أخضر، ظلال العصر، مغرب برتقالي، فوانيس العشاء ونجومه، ليل فضّي)، ونافورة وساعة في القوس وأوراق تتساقط، ولوحات من زجاج مصقول بحواف ذهبية · هدية الصداقة",
+            Riwaq.palOf(Riwaq.Moment.DHUHR), Riwaq.palOf(Riwaq.Moment.ISHA), Corners.ROUND, 22.dp, Fonts.messiri, Fonts.kufi, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.SUNDIAL, CounterStyle.BEADS, ornament = "۞",
+            backdrop = Backdrop.RIWAQ, panel = PanelStyle.GLASS, palFor = { Riwaq.pal() }),
+        Look("sultani", "المخطوطة السلطانية", "مكتبة تاريخية فاخرة: ورق عاجي بأطراف مذهّبة وشمسة في رأس الصفحة، ولوحات كأغلفة الجلد المخيطة، وخط النسخ، وكحلي وذهب في الليل · هدية الصداقة",
+            pal(false, 0xFFF7F0DE, 0xFFFFF9EA, 0xFFEFE3C4, 0xFFDCC79A, 0xFF2A1A0C, 0xFF7A6040, 0xFF7A2A18, 0xFFFFF6E8, 0xFFB08A2E),
+            pal(true, 0xFF0C1326, 0xFF131C34, 0xFF1A2542, 0xFF2C3A60, 0xFFF1E8D2, 0xFFB0A486, 0xFFE0B050, 0xFF161002, 0xFFE8C468),
+            Corners.SOFT, 8.dp, Fonts.naskh, Fonts.naskh, NavStyle.TOP, IconStyle.GLYPH, PrayerLayout.LIST, CounterStyle.BEADS, ornament = "❈",
+            backdrop = Backdrop.MANUSCRIPT, panel = PanelStyle.LEATHER),
+        Look("oasis", "الواحة الحية", "واحة بنخيل يتمايل وماء صافٍ وجبال بعيدة، طبقاتها تتحرك بسرعات مختلفة فتبدو عميقة، وسماؤها تتبع الوقت، ومطر خفيف في الشتاء وضباب الصباح · هدية الصداقة",
+            pal(false, 0xFFF6F4EC, 0xFFFFFFFF, 0xFFE9EFE2, 0xFFD2DEC6, 0xFF1E3624, 0xFF5E7462, 0xFF2E8A5A, 0xFFD49A3A),
+            pal(true, 0xFF0B1612, 0xFF12211A, 0xFF192C22, 0xFF284434, 0xFFE6F2EA, 0xFF96B0A0, 0xFF6CCB96, 0xFFE8B860),
+            Corners.ROUND, 24.dp, Fonts.changa, Fonts.messiri, NavStyle.ARC, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "🌴",
+            backdrop = Backdrop.OASIS, panel = PanelStyle.PEBBLE, motif = "cactus", sky = true),
+        Look("stained", "زجاج معشّق", "خلفية ليلية عميقة ونافذة هندسية من زجاج ملوّن يتسلّل منها الضوء فتنعكس ألوانه على الأرض، ولوحات من زجاج مصقول — بهيّ على شاشات AMOLED · هدية الصداقة",
+            null, pal(true, 0xFF060A18, 0xFF0D1326, 0xFF141C34, 0xFF243052, 0xFFEEF0F8, 0xFF9CA4C0, 0xFFF2B53A, 0xFF1A1000, 0xFF20B8C0),
+            Corners.ROUND, 22.dp, Fonts.modern, Fonts.kufi, NavStyle.RAIL, IconStyle.OUTLINED, PrayerLayout.LANTERNS, CounterStyle.CRESCENT, ornament = "❖",
+            backdrop = Backdrop.STAINED, panel = PanelStyle.GLASS),
+        Look("paperworld", "عالم من الورق", "عالم مصنوع يدويًا من طبقات الورق المقصوص: جبال وتلال ومسجد وأشجار بظلال حقيقية وسحب ورقية تتحرك، ولوحات كأوراق مقصوصة بظلّها · هدية الصداقة",
+            pal(false, 0xFFF4EEE4, 0xFFFFFBF4, 0xFFEDE4D4, 0xFFD8CBB4, 0xFF3A2E22, 0xFF7E6E5A, 0xFFC06A3A, 0xFF4E8A6A),
+            pal(true, 0xFF1A1E2E, 0xFF22283C, 0xFF2A3148, 0xFF3C4560, 0xFFEEEAF4, 0xFFA8A4BC, 0xFFF0A070, 0xFF8ED6A6),
+            Corners.SOFT, 4.dp, Fonts.changa, Fonts.changa, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.FLOWER, ornament = "✂",
+            backdrop = Backdrop.PAPER, panel = PanelStyle.PAPER),
+        Look("observatory", "المرصد", "مرصد مفتوح على السماء: أسطرلاب بحلقات مدرّجة تدور ببطء، والقمر كما يبدو الليلة فعلًا، ونجوم، والصلوات مزولة يعبرها الوقت؛ أزرق ملكي وفضّة وذهب — للجمال وقياس الزمن فقط · هدية الصداقة",
+            null, pal(true, 0xFF0B1030, 0xFF121942, 0xFF1A2352, 0xFF2C3870, 0xFFECEEFA, 0xFFA2A8CC, 0xFFC8D0E0, 0xFF0B1030, 0xFFD8B060),
+            Corners.ROUND, 26.dp, Fonts.modern, Fonts.kufi, NavStyle.ARC, IconStyle.OUTLINED, PrayerLayout.SUNDIAL, CounterStyle.CRESCENT, ornament = "✧",
+            backdrop = Backdrop.OBSERVATORY, panel = PanelStyle.GLASS),
+        Look("seasons", "حديقة الفصول", "حديقة تتبدّل مع السنة: أزهار وفراشات في الربيع، وماء يتلألأ في الصيف، وأوراق ذهبية تتساقط في الخريف، وثلج ونوافذ دافئة في الشتاء، وفوانيس رمضان، وزهور العيد وألوانه · هدية الصداقة",
+            YearSeason.palOf(YearSeason.S.SPRING), YearSeason.palOf(YearSeason.S.WINTER), Corners.ROUND, 24.dp, Fonts.messiri, Fonts.messiri, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "❀",
+            backdrop = Backdrop.SEASONS, panel = PanelStyle.PETAL, motif = "rose", palFor = { YearSeason.pal() }),
+        Look("marble", "الرخام والذهب", "فخامة القصور: رخام بعروق خفيفة أبيض في النهار وأسود في الليل، وتطعيم زمردي بحواف ذهبية، ولوحات رخامية بزوايا من الزمرد — جمال الخامات بلا حركة كثيرة · هدية الصداقة",
+            pal(false, 0xFFF8F7F4, 0xFFFFFFFF, 0xFFF0EEEA, 0xFFDAD6CE, 0xFF1A1A1A, 0xFF6A665E, 0xFF174D43, 0xFFB0883E),
+            pal(true, 0xFF0D0D0E, 0xFF161617, 0xFF1E1E20, 0xFF33322E, 0xFFF4F2EC, 0xFFA8A49A, 0xFFC9A66B, 0xFF174D43),
+            Corners.SQUARE, 6.dp, Fonts.naskh, Fonts.kufi, NavStyle.TOP, IconStyle.SHARP, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "◆",
+            backdrop = Backdrop.MARBLE, panel = PanelStyle.MARBLE),
     ) }
 
     fun byId(id: String) = all.firstOrNull { it.id == id } ?: all.first()
