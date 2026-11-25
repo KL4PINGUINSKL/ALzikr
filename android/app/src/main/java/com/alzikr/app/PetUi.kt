@@ -338,25 +338,24 @@ fun PetPage() {
             Triple("album", "📔", "الذكريات"), Triple("bag", "🎒", "الحقيبة"), Triple("settings", "⚙", "الإعدادات")), tab) { tab = it }
         // «سجل صديقي»: what opened and when, the level and the friendship now, and what comes next.
         var journal by remember { mutableStateOf(false) }
-        if (sp != null) Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         if (journal) JournalSheet { journal = false }
         var lookSheet by remember { mutableStateOf(false) }
         if (lookSheet) PetLookSheet { lookSheet = false }
-        if (tab == "friend" && sp != null) Panel(color = P.card, pad = 12.dp) {
-            // The friend in its scene (a drawn background, or a picture from the phone); «🖼» to choose it and the glow.
-            Box(Modifier.fillMaxWidth()) {
-                PetStageWithBackdrop(110)
-                Text("🖼", fontSize = 16.sp, modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).clip(L.shape(10.dp)).background(androidx.compose.ui.graphics.Color(0x66000000)).clickable { lookSheet = true }.padding(horizontal = 8.dp, vertical = 4.dp))
-            }
-            Text("🖼 الخلفية والوهج", color = P.accent, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clip(L.shape(8.dp)).clickable { lookSheet = true }.padding(4.dp))
-            Text(Pet.name, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        if (tab == "friend" && sp != null) PetSceneCard { onScene ->
+            val ink = if (onScene) androidx.compose.ui.graphics.Color.White else P.ink
+            val soft = if (onScene) androidx.compose.ui.graphics.Color(0xDDFFFFFF) else P.muted
+            Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110, paper = if (onScene) androidx.compose.ui.graphics.Color.Transparent else P.card) }
+            Text(Pet.name, color = ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             val mood = Pet.mood()
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
-                repeat(5) { k -> val on = mood >= (k + 1) * 20 - 10; Glyph(if (on) Friendship.heart else "♡", tint = if (on) (if (Friendship.has("golden")) P.gold else P.accent) else P.line, size = 26.dp, modifier = Modifier.padding(horizontal = 3.dp)) }
+                repeat(5) { k -> val on = mood >= (k + 1) * 20 - 10; Glyph(if (on) Friendship.heart else "♡", tint = if (on) (if (Friendship.has("golden")) P.gold else P.accent) else if (onScene) androidx.compose.ui.graphics.Color(0x99FFFFFF) else P.line, size = 26.dp, modifier = Modifier.padding(horizontal = 3.dp)) }
             }
-            Sub(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلواتك وأذكارك ليفرح" }, Modifier.fillMaxWidth(), size = 12.sp)
-            Sub("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", Modifier.fillMaxWidth(), size = 11.sp)
+            Text(if (Pet.asleep()) "نائم الآن" else when { mood >= 80 -> "فرحان جدًا بيومك، بارك الله فيك"; mood >= 50 -> "سعيد، أكمل يومك بخير"; else -> "ينتظر صلاتك وذكرك اليوم" }, color = soft, fontSize = 13.sp, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+            Text("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", color = soft, fontSize = 11.sp, modifier = Modifier.fillMaxWidth())
         }
+        // Under the friend: its background and glow, and the log — each as a card.
+        if (tab == "friend" && sp != null) Action("🖼 خلفية صديقك ووهجه، وخلفية أداته على الشاشة", Modifier.fillMaxWidth(), filled = false) { lookSheet = true }
+        if (sp != null && tab == "friend") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         if (tab == "friend" && sp != null && petHasMoves(sp)) Panel(pad = 12.dp) {
             Title("العب معه")
             Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)

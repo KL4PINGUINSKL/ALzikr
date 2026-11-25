@@ -72,7 +72,7 @@ private fun NotesList() {
     val all = Store.notes()
     val notes = if (find.isBlank()) all else { val m = HadithSearch.matcher(find); all.filter { m(Md.plain(it.text)) } }
     val fmt = remember { SimpleDateFormat("d MMM · h:mm a", Locale("ar")) }
-    if (adding || editing != null) { NoteEditor(editing) { adding = false; editing = null }; return }
+    if (adding || editing != null) { RichNoteEditor(editing) { adding = false; editing = null }; return }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Hint("notes2", "📝", "اكتب ملاحظاتك بعناوين وخط عريض وألوان وقوائم مهام من الشريط فوق الكتابة. اضغط ملاحظة لتفتحها: تؤشّر مربعاتها، وتعلّقها كقصاصة في أي صفحة، أو على الشاشة الرئيسية، أو فقاعة فوق التطبيقات.") }
         item { Action("+ ملاحظة جديدة", Modifier.fillMaxWidth(), filled = false) { adding = true } }

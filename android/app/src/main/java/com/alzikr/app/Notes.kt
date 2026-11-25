@@ -191,7 +191,23 @@ object Md {
     }
 
     /** Takes out marks that hold nothing («{c:blue}{/c}», «****»), left when a mark was pressed with nothing selected. */
-    fun tidy(md: String): String = md.replace(Regex("""\{c:\w+\}\{/c\}|\{s:\w+\}\{/s\}|\*\*\*\*|____|~~~~|===="""), "")
+    fun tidy(md: String): String {
+        var t = md
+        // A size (or colour) mark right inside another of the same kind — «{s:sm}{s:lg}text{/s}{/s}» from pressing
+        // twice — keeps the inner one only; marks around nothing go.
+        while (true) {
+            val before = t
+            t = t.replace(Regex("""\{s:\w+\}(\{s:\w+\})"""), "$1").replace("{/s}{/s}", "{/s}")
+                .replace(Regex("""\{c:\w+\}(\{c:\w+\})"""), "$1").replace("{/c}{/c}", "{/c}")
+                .replace(Regex("""\{c:\w+\}\{/c\}|\{s:\w+\}\{/s\}|\*\*\*\*|____|~~~~|===="""), "")
+            if (t == before) break
+        }
+        // Still unpaired: that kind of mark is dropped, so no mark is ever shown as text.
+        fun balanced(open: Regex, close: String) = open.findAll(t).count() == Regex(Regex.escape(close)).findAll(t).count()
+        if (!balanced(Regex("""\{s:\w+\}"""), "{/s}")) t = t.replace(Regex("""\{s:\w+\}|\{/s\}"""), "")
+        if (!balanced(Regex("""\{c:\w+\}"""), "{/c}")) t = t.replace(Regex("""\{c:\w+\}|\{/c\}"""), "")
+        return t
+    }
 
     /** The papers a note can be written on. */
     val papers = listOf(
@@ -399,7 +415,7 @@ fun PinnedScraps(place: String, modifier: Modifier = Modifier) {
         }
     }
     open?.let { id -> NoteSheet(id, edit = { editing = Store.notes().firstOrNull { it.id == id } }) { open = null } }
-    editing?.let { e -> androidx.compose.ui.window.Dialog({ editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) { NoteEditor(e) { editing = null } } }
+    editing?.let { e -> androidx.compose.ui.window.Dialog({ editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) { RichNoteEditor(e) { editing = null } } }
 }
 
 /** Scraps folded to their pins (tap the pin), until the app starts again. */

@@ -65,8 +65,13 @@ object PetBackdrop {
     data class Scene(val id: String, val name: String, val bond: Int)
     val scenes = listOf(
         Scene("night", "سماء الليل", 0), Scene("dawn", "الفجر", 0), Scene("garden", "الحديقة", 0), Scene("sea", "البحر", 0), Scene("dunes", "الصحراء", 0),
-        Scene("moon", "الهلال", 150), Scene("aurora", "الشفق", 400), Scene("zellige", "الزليج", 900), Scene("lanterns", "الفوانيس", 2000), Scene("galaxy", "المجرّة", 4000),
+        Scene("spring", "الربيع", 0), Scene("pinkclouds", "غيوم وردية", 0), Scene("mountains", "الجبال", 0),
+        Scene("moon", "الهلال", 150), Scene("aurora", "الشفق", 400), Scene("rain", "المطر", 600), Scene("zellige", "الزليج", 900),
+        Scene("sakura", "الكرز", 1200), Scene("lanterns", "الفوانيس", 2000), Scene("meteors", "الشهب", 3000), Scene("galaxy", "المجرّة", 4000),
     )
+    /** A picture from the phone (for the card or the widget) opens with friendship too. */
+    const val PHOTO_BOND = 1000
+    fun photoOpen() = Progress.bondPoints >= PHOTO_BOND
     fun open(s: Scene) = Progress.bondPoints >= s.bond
 
     /** "" none, a scene id, or "photo". */
@@ -94,6 +99,8 @@ object PetBackdrop {
         WScene("w_clouds", "السماء الصافية", 0, true), WScene("w_calm", "الليل الهادئ", 0, false),
         WScene("w_lamp", "المشكاة", 250, false), WScene("w_palms", "النخيل", 700, true), WScene("w_waves", "أمواج الليل", 1500, false),
         WScene("w_stars", "المرصد", 3000, false), WScene("w_gold", "الذهب", 5000, true),
+        WScene("w_lavender", "حقل البنفسج", 0, false), WScene("w_river", "النهر", 0, true),
+        WScene("w_rainbow", "قوس المطر", 2000, true), WScene("w_moonsea", "القمر والبحر", 4000, false),
     )
     fun open(s: WScene) = Progress.bondPoints >= s.bond
     /** "" = the theme or a frame (as before), a widget scene id, or "photo". */
@@ -185,6 +192,16 @@ fun DrawScope.drawWidgetScene(id: String) {
         "w_stars" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF02040F), Color(0xFF101B3D)))); stars(90, 31)
             val pts = listOf(.12f to .3f, .22f to .2f, .32f to .34f, .41f to .25f, .5f to .4f).map { Offset(w * it.first, h * it.second) }
             pts.zipWithNext().forEach { (a, b) -> drawLine(Color(0x99A9C8FF), a, b, 1.5f * density) }; pts.forEach { drawCircle(Color.White, 3 * density, it) } }
+        "w_lavender" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF4A2D7A), Color(0xFFB58BD9), Color(0xFFF3C6A8))))
+            for (k in 0..7) { val y = h * (.6f + k * .06f); drawLine(Color(0xFF7A4FB5).copy(alpha = .8f - k * .05f), Offset(0f, y), Offset(w, y + (k - 3) * 6 * density), (5 + k) * density) } }
+        "w_river" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFBFE6C8), Color(0xFFE6F5D8))))
+            drawPath(Path().apply { moveTo(w * .35f, 0f); quadraticBezierTo(w * .2f, h * .5f, w * .45f, h); lineTo(w * .7f, h); quadraticBezierTo(w * .4f, h * .5f, w * .5f, 0f); close() }, Color(0xFF7CC6E8)) }
+        "w_rainbow" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF9FD3F2), Color(0xFFE8F6FF))))
+            listOf(0xFFFF6B6B, 0xFFFFA94D, 0xFFFFE066, 0xFF69DB7C, 0xFF4DABF7, 0xFF9775FA).forEachIndexed { k, c ->
+                drawCircle(Color(c).copy(alpha = .75f), h * (.95f - k * .07f), Offset(w * .3f, h * 1.15f), style = Stroke(h * .07f)) } }
+        "w_moonsea" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF050B24), Color(0xFF0E2A55)))); stars(50, 51)
+            drawCircle(Color(0x33FFF3C4), h * .3f, Offset(w * .22f, h * .3f)); drawCircle(Color(0xFFFFF3C4), h * .14f, Offset(w * .22f, h * .3f))
+            for (k in 0..6) { val y = h * (.62f + k * .055f); drawLine(Color(0xFFFFF3C4).copy(alpha = .5f - k * .06f), Offset(w * .22f - (30 - k * 3) * density, y), Offset(w * .22f + (30 - k * 3) * density, y), 2 * density) } }
         "w_gold" -> { drawRect(Brush.linearGradient(listOf(Color(0xFFFFF1C4), Color(0xFFE9C46A), Color(0xFFF8DE9A)), Offset.Zero, Offset(w, h)))
             val r = java.util.Random(13); repeat(70) { drawCircle(Color.White.copy(alpha = .4f + r.nextFloat() * .5f), (1 + r.nextFloat() * 2.2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
     }
@@ -214,6 +231,27 @@ fun DrawScope.drawScene(id: String, t: Float) {
             drawCircle(Color(0xFFFFF6D8), h * .13f, Offset(w * .22f, h * .25f))
             drawPath(Path().apply { moveTo(0f, h * .72f); quadraticBezierTo(w * .35f, h * .5f, w * .7f, h * .74f); quadraticBezierTo(w * .9f, h * .84f, w, h * .7f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFFE0A85E))
             drawPath(Path().apply { moveTo(0f, h * .88f); quadraticBezierTo(w * .5f, h * .72f, w, h * .9f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFFC98A44)) }
+        "spring" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFBDE7FF), Color(0xFFE9F8FF))))
+            drawPath(Path().apply { moveTo(0f, h * .72f); quadraticBezierTo(w * .5f, h * .6f, w, h * .74f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFF8FD18A))
+            val r = java.util.Random(12); repeat(26) { val x = r.nextFloat() * w; val y = h * (.76f + r.nextFloat() * .22f); val c = listOf(Color(0xFFFF8FB1), Color(0xFFFFE066), Color(0xFFFFFFFF), Color(0xFFC79BFF))[it % 4]
+                for (k in 0..4) { val a = (k * 2 * PI / 5).toFloat(); drawCircle(c, 3.2f * density, Offset(x + cos(a) * 3.5f * density, y + sin(a) * 3.5f * density)) }; drawCircle(Color(0xFFFFC94D), 2f * density, Offset(x, y)) } }
+        "pinkclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFFFD1DC), Color(0xFFFFE9D6), Color(0xFFE3D7FF))))
+            listOf(.2f to .3f, .7f to .22f, .45f to .55f, .9f to .6f, .1f to .75f).forEachIndexed { k, (fx, fy) -> val x = w * fx; val y = h * fy + sin((t * 2 * PI + k).toFloat()) * 3 * density
+                listOf(-28f to 0f, 0f to -12f, 28f to 0f, 10f to 8f).forEach { (dx, dy) -> drawCircle(Color.White.copy(alpha = .8f), 22 * density, Offset(x + dx * density, y + dy * density)) } } }
+        "mountains" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF6FA8DC), Color(0xFFCFE8F7))))
+            drawPath(Path().apply { moveTo(0f, h * .8f); lineTo(w * .22f, h * .38f); lineTo(w * .42f, h * .72f); lineTo(w * .62f, h * .3f); lineTo(w * .85f, h * .66f); lineTo(w, h * .5f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFF5A6E8C))
+            drawPath(Path().apply { moveTo(w * .62f, h * .3f); lineTo(w * .56f, h * .4f); lineTo(w * .6f, h * .38f); lineTo(w * .64f, h * .42f); lineTo(w * .68f, h * .38f); close() }, Color.White)
+            drawPath(Path().apply { moveTo(0f, h * .9f); quadraticBezierTo(w * .5f, h * .76f, w, h * .9f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFF3E7D5A)) }
+        "rain" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF2B3A4F), Color(0xFF4A5D78))))
+            val r = java.util.Random(8); repeat(70) { val x = r.nextFloat() * w; val y0 = r.nextFloat(); val y = ((y0 + t * 3f) % 1f) * h
+                drawLine(Color(0x88CFE6FF), Offset(x, y), Offset(x - 3 * density, y + 12 * density), 1.3f * density) } }
+        "sakura" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFFFE4EC), Color(0xFFFFF6F0))))
+            drawLine(Color(0xFF6B4A3A), Offset(w * .9f, h), Offset(w * .78f, h * .35f), 8 * density); drawLine(Color(0xFF6B4A3A), Offset(w * .8f, h * .5f), Offset(w * .55f, h * .25f), 5 * density)
+            listOf(.78f to .3f, .62f to .22f, .9f to .45f, .7f to .42f).forEach { (fx, fy) -> drawCircle(Color(0xFFFFB7CC), 34 * density, Offset(w * fx, h * fy)) }
+            val r = java.util.Random(3); repeat(24) { val x = (r.nextFloat() * w - t * w * .3f + w) % w; val y = (r.nextFloat() * h + t * h * .5f) % h; drawCircle(Color(0xFFFF9EBB), 3 * density, Offset(x, y)) } }
+        "meteors" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF02030A), Color(0xFF14183A)))); stars(50, 41)
+            for (k in 0..3) { val p = ((t + k * .25f) % 1f); val x = w * (1.1f - p * 1.2f) - k * 40 * density; val y = h * (p * .9f) + k * 12 * density
+                drawLine(Brush.linearGradient(listOf(Color(0x00FFFFFF), Color(0xEEFFFFFF)), Offset(x + 60 * density, y - 30 * density), Offset(x, y)), Offset(x + 60 * density, y - 30 * density), Offset(x, y), 2 * density) } }
         "moon" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF050B1F), Color(0xFF14204A)))); stars(30, 3)
             val c = Offset(w * .78f, h * .3f); val r = h * .2f
             drawCircle(Color(0x33FFE9A8), r * 2.2f, c); drawCircle(Color(0xFFFFE9A8), r, c); drawCircle(Color(0xFF0A1430), r * .88f, Offset(c.x + r * .42f, c.y - r * .12f)) }
@@ -259,6 +297,29 @@ fun PetStageWithBackdrop(height: Int) {
     }
 }
 
+/**
+ * The friend's card in «صديقي» with the chosen scene (or picture) behind ALL of it; a soft veil at the bottom keeps the
+ * words readable. [content] gets true when a scene is on (then its words are light).
+ */
+@Composable
+fun PetSceneCard(content: @Composable androidx.compose.foundation.layout.ColumnScope.(Boolean) -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = LocalContext.current
+    val id = PetBackdrop.chosen
+    val calm = com.alzikr.app.pets.PetPerf.reduceMotion
+    val tr = rememberInfiniteTransition(label = "scene")
+    val t by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "t")
+    val stamp = Store.prefs.getLong("pet_bg_photo_at", 0)
+    val pic = remember(id, stamp) { if (id == "photo") runCatching { BitmapFactory.decodeFile(PetBackdrop.photo(ctx).path)?.asImageBitmap() }.getOrNull() else null }
+    val on = pic != null || (id.isNotEmpty() && id != "photo")
+    Box(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(P.card)) {
+        if (pic != null) Image(pic, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+        else if (on) Canvas(Modifier.matchParentSize()) { drawScene(id, if (calm) 0f else t) }
+        if (on) Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0x55000000), Color(0xAA000000)))))
+        Column(Modifier.fillMaxWidth().padding(12.dp)) { content(on) }
+    }
+}
+
 /** A soft glow behind the friend at the top of the app (pulsing gently; still when motion is reduced). */
 @Composable
 fun BoxScope.PetGlow() {
@@ -293,7 +354,7 @@ fun PetLookSheet(close: () -> Unit) {
     AppSheet(onDismissRequest = close) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("🖼 خلفية ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
-            Sub("خمس مفتوحة لك، وخمس تفتحها نقاط الصداقة ❤، أو صورة من هاتفك.", size = 12.sp)
+            Sub("ثمانٍ مفتوحة لك، وثمانٍ تفتحها نقاط الصداقة ❤، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤.", size = 12.sp)
             val items = listOf(PetBackdrop.Scene("", "بلا خلفية", 0)) + PetBackdrop.scenes
             items.chunked(3).forEach { row ->
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -311,10 +372,11 @@ fun PetLookSheet(close: () -> Unit) {
                     repeat(3 - row.size) { Box(Modifier.weight(1f)) }
                 }
             }
-            Choice(if (PetBackdrop.chosen == "photo") "📷 صورتك ✓ (اختر غيرها)" else "📷 صورة من هاتفك", PetBackdrop.chosen == "photo") { pick.launch("image/*") }
+            Choice(if (!PetBackdrop.photoOpen()) "🔒 📷 صورة من هاتفك · ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤" else if (PetBackdrop.chosen == "photo") "📷 صورتك ✓ (اختر غيرها)" else "📷 صورة من هاتفك", PetBackdrop.chosen == "photo") {
+                if (PetBackdrop.photoOpen()) pick.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
             Text("📱 خلفية أداة «صديقي» على الشاشة الرئيسية", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-            Sub("خلفيات للأداة غير خلفيات بطاقته: خمس مفتوحة، وخمس بنقاط الصداقة، أو صورة من هاتفك. «لون الثيم أو الإطار» يُبقي إطارك المختار من الحقيبة.", size = 12.sp)
+            Sub("خلفيات للأداة غير خلفيات بطاقته: سبع مفتوحة، وسبع بنقاط الصداقة، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤. «لون الثيم أو الإطار» يُبقي إطارك المختار من الحقيبة.", size = 12.sp)
             val wItems = listOf(PetBackdrop.WScene("", "لون الثيم أو الإطار", 0, false)) + PetBackdrop.widgetScenes
             wItems.chunked(3).forEach { row ->
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -332,7 +394,8 @@ fun PetLookSheet(close: () -> Unit) {
                     repeat(3 - row.size) { Box(Modifier.weight(1f)) }
                 }
             }
-            Choice(if (PetBackdrop.widgetBg == "photo") "📷 صورتك للأداة ✓ (اختر غيرها)" else "📷 صورة من هاتفك للأداة", PetBackdrop.widgetBg == "photo") { pickWidget.launch("image/*") }
+            Choice(if (!PetBackdrop.photoOpen()) "🔒 📷 صورة من هاتفك للأداة · ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤" else if (PetBackdrop.widgetBg == "photo") "📷 صورتك للأداة ✓ (اختر غيرها)" else "📷 صورة من هاتفك للأداة", PetBackdrop.widgetBg == "photo") {
+                if (PetBackdrop.photoOpen()) pickWidget.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
             Text("✨ وهج حوله في أعلى التطبيق", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             Wrap(gap = 8.dp) {

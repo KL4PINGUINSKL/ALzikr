@@ -309,7 +309,7 @@ private fun Header() {
 
 /**
  * A sideways swipe over a section's page moves to the next or previous section, round like a wheel: after the last
- * comes the first. Right-to-left, so a swipe to the left goes on to the next one (the one to the left in the bar).
+ * comes the first. The finger goes the way the bar goes: a swipe to the right reaches the section on the right.
  * Lists that scroll sideways keep their own swipes (they take the gesture first).
  */
 @Composable
@@ -321,7 +321,7 @@ private fun Modifier.tabSwipe(): Modifier {
             val limit = 90.dp.toPx()
             val i = ids.indexOf(Nav.tab).takeIf { it >= 0 } ?: 0
             if (kotlin.math.abs(total) > limit && ids.isNotEmpty()) {
-                val next = if (total < 0) (i + 1) % ids.size else (i - 1 + ids.size) % ids.size
+                val next = if (total > 0) (i + 1) % ids.size else (i - 1 + ids.size) % ids.size
                 Nav.go(ids[next])
             }
             total = 0f
