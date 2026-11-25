@@ -1,6 +1,31 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <!-- A gold crescent and two shining stars beside it (design/icon.py) -->
+    <!-- A gold crescent and two shining stars beside it, glowing softly (design/icon.py) -->
+    <path android:pathData="M54,56m-34,0a34,34 0 1,0 68,0a34,34 0 1,0 -68,0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="52" android:centerY="56" android:gradientRadius="34">
+                <item android:offset="0" android:color="#3DF3D27A"/>
+                <item android:offset="0.6" android:color="#12F3D27A"/>
+                <item android:offset="1" android:color="#00F3D27A"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M73.5,40.5m-15,0a15,15 0 1,0 30,0a15,15 0 1,0 -30,0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="73.5" android:centerY="40.5" android:gradientRadius="15">
+                <item android:offset="0" android:color="#88FFF4CF"/>
+                <item android:offset="1" android:color="#00FFF4CF"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M79,58m-9,0a9,9 0 1,0 18,0a9,9 0 1,0 -18,0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="79" android:centerY="58" android:gradientRadius="9">
+                <item android:offset="0" android:color="#77F3D27A"/>
+                <item android:offset="1" android:color="#00F3D27A"/>
+            </gradient>
+        </aapt:attr>
+    </path>
     <path android:pathData="M48.26,33.07 A23.0,23.0 0 1,0 71.39,64.46 A19.5,19.5 0 0,1 48.26,33.07 Z">
         <aapt:attr name="android:fillColor">
             <gradient android:type="linear" android:startX="34" android:startY="34" android:endX="66" android:endY="80">

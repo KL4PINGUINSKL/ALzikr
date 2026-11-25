@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The corner of a home-screen widget: the phone's own (Android 12+), so a frame is never cut at the corners. -->
+    <dimen name="widget_radius">22dp</dimen>
+    <dimen name="widget_radius_inner">16dp</dimen>
+</resources>

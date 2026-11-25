@@ -4,7 +4,7 @@
         <shape android:shape="rectangle">
             <gradient android:startColor="#FF0B3D5C" android:endColor="#FF0F7A8A" android:angle="270" />
             <stroke android:width="2dp" android:color="#CCBFF3FF" android:dashWidth="14dp" android:dashGap="6dp" />
-            <corners android:radius="22dp" />
+            <corners android:radius="@dimen/widget_radius" />
         </shape>
     </item>
 </layer-list>

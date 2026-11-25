@@ -91,6 +91,12 @@ fun Choice(label: String, on: Boolean, modifier: Modifier = Modifier, onClick: (
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun Wrap(modifier: Modifier = Modifier, gap: Dp = 6.dp, lines: Int = 3, startOpen: Boolean = false, content: @Composable () -> Unit) {
+    // The setting «كلها في شريط يُمرَّر»: every option in one row that scrolls sideways, no «المزيد».
+    if (Data.pickScroll && lines != Int.MAX_VALUE) {
+        Row(modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalAlignment = Alignment.CenterVertically) { content() }
+        return
+    }
     // [startOpen]: open all when the chosen item would otherwise be folded away.
     val all = androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(startOpen) }
     androidx.compose.foundation.layout.FlowRow(

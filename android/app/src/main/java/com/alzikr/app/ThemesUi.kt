@@ -38,7 +38,7 @@ private fun describe(l: Look): String = listOf(
 ).joinToString(" · ")
 
 /** The kinds of themes, to find one quickly. */
-private val filters = listOf("all" to "الكل", "open" to "المفتوحة لي", "living" to "خلفيات حيّة", "form" to "تغيّر الشكل", "time" to "تتبدّل مع الوقت", "locked" to "المقفلة")
+private val filters = listOf("all" to "الكل", "open" to "المفتوحة لي", "living" to "خلفيات حيّة", "form" to "تغيّر الشكل", "time" to "تتبدّل مع الوقت", "scene" to "بمشهد مرسوم", "locked" to "المقفلة")
 private fun Look.reshapes() = panel != PanelStyle.CARD || nav in setOf(NavStyle.LANTERNS, NavStyle.RAIL, NavStyle.ARC) ||
     prayers in setOf(PrayerLayout.LANTERNS, PrayerLayout.SUNDIAL, PrayerLayout.GARDEN) || counter in setOf(CounterStyle.LANTERN, CounterStyle.FLOWER, CounterStyle.CRESCENT)
 
@@ -55,7 +55,7 @@ fun ThemeGallery() {
     var shown by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(Data.look) }
     val list = Looks.all.filter { l ->
         val open = Friendship.themeOpen(l.id)
-        when (filter) { "open" -> open; "locked" -> !open; "living" -> l.backdrop != Backdrop.NONE; "form" -> l.reshapes(); "time" -> l.sky || l.palFor != null; else -> true }
+        when (filter) { "open" -> open; "locked" -> !open; "living" -> l.backdrop != Backdrop.NONE; "form" -> l.reshapes(); "time" -> l.sky || l.palFor != null || l.hero != null; "scene" -> l.hero != null; else -> true }
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         val focus = Looks.byId(shown)

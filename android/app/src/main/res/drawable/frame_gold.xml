@@ -2,5 +2,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <gradient android:startColor="#FFF6E3A6" android:endColor="#FFD4A846" android:angle="270" />
     <stroke android:width="3dp" android:color="#FFB0832A"  />
-    <corners android:radius="22dp" />
+    <corners android:radius="@dimen/widget_radius" />
 </shape>

@@ -120,8 +120,11 @@ fun PrayerScreen(openSettings: () -> Unit) {
         val open = { options = true }
         val parts = mapOf<String, @Composable () -> Unit>(
             "next" to {
-            // The next prayer, the countdown, and how far the current time has gone.
-            Panel(Modifier.clickable { sheetFor = w.next }, color = P.card, pad = 14.dp) {
+            // The next prayer, the countdown, and how far the current time has gone (over the theme's scene, if it has one).
+            val hero = L.hero
+            if (hero != null) HeroNext(hero, w.next, Alerts.timeText(Store.times(java.time.Instant.ofEpochMilli(w.nextAt).atZone(ZoneId.systemDefault()).toLocalDate()).getValue(w.next)),
+                durationText(w.nextAt - now)) { sheetFor = w.next }
+            else Panel(Modifier.clickable { sheetFor = w.next }, color = P.card, pad = 14.dp) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Sub(if (w.next == Prayer.SUNRISE) "الشروق" else "الصلاة القادمة", size = 12.sp)
