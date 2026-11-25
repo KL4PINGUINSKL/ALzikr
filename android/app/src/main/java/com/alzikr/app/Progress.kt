@@ -60,7 +60,7 @@ object Progress {
         if (add > 0) e.putInt(pk("pet_xp"), xp + add)
         e.apply()
         if (Pet.since == 0L && Pet.species != null) Pet.since = System.currentTimeMillis()
-        if (level() > oldLevel) levelUp(level())
+        if (level() > oldLevel) { (oldLevel + 1..level()).forEach { Journal.level(it) }; levelUp(level()) }
         if (add > 0 && kind == Kind.KHATMA) Pet.remember("khatma", maxOf(Data.khatmaCount, total(Kind.KHATMA)))
         if (kind == Kind.PAGE) Pet.readingHour()
         checkBadges()
@@ -130,6 +130,7 @@ object Progress {
         sp.edit().putString(pk("bond_day"), d).putStringSet(pk("bond_keys"), keys).putInt(pk("bond_today"), got + add).putInt(pk("bond"), before + add)
             .putString(pk("bond_amt"), amt.toString()).apply()
         if (!Pet.kids) Friendship.crossed(before, before + add)
+        Journal.bond(before, before + add, bondSteps)
         checkBadges(); Store.bump()
     }
     /** Takes back the friendship points [bond] gave today for [key] (the thing was undone). */
@@ -284,7 +285,7 @@ object Progress {
     fun checkBadges() {
         val o = JSONObject(sp.getString(pk("prog_badges"), "{}")!!)
         var fresh: Badge? = null
-        badges.forEach { b -> if (!o.has(b.id) && runCatching { b.now() }.getOrDefault(0) >= b.target) { o.put(b.id, today()); fresh = b } }
+        badges.forEach { b -> if (!o.has(b.id) && runCatching { b.now() }.getOrDefault(0) >= b.target) { o.put(b.id, today()); fresh = b; Journal.add(b.icon, "وسام: ${b.name}") } }
         if (fresh != null) { sp.edit().putString(pk("prog_badges"), o.toString()).putString(pk("prog_newbadge"), fresh!!.id).apply() }
     }
     fun newBadge(): Badge? = sp.getString(pk("prog_newbadge"), null)?.let { id -> badges.firstOrNull { it.id == id } }?.takeIf { showLevels }

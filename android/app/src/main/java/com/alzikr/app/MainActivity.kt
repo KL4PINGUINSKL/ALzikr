@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Store.init(this)
         AutoBackup.onLaunch(this)
+        runCatching { Journal.start() }
         // Create every shared Compose state on the main thread first. If a background thread (the Quran
         // loading below) is the first to touch one of these objects, its state is born outside the
         // composition's snapshot and Compose can crash with "Reading a state that was created after the snapshot was taken".

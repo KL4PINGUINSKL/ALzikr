@@ -336,6 +336,10 @@ fun PetPage() {
         if (sp == null) tab = "look"
         TabGrid(listOf(Triple("friend", "🐾", "صديقي"), Triple("look", "🎨", "المظهر"), Triple("room", "🏠", "الغرفة"),
             Triple("album", "📔", "الذكريات"), Triple("bag", "🎒", "الحقيبة"), Triple("settings", "⚙", "الإعدادات")), tab) { tab = it }
+        // «سجل صديقي»: what opened and when, the level and the friendship now, and what comes next.
+        var journal by remember { mutableStateOf(false) }
+        if (sp != null) Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
+        if (journal) JournalSheet { journal = false }
         if (tab == "friend" && sp != null) Panel(color = P.card, pad = 12.dp) {
             Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110, paper = P.card) }
             Text(Pet.name, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())

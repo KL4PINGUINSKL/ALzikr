@@ -454,11 +454,11 @@ internal fun AyahSheet(a: Quran.Ayah, inContext: (() -> Unit)? = null, close: ()
                 PickOne(Tafsir.books.map { it.id to it.name }, sel, "اختر التفسير", shown = 1, modifier = Modifier.padding(start = 8.dp)) { Tafsir.selected = it; tafsirShown = true }
             }
             val fold = { tafsirShown = !tafsirShown; Store.prefs.edit().putBoolean("sheet_tafsir_hidden", !tafsirShown).apply() }
-            // Folded: a small bubble, as wide as its words.
-            if (!tafsirShown) Row(Modifier.padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).clickable(onClick = fold).padding(horizontal = 14.dp, vertical = 10.dp),
+            // Folded: a short bubble across the width, just its name and «إظهار».
+            if (!tafsirShown) Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).clickable(onClick = fold).padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Text("  ·  إظهار ▾", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text("إظهار ▾", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
             if (tafsirShown) Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
                 // The name, and «إخفاء» at the bubble's top left.
