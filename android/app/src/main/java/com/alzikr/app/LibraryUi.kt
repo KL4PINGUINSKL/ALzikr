@@ -125,6 +125,20 @@ fun LibraryScreen() {
     }
 }
 
+/**
+ * A list's scroll position that survives leaving the screen: opening a surah (or a hadith) replaces the list, and its
+ * ordinary state was lost, so «back» showed the top. Kept per [key] for as long as the app runs.
+ */
+private val keptLists = HashMap<String, Pair<Int, Int>>()
+internal fun keptPosition(key: String): Pair<Int, Int> = keptLists[key] ?: (0 to 0)
+@Composable
+internal fun rememberKeptListState(key: String): androidx.compose.foundation.lazy.LazyListState {
+    val saved = keptLists[key] ?: (0 to 0)
+    val state = remember(key) { androidx.compose.foundation.lazy.LazyListState(saved.first, saved.second) }
+    LaunchedEffect(state) { snapshotFlow { state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset }.collect { keptLists[key] = it } }
+    return state
+}
+
 @Composable private fun Loading() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = P.accent) }
 
 // =============================================================================== Quran
@@ -139,7 +153,8 @@ private fun QuranHome() {
     val named = jumps.filter { it.surahOnly }.map { it.s }.toSet()
     val surahs = if (q.isEmpty()) Quran.surahs else Quran.surahs.filter { it.n in named || Quran.normalize(it.name).contains(q) || it.n.toString() == Quran.latinDigits(q) }
     val hits = remember(q) { if (q.length >= 3) Quran.search(q) else emptyList() }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val listState = rememberKeptListState("quran:" + (if (byJuz) "juz" else "surah"))
+    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         item { Hint("quran", "📖", "اضغط «متابعة القراءة» لتكمل من حيث توقفت، أو اختر سورة أو جزءًا، أو ابحث بكلمة من آية.") }
         item { MushafViewCard() }
         item {

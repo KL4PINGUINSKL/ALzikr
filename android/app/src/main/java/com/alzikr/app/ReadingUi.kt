@@ -156,7 +156,14 @@ private fun SharhList(title: String, category: String, open: (String, List<Strin
     LaunchedEffect(category) { more() }
     Subpage(title, back) {
         val shown = if (query.isBlank()) items else items.filter { Quran.normalize(it.title).contains(Quran.normalize(query)) }
-        val state = rememberLazyListState()
+        val want = remember(category) { keptPosition("sharh:$category") }
+        val state = rememberKeptListState("sharh:$category")   // back from a hadith returns to it, not to the top
+        // The list comes in pages (kept on the phone): load as far as the place to return to, then go there.
+        LaunchedEffect(state) {
+            if (want.first <= 0) return@LaunchedEffect
+            while (items.size <= want.first && page < last) { more(); kotlinx.coroutines.delay(30) }
+            runCatching { state.scrollToItem(want.first, want.second) }
+        }
         LaunchedEffect(state, query) { snapshotFlow { state.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }.collect { if (query.isBlank() && it >= items.size - 5) more() } }
         LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في العناوين المحمّلة") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
