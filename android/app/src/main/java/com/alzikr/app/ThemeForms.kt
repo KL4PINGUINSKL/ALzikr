@@ -220,10 +220,10 @@ fun ArcNav() {
 private val five get() = Prayer.entries.filter { it.alertable }
 
 @Composable
-private fun pulse(): Float {
+private fun pulse(): androidx.compose.runtime.State<Float> {
+    // Read only while drawing (.value inside the draw code), so the pulse redraws the lantern, never recomposes the screen.
     val t = rememberInfiniteTransition(label = "pulse")
-    val v by t.animateFloat(.55f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Reverse), label = "p")
-    return v
+    return t.animateFloat(.55f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Reverse), label = "p")
 }
 
 /** Five lanterns hanging at different heights: lit gold for a prayer prayed, glowing for the next one. */
@@ -236,7 +236,7 @@ fun PrayerLanterns(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
                 val prayed = Data.prayed(today, p); val next = p == w.next
                 Column(Modifier.weight(1f).clip(L.shape(10.dp)).clickable { open(p) }, horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.width(1.5.dp).height((6 + (i % 3) * 10).dp).background(line))
-                    Box(Modifier.size(42.dp, 52.dp).drawBehind { lantern(this, when { prayed -> gold; next -> accent.copy(alpha = glow); else -> line }, prayed || next, if (prayed) 1f else if (next) .45f * glow else 0f) })
+                    Box(Modifier.size(42.dp, 52.dp).drawBehind { val g = glow.value; lantern(this, when { prayed -> gold; next -> accent.copy(alpha = g); else -> line }, prayed || next, if (prayed) 1f else if (next) .45f * g else 0f) })
                     Text(p.ar, color = if (next) accent else P.ink, fontSize = 13.sp, fontWeight = if (next) FontWeight.Bold else FontWeight.Normal)
                     Text(Alerts.timeText(times.getValue(p)), color = P.gold, fontSize = 12.sp)
                 }
@@ -298,7 +298,7 @@ fun PrayerGarden(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Unit) {
             five.forEach { p ->
                 val prayed = Data.prayed(today, p); val next = p == w.next
                 Column(Modifier.weight(1f).clip(L.shape(10.dp)).clickable { open(p) }, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Canvas(Modifier.size(52.dp, 72.dp)) { plant(motif, prayed, next, glow, accent, gold, line) }
+                    Canvas(Modifier.size(52.dp, 72.dp)) { plant(motif, prayed, next, glow.value, accent, gold, line) }
                     Text(p.ar, color = if (next) accent else P.ink, fontSize = 13.sp, fontWeight = if (next) FontWeight.Bold else FontWeight.Normal)
                     Text(Alerts.timeText(times.getValue(p)), color = P.gold, fontSize = 12.sp)
                 }
@@ -377,7 +377,7 @@ fun FancyCounter(style: CounterStyle, count: Int, target: Int, done: Boolean, la
             val flick = pulse()
             Box(Modifier.size(size * .5f, size * .62f).drawBehind {
                 lantern(this, if (count > 0) fill else line, count > 0, frac)
-                if (count > 0) drawOval(Color(0xFFFFE08A).copy(alpha = .9f * flick), Offset(this.size.width * .44f, this.size.height * (.86f - .7f * frac).coerceAtLeast(.3f)), Size(this.size.width * .12f, this.size.height * .1f))
+                if (count > 0) drawOval(Color(0xFFFFE08A).copy(alpha = .9f * flick.value), Offset(this.size.width * .44f, this.size.height * (.86f - .7f * frac).coerceAtLeast(.3f)), Size(this.size.width * .12f, this.size.height * .1f))
             })
             Text("$count", color = if (done) P.gold else P.ink, fontSize = (size.value / 5f).sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)
             Sub(label, size = 11.sp)

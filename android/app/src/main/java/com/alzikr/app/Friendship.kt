@@ -86,7 +86,9 @@ Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّ�
 
     /** Themes that friendship opens (the other themes are open to everyone). */
     fun themeGift(lookId: String): Gift? = gift("theme_$lookId")
-    fun themeOpen(lookId: String) = themeGift(lookId)?.let { Progress.bondPoints >= it.bond } ?: true
+    /** TEMPORARY, for trying the themes before publishing: every theme open. Must be false in a published version. */
+    const val TRY_ALL_THEMES = true
+    fun themeOpen(lookId: String) = TRY_ALL_THEMES || (themeGift(lookId)?.let { Progress.bondPoints >= it.bond } ?: true)
 
     /** The widget frame's gift. */
     fun frameGift(frameId: String): Gift? = gift("frame_$frameId")

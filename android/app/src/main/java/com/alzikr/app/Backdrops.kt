@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -42,11 +43,13 @@ fun ThemeBackdrop(b: Backdrop, p: Pal) {
     val still = com.alzikr.app.pets.PetPerf.userReduceMotion || com.alzikr.app.pets.PetPerf.userSaveBattery
     var t by remember { mutableFloatStateOf(0f) }
     if (b.moving && !still) LaunchedEffect(b) { val start = System.nanoTime(); while (true) { delay(83); t = (System.nanoTime() - start) / 1e9f } }
-    Canvas(Modifier.fillMaxSize()) { drawBackdrop(b, p, t) }
+    // Its own layer: the slow motion redraws the background only, never the app over it.
+    Canvas(Modifier.fillMaxSize().graphicsLayer()) { drawBackdrop(b, p, t) }
 }
 
 /** Draws [b] at time [t] (seconds); the theme gallery uses it for a still preview. */
 fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
+        if (size.minDimension < 40f) return          // nothing to draw on yet (and the tiled patterns need room)
         when (b) {
             Backdrop.LANTERN -> lantern(p, t)
             Backdrop.VINES -> vines(p, t)
