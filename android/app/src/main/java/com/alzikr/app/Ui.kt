@@ -49,6 +49,7 @@ val P: Pal @Composable get() = LocalPal.current
 @Composable
 fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surface, content: @Composable ColumnScope.() -> Unit) {
     val look = L
+    if (look.panel != PanelStyle.CARD && !look.flat) { FancyPanel(modifier, pad, color, content); return }
     if (look.flat) {
         // "Lines only" themes: no card, a thin rule under the content.
         Column(modifier.fillMaxWidth()) {
@@ -204,6 +205,7 @@ fun clockText(ms: Long): String {
 fun Counter(count: Int, target: Int, done: Boolean, label: String, size: Dp) {
     val frac = if (target > 0) (count.toFloat() / target).coerceIn(0f, 1f) else 0f
     val ring = P.line; val fill = if (done) P.gold else P.accent; val imam = P.gold
+    if (L.counter in setOf(CounterStyle.LANTERN, CounterStyle.FLOWER, CounterStyle.CRESCENT)) { FancyCounter(L.counter, count, target, done, label, size); return }
     when (L.counter) {
         CounterStyle.PLAIN -> Column(Modifier.height(size), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text("$count", color = if (done) P.gold else P.ink, fontSize = (size.value / 2.8f).sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body)

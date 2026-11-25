@@ -33,6 +33,7 @@ import kotlin.math.sin
 enum class Backdrop(val moving: Boolean) {
     NONE(false), LANTERN(true), VINES(true), GIRIH(false), RAIN(true), AURORA(true), ILLUMINATED(false), SKY(true), STARS(true), RAYS(true),
     SNOW(true), PETALS(true), FIREFLIES(true), BUBBLES(true), DUNES(true), ROSETTE(true), SKYLINE(true),
+    BUNTING(true), MESA(true), DAMASK(false), ORBS(true), INK(true), CACTI(true),
 }
 
 @Composable
@@ -63,6 +64,12 @@ fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
             Backdrop.DUNES -> dunes(p, t)
             Backdrop.ROSETTE -> rosette(p, t)
             Backdrop.SKYLINE -> skyline(p, t)
+            Backdrop.BUNTING -> bunting(p, t)
+            Backdrop.MESA -> mesa(p, t)
+            Backdrop.DAMASK -> damask(p)
+            Backdrop.ORBS -> orbs(p, t)
+            Backdrop.INK -> ink(p, t)
+            Backdrop.CACTI -> cacti(p, t)
             Backdrop.NONE -> Unit
         }
 }
@@ -346,6 +353,119 @@ private fun DrawScope.skyline(p: Pal, t: Float) {
     }
     drawCircle(p.gold.copy(alpha = .25f), 16f, Offset(w * .8f, size.height * .58f))      // the crescent above
     drawCircle(p.bg.copy(alpha = .9f), 14f, Offset(w * .8f + 7f, size.height * .58f - 4f))
+}
+
+/** «فانوس رمضان»: Ramadan's string of little lanterns and stars swaying across the top, and a crescent. */
+private fun DrawScope.bunting(p: Pal, t: Float) {
+    for (row in 0..1) {
+        val y0 = size.height * (.03f + row * .09f); val sag = size.height * .05f
+        val cord = Path().apply { moveTo(0f, y0); quadraticTo(size.width / 2, y0 + sag * 2, size.width, y0) }
+        drawPath(cord, p.gold.copy(alpha = .3f), style = Stroke(1.5f))
+        val n = 9
+        for (i in 1 until n) {
+            val f = i / n.toFloat(); val x = size.width * f
+            val y = y0 + 4 * sag * f * (1 - f)
+            val swing = sin(t * 1.2f + i + row) * 4f
+            val hang = 10f + (i % 3) * 6f
+            drawLine(p.gold.copy(alpha = .3f), Offset(x, y), Offset(x + swing, y + hang), 1f)
+            val c = Offset(x + swing, y + hang)
+            if ((i + row) % 2 == 0) {
+                val col = listOf(Color(0xFFE85A4F), Color(0xFFF2C14E), Color(0xFF3FB8B0))[(i + row) % 3]
+                drawCircle(Brush.radialGradient(listOf(col.copy(alpha = .35f), Color.Transparent), c, 30f), 30f, Offset(c.x, c.y + 12f))
+                drawRoundRect(col.copy(alpha = .55f), Offset(c.x - 7f, c.y), Size(14f, 22f), androidx.compose.ui.geometry.CornerRadius(6f))
+                drawRect(p.gold.copy(alpha = .6f), Offset(c.x - 4f, c.y - 3f), Size(8f, 4f))
+            } else {
+                val st = Path(); for (k in 0..10) { val a = -PI.toFloat() / 2 + k * PI.toFloat() / 5; val rr = if (k % 2 == 0) 8f else 3.5f
+                    if (k == 0) st.moveTo(c.x + cos(a) * rr, c.y + 8f + sin(a) * rr) else st.lineTo(c.x + cos(a) * rr, c.y + 8f + sin(a) * rr) }
+                drawPath(st, p.gold.copy(alpha = .45f + .2f * sin(t * 2 + i)))
+            }
+        }
+    }
+    val mc = Offset(size.width * .15f, size.height * .26f)
+    drawCircle(p.gold.copy(alpha = .3f), 26f, mc); drawCircle(p.bg, 23f, Offset(mc.x + 11f, mc.y - 6f))
+}
+
+/** «أريزونا»: red mesas and saguaros under a low desert sun. */
+private fun DrawScope.mesa(p: Pal, t: Float) {
+    val sun = Offset(size.width * .7f, size.height * .74f)
+    drawCircle(Brush.radialGradient(listOf(Color(0xFFFF9A5A).copy(alpha = .35f), Color.Transparent), sun, size.width * .5f), size.width * .5f, sun)
+    drawCircle(Color(0xFFF2B05A).copy(alpha = .35f), 34f, sun)
+    val far = Color(0xFFC0582E).copy(alpha = .16f); val near = Color(0xFF8E3A1E).copy(alpha = .2f)
+    val m = Path().apply {
+        val b = size.height * .8f; moveTo(0f, size.height); lineTo(0f, b)
+        lineTo(size.width * .08f, b); lineTo(size.width * .12f, b - 70f); lineTo(size.width * .34f, b - 70f); lineTo(size.width * .38f, b)
+        lineTo(size.width * .55f, b); lineTo(size.width * .58f, b - 40f); lineTo(size.width * .66f, b - 40f); lineTo(size.width * .69f, b)
+        lineTo(size.width * .8f, b); lineTo(size.width * .84f, b - 95f); lineTo(size.width * .97f, b - 95f); lineTo(size.width, b - 60f); lineTo(size.width, size.height); close()
+    }
+    drawPath(m, far)
+    drawRect(near, Offset(0f, size.height * .86f), Size(size.width, size.height * .14f))
+    listOf(.2f to 1f, .47f to .7f, .9f to .85f).forEach { (fx, s) ->           // saguaros
+        val x = size.width * fx; val base = size.height * .88f; val h = 90f * s; val w = 12f * s; val c = Color(0xFF3E6B3A).copy(alpha = .3f)
+        drawRoundRect(c, Offset(x - w / 2, base - h), Size(w, h), androidx.compose.ui.geometry.CornerRadius(w / 2))
+        drawRoundRect(c, Offset(x - w * 2.2f, base - h * .7f), Size(w * .8f, h * .35f), androidx.compose.ui.geometry.CornerRadius(w / 2))
+        drawLine(c, Offset(x - w * 1.8f, base - h * .4f), Offset(x, base - h * .4f), w * .7f)
+        drawRoundRect(c, Offset(x + w * 1.3f, base - h * .8f), Size(w * .8f, h * .4f), androidx.compose.ui.geometry.CornerRadius(w / 2))
+        drawLine(c, Offset(x, base - h * .5f), Offset(x + w * 1.7f, base - h * .5f), w * .7f)
+    }
+    for (i in 0 until 3) { val x = ((t * 8f + i * 140f) % (size.width + 60f)) - 30f; drawLine(p.ink.copy(alpha = .12f), Offset(x, size.height * (.2f + i * .05f)), Offset(x + 10f, size.height * (.2f + i * .05f) - 5f), 1.5f) }
+}
+
+/** «المخمل الملكي»: a faint damask pattern repeating like woven silk. */
+private fun DrawScope.damask(p: Pal) {
+    val s = size.width / 3.2f; val c = p.gold.copy(alpha = .06f)
+    var y = 0f; var row = 0
+    while (y < size.height + s) {
+        var x = if (row % 2 == 0) 0f else s / 2
+        while (x < size.width + s) {
+            val motif = Path().apply {
+                moveTo(x, y - s * .42f)
+                cubicTo(x + s * .32f, y - s * .25f, x + s * .2f, y + s * .05f, x, y + s * .42f)
+                cubicTo(x - s * .2f, y + s * .05f, x - s * .32f, y - s * .25f, x, y - s * .42f); close()
+            }
+            drawPath(motif, c, style = Stroke(2f))
+            drawCircle(c, s * .07f, Offset(x, y))
+            drawLine(c, Offset(x - s * .22f, y), Offset(x + s * .22f, y), 1.5f)
+            x += s
+        }
+        y += s * .9f; row++
+    }
+}
+
+/** «زجاج»: large soft lights of color drifting behind frosted glass. */
+private fun DrawScope.orbs(p: Pal, t: Float) {
+    val cols = listOf(Color(0xFF7A5CFF), Color(0xFF00C2B8), Color(0xFFFF6FA8), Color(0xFFFFB347))
+    cols.forEachIndexed { i, c ->
+        val x = size.width * (.5f + .4f * sin(t * (.05f + i * .013f) + i * 1.7f)); val y = size.height * (.45f + .38f * cos(t * (.04f + i * .011f) + i))
+        val r = size.width * (.45f + .1f * i % 2)
+        drawCircle(Brush.radialGradient(listOf(c.copy(alpha = if (p.dark) .28f else .22f), Color.Transparent), Offset(x, y), r), r, Offset(x, y))
+    }
+}
+
+/** «حبر وقلم»: drops of ink falling and spreading on paper, and a reed pen's stroke. */
+private fun DrawScope.ink(p: Pal, t: Float) {
+    for (i in 0 until 6) {
+        val ph = (t * .08f + i / 6f) % 1f
+        val c = Offset(size.width * (.12f + (i * .37f) % .8f), size.height * (.15f + (i * .29f) % .75f))
+        drawCircle(p.ink.copy(alpha = .07f * (1 - ph)), 6f + ph * 70f, c)
+        drawCircle(p.ink.copy(alpha = .10f * (1 - ph)), 6f + ph * 70f, c, style = Stroke(1.2f))
+    }
+    val stroke = Path().apply { moveTo(size.width * .1f, size.height * .93f); cubicTo(size.width * .35f, size.height * .86f, size.width * .6f, size.height * .98f, size.width * .9f, size.height * .9f) }
+    drawPath(stroke, p.accent.copy(alpha = .12f), style = Stroke(9f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+}
+
+/** «صبّار»: little cacti in pots along the bottom, a warm sun, and a flower opening now and then. */
+private fun DrawScope.cacti(p: Pal, t: Float) {
+    val sun = Offset(size.width * .82f, size.height * .1f)
+    drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC85A).copy(alpha = .3f), Color.Transparent), sun, 110f), 110f, sun)
+    val green = Color(0xFF4E9A5A).copy(alpha = .22f); val pot = Color(0xFFB0603A).copy(alpha = .22f)
+    listOf(.08f, .3f, .62f, .88f).forEachIndexed { i, fx ->
+        val x = size.width * fx; val base = size.height * .97f; val h = 50f + (i % 2) * 26f; val w = 18f
+        drawRoundRect(pot, Offset(x - 16f, base - 18f), Size(32f, 18f), androidx.compose.ui.geometry.CornerRadius(3f))
+        drawRoundRect(green, Offset(x - w / 2, base - 18f - h), Size(w, h), androidx.compose.ui.geometry.CornerRadius(w / 2))
+        if (i % 2 == 0) drawRoundRect(green, Offset(x + w / 2, base - 18f - h * .7f), Size(10f, h * .35f), androidx.compose.ui.geometry.CornerRadius(5f))
+        val open = (.5f + .5f * sin(t * .5f + i * 1.6f)).coerceIn(0f, 1f)
+        for (k in 0 until 5) { val a = k * 2 * PI.toFloat() / 5; drawCircle(Color(0xFFF06A9A).copy(alpha = .3f * open), 4f * open + 1f, Offset(x + cos(a) * 5f * open, base - 20f - h + sin(a) * 5f * open)) }
+    }
 }
 
 /**

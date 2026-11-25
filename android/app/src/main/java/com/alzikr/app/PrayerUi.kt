@@ -104,7 +104,8 @@ fun PrayerScreen(openSettings: () -> Unit) {
     Nav.prayerSheet?.let { sheetFor = it; Nav.prayerSheet = null }
     val w = window()
     val times = Store.times()
-    val view = when (Data.prayerView) { 1 -> 1; 2 -> 2; 3 -> 3; 4 -> 4; else -> when (L.prayers) { PrayerLayout.CARDS -> 1; PrayerLayout.LIST -> 2; PrayerLayout.TIMELINE -> 4 } }
+    val view = when (Data.prayerView) { in 1..7 -> Data.prayerView; else -> when (L.prayers) { PrayerLayout.CARDS -> 1; PrayerLayout.LIST -> 2; PrayerLayout.TIMELINE -> 4
+        PrayerLayout.LANTERNS -> 5; PrayerLayout.SUNDIAL -> 6; PrayerLayout.GARDEN -> 7 } }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         UpdateBanner()
         Hint("prayer3", "🕌", "اضغط على أي صلاة لصفحتها: ✓ صلّيتها، والمنبه، والتذكير، والأذان، وسننها وأذكارها. والموقع وطريقة الحساب في السطر الأخير أسفل الصفحة. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
@@ -151,7 +152,7 @@ fun PrayerScreen(openSettings: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("مواقيت اليوم", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 if (Data.viewChips) Wrap(gap = 4.dp) {
-                    listOf(1 to "بطاقات", 2 to "قائمة", 3 to "سطر", 4 to "خط زمني").forEach { (n, l) -> Choice(l, view == n) { Data.prayerView = n } }
+                    listOf(1 to "بطاقات", 2 to "قائمة", 3 to "سطر", 4 to "خط زمني", 5 to "فوانيس", 6 to "مزولة", 7 to "حديقة").forEach { (n, l) -> Choice(l, view == n) { Data.prayerView = n } }
                 }
                 // A small button shows or hides the view choice.
                 androidx.compose.foundation.layout.Box(Modifier.padding(start = 4.dp).clip(L.shape(10.dp)).clickable { Data.viewChips = !Data.viewChips }.padding(6.dp)) {
@@ -162,6 +163,9 @@ fun PrayerScreen(openSettings: () -> Unit) {
                 1 -> PrayerCards(w, times, pick)
                 3 -> PrayerLine(w, times, pick)
                 4 -> PrayerTimeline(w, times, pick)
+                5 -> PrayerLanterns(w, times, pick)
+                6 -> PrayerSundial(w, times, pick)
+                7 -> PrayerGarden(w, times, pick)
                 else -> Panel(pad = 6.dp) { Prayer.entries.forEach { p -> PrayerRow(p, p == w.next, times, pick) } }
             }
             },

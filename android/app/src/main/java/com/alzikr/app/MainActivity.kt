@@ -214,6 +214,9 @@ private fun Root() {
                     if (inPage) Spacer(Modifier.statusBarsPadding())
                     else Header { settings = true }
                     if (look.nav == NavStyle.TOP && !inPage) TopTabs()
+                    if (look.nav == NavStyle.LANTERNS && !inPage) LanternTabs()
+                    Row(Modifier.weight(1f)) {
+                    if (look.nav == NavStyle.RAIL && !inPage) SideRail()
                     Box(Modifier.weight(1f)) {
                         when (Nav.tab) {
                             "adhkar" -> AdhkarScreen()
@@ -225,6 +228,7 @@ private fun Root() {
                             else -> PrayerScreen(openSettings = { settings = true })
                         }
                     }
+                    }
                     if (!inPage && Pet.species != null && Pet.place == "ground") Column(Modifier.fillMaxWidth()) {
                         PetStage(Modifier.fillMaxWidth().padding(horizontal = 10.dp), height = 46, bubbleBelow = false)
                         Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp).clip(L.shape(1.dp)).background(P.line))
@@ -235,10 +239,12 @@ private fun Root() {
                         NavStyle.BAR -> BottomBar()
                         NavStyle.WORDS -> WordsBar()
                         NavStyle.DOCK -> Spacer(Modifier.height(86.dp).navigationBarsPadding())
-                        NavStyle.TOP -> Spacer(Modifier.navigationBarsPadding())
+                        NavStyle.TOP, NavStyle.LANTERNS, NavStyle.RAIL -> Spacer(Modifier.navigationBarsPadding())
+                        NavStyle.ARC -> Spacer(Modifier.height(92.dp).navigationBarsPadding())
                     }
                 }
                 if (look.nav == NavStyle.DOCK && !inPage) Box(Modifier.align(Alignment.BottomCenter)) { Dock() }
+                if (look.nav == NavStyle.ARC && !inPage) Box(Modifier.align(Alignment.BottomCenter)) { ArcNav() }
                 Overlays()
             }
             Nav.daySheet?.let { d -> DaySheet(d) { Nav.daySheet = null } }
@@ -284,8 +290,7 @@ private fun Header(openSettings: () -> Unit) {
 
 /** The section icon in the theme's icon set. */
 @Composable
-private fun SectionIcon(s: Section, on: Boolean, size: Int = 22) {
-    val tint = if (on) P.accent else P.muted
+internal fun SectionIcon(s: Section, on: Boolean, size: Int = 22, tint: androidx.compose.ui.graphics.Color = if (on) P.accent else P.muted) {
     when (L.icons) {
         IconStyle.GLYPH -> Glyph(s.glyph, tint = tint, size = size.dp)
         IconStyle.NONE -> {}

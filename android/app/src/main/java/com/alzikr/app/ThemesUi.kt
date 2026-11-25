@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private fun describe(l: Look): String = listOf(
-    when (l.nav) { NavStyle.BAR -> "شريط سفلي"; NavStyle.DOCK -> "شريط عائم"; NavStyle.TOP -> "تبويبات علوية"; NavStyle.WORDS -> "كلمات بلا أيقونات" },
-    when (l.prayers) { PrayerLayout.LIST -> "قائمة الصلوات"; PrayerLayout.CARDS -> "بطاقات الصلوات"; PrayerLayout.TIMELINE -> "خط زمني" },
-    when (l.counter) { CounterStyle.RING -> "عدّاد حلقة"; CounterStyle.BEADS -> "سبحة خرز"; CounterStyle.PLAIN -> "عدّاد رقمي" },
+    when (l.nav) { NavStyle.BAR -> "شريط سفلي"; NavStyle.DOCK -> "شريط عائم"; NavStyle.TOP -> "تبويبات علوية"; NavStyle.WORDS -> "كلمات بلا أيقونات"; NavStyle.LANTERNS -> "فوانيس معلّقة للأقسام"; NavStyle.RAIL -> "شريط جانبي"; NavStyle.ARC -> "أقسام على قوس" },
+    when (l.prayers) { PrayerLayout.LIST -> "قائمة الصلوات"; PrayerLayout.CARDS -> "بطاقات الصلوات"; PrayerLayout.TIMELINE -> "خط زمني"; PrayerLayout.LANTERNS -> "فوانيس الصلوات"; PrayerLayout.SUNDIAL -> "مزولة"; PrayerLayout.GARDEN -> "حديقة تُزهر" },
+    when (l.counter) { CounterStyle.RING -> "عدّاد حلقة"; CounterStyle.BEADS -> "سبحة خرز"; CounterStyle.PLAIN -> "عدّاد رقمي"; CounterStyle.LANTERN -> "فانوس يمتلئ نورًا"; CounterStyle.FLOWER -> "زهرة تتفتّح"; CounterStyle.CRESCENT -> "هلال يكتمل" },
     when (l.corners) { Corners.ROUND -> "زوايا مستديرة"; Corners.SOFT -> "زوايا ناعمة"; Corners.SQUARE -> "زوايا حادة"; Corners.CUT -> "زوايا مقصوصة" },
 ).joinToString(" · ")
 
@@ -59,7 +59,9 @@ fun ThemeGallery() {
                     Spacer(Modifier.height(10.dp))
                     // A miniature: a panel, a choice, a button and the counter's shape.
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f).clip(look.shape()).background(if (look.flat) pal.bg else pal.surface).border(1.dp, pal.line, look.shape()).padding(10.dp)) {
+                        val ps = panelShape(look.panel, look.radius)
+                        Column(Modifier.weight(1f).clip(ps).background(if (look.flat) pal.bg else pal.surface).border(1.dp, if (look.panel == PanelStyle.CARD) pal.line else pal.gold.copy(alpha = .6f), ps)
+                            .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = if (look.panel == PanelStyle.ARCH) 22.dp else 10.dp)) {
                             Text("العصر", color = pal.ink, fontSize = 14.sp, fontFamily = look.head ?: look.body, fontWeight = FontWeight.SemiBold)
                             Text("3:12 م", color = pal.gold, fontSize = 16.sp, fontFamily = look.body, fontWeight = FontWeight.Bold)
                         }
@@ -70,6 +72,9 @@ fun ThemeGallery() {
                             when (look.counter) {
                                 CounterStyle.BEADS -> Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) { repeat(5) { Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(if (it < 3) pal.accent else pal.line)) } }
                                 CounterStyle.PLAIN -> Text("33", color = pal.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = look.head ?: look.body)
+                                CounterStyle.LANTERN -> Text("🏮", fontSize = 26.sp)
+                                CounterStyle.FLOWER -> Text("🌸", fontSize = 26.sp)
+                                CounterStyle.CRESCENT -> Text("🌙", fontSize = 26.sp)
                                 CounterStyle.RING -> Box(Modifier.size(38.dp).clip(androidx.compose.foundation.shape.CircleShape).border(5.dp, pal.accent, androidx.compose.foundation.shape.CircleShape))
                             }
                         }

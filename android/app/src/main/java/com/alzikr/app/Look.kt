@@ -15,12 +15,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /** Where the sections live: a bottom bar, a floating dock (icons only), tabs at the top, or words only. */
-enum class NavStyle { BAR, DOCK, TOP, WORDS }
+enum class NavStyle { BAR, DOCK, TOP, WORDS, LANTERNS, RAIL, ARC }
 enum class IconStyle { FILLED, OUTLINED, ROUNDED, SHARP, GLYPH, NONE }
 /** How the five prayers are shown: a list, a grid of cards, or a timeline. */
-enum class PrayerLayout { LIST, CARDS, TIMELINE }
+enum class PrayerLayout { LIST, CARDS, TIMELINE, LANTERNS, SUNDIAL, GARDEN }
 /** The dhikr counter: a ring, prayer beads, or a large numeral. */
-enum class CounterStyle { RING, BEADS, PLAIN }
+enum class CounterStyle { RING, BEADS, PLAIN, LANTERN, FLOWER, CRESCENT }
 enum class Corners { ROUND, SOFT, SQUARE, CUT }
 
 /**
@@ -40,6 +40,9 @@ data class Look(
     val backdrop: Backdrop = Backdrop.NONE,
     /** The colors follow the hour of the day by the real prayer times (Sky). */
     val sky: Boolean = false,
+    /** The panels' form (ThemeForms.kt), and what grows in the prayers' garden ("rose", "cactus", "crystal"). */
+    val panel: PanelStyle = PanelStyle.CARD,
+    val motif: String = "rose",
 ) {
     fun basePal(systemDark: Boolean, mode: Int): Pal = when {
         day == null -> night!!
@@ -214,6 +217,40 @@ object Looks {
             pal(false, 0xFFF4F1EA, 0xFFFFFFFF, 0xFFE8E1D2, 0xFFD6CBB4, 0xFF2A2418, 0xFF746A55, 0xFF2E5E7A, 0xFFFFFFFF, 0xFFC0902E),
             pal(true, 0xFF0B0E16, 0xFF121722, 0xFF19202E, 0xFF2A3346, 0xFFECEFF5, 0xFF9AA3B6, 0xFF7FB0D8, 0xFF061420, 0xFFF0C860),
             Corners.ROUND, 18.dp, Fonts.naskh, Fonts.naskh, NavStyle.DOCK, IconStyle.GLYPH, PrayerLayout.TIMELINE, CounterStyle.BEADS, ornament = "☪", backdrop = Backdrop.SKYLINE),
+        // Themes that change the app's whole form (ThemeForms.kt): panels, navigation, the prayers and the counter.
+        Look("cactus", "صبّار", "لوحات كالحصى، والأقسام على قوس كغصن، والصلوات خمس صبّارات تُزهر كلما صلّيت، والسبحة زهرة تتفتّح بتلاتها · هدية الصداقة",
+            pal(false, 0xFFF7F1E6, 0xFFFFFBF3, 0xFFEDE3CF, 0xFFDCCBA8, 0xFF2B3A22, 0xFF6E7A5C, 0xFF3E7D46, 0xFFFFFFFF, 0xFFD0603A),
+            pal(true, 0xFF12140E, 0xFF1A1D14, 0xFF22261A, 0xFF353B28, 0xFFEDEFDF, 0xFFA6AD8E, 0xFF7CC47E, 0xFF0C1A0A, 0xFFF08A5A),
+            Corners.ROUND, 26.dp, Fonts.changa, Fonts.messiri, NavStyle.ARC, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "🌵",
+            backdrop = Backdrop.CACTI, panel = PanelStyle.PEBBLE, motif = "cactus"),
+        Look("ramadan", "فانوس رمضان", "الأقسام فوانيس معلّقة بخيط، واللوحات محاريب مقوّسة، والصلوات خمسة فوانيس تُضيء بصلاتك، والسبحة فانوس يمتلئ نورًا، وزينة رمضان تتمايل · هدية الصداقة",
+            null, pal(true, 0xFF0E0A1E, 0xFF171130, 0xFF201840, 0xFF35295E, 0xFFF6EEDC, 0xFFB4A8C8, 0xFFF2C14E, 0xFF1A1300, 0xFFF2C14E),
+            Corners.ROUND, 16.dp, Fonts.naskh, Fonts.kufi, NavStyle.LANTERNS, IconStyle.GLYPH, PrayerLayout.LANTERNS, CounterStyle.LANTERN, ornament = "🏮",
+            backdrop = Backdrop.BUNTING, panel = PanelStyle.ARCH),
+        Look("damask", "الوردة الدمشقية", "لوحات على شكل بتلة، والأقسام على قوس، والصلوات خمس ورود تتفتّح بصلاتك، والسبحة زهرة، وبتلات تتساقط، وردي وقرمزي وذهب · هدية الصداقة",
+            pal(false, 0xFFFDF3F4, 0xFFFFFFFF, 0xFFF8E1E5, 0xFFEFC5CE, 0xFF4A1426, 0xFF8E5A68, 0xFFB0274E, 0xFFFFFFFF, 0xFFC4913A),
+            pal(true, 0xFF190A10, 0xFF241018, 0xFF301622, 0xFF4A2234, 0xFFF9E4EA, 0xFFC897A6, 0xFFF0668E, 0xFF2A0612, 0xFFE8B860),
+            Corners.ROUND, 28.dp, Fonts.messiri, Fonts.messiri, NavStyle.ARC, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "🌹",
+            backdrop = Backdrop.PETALS, panel = PanelStyle.PETAL, motif = "rose"),
+        Look("arizona", "أريزونا", "صحراء الهضاب الحمراء والصبّار العملاق تحت شمس الغروب، والأقسام على شريط جانبي، والصلوات مزولة تعبرها الشمس، والسبحة هلال يكتمل بدرًا · هدية الصداقة",
+            pal(false, 0xFFFBF0E6, 0xFFFFF8F0, 0xFFF3DCC8, 0xFFE3BFA0, 0xFF3E1E10, 0xFF8A5E48, 0xFFC0502A, 0xFFFFFFFF, 0xFF2E9A9A),
+            pal(true, 0xFF1A0F0A, 0xFF24150E, 0xFF301C13, 0xFF4A2C1E, 0xFFF8E6D8, 0xFFC6A08A, 0xFFF08050, 0xFF1E0A02, 0xFF4CC8C0),
+            Corners.SOFT, 12.dp, Fonts.changa, Fonts.changa, NavStyle.RAIL, IconStyle.SHARP, PrayerLayout.SUNDIAL, CounterStyle.CRESCENT, ornament = "☀",
+            backdrop = Backdrop.MESA, panel = PanelStyle.FRAMED),
+        Look("ink", "حبر وقلم", "التطبيق كصفحة يكتبها خطّاط: لوحات كلفائف الرقّ، وقطرات حبر تنتشر، وكلمات للتنقل، وخط النسخ كاملًا · هدية الصداقة",
+            pal(false, 0xFFF8F3E8, 0xFFFFFCF4, 0xFFF0E8D6, 0xFFDCCFB2, 0xFF1A140C, 0xFF6A5E4A, 0xFF9A2A1E, 0xFFFFF8EE, 0xFF8A6A2A),
+            pal(true, 0xFF11100D, 0xFF191712, 0xFF221F18, 0xFF38332A, 0xFFF2ECDE, 0xFFADA48E, 0xFFE0705A, 0xFF1E0602, 0xFFD8B060),
+            Corners.SQUARE, 2.dp, Fonts.naskh, Fonts.naskh, NavStyle.WORDS, IconStyle.NONE, PrayerLayout.TIMELINE, CounterStyle.CRESCENT, ornament = "✒",
+            backdrop = Backdrop.INK, panel = PanelStyle.SCROLL),
+        Look("glass", "زجاج", "لوحات من زجاج مصنفر تسبح خلفها أضواء ملوّنة، والأقسام على قوس، والصلوات خمس بلّورات تُضيء بصلاتك، والسبحة هلال · هدية الصداقة",
+            pal(false, 0xFFF0F2F8, 0xFFFFFFFF, 0xFFE6E9F3, 0xFFD3D8E8, 0xFF161A2E, 0xFF5C6280, 0xFF5B4BE0, 0xFFFFFFFF, 0xFF00A89E),
+            pal(true, 0xFF0A0B14, 0xFF12131F, 0xFF1A1B2B, 0xFF2C2E45, 0xFFF0F1FA, 0xFF9EA2C0, 0xFFA89CFF, 0xFF100A30, 0xFF4CE0D2),
+            Corners.ROUND, 24.dp, Fonts.modern, Fonts.modern, NavStyle.ARC, IconStyle.OUTLINED, PrayerLayout.GARDEN, CounterStyle.CRESCENT, ornament = "◈",
+            backdrop = Backdrop.ORBS, panel = PanelStyle.GLASS, motif = "crystal"),
+        Look("velvet", "المخمل الملكي", "قرمزي مخملي ونسيج دمشقي خافت، ولوحات بإطار مذهّب مزدوج، والأقسام على شريط جانبي، والصلوات مزولة ذهبية، وسبحة خرز · هدية الصداقة",
+            null, pal(true, 0xFF1A060C, 0xFF240A12, 0xFF2F0E18, 0xFF4E1A28, 0xFFF8E8DA, 0xFFC8A090, 0xFFE6C35C, 0xFF1A1000, 0xFFE6C35C),
+            Corners.SQUARE, 3.dp, Fonts.naskh, Fonts.kufi, NavStyle.RAIL, IconStyle.GLYPH, PrayerLayout.SUNDIAL, CounterStyle.BEADS, ornament = "♛",
+            backdrop = Backdrop.DAMASK, panel = PanelStyle.FRAMED),
     ) }
 
     fun byId(id: String) = all.firstOrNull { it.id == id } ?: all.first()
