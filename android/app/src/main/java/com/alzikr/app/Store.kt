@@ -195,16 +195,21 @@ object Store {
     fun tasks(): List<Task> {
         val a = JSONArray(sp.getString("tasks", "[]"))
         val today = LocalDate.now()
+        val seen = HashSet<Long>()
+        var repaired = false
         return (0 until a.length()).map { a.getJSONObject(it).let { o ->
+            // Repair: a repeated id (from 1.5.0 test builds) gets a free one, so the lists never see the same key twice.
+            var id = o.getLong("id"); while (!seen.add(id)) id++
+            if (id != o.getLong("id")) { o.put("id", id); repaired = true }
             val rule = o.optString("rule").ifEmpty { if (o.optBoolean("repeat")) "daily" else "" }
             val doneAt = o.optLong("doneAt")
             // A repeating task done on an earlier day is open again today (its steps too).
             val stale = rule.isNotEmpty() && java.time.Instant.ofEpochMilli(doneAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() != today
             val done = o.optBoolean("done") && !stale
             val steps = o.optJSONArray("steps")?.let { st -> (0 until st.length()).map { i -> st.getJSONObject(i).let { x -> Step(x.getString("t"), x.optBoolean("d") && !stale) } } } ?: emptyList()
-            Task(o.getLong("id"), o.getString("text"), done, o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, doneAt,
+            Task(id, o.getString("text"), done, o.optString("after").takeIf { s -> s.isNotEmpty() }?.let { s -> runCatching { Prayer.valueOf(s) }.getOrNull() }, doneAt,
                 o.optLong("remindAt"), rule, steps, o.optString("cat"), o.optString("due"))
-        } }
+        } }.also { if (repaired) sp.edit().putString("tasks", a.toString()).apply() }
     }
     private fun saveTasks(list: List<Task>) {
         val a = JSONArray(); list.forEach { t -> a.put(JSONObject().put("id", t.id).put("text", t.text).put("done", t.done).put("after", t.after?.name ?: "").put("doneAt", t.doneAt)
@@ -214,7 +219,11 @@ object Store {
         app?.let { runCatching { DayWidget.update(it) } }
     }
     fun addTask(text: String, after: Prayer?, remindAt: Long = 0, rule: String = "", cat: String = "", due: String = "") =
-        saveTasks(listOf(Task(System.currentTimeMillis() + (0..999).random(), text, false, after, 0, remindAt, rule, emptyList(), cat, due)) + tasks())
+        tasks().let { list ->
+            // Ids must be unique (they key the lists): a routine adds several in the same millisecond.
+            val id = maxOf(System.currentTimeMillis(), (list.maxOfOrNull { it.id } ?: 0L) + 1)
+            saveTasks(listOf(Task(id, text, false, after, 0, remindAt, rule, emptyList(), cat, due)) + list)
+        }
     fun update(id: Long, f: (Task) -> Task) = saveTasks(tasks().map { if (it.id == id) f(it) else it })
     fun toggleRepeat(id: Long) = update(id) { it.copy(rule = if (it.repeat) "" else "daily") }
     fun renameTask(id: Long, text: String) = update(id) { it.copy(text = text) }
