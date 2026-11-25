@@ -205,6 +205,9 @@ object Home {
         Short("tasks", "☑", "المهام") { Nav.daily = Daily.TASKS; Nav.go("daily") },
         Short("focus", "⏱", "التركيز") { Nav.daily = Daily.FOCUS; Nav.go("daily") },
         Short("khatma", "📗", "الختمة") { Nav.daily = Daily.KHATMA; Nav.go("daily") },
+        Short("timeline", "⏳", "التاريخ") { Nav.morePage = "timeline"; Nav.go("more") },
+        Short("history", "🕘", "سجلاتي") { Nav.morePage = "history"; Nav.go("more") },
+        Short("search", "🔍", "البحث") { Nav.search = true },
     )
     private val defaultShorts = listOf("qibla", "adhkar", "quran", "khatma", "tasbih")
     val names = listOf("الصلاة", "الرئيسية", "وقتي", "البداية")
@@ -234,8 +237,11 @@ object Home {
         get() = Store.prefs.getStringSet("home_hidden", emptySet())!!.toSet()
         set(v) { Store.prefs.edit().putStringSet("home_hidden", v).apply(); Store.bump() }
     var shortcuts: List<String>
-        get() = Store.prefs.getString("home_shorts", null)?.split(',')?.filter { id -> shorts.any { it.id == id } } ?: defaultShorts
+        get() = Store.prefs.getString("home_shorts", null)?.split(',')?.filter { id -> shorts.any { it.id == id } } ?: suggestedShorts()
         set(v) { Store.prefs.edit().putString("home_shorts", v.joinToString(",")).apply(); Store.bump() }
+    /** «الوصول السريع»: until the user picks the shortcuts, the ones used most come first (then the usual ones). */
+    val suggesting: Boolean get() = Store.prefs.getString("home_shorts", null) == null && Usage.top(1).isNotEmpty()
+    private fun suggestedShorts(): List<String> = (Usage.top(8).filter { id -> shorts.any { it.id == id } } + defaultShorts).distinct().take(5)
     var name: String
         get() = Store.prefs.getString("home_name", null) ?: names.first()
         set(v) { Store.prefs.edit().putString("home_name", v).apply(); Store.bump() }
@@ -293,9 +299,10 @@ fun HomeShortcuts() {
     val chosen = Home.shortcuts.mapNotNull { id -> Home.shorts.firstOrNull { it.id == id } }
     if (chosen.isEmpty()) return
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (Home.suggesting) Sub("⚡ وصول سريع: ما تستعمله أكثر (تخصّصه من تعديل الصفحة)", size = 11.sp)
         chosen.chunked(5).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                row.forEach { s -> Tile(s.icon, s.label, Modifier.weight(1f)) { s.go() } }
+                row.forEach { s -> Tile(s.icon, s.label, Modifier.weight(1f)) { Usage.hit(s.id); s.go() } }
                 repeat(5 - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
             }
         }

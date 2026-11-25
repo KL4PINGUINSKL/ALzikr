@@ -51,6 +51,7 @@ fun TasksScreen() {
                 Triple(Daily.FOCUS, "🎯", "التركيز"), Triple(Daily.NOTES, "📝", "ملاحظات")).map { (i, ic, t) -> Triple(i.toString(), ic, t) },
                 Nav.daily.toString(), cols = 6) { Nav.daily = it.toInt() }
         }
+        androidx.compose.runtime.LaunchedEffect(Nav.daily) { when (Nav.daily) { Daily.TASKS -> "tasks"; Daily.FOCUS -> "focus"; Daily.KHATMA -> "khatma"; else -> null }?.let(Usage::hit) }
         when (Nav.daily) {
             Daily.TODAY -> DayOverview()
             1 -> HabitsList()

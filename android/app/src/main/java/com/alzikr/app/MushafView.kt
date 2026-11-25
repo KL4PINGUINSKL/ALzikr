@@ -36,7 +36,10 @@ object MushafView {
         get() = Store.prefs.getBoolean("mushaf_hifz_default", false)
         set(v) { Store.prefs.edit().putBoolean("mushaf_hifz_default", v).apply(); Store.bump() }
     /** Opens [s]:[a] in the chosen view. */
-    fun open(s: Int, a: Int) { if (openAs == "verses") Nav.openQuran(s, a) else { Reading.pages = openAs == "pages"; Nav.reading = s to a } }
+    fun open(s: Int, a: Int) {
+        if (openAs != "verses") runCatching { History.add("📖", "سورة ${Quran.surahs[s - 1].name}", "المصحف", "read:$s:$a") }
+        if (openAs == "verses") Nav.openQuran(s, a) else { Reading.pages = openAs == "pages"; Nav.reading = s to a }
+    }
 }
 
 /** «طريقة عرض المصحف»: a card that opens to every choice of the mushaf. */

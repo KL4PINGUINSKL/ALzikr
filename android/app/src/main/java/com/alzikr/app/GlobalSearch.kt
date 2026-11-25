@@ -131,6 +131,7 @@ object GlobalSearch {
     // ------------------------------------------------------------------ recent searches
     fun recent(): List<String> = Store.prefs.getString("search_recent", "")!!.split('\n').filter { it.isNotBlank() }
     fun remember(q: String) {
+        History.add("🔍", q.trim(), "بحث", "search:${q.trim()}")
         val list = (listOf(q.trim()) + recent().filter { it != q.trim() }).take(8)
         Store.prefs.edit().putString("search_recent", list.joinToString("\n")).apply()
     }
@@ -142,7 +143,7 @@ object GlobalSearch {
 fun GlobalSearchPage(close: () -> Unit) {
     val ctx = LocalContext.current
     BackHandler(onBack = close)
-    var query by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf(Nav.searchQuery.also { Nav.searchQuery = null } ?: "") }
     val found = remember { mutableStateMapOf<GlobalSearch.Kind, List<GlobalSearch.Hit>>() }
     val busy = remember { mutableStateMapOf<GlobalSearch.Kind, Boolean>() }
     val open = remember { mutableStateMapOf<GlobalSearch.Kind, Boolean>() }

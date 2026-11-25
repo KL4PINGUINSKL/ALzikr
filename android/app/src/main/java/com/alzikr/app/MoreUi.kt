@@ -71,7 +71,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
     fun levelKey(depth: Int, p: String) = "$depth:$p"
     // A page opened from another tab (a shortcut) goes back to that tab; one opened here goes back to More.
     var fromOutside by remember { mutableStateOf(false) }
-    fun open(p: String) { stack.add(p) }
+    fun open(p: String) { stack.add(p); Usage.morePage[p]?.let(Usage::hit) }
     fun close() {
         if (stack.isNotEmpty()) { keep.removeState(levelKey(stack.size, stack.last())); stack.removeAt(stack.lastIndex) }
         if (stack.isEmpty() && fromOutside) { fromOutside = false; Nav.back() }
@@ -80,7 +80,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
         keep.SaveableStateProvider(levelKey(stack.size, p)) {
-        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "timeline" -> "التسلسل التاريخي"; "history" -> "سجلاتي"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -88,6 +88,8 @@ fun MoreScreen(openSettings: (String) -> Unit) {
                 "months" -> MonthsPage()
                 "seasons" -> SeasonsHome { open("season:$it") }
                 "names" -> NamesPage()
+                "timeline" -> { androidx.compose.runtime.LaunchedEffect(Unit) { History.add("⏳", "التسلسل التاريخي", "", "page:timeline") }; TimelinePage() }
+                "history" -> HistoryPage()
                 "qada" -> QadaPage()
                 "zakat" -> ZakatPage()
                 "quiz" -> QuizPage()
@@ -150,14 +152,14 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         ))
         MoreGroup("تعلّم", listOf(
             Triple("🎙", "تعلّم التجويد") { open("tajweed") }, Triple("🧠", "حفظ القرآن") { open("hifz") }, Triple("💧", "صفة الوضوء والصلاة") { open("salah") },
-            Triple("⚖", "الأحكام الفقهية") { open("fiqh") }, Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("🎯", "مسابقة القرآن") { open("quiz") },
+            Triple("⚖", "الأحكام الفقهية") { open("fiqh") }, Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("⏳", "التسلسل التاريخي") { open("timeline") }, Triple("🎯", "مسابقة القرآن") { open("quiz") },
         ))
         MoreGroup("التقويم والمواسم", listOf(
             Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "رمضان") { open("ramadan") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
         ))
         MoreGroup("أدوات", listOf(
             Triple("🧭", "القبلة") { open("qibla") }, Triple("📅", "مواقيت الشهر") { open("month") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
-            Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث الشامل") { Nav.search = true },
+            Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث الشامل") { Nav.search = true }, Triple("🕘", "سجلاتي") { open("history") },
         ))
         val ctx = LocalContext.current
         // The settings sections, one tap away (there is no gear in the top bar any more).

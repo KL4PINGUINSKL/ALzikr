@@ -80,6 +80,7 @@ fun LibraryScreen() {
     keep.SaveableStateProvider("main") {
     var section by rememberSaveable { mutableStateOf(0) }
     Nav.library?.let { section = it; Nav.library = null }
+    LaunchedEffect(section) { when (section) { 0 -> "quran"; 3 -> "hadith"; else -> null }?.let(Usage::hit) }
     // A books section opened from the stories or the sciences ("" = all books).
     var booksAt by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
     // The sections (e.g. the Islamic stories list) keep their place while a books page covers them.
@@ -685,6 +686,7 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
     QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
+    LaunchedEffect(bookId, focus) { Hadith.info(bookId)?.let { b -> History.add("📜", b.title + (focus?.let { " · حديث $it" } ?: ""), "الحديث", "hadith:$bookId:${focus ?: 0}") } }
     var book by remember(bookId) { mutableStateOf<Hadith.Book?>(null) }
     LaunchedEffect(bookId) { book = withContext(Dispatchers.IO) { Hadith.load(ctx, bookId) } }
     var chapter by rememberSaveable(bookId) { mutableStateOf<String?>(null) }

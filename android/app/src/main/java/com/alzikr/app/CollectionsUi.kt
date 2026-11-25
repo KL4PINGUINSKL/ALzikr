@@ -66,6 +66,9 @@ fun AdhkarScreen(openCollection: String? = null) {
     var readAt by rememberSaveable { mutableStateOf(-1) }
     Nav.adhkar?.let { section = it; reading = null; Nav.adhkar = null }
     Nav.collection?.let { section = 1; reading = it; readAt = -1; Nav.collection = null }
+    androidx.compose.runtime.LaunchedEffect(section) { when (section) { 0 -> "awrad"; 2 -> "tasbih"; else -> null }?.let(Usage::hit) }
+    androidx.compose.runtime.LaunchedEffect(reading) { reading?.let { id -> if (id in setOf("morning", "evening", "sleep")) Usage.hit(id)
+        Content.collection(id)?.let { c -> History.add("📿", c.title, "الأذكار", "collection:$id") } } }
     reading?.let { id -> Content.collection(id)?.let { CollectionReader(it, readAt) { reading = null; readAt = -1 }; return } }
     keep.SaveableStateProvider("main") {
     Column(Modifier.fillMaxSize()) {

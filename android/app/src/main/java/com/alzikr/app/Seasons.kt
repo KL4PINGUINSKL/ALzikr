@@ -238,6 +238,7 @@ fun SeasonsHome(open: (String) -> Unit) {
 /** One guide: its sections, each item with its source; a long text copies on tap. */
 @Composable
 fun SeasonPage(id: String, open: (String) -> Unit) {
+    androidx.compose.runtime.LaunchedEffect(id) { Seasons.byId(id)?.let { g -> History.add(g.icon, g.title, "مواسم الطاعات", "page:season:$id") } }
     val g = Seasons.byId(id) ?: return
     val ctx = LocalContext.current
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

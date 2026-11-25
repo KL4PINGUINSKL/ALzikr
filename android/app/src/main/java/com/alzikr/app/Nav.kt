@@ -68,7 +68,11 @@ object Nav {
     var openTadabbur = false
     /** The tab a verse or hadith was opened from (e.g. «ختمتك» in «يومي»): «back» from it returns there, not to the library. */
     var openedFrom: String? = null
-    fun openQuran(surah: Int, ayah: Int, sheet: Boolean = false, tadabbur: Boolean = false) { quranSheet = sheet; openTadabbur = tadabbur; quran = surah to ayah; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
+    /** A query the global search opens with (from «سجلاتي»). */
+    var searchQuery: String? = null
+    fun openQuran(surah: Int, ayah: Int, sheet: Boolean = false, tadabbur: Boolean = false) {
+        runCatching { History.add("📖", "سورة ${Quran.surahs[surah - 1].name} · الآية ${Quran.digits(ayah)}", "القرآن", "quran:$surah:$ayah") }
+        quranSheet = sheet; openTadabbur = tadabbur; quran = surah to ayah; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
     fun openHadith(book: String, number: Int) { hadith = book to number; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
     fun openBook(b: Books.Book) { book = b; openedFrom = tab.takeIf { it != "library" }; tab = "library" }
     /** A book opened from the global search. */

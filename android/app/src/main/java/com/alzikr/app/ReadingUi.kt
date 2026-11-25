@@ -248,7 +248,7 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     var h by remember(id) { mutableStateOf<Sharh.Hadith?>(null) }
     var failed by remember(id) { mutableStateOf(false) }
-    LaunchedEffect(id) { h = withContext(Dispatchers.IO) { Sharh.hadith(ctx, id) }; failed = h == null }
+    LaunchedEffect(id) { h = withContext(Dispatchers.IO) { Sharh.hadith(ctx, id) }; failed = h == null; h?.let { x -> History.add("💡", x.text, "شرح حديث", "sharh:$id") } }
     // The hadith counts after fifteen seconds, its explanation after a minute.
     LaunchedEffect(id) { kotlinx.coroutines.delay(15_000); Progress.record(Progress.Kind.HADITH, "s:$id"); kotlinx.coroutines.delay(45_000); Progress.record(Progress.Kind.SHARH, "s:$id") }
     var readMode by remember(id) { mutableStateOf(false) }
@@ -452,6 +452,7 @@ private fun PdfReader(id: String, title: String, back: () -> Unit) {
     var zoom by rememberSaveable { mutableStateOf(1f) }
     var goTo by remember { mutableStateOf(false) }
     val state = rememberLazyListState(initialFirstVisibleItemIndex = Books.lastPage(id))
+    LaunchedEffect(id) { History.add("📚", title, "كتاب", "book:$id") }
     val scope = rememberCoroutineScope()
     LaunchedEffect(id) { snapshotFlow { state.firstVisibleItemIndex }.collect { Books.setLastPage(id, it) } }
     var readMode by rememberSaveable(id) { mutableStateOf(false) }

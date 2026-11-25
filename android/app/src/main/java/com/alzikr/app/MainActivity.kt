@@ -188,7 +188,7 @@ val sections get() = if (Looks.byId(Data.look).kids) listOf(
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    val look = Looks.byId(Data.look)
+    val look = AppFont.apply(Looks.byId(Data.look))   // the font chosen in «راحة العين», if any
     val pal = look.pal(isSystemInDarkTheme(), Data.theme)
     val scheme = if (pal.dark) darkColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
         else lightColorScheme(primary = pal.accent, onPrimary = pal.onAccent, surface = pal.surface, onSurface = pal.ink, background = pal.bg, onSurfaceVariant = pal.muted, surfaceVariant = pal.card)
@@ -295,7 +295,9 @@ private fun Header() {
         // The friend gets its own fixed space (it used to get only what the date line left, a few dp on long dates).
         Column(Modifier.weight(1f)) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
-            Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
+            var styles by remember { mutableStateOf(false) }
+            DateBadge(open = { Nav.morePage = "calendar"; Nav.go("more") }, pick = { styles = true })
+            if (styles) DateStyleSheet { styles = false }
         }
         // The settings live in «المزيد» now, so the friend takes the gear's place and is a little bigger.
         // The friend, with its glow if one is chosen («صديقي» › 🖼).

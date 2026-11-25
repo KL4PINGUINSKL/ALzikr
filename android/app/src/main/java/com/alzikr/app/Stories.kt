@@ -89,6 +89,7 @@ fun StoriesHome(openBooks: (String, String) -> Unit) {
     val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     var open by rememberSaveable { mutableStateOf<Int?>(null) }
     Nav.story?.let { open = it; Nav.story = null }
+    LaunchedEffect(open) { open?.let { i -> History.add("🌿", Stories.quran[i].title, "قصص القرآن", "story:$i") } }
     open?.let { i -> StoryReader(Stories.quran[i]) { open = null }; return }
     keep.SaveableStateProvider("main") {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

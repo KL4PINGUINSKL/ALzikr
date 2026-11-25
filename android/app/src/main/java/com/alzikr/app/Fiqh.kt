@@ -878,6 +878,7 @@ fun FiqhHome(open: (String) -> Unit) {
 fun FiqhPage(id: String, open: (String) -> Unit) {
     val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val t = Fiqh.byId(id) ?: return
+    androidx.compose.runtime.LaunchedEffect(id) { History.add(t.icon, t.title, "الأحكام الفقهية", "page:fiqh:$id") }
     var openSec by rememberSaveable(id) { mutableStateOf(0) }
     var ev by remember { mutableStateOf<Fiqh.Ev?>(null) }
     ev?.let { e -> FiqhEvidencePage(e) { ev = null }; return }

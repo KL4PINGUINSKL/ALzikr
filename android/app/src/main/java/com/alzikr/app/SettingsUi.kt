@@ -1,5 +1,6 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 
 import android.app.AlarmManager
@@ -246,6 +247,24 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                         }
                         Switch(Comfort.calm, { Comfort.calm = it })
                     }
+                }
+                Panel {
+                    Title("🔤 خط التطبيق")
+                    Sub("خط واحد لكل النصوص في التطبيق، أو خط الثيم كما صُمّم.", Modifier.padding(bottom = 6.dp), size = 12.sp)
+                    Wrap(gap = 6.dp) {
+                        AppFont.choices.forEach { (id, name) ->
+                            Text(name, color = if (AppFont.id == id) P.onAccent else P.ink, fontSize = 15.sp, fontFamily = AppFont.family(id) ?: L.body,
+                                modifier = Modifier.clip(L.shape(10.dp)).background(if (AppFont.id == id) P.accent else P.surface).then(Modifier.border(1.dp, P.line, L.shape(10.dp))).clickable { AppFont.id = id }.padding(horizontal = 12.dp, vertical = 8.dp))
+                        }
+                    }
+                    Text("بسم الله الرحمن الرحيم · ١٢٣ · 123", color = P.ink, fontSize = 17.sp, modifier = Modifier.padding(top = 8.dp))
+                }
+                Panel {
+                    Title("📅 شكل التاريخ في الأعلى")
+                    var dates by remember { mutableStateOf(false) }
+                    Box(Modifier.padding(vertical = 6.dp)) { DateBadge({ dates = true }, { dates = true }) }
+                    Action("اختر شكلًا", filled = false) { dates = true }
+                    if (dates) DateStyleSheet { dates = false }
                 }
                 Panel {
                     Title("القراءة")
