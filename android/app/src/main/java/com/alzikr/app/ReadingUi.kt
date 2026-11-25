@@ -79,6 +79,7 @@ private fun Badge(text: String, color: androidx.compose.ui.graphics.Color) =
 /** Explained hadith: categories → hadiths → one hadith with its explanation. */
 @Composable
 fun SharhHome() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var cats by remember { mutableStateOf<List<Sharh.Category>?>(null) }
@@ -103,6 +104,7 @@ fun SharhHome() {
         SharhPage(id, nav) { openHadith = null }; return
     }
     openCat?.let { id -> SharhList(cats?.firstOrNull { it.id == id }?.title ?: "", id, open = { h, list -> openList = list; openHadith = h }) { openCat = null }; return }
+    keep.SaveableStateProvider("main") {
     val all = cats
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { SearchBar("ابحث عن حديث وشرحه…") { searching = true } }
@@ -136,6 +138,7 @@ fun SharhHome() {
                 }
             }
         }
+    }
     }
 }
 
@@ -239,6 +242,7 @@ fun BookSharh(bookTitle: String, list: List<Hadith.Item>, start: Int, firstId: S
 
 @Composable
 private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -261,6 +265,7 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
         TextReading("شرح الحديث", "sharh:$id", blocks, 0) { readMode = false }
         return
     }
+    keep.SaveableStateProvider("main") {
     Subpage("شرح الحديث", back) {
         val x = h
         if (x == null) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { if (failed) Sub("تعذّر التحميل، تحقق من الإنترنت.") else CircularProgressIndicator(color = P.accent) }; return@Subpage }
@@ -299,6 +304,7 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
             }
         }
     }
+    }
 }
 
 // =============================================================================== Islamic books
@@ -306,6 +312,7 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
 /** Islamic books: my shelf, the newest books, and the category tree; download a PDF and read it here. */
 @Composable
 fun BooksHome(root: String? = null, rootTitle: String = "") {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val bv = Books.version
@@ -319,6 +326,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
     val currentTitle = titles.lastOrNull() ?: rootTitle.ifBlank { null }
     LaunchedEffect(current, refreshTick) { cats = null; cats = withContext(Dispatchers.IO) { Books.categories(ctx, current ?: "397053", refreshTick > 0) } }
     reading?.let { id -> PdfReader(id, readingTitle) { reading = null }; return }
+    keep.SaveableStateProvider("main") {
     val list = remember(current) { androidx.compose.runtime.mutableStateListOf<Books.Book>() }
     var page by remember(current) { mutableStateOf(0) }
     var pages by remember(current) { mutableStateOf(1) }
@@ -405,6 +413,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
                 }) { Text("تنزيل (${b.size}) ثم القراءة") }
             },
             dismissButton = { TextButton({ chosen = null }) { Text("إغلاق") } })
+    }
     }
 }
 

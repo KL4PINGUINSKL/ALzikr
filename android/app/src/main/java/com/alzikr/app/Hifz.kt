@@ -122,6 +122,7 @@ object Hifz {
 
 @Composable
 fun HifzPage() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
@@ -133,6 +134,7 @@ fun HifzPage() {
     reading?.let { (s, f, t) -> HifzReader(s, f, t, review = null) { reading = null }; return }
     viewing?.let { (s, f, t) -> HifzReader(s, f, t, review = null, learn = false) { viewing = null }; return }
     reviewing?.let { c -> HifzReader(c.s, c.from, c.to, review = c) { reviewing = null }; return }
+    keep.SaveableStateProvider("main") {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Hint("hifz", "🧠", "كل يوم آيات قليلة جديدة، ثم مراجعة ما حفظته بعد يوم، ثم 3 أيام، ثم أسبوع، ثم أسبوعين، ثم شهر… حتى يثبت. اضغط «حفظتها» بعد أن تحفظ، و«أتقنتها» أو «أعدها» بعد كل مراجعة.")
@@ -213,6 +215,7 @@ fun HifzPage() {
                 }
             }
         }, confirmButton = { TextButton({ pickSurah = false }) { Text("إغلاق") } })
+    }
 }
 
 /** The verses to learn or review: big text, listen with repeat, and a test that hides them (first word only, tap to reveal). */

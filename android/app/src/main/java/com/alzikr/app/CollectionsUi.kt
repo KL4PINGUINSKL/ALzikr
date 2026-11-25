@@ -60,12 +60,14 @@ import kotlinx.coroutines.launch
 /** The Adhkar tab: my daily awrad, the full collections, and a free tasbih. */
 @Composable
 fun AdhkarScreen(openCollection: String? = null) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     var section by rememberSaveable { mutableStateOf(if (openCollection != null) 1 else 0) }
     var reading by rememberSaveable { mutableStateOf(openCollection) }
     var readAt by rememberSaveable { mutableStateOf(-1) }
     Nav.adhkar?.let { section = it; reading = null; Nav.adhkar = null }
     Nav.collection?.let { section = 1; reading = it; readAt = -1; Nav.collection = null }
     reading?.let { id -> Content.collection(id)?.let { CollectionReader(it, readAt) { reading = null; readAt = -1 }; return } }
+    keep.SaveableStateProvider("main") {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(0 to "أورادي", 1 to "الأذكار", 3 to "أدعيتي", 2 to "السبحة").forEach { (i, t) -> Choice(t, section == i) { section = i } }
@@ -78,6 +80,7 @@ fun AdhkarScreen(openCollection: String? = null) {
                 else -> TasbihScreen()
             }
         }
+    }
     }
 }
 

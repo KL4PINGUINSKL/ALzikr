@@ -772,6 +772,7 @@ private fun EvidenceRow(e: Fiqh.Ev, open: (Fiqh.Ev) -> Unit) {
 /** A hadith or athar given as evidence: its text, narrator and source, then its full text, grade, explanation and benefits. */
 @Composable
 fun FiqhEvidencePage(e: Fiqh.Ev, back: () -> Unit) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     androidx.activity.compose.BackHandler(onBack = back)
     var openSharh by rememberSaveable { mutableStateOf<String?>(null) }
@@ -781,6 +782,7 @@ fun FiqhEvidencePage(e: Fiqh.Ev, back: () -> Unit) {
     openBook?.let { (b, n) -> HadithReader(b, 0, { openBook = null }, focus = n); return }
     val key = remember(e) { Fiqh.keyOf(e) }
     if (searchAll) { HadithSearchPage(initial = key) { searchAll = false }; return }
+    keep.SaveableStateProvider("main") {
     var sharh by remember(e) { mutableStateOf<List<HadithSearch.Hit>?>(null) }
     var books by remember(e) { mutableStateOf<List<HadithSearch.Hit>?>(null) }
     LaunchedEffect(e) {
@@ -830,6 +832,7 @@ fun FiqhEvidencePage(e: Fiqh.Ev, back: () -> Unit) {
             Action("🔍 بحث كامل عن هذا الحديث", Modifier.fillMaxWidth(), filled = false) { searchAll = true }
         }
     }
+    }
 }
 
 /** All the fiqh cards with a search over them. [open] opens a page by id ("fiqh:<id>", "salah", "zakat"…). */
@@ -873,10 +876,12 @@ fun FiqhHome(open: (String) -> Unit) {
 
 @Composable
 fun FiqhPage(id: String, open: (String) -> Unit) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val t = Fiqh.byId(id) ?: return
     var openSec by rememberSaveable(id) { mutableStateOf(0) }
     var ev by remember { mutableStateOf<Fiqh.Ev?>(null) }
     ev?.let { e -> FiqhEvidencePage(e) { ev = null }; return }
+    keep.SaveableStateProvider("main") {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Panel(color = P.accent.copy(alpha = .10f)) { Text(t.intro, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (25 * Data.textScale).sp) }
         t.secs.forEachIndexed { k, s ->
@@ -906,5 +911,6 @@ fun FiqhPage(id: String, open: (String) -> Unit) {
             t.links.forEach { (label, to) -> Choice(label, false) { open(to) } }
         }
         Sub("ملخّص ميسّر من كتب الفقه المقارن؛ وأقوال المذاهب على المعتمد عند كلٍّ منها. للمسائل الخاصة اسأل أهل العلم.", Modifier.padding(4.dp), size = 11.sp)
+    }
     }
 }

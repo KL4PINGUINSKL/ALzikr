@@ -191,6 +191,7 @@ object HadithSearch {
 /** One search box for every hadith: the explained encyclopedia and the books on the phone. */
 @Composable
 fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val keyboard = LocalSoftwareKeyboardController.current
@@ -207,6 +208,7 @@ fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
     openSharh?.let { SharhOpen(it) { openSharh = null }; return }
     openAt?.let { (b, n) -> HadithReader(b, 0, { openAt = null }, focus = n); return }
     openBook?.let { b -> HadithReader(b, 0, { openBook = null }); return }
+    keep.SaveableStateProvider("main") {
     fun run() {
         if (query.isBlank() || busy) return
         keyboard?.hide()
@@ -266,5 +268,6 @@ fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
                 }
             }
         }
+    }
     }
 }

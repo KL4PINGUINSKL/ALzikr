@@ -68,6 +68,7 @@ internal fun copy(c: Context, text: String) {
 /** The Library tab: the Quran and the hadith books. Opens a reader when [Nav] asks for one. */
 @Composable
 fun LibraryScreen() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     // The verse asked for is framed; with Nav.quranSheet its sheet opens at once.
@@ -75,13 +76,14 @@ fun LibraryScreen() {
     Nav.hadith?.let { (b, n) -> HadithReader(b, n, back = { Nav.hadith = null }); return }
     Nav.sharh?.let { id -> SharhOpen(id) { Nav.sharh = null }; return }
     Nav.hadithQuery?.let { q -> HadithSearchPage(initial = q) { Nav.hadithQuery = null }; return }
+    keep.SaveableStateProvider("main") {
     var section by rememberSaveable { mutableStateOf(0) }
     Nav.library?.let { section = it; Nav.library = null }
     // A books section opened from the stories or the sciences ("" = all books).
     var booksAt by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
     booksAt?.let { (id, name) ->
         Subpage(if (id.isEmpty()) "الكتب الإسلامية" else name, { booksAt = null }) { BooksHome(root = id.ifEmpty { null }, rootTitle = name) }
-        return
+        return@SaveableStateProvider
     }
     Column(Modifier.fillMaxSize()) {
         // The sections as an even grid of tiles that slides away with the finger as you scroll down and slides back as
@@ -122,6 +124,7 @@ fun LibraryScreen() {
                 else -> Favorites()
             }
         }
+    }
     }
 }
 
@@ -606,9 +609,11 @@ private fun TafsirHome() {
 
 @Composable
 private fun HadithHome() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     var searching by rememberSaveable { mutableStateOf(false) }
     if (searching) { HadithSearchPage { searching = false }; return }
+    keep.SaveableStateProvider("main") {
     val scope = rememberCoroutineScope()
     @Suppress("UNUSED_VARIABLE") val v = Hadith.version
     var remove by remember { mutableStateOf<Hadith.Info?>(null) }
@@ -661,10 +666,12 @@ private fun HadithHome() {
                 }
             })
     }
+    }
 }
 
 @Composable
 internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: String? = number.takeIf { it > 0 }?.toString()) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -696,6 +703,7 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
         TextReading(Hadith.info(bookId)?.title ?: "", "hadith:$bookId", blocks, chapter?.let { at[it] } ?: -1) { readMode = false }
         return
     }
+    keep.SaveableStateProvider("main") {
     // Opened on one hadith: go to its chapter.
     LaunchedEffect(b, focus) { if (b != null && focus != null && b.chapters.size > 1) b.items.firstOrNull { it.number == focus }?.let { chapter = it.chapter } }
     Subpage(Hadith.info(bookId)?.title ?: "", { if (chapter != null && query.isEmpty()) chapter = null else back() }) {
@@ -738,6 +746,7 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
                 items(shown, key = { "${it.chapter}-${it.number}-${it.text.length}" }) { h -> HadithCard(b, h, focused = h.number == focus, openSharh = { id -> val k = shown.indexOf(h); if (k >= 0) walk = Triple(shown, k, id) else sharhId = id }) }
             }
         }
+    }
     }
 }
 

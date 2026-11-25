@@ -169,6 +169,7 @@ object Kids {
 /** «قسم الأطفال»: the first tab in the children's theme, and a page in More for everyone else. */
 @Composable
 fun KidsHome() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     var page by rememberSaveable { mutableStateOf<String?>(null) }
     page?.let { p ->
@@ -200,6 +201,7 @@ fun KidsHome() {
         }
         return
     }
+    keep.SaveableStateProvider("main") {
     val sp = Pet.species
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(P.accent.copy(alpha = .12f)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -225,6 +227,7 @@ fun KidsHome() {
         }
         if (!Looks.byId(Data.look).kids) Text("🎨 اجعل التطبيق كله للأطفال: اختر ثيم «الأطفال» من الثيمات", color = P.accent, fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { Data.look = "kids"; Nav.tab = "kids"; Nav.history.clear() }.padding(12.dp))
+    }
     }
 }
 
@@ -360,8 +363,10 @@ private fun LetterGame() {
 
 @Composable
 private fun KidsTajweed() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     var game by rememberSaveable { mutableStateOf(false) }
     if (game) { SunMoonGame { game = false }; return }
+    keep.SaveableStateProvider("main") {
     data class K(val emoji: String, val title: String, val text: String, val ex: List<Tajweed.Ex>)
     val cards = listOf(
         K("📖", "ما هو التجويد؟", "أن نقرأ القرآن كما قرأه النبي ﷺ: نُخرج كل حرف من مكانه، ونعطيه حقّه. قال الله: ﴿ورتّل القرآن ترتيلًا﴾.", listOf(Tajweed.Ex("ورتل القرآن ترتيلا", 73, 4))),
@@ -388,6 +393,7 @@ private fun KidsTajweed() {
         }
         Text("للكبار ولمن يريد المزيد: «تعلّم التجويد» في المزيد ›", color = P.accent, fontSize = 14.sp,
             modifier = Modifier.clip(L.shape(10.dp)).clickable { Nav.morePage = "tajweed"; Nav.go("more") }.padding(8.dp))
+    }
     }
 }
 

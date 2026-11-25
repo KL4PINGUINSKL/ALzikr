@@ -244,6 +244,7 @@ object Tajweed {
 
 @Composable
 fun TajweedPage() {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
@@ -260,6 +261,7 @@ fun TajweedPage() {
             return
         }
     }
+    keep.SaveableStateProvider("main") {
     val all = Tajweed.lessons.size
     val done = Tajweed.doneCount()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -286,6 +288,7 @@ fun TajweedPage() {
             }
         }
         Sub("المرجع: تحفة الأطفال للجمزوري، والمقدمة الجزرية لابن الجزري، برواية حفص عن عاصم من طريق الشاطبية. التجويد يُتلقّى بالمشافهة، فاعرض قراءتك على معلّم متقن.", Modifier.padding(4.dp), size = 11.sp)
+    }
     }
 }
 

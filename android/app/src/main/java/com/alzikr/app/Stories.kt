@@ -86,9 +86,11 @@ object Stories {
 /** Quran stories and Islamic stories. */
 @Composable
 fun StoriesHome(openBooks: (String, String) -> Unit) {
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     var open by rememberSaveable { mutableStateOf<Int?>(null) }
     Nav.story?.let { open = it; Nav.story = null }
     open?.let { i -> StoryReader(Stories.quran[i]) { open = null }; return }
+    keep.SaveableStateProvider("main") {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Hint("stories", "📖", "قصص القرآن تُقرأ بآياتها وتفسيرها الميسّر، ويمكنك الاستماع إليها. وفي الأسفل كتب القصص الإسلامية: الأنبياء والسيرة والصحابة.") }
         item { Title("قصص القرآن الكريم") }
@@ -113,6 +115,7 @@ fun StoriesHome(openBooks: (String, String) -> Unit) {
                 GText("📚", fontSize = 18.sp)
             }
         }
+    }
     }
 }
 

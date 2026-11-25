@@ -66,15 +66,19 @@ import kotlin.math.roundToInt
 @Composable
 fun MoreScreen(openSettings: (String) -> Unit) {
     val stack = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    // Each level (the tiles, a list page under an opened page…) keeps its scroll while a deeper page covers it.
+    val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    fun levelKey(depth: Int, p: String) = "$depth:$p"
     // A page opened from another tab (a shortcut) goes back to that tab; one opened here goes back to More.
     var fromOutside by remember { mutableStateOf(false) }
     fun open(p: String) { stack.add(p) }
     fun close() {
-        if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+        if (stack.isNotEmpty()) { keep.removeState(levelKey(stack.size, stack.last())); stack.removeAt(stack.lastIndex) }
         if (stack.isEmpty() && fromOutside) { fromOutside = false; Nav.back() }
     }
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
+        keep.SaveableStateProvider(levelKey(stack.size, p)) {
         Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
@@ -114,8 +118,10 @@ fun MoreScreen(openSettings: (String) -> Unit) {
                 } else BackupPage()
             }
         }
+        }
         return
     }
+    keep.SaveableStateProvider("root") {
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
@@ -165,6 +171,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
             }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
             Triple("↗", "مشاركة التطبيق") { activity?.let { shareApp(it) } },
         ))
+    }
     }
 }
 
