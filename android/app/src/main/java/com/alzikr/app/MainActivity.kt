@@ -1,5 +1,7 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import android.Manifest
 import android.content.Intent
 import android.os.Build
@@ -224,7 +226,7 @@ private fun Root() {
                     if (look.nav == NavStyle.LANTERNS && !inPage) LanternTabs()
                     Row(Modifier.weight(1f)) {
                     if (look.nav == NavStyle.RAIL && !inPage) SideRail()
-                    Box(Modifier.weight(1f)) {
+                    Box(Modifier.weight(1f).then(if (inPage || Nav.search) Modifier else Modifier.tabSwipe())) {
                         // Notes pinned to this page hang at its top corner (hidden over readers, shown on the calendar).
                         val scrapPlace = if (Nav.tab == "more" && Nav.moreTop == "calendar") "calendar" else Nav.tab
                         when (Nav.tab) {
@@ -296,11 +298,34 @@ private fun Header() {
             Sub("📅 " + dateLine(), Modifier.clip(L.shape(8.dp)).clickable { Nav.morePage = "calendar"; Nav.go("more") }, size = 12.sp)
         }
         // The settings live in «المزيد» now, so the friend takes the gear's place and is a little bigger.
-        if (pet) PetStage(Modifier.width(150.dp).padding(start = 4.dp), height = 88)
+        // The friend, with its glow if one is chosen («صديقي» › 🖼).
+        if (pet) Box(Modifier.width(150.dp).padding(start = 4.dp)) { PetGlow(); PetStage(Modifier.fillMaxWidth(), height = 88) }
         // The search over everything: one small, quiet button at the header's end.
         Box(Modifier.size(40.dp).clip(L.shape(12.dp)).clickable { Nav.search = true }, contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("🔍", tint = P.muted, size = 20.dp) else Icon(Icons.Filled.Search, "البحث في كل التطبيق", tint = P.muted)
         }
+    }
+}
+
+/**
+ * A sideways swipe over a section's page moves to the next or previous section, round like a wheel: after the last
+ * comes the first. Right-to-left, so a swipe to the left goes on to the next one (the one to the left in the bar).
+ * Lists that scroll sideways keep their own swipes (they take the gesture first).
+ */
+@Composable
+private fun Modifier.tabSwipe(): Modifier {
+    val ids = sections.map { it.id }
+    return this.pointerInput(ids) {
+        var total = 0f
+        detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragCancel = { total = 0f }, onDragEnd = {
+            val limit = 90.dp.toPx()
+            val i = ids.indexOf(Nav.tab).takeIf { it >= 0 } ?: 0
+            if (kotlin.math.abs(total) > limit && ids.isNotEmpty()) {
+                val next = if (total < 0) (i + 1) % ids.size else (i - 1 + ids.size) % ids.size
+                Nav.go(ids[next])
+            }
+            total = 0f
+        }) { change, dx -> total += dx; change.consume() }
     }
 }
 

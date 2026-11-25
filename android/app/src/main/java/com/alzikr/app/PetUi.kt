@@ -340,8 +340,15 @@ fun PetPage() {
         var journal by remember { mutableStateOf(false) }
         if (sp != null) Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         if (journal) JournalSheet { journal = false }
+        var lookSheet by remember { mutableStateOf(false) }
+        if (lookSheet) PetLookSheet { lookSheet = false }
         if (tab == "friend" && sp != null) Panel(color = P.card, pad = 12.dp) {
-            Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110, paper = P.card) }
+            // The friend in its scene (a drawn background, or a picture from the phone); «🖼» to choose it and the glow.
+            Box(Modifier.fillMaxWidth()) {
+                PetStageWithBackdrop(110)
+                Text("🖼", fontSize = 16.sp, modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).clip(L.shape(10.dp)).background(androidx.compose.ui.graphics.Color(0x66000000)).clickable { lookSheet = true }.padding(horizontal = 8.dp, vertical = 4.dp))
+            }
+            Text("🖼 الخلفية والوهج", color = P.accent, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally).clip(L.shape(8.dp)).clickable { lookSheet = true }.padding(4.dp))
             Text(Pet.name, color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             val mood = Pet.mood()
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {

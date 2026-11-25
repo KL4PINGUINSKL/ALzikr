@@ -135,9 +135,15 @@ class NoteBubble : Service() {
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> { sx = e.rawX; sy = e.rawY; px = params.x; py = params.y; moved = false; pin.animate().scaleX(.92f).scaleY(.92f).setDuration(90).start() }
                 MotionEvent.ACTION_MOVE -> { val dx = e.rawX - sx; val dy = e.rawY - sy
-                    if (moved || kotlin.math.abs(dx) + kotlin.math.abs(dy) > dp(8)) { moved = true; params.x = px + dx.toInt(); params.y = py + dy.toInt(); runCatching { wm?.updateViewLayout(root, params) } } }
+                    if (moved || kotlin.math.abs(dx) + kotlin.math.abs(dy) > dp(8)) {
+                        if (!moved) { card?.let { root.removeView(it); card = null }; showTrash() }
+                        moved = true; params.x = px + dx.toInt(); params.y = py + dy.toInt(); runCatching { wm?.updateViewLayout(root, params) }
+                        markTrash(e.rawX, e.rawY)
+                    } }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     pin.animate().scaleX(1f).scaleY(1f).setDuration(120).start()
+                    if (moved && overTrash) { hideTrash(); close(); return@setOnTouchListener true }
+                    hideTrash()
                     if (moved) {
                         val w = resources.displayMetrics.widthPixels
                         if (card == null) params.x = if (params.x + dp(31) < w / 2) dp(6) else w - dp(66)
@@ -186,7 +192,44 @@ class NoteBubble : Service() {
         box.alpha = 0f; box.translationY = -dp(8).toFloat(); box.animate().alpha(1f).translationY(0f).setDuration(160).start()
     }
 
-    override fun onDestroy() { view?.let { runCatching { wm?.removeView(it) } }; view = null; super.onDestroy() }
+    // ---- the ✕ at the bottom centre while the bubble is dragged: drop it there to close the bubble
+    private var trash: TextView? = null
+    private var overTrash = false
+    private fun showTrash() {
+        if (trash != null) return
+        val t = TextView(this).apply {
+            text = "✕"; textSize = 22f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable().apply { shape = android.graphics.drawable.GradientDrawable.OVAL; setColor(0xCC202124.toInt()); setStroke(dp(2), 0x66FFFFFF) }
+            elevation = dp(6).toFloat(); alpha = 0f; scaleX = .7f; scaleY = .7f
+        }
+        val p = WindowManager.LayoutParams(dp(64), dp(64), WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, PixelFormat.TRANSLUCENT).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL; y = dp(72)
+        }
+        runCatching { wm?.addView(t, p) }.onSuccess { trash = t; t.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(150).start() }
+    }
+    /** Near the ✕ (within about 90 dp of its centre): it grows and turns red. */
+    private fun markTrash(x: Float, y: Float) {
+        val m = resources.displayMetrics
+        val near = kotlin.math.hypot(x - m.widthPixels / 2f, y - (m.heightPixels - dp(72) - dp(32))) < dp(90)
+        if (near == overTrash) return
+        overTrash = near
+        trash?.let { t ->
+            (t.background as? android.graphics.drawable.GradientDrawable)?.setColor(if (near) 0xEED93025.toInt() else 0xCC202124.toInt())
+            t.animate().scaleX(if (near) 1.25f else 1f).scaleY(if (near) 1.25f else 1f).setDuration(120).start()
+            if (near) t.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+        }
+    }
+    private fun hideTrash() { trash?.let { runCatching { wm?.removeView(it) } }; trash = null }
+    /** Dropped on the ✕: the note leaves the bubble (it stays a note), and the bubble goes. */
+    private fun close() {
+        overTrash = false
+        Store.notes().firstOrNull { it.bubble }?.let { Store.noteInBubble(it.id, false) }
+        android.widget.Toast.makeText(this, "أُغلقت الفقاعة. تعيدها من الملاحظة", android.widget.Toast.LENGTH_SHORT).show()
+        stopSelf()
+    }
+
+    override fun onDestroy() { hideTrash(); view?.let { runCatching { wm?.removeView(it) } }; view = null; super.onDestroy() }
 
     companion object {
         private const val CH = "note_bubble"

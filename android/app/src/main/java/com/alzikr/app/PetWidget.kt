@@ -75,7 +75,16 @@ class PetWidget : AppWidgetProvider() {
             val frame = Progress.frames.firstOrNull { it.id == Progress.frame }
             val fr = frame?.res
             var ink = ThemeColors.argb(pal.ink); var gold = ThemeColors.argb(pal.gold); var acc = ThemeColors.argb(pal.accent)
-            if (fr == null) ThemeColors.background(v, R.id.p_root, pal.surface)
+            val pic = runCatching { PetBackdrop.widgetBitmap(c) }.getOrNull()
+            if (pic != null) {
+                // A scene or a photo chosen for the widget («صديقي» › 🖼): behind everything, the root itself clear.
+                v.setViewVisibility(R.id.p_bg, android.view.View.VISIBLE); v.setImageViewBitmap(R.id.p_bg, pic.first)
+                v.setInt(R.id.p_root, "setBackgroundColor", 0)
+                if (pic.second) { ink = 0xFF2A1E10.toInt(); gold = 0xFF7A4E00.toInt(); acc = 0xFF4A3200.toInt() }
+                else { ink = 0xFFFFFFFF.toInt(); gold = 0xFFF3D27A.toInt(); acc = 0xFFFFFFFF.toInt() }
+            } else v.setViewVisibility(R.id.p_bg, android.view.View.GONE)
+            if (pic != null) Unit
+            else if (fr == null) ThemeColors.background(v, R.id.p_root, pal.surface)
             else {
                 v.setInt(R.id.p_root, "setBackgroundResource", fr)
                 if (android.os.Build.VERSION.SDK_INT >= 31) v.setColorStateList(R.id.p_root, "setBackgroundTintList", null)

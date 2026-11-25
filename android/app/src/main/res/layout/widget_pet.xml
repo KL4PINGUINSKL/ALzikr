@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Only RemoteViews-safe classes here (no plain View/Space). The friend fills the height; the text fills the width. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/p_root"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/p_outer"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <!-- The chosen scene or photo (a bitmap with rounded corners); hidden when the theme colour or a frame is used. -->
+    <ImageView android:id="@+id/p_bg" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="centerCrop" android:visibility="gone" android:importantForAccessibility="no" />
+<LinearLayout android:id="@+id/p_root"
     android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
     android:background="@drawable/widget_bg" android:paddingStart="6dp" android:paddingEnd="10dp" android:paddingTop="6dp" android:paddingBottom="8dp"
     android:layoutDirection="rtl">
@@ -40,3 +45,4 @@
             android:text="📿 سبّح" android:textSize="15sp" android:textStyle="bold" android:maxLines="1" />
     </LinearLayout>
 </LinearLayout>
+</FrameLayout>
