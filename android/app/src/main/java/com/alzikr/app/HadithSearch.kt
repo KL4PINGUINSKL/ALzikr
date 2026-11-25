@@ -106,23 +106,48 @@ object HadithSearch {
     /** Letters and spaces only (no marks, no punctuation), one form of alef / ya / ta marbuta. */
     private fun letters(t: String) = Quran.normalize(t).replace(Regex("[^\u0621-\u064A\\s]"), " ").replace(Regex("\\s+"), " ").trim()
 
-    private var titleWords: List<Pair<String, List<String>>>? = null
+    /** Each title as words, its distinctive words, and the words too common to tell hadiths apart. */
+    private class Titles(val list: List<Triple<String, List<String>, List<String>>>, val common: Set<String>)
+    private var titles: Titles? = null
+
+    private fun titles(c: Context): Titles = titles ?: run {
+        val all = sharhIndex(c).map { it.id to letters(it.title).split(' ').filter { w -> w.isNotEmpty() } }
+        // Words in more than 1% of the titles («رسول», «الله», «صلي», «قال», «كان»…) say nothing about which hadith it is.
+        val df = HashMap<String, Int>()
+        all.forEach { (_, ws) -> ws.toSet().forEach { df[it] = (df[it] ?: 0) + 1 } }
+        val common = df.filter { it.value > all.size / 100 || it.key.length < 2 }.keys
+        Titles(all.map { (id, ws) -> Triple(id, ws, ws.filter { it !in common }) }.filter { it.third.isNotEmpty() }, common)
+    }.also { if (it.list.isNotEmpty()) titles = it }
 
     /**
-     * The explanation for a hadith from its text: the encyclopedia's titles are the hadith's key words,
-     * so a title whose first five words appear in the text is a candidate, and the one that matches the
-     * most words in a row wins. About 40 of the Forty Nawawi match. Blocking.
+     * The explanation for a hadith from its text. The encyclopedia's titles are the hadith's own key words, so a title
+     * fits when its DISTINCTIVE words are in the text and several of them come in the same order. (It used to compare
+     * the first words only, so a title opening with «سمعت رسول الله صلى الله عليه وسلم يقول» fitted any hadith that
+     * opened the same way, and «إنما الأعمال بالنيات» opened another hadith's explanation.) 41 of the 42 Nawawi match,
+     * and a hadith with no fitting title gets none rather than a wrong one. Blocking.
      */
     fun findSharh(c: Context, hadithText: String): String? {
-        val words = titleWords ?: sharhIndex(c).map { it.id to letters(it.title).split(' ') }.filter { it.second.size >= 3 }.also { titleWords = it }
-        val text = " " + letters(hadithText) + " "
-        var best: String? = null; var bestScore = 0
-        for ((id, w) in words) {
-            val key = w.take(5).joinToString(" ")
-            if (!text.contains(" $key ")) continue
-            var n = minOf(5, w.size)
-            while (n < w.size && text.contains(" " + w.take(n + 1).joinToString(" ") + " ")) n++
-            if (n > bestScore) { bestScore = n; best = id }
+        val t = titles(c)
+        val tw = letters(hadithText).split(' ').filter { it.isNotEmpty() }
+        val pos = HashMap<String, MutableList<Int>>()
+        tw.forEachIndexed { k, w -> pos.getOrPut(w) { ArrayList() } += k }
+        var best: String? = null; var bestScore = 0.0
+        for ((id, all, distinct) in t.list) {
+            val hit = distinct.count { it in pos }
+            if (hit < 1 || hit < 2 && all.size > 2) continue
+            val cov = hit.toDouble() / distinct.size
+            // The longest stretch of the title found word for word in the text, and how many distinctive words it holds.
+            var run = 0; var runDistinct = 0
+            for (a in all.indices) for (p in pos[all[a]] ?: continue) {
+                var n = 1
+                while (a + n < all.size && p + n < tw.size && tw[p + n] == all[a + n]) n++
+                val d = (a until a + n).count { all[it] !in t.common }
+                if (d > runDistinct || d == runDistinct && n > run) { runDistinct = d; run = n }
+            }
+            val whole = run == all.size && all.size >= 2 && runDistinct >= 1
+            if (!(whole || cov >= 0.6 && runDistinct >= 3 || cov >= 0.999 && hit >= 2)) continue
+            val score = cov * 10 + runDistinct
+            if (score > bestScore) { bestScore = score; best = id }
         }
         return best
     }

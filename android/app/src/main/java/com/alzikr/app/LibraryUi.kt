@@ -661,6 +661,9 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
     // A hadith opened by itself counts after fifteen seconds on it.
     LaunchedEffect(bookId, focus) { if (focus != null) { kotlinx.coroutines.delay(15_000); Progress.record(Progress.Kind.HADITH, "$bookId:$focus") } }
     sharhId?.let { id -> SharhOpen(id) { sharhId = null }; return }
+    // An explanation opened from the list walks the hadiths around it (next / previous).
+    var walk by remember(bookId) { mutableStateOf<Triple<List<Hadith.Item>, Int, String>?>(null) }
+    walk?.let { (list, i, id) -> BookSharh(Hadith.info(bookId)?.title ?: "", list, i, id) { walk = null }; return }
     val b = book
     var readMode by rememberSaveable(bookId) { mutableStateOf(false) }
     if (readMode && b != null) {
@@ -707,7 +710,7 @@ internal fun HadithReader(bookId: String, number: Int, back: () -> Unit, focus: 
             } else {
                 if (chapter != null && q.isEmpty()) item { Title(b.chapters[chapter] ?: "") }
                 if (shown.isEmpty()) item { Sub("لا نتائج") }
-                items(shown, key = { "${it.chapter}-${it.number}-${it.text.length}" }) { h -> HadithCard(b, h, focused = h.number == focus, openSharh = { sharhId = it }) }
+                items(shown, key = { "${it.chapter}-${it.number}-${it.text.length}" }) { h -> HadithCard(b, h, focused = h.number == focus, openSharh = { id -> val k = shown.indexOf(h); if (k >= 0) walk = Triple(shown, k, id) else sharhId = id }) }
             }
         }
     }

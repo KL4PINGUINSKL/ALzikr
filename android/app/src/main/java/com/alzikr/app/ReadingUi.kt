@@ -51,6 +51,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -84,6 +86,7 @@ fun SharhHome() {
     var parent by rememberSaveable { mutableStateOf<String?>(null) }
     var openCat by rememberSaveable { mutableStateOf<String?>(null) }
     var openHadith by rememberSaveable { mutableStateOf<String?>(null) }
+    var openList by remember { mutableStateOf<List<String>>(emptyList()) }
     fun load(refresh: Boolean) = scope.launch {
         failed = false
         cats = withContext(Dispatchers.IO) { Sharh.categories(ctx, refresh) }
@@ -92,8 +95,14 @@ fun SharhHome() {
     LaunchedEffect(Unit) { load(false) }
     var searching by rememberSaveable { mutableStateOf(false) }
     if (searching) { HadithSearchPage { searching = false }; return }
-    openHadith?.let { id -> SharhPage(id) { openHadith = null }; return }
-    openCat?.let { id -> SharhList(cats?.firstOrNull { it.id == id }?.title ?: "", id, open = { openHadith = it }) { openCat = null }; return }
+    openHadith?.let { id ->
+        // Next / previous walk the topic's list it was opened from.
+        val i = openList.indexOf(id)
+        val nav = if (i < 0) null else SharhNav("${Quran.digits(i + 1)} من ${Quran.digits(openList.size)}",
+            prev = openList.getOrNull(i - 1)?.let { p -> { openHadith = p } }, next = openList.getOrNull(i + 1)?.let { n -> { openHadith = n } })
+        SharhPage(id, nav) { openHadith = null }; return
+    }
+    openCat?.let { id -> SharhList(cats?.firstOrNull { it.id == id }?.title ?: "", id, open = { h, list -> openList = list; openHadith = h }) { openCat = null }; return }
     val all = cats
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { SearchBar("ابحث عن حديث وشرحه…") { searching = true } }
@@ -131,7 +140,7 @@ fun SharhHome() {
 }
 
 @Composable
-private fun SharhList(title: String, category: String, open: (String) -> Unit, back: () -> Unit) {
+private fun SharhList(title: String, category: String, open: (String, List<String>) -> Unit, back: () -> Unit) {
     val ctx = LocalContext.current
     val items = remember(category) { androidx.compose.runtime.mutableStateListOf<Sharh.Brief>() }
     var page by remember(category) { mutableStateOf(0) }
@@ -152,7 +161,7 @@ private fun SharhList(title: String, category: String, open: (String) -> Unit, b
         LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { OutlinedTextField(query, { query = it }, placeholder = { Text("ابحث في العناوين المحمّلة") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
             items(shown, key = { it.id }) { h ->
-                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { open(h.id) }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { open(h.id, shown.map { it.id }) }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(h.title, color = P.ink, fontSize = 15.sp, fontFamily = Fonts.naskh, lineHeight = 24.sp, modifier = Modifier.weight(1f))
                     if (Sharh.isFavorite(h.id)) Text(" ★", color = P.gold)
                 }
@@ -165,10 +174,63 @@ private fun SharhList(title: String, category: String, open: (String) -> Unit, b
 
 /** Opens one explained hadith on its own (from favorites). */
 @Composable
-fun SharhOpen(id: String, back: () -> Unit) = SharhPage(id, back)
+fun SharhOpen(id: String, back: () -> Unit) = SharhPage(id, null, back)
+
+/** Where an explained hadith sits in a list: «3 من 40», and the hadiths before and after it (null at the ends). */
+class SharhNav(val label: String, val prev: (() -> Unit)?, val next: (() -> Unit)?)
+
+/** The previous / next buttons over an explanation; [sharhSwipe] adds the sideways swipe (right = next, as in the mushaf). */
+@Composable
+internal fun SharhNavRow(nav: SharhNav) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("› الحديث السابق", color = if (nav.prev != null) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = nav.prev != null) { nav.prev?.invoke() }.padding(horizontal = 8.dp, vertical = 6.dp))
+        Spacer(Modifier.weight(1f))
+        Sub(nav.label, size = 12.sp)
+        Spacer(Modifier.weight(1f))
+        Text("الحديث التالي ‹", color = if (nav.next != null) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = nav.next != null) { nav.next?.invoke() }.padding(horizontal = 8.dp, vertical = 6.dp))
+    }
+}
+
+internal fun Modifier.sharhSwipe(nav: SharhNav?): Modifier = if (nav == null) this else pointerInput(nav) {
+    var drag = 0f
+    detectHorizontalDragGestures(onDragStart = { drag = 0f }, onDragCancel = { drag = 0f },
+        onDragEnd = { val limit = 70.dp.toPx(); if (drag > limit) nav.next?.invoke() else if (drag < -limit) nav.prev?.invoke(); drag = 0f }) { ch, dx -> drag += dx; ch.consume() }
+}
+
+/**
+ * The explanations of a book's hadiths one after another: opened on [start] (whose explanation is [firstId]), next /
+ * previous go to the neighbouring hadiths of [list]; one the encyclopedia does not explain shows its text and says so.
+ */
+@Composable
+fun BookSharh(bookTitle: String, list: List<Hadith.Item>, start: Int, firstId: String, back: () -> Unit) {
+    val ctx = LocalContext.current
+    var i by remember { mutableStateOf(start) }
+    var id by remember { mutableStateOf<String?>(firstId) }
+    var searched by remember { mutableStateOf(true) }
+    LaunchedEffect(i) {
+        if (i == start) { id = firstId; searched = true; return@LaunchedEffect }
+        searched = false; id = null
+        id = withContext(Dispatchers.IO) { HadithSearch.findSharh(ctx, list[i].text) }; searched = true
+    }
+    val h = list[i]
+    val num = h.number.toIntOrNull()?.let { Quran.digits(it) } ?: h.number
+    val nav = SharhNav("$bookTitle · $num", prev = if (i > 0) ({ i-- }) else null, next = if (i < list.size - 1) ({ i++ }) else null)
+    val found = id
+    if (found != null) { SharhPage(found, nav, back); return }
+    Subpage("شرح الحديث", back) {
+        Column(Modifier.fillMaxSize().sharhSwipe(nav).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SharhNavRow(nav)
+            Panel(color = P.card) { Text(h.text, color = P.ink, fontSize = (18 * Data.textScale).sp, lineHeight = (32 * Data.textScale).sp, fontFamily = Fonts.naskh) }
+            if (!searched) Row(verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(Modifier.size(18.dp), color = P.accent, strokeWidth = 2.dp); Sub("  جارٍ البحث عن شرحه…") }
+            else Sub("لا يوجد شرح لهذا الحديث في موسوعة الأحاديث المشروحة. اسحب أو اضغط «التالي» للحديث الذي بعده.")
+        }
+    }
+}
 
 @Composable
-private fun SharhPage(id: String, back: () -> Unit) {
+private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
     QuietWhileReading()  // the friend stays calm and silent while reading
     val ctx = LocalContext.current
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -195,7 +257,10 @@ private fun SharhPage(id: String, back: () -> Unit) {
         val x = h
         if (x == null) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { if (failed) Sub("تعذّر التحميل، تحقق من الإنترنت.") else CircularProgressIndicator(color = P.accent) }; return@Subpage }
         val full = "${x.text}\n[${x.attribution} · ${x.grade}]\n\nالشرح: ${x.explanation}"
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val scroll = rememberScrollState()
+        LaunchedEffect(id) { scroll.scrollTo(0) }
+        Column(Modifier.fillMaxSize().sharhSwipe(nav).verticalScroll(scroll).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            nav?.let { SharhNavRow(it) }
             Panel(color = P.card) {
                 Text(x.text, color = P.ink, fontSize = (19 * Data.textScale).sp, lineHeight = (34 * Data.textScale).sp, fontFamily = Fonts.naskh)
                 Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
