@@ -330,13 +330,21 @@ fun PetPage() {
     @Suppress("UNUSED_VARIABLE") val r = resumed
     val sp = Pet.species
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("pet2", "🐾", "صفحة صديقك في أقسام: «صديقي» لحاله وتحدّيه واللعب معه، و«المظهر» لاختياره وشكله، و«الغرفة» و«الذكريات» و«الحقيبة»، و«الإعدادات». اضغط عليه ليقول شيئًا، ومطولًا لتفتح هذه الصفحة.")
+        Hint("pet3", "🐾", "صفحة صديقك في أقسام: «صديقي» لحاله ولعبه وتحدّيه، و«المظهر» لاختياره وشكله واسمه، و«الزينة» لخلفيته وإطار أداته ووهجه، و«المكافآت» لمستواك وأوسمتك، و«الغرفة» و«الذكريات» و«الحقيبة»، و«الإعدادات».")
         // The page in tabs (organised); without a friend yet, it opens on choosing one.
         var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(PetTabs.start ?: "friend") }
         LaunchedEffect(Unit) { PetTabs.start = null }
         if (sp == null) tab = "look"
-        TabGrid(listOf(Triple("friend", "🐾", "صديقي"), Triple("look", "🎨", "المظهر"), Triple("room", "🏠", "الغرفة"),
-            Triple("album", "📔", "الذكريات"), Triple("bag", "🎒", "الحقيبة"), Triple("settings", "⚙", "الإعدادات")), tab) { tab = it }
+        TabGrid(listOf(Triple("friend", "🐾", "صديقي"), Triple("look", "🎨", "المظهر"), Triple("decor", "🖼", "الزينة"), Triple("rewards", "🎁", "المكافآت"),
+            Triple("room", "🏠", "الغرفة"), Triple("album", "📔", "الذكريات"), Triple("bag", "🎒", "الحقيبة"), Triple("settings", "⚙", "الإعدادات")), tab, cols = 4) { tab = it }
+        if (tab == "decor" && sp != null) {
+            var part by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("card") }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("card" to "بطاقته", "widget" to "أداة الشاشة", "glow" to "الوهج").forEach { (k, l) -> Choice(l, part == k) { part = k } }
+            }
+            Panel(pad = 14.dp) { PetDecorContent(part) }
+        }
+        if (tab == "rewards") RewardsContent()
         // «سجل صديقي»: what opened and when, the level and the friendship now, and what comes next.
         var journal by remember { mutableStateOf(false) }
         if (journal) JournalSheet { journal = false }
@@ -360,9 +368,7 @@ fun PetPage() {
             Text("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", color = soft, fontSize = 11.sp, modifier = Modifier.fillMaxWidth())
         }
         // Under the friend: its background and glow, and the log — each as a card.
-        if (tab == "friend" && sp != null) Action("🖼 خلفية صديقك ووهجه، وخلفية أداته على الشاشة", Modifier.fillMaxWidth(), filled = false) { lookSheet = true }
-        if (sp != null && tab == "friend") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
-        if (sp != null && tab == "friend") PetHideCard()
+        if (tab == "album") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         if (tab == "friend" && sp != null && petHasMoves(sp)) Panel(pad = 12.dp) {
             Title("العب معه")
             Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
@@ -410,7 +416,7 @@ fun PetPage() {
                     Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
                 }
                 Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
-                Action("🎁 مكافآتي وأوسمتي", Modifier.fillMaxWidth().padding(top = 10.dp)) { Nav.morePage = "rewards"; Nav.go("more") }
+                Action("🎁 مكافآتي وأوسمتي", Modifier.fillMaxWidth().padding(top = 10.dp)) { tab = "rewards" }
             }
             val st = Pet.streak()
             Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
@@ -429,6 +435,7 @@ fun PetPage() {
             }
             else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
         }
+        if (tab == "settings" && sp != null) PetHideCard()
         if (tab == "settings" && sp != null) Panel(pad = 14.dp) {
             Title("على الشاشة الرئيسية")
             Sub("ضع ${Pet.name} على شاشة هاتفك الرئيسية: صورته وقلوب يومه وكلمة منه، وزرّا «كلّمني» و«سبّح». أو اختصارًا في رئيسية التطبيق.", size = 12.sp)

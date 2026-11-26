@@ -30,24 +30,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 /** «مكافآتي»: the level, today's experience, what each level opens, the widget frames, the badges, and the certificate. */
 @Composable
 fun RewardsPage() {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) { RewardsContent() }
+}
+
+/** The rewards in four short sections (no long page to scroll through). */
+@Composable
+fun RewardsContent() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val sp = Pet.species
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    var part by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("me") }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Hint("rewards", "🎁", "النقاط والمستويات مكافآت داخل التطبيق تفرح بها مع صديقك، وليست مقياسًا للأجر ولا لصلاح أحد؛ فالأجر عند الله وحده، والعبرة بالإخلاص. وتستطيع إخفاءها من آخر هذه الصفحة.")
         SettingRow("إظهار المستويات والنقاط", if (Progress.showLevels) null else "مخفية: تبقى المكافآت تُفتح بهدوء") { Switch(Progress.showLevels, { Progress.showLevels = it }) }
         if (!Progress.showLevels) return@Column
         val lv = Progress.level(); val x = Progress.xp
-        Panel(color = P.card, pad = 14.dp) {
+        TabGrid(listOf(Triple("me", "✨", "تقدّمي"), Triple("badges", "🏅", "أوسمتي"), Triple("gifts", "❤", "جوائز الصداقة"), Triple("levels", "🔓", "ما يُفتح")), part, cols = 4) { part = it }
+        if (part == "me") Panel(color = P.card, pad = 14.dp) {
             if (sp != null) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { PetLottie(sp, Modifier.size(110.dp)) }
             Text("${Progress.title(lv)} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             Sub("${Quran.digits(x)} ✨ · المستوى التالي عند ${Quran.digits(Progress.need(lv + 1))}", Modifier.fillMaxWidth(), size = 12.sp)
         }
-        Panel(pad = 14.dp) {
+        if (part == "me") Panel(pad = 14.dp) {
             Title("خبرة اليوم ✨")
             Progress.Kind.entries.forEach { k ->
                 val got = Progress.todayXp(k)
@@ -58,7 +68,7 @@ fun RewardsPage() {
             }
             Sub("لكل عمل نقاطه مرة في اليوم، ولكل نوع حدّ يومي، حتى يكبر صديقك بهدوء. الصفحة تُحسب بعد عشر ثوانٍ عليها في وضع القراءة أو عشرين في المصحف، أو بأزرار الختمة لمن يقرأ في مصحف ورقي. والحديث بعد 15 ثانية عليه، والشرح بعد دقيقة.", size = 11.sp)
         }
-        Panel(pad = 14.dp) {
+        if (part == "levels") Panel(pad = 14.dp) {
             Title("ما يُفتح لك")
             Progress.rewards().forEach { r ->
                 val got = lv >= r.level
@@ -72,7 +82,7 @@ fun RewardsPage() {
             }
             Sub("وكل مستوى من 2 إلى 125 يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
         }
-        Panel(pad = 14.dp) {
+        if (part == "gifts") Panel(pad = 14.dp) {
             Title("جوائز الصداقة ${Friendship.heart}")
             Sub("بنقاط الصداقة وحدها (${Quran.digits(Progress.bondPoints)} ❤ الآن)، منفصلة عن المستوى: إطارات، وثيمات، وأوسمة، ومزايا.", size = 12.sp)
             Friendship.gifts.forEach { g ->
@@ -86,19 +96,8 @@ fun RewardsPage() {
                 }
             }
         }
-        Panel(pad = 14.dp) {
-            Title("إطار أداة «صديقي»")
-            // An even grid, like the friends' looks.
-            Box(Modifier.padding(top = 8.dp)) {
-                TileGrid(Progress.frames, cols = 3, rows = 2, noun = "الإطارات") { f, m ->
-                    val open = f.open; val on = Progress.frame == f.id
-                    PictureTile(f.name, on, open, f.bond, m, onClick = { if (open) { Progress.frame = f.id; PetWidget.update(ctx) } }) { pm ->
-                        Box(pm.padding(6.dp).clip(L.shape(10.dp)).background(framePreview(f.id)))
-                    }
-                }
-            }
-        }
-        Panel(pad = 14.dp) {
+        if (part == "gifts") Sub("🖼 إطارات الأداة وخلفياتها تختارها من «صديقي» › «الزينة».", size = 12.sp)
+        if (part == "badges") Panel(pad = 14.dp) {
             Title("أوسمتي 🏅")
             val earned = Progress.earned()
             Progress.badges.chunked(3).forEach { row ->
@@ -115,7 +114,7 @@ fun RewardsPage() {
                 }
             }
         }
-        if (sp != null) Panel(pad = 14.dp) {
+        if (part == "badges" && sp != null) Panel(pad = 14.dp) {
             Title("شهادة الصداقة 📜")
             val cert = Friendship.has("certificate")
             Sub(if (cert) "صورة فيها اسم صديقك ومستواه وأيامكما معًا، تشاركها إن شئت. لا تظهر فيها تفاصيل عبادتك." else "تُفتح بـ ${Quran.digits(Friendship.gift("certificate")!!.bond)} ❤ صداقة.", size = 12.sp)
@@ -210,5 +209,20 @@ object Certificate {
         f.outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         val uri = androidx.core.content.FileProvider.getUriForFile(c, c.packageName + ".files", f)
         c.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("image/png").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), "مشاركة الشهادة").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
+
+
+/** The widget's frames, an even grid (used in «الزينة»). */
+@Composable
+fun WidgetFramesGrid() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = LocalContext.current
+    TileGrid(Progress.frames, cols = 3, rows = 2, startOpen = Progress.frames.indexOfFirst { it.id == Progress.frame } >= 6, noun = "الإطارات") { f, m ->
+        val open = f.open; val on = Progress.frame == f.id
+        PictureTile(f.name, on, open, f.bond, m, onClick = {
+            if (open) { Progress.frame = f.id; PetWidget.update(ctx) }
+            else android.widget.Toast.makeText(ctx, "يُفتح عند ${Quran.digits(f.bond)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show()
+        }) { pm -> Box(pm.padding(6.dp).clip(L.shape(10.dp)).background(framePreview(f.id))) }
     }
 }

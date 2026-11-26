@@ -133,7 +133,13 @@ object PetBackdrop {
         val cv = android.graphics.Canvas(out)
         val r = 22f * c.resources.displayMetrics.density
         val clip = android.graphics.Path().apply { addRoundRect(0f, 0f, w.toFloat(), h.toFloat(), r, r, android.graphics.Path.Direction.CW) }
-        cv.clipPath(clip)
+        // A frame chosen too: drawn first, then the scene inset inside it (the frame stays as a border).
+        val frame = Progress.frames.firstOrNull { it.id == Progress.frame }?.res
+        if (frame != null) runCatching {
+            androidx.core.content.ContextCompat.getDrawable(c, frame)?.let { d -> d.setBounds(0, 0, w, h); d.draw(cv) }
+            val inset = 9f * c.resources.displayMetrics.density
+            cv.clipPath(android.graphics.Path().apply { addRoundRect(inset, inset, w - inset, h - inset, r - inset / 2, r - inset / 2, android.graphics.Path.Direction.CW) })
+        } else cv.clipPath(clip)
         var light = false
         if (id == "photo") {
             val src = runCatching { BitmapFactory.decodeFile(widgetPhoto(c).path) }.getOrNull() ?: return null
@@ -417,6 +423,16 @@ fun BoxScope.PetGlow() {
 /** Choosing the card's scene (or a picture from the phone) and the glow. */
 @Composable
 fun PetLookSheet(close: () -> Unit) {
+    AppSheet(onDismissRequest = close) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            PetDecorContent(null)
+        }
+    }
+}
+
+/** The friend's decorations: [part] "card" (its card's background), "widget" (the home-screen widget: frame and background), "glow", or null for all. */
+@Composable
+fun PetDecorContent(part: String?) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -427,9 +443,9 @@ fun PetLookSheet(close: () -> Unit) {
         if (uri != null) Thread { val ok = PetBackdrop.setWidgetPhoto(ctx, uri); android.os.Handler(android.os.Looper.getMainLooper()).post {
             if (ok) PetWidget.update(ctx) else android.widget.Toast.makeText(ctx, "تعذّر فتح الصورة", android.widget.Toast.LENGTH_SHORT).show() } }.start()
     }
-    AppSheet(onDismissRequest = close) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("🖼 خلفية ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (part == null || part == "card") {
+            Text("🖼 خلفية بطاقة ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub("ثمانٍ مفتوحة لك، وثمانٍ تفتحها نقاط الصداقة ❤، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤.", size = 12.sp)
             val items = listOf(PetBackdrop.Scene("", "بلا خلفية", 0)) + PetBackdrop.scenes
             items.chunked(3).forEach { row ->
@@ -451,9 +467,14 @@ fun PetLookSheet(close: () -> Unit) {
             Choice(if (!PetBackdrop.photoOpen()) "🔒 📷 صورة من هاتفك · ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤" else if (PetBackdrop.chosen == "photo") "📷 صورتك ✓ (اختر غيرها)" else "📷 صورة من هاتفك", PetBackdrop.chosen == "photo") {
                 if (PetBackdrop.photoOpen()) pick.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
+        }
+        if (part == null || part == "widget") {
+            Text("🖼 إطار الأداة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Sub("يحيط بالأداة، ومع الخلفية يصير حولها كبرواز.", size = 12.sp)
+            WidgetFramesGrid()
             Text("📱 خلفية أداة «صديقي» على الشاشة الرئيسية", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-            Sub("خلفيات للأداة غير خلفيات بطاقته: سبع مفتوحة، وسبع بنقاط الصداقة، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤. «لون الثيم أو الإطار» يُبقي إطارك المختار من الحقيبة.", size = 12.sp)
-            val wItems = listOf(PetBackdrop.WScene("", "لون الثيم أو الإطار", 0, false)) + PetBackdrop.widgetScenes
+            Sub("خلفيات للأداة غير خلفيات بطاقته، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤. «بلا خلفية» يُبقي لون الثيم أو الإطار وحده.", size = 12.sp)
+            val wItems = listOf(PetBackdrop.WScene("", "بلا خلفية", 0, false)) + PetBackdrop.widgetScenes
             wItems.chunked(3).forEach { row ->
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { s ->
@@ -473,7 +494,9 @@ fun PetLookSheet(close: () -> Unit) {
             Choice(if (!PetBackdrop.photoOpen()) "🔒 📷 صورة من هاتفك للأداة · ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤" else if (PetBackdrop.widgetBg == "photo") "📷 صورتك للأداة ✓ (اختر غيرها)" else "📷 صورة من هاتفك للأداة", PetBackdrop.widgetBg == "photo") {
                 if (PetBackdrop.photoOpen()) pickWidget.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
-            Text("✨ وهج حوله في أعلى التطبيق", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+        }
+        if (part == null || part == "glow") {
+            Text("✨ وهج حوله في أعلى التطبيق", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Wrap(gap = 8.dp) {
                 Choice("بلا وهج", PetBackdrop.glow.isEmpty()) { PetBackdrop.glow = "" }
                 PetBackdrop.glows.forEach { (k, c) ->
