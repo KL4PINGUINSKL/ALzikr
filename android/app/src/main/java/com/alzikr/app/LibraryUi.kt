@@ -789,7 +789,7 @@ private fun HadithCard(b: Hadith.Book, h: Hadith.Item, focused: Boolean = false,
             }.padding(horizontal = 12.dp, vertical = 8.dp))
         // The friend's gentle suggestion: after a while on a hadith opened by itself, if the encyclopedia explains it.
         // Quiet text only (no motion or sound), once per hadith, and it can be closed or turned off in the friend's settings.
-        if (focused && Pet.species != null && Store.prefs.getBoolean("pet_suggest", true)) {
+        if (focused && Pet.visible && Store.prefs.getBoolean("pet_suggest", true)) {
             var tip by remember(h.number) { mutableStateOf<String?>(null) }
             var closed by remember(h.number) { mutableStateOf(false) }
             LaunchedEffect(h.number) {

@@ -266,6 +266,7 @@ private fun Root() {
             settings?.let { s -> SettingsSheet(s.ifEmpty { null }) { settings = null } }
             Nav.settingsReq?.let { s -> settings = s; Nav.settingsReq = null }
             if (Nav.search) GlobalSearchPage { Nav.search = false }
+            WelcomePages()     // the first launch
             EyeBreak()         // «استراحة العين»: a short reminder card at the top
             ComfortOverlay()   // «نور الليل»: over everything, letting touches through
         }

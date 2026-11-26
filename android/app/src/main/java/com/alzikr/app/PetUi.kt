@@ -280,7 +280,7 @@ fun Bubble(text: String, onClick: () -> Unit) {
 @Composable
 fun PetIntro() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    if (Pet.introSeen || Pet.species != null) return
+    if (Pet.introSeen || Pet.species != null || !Welcome.seen) return
     val state = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val close = { Pet.introSeen = true }
     AppSheet(onDismissRequest = close) {
@@ -341,6 +341,11 @@ fun PetPage() {
         if (journal) JournalSheet { journal = false }
         var lookSheet by remember { mutableStateOf(false) }
         if (lookSheet) PetLookSheet { lookSheet = false }
+        if (tab == "friend" && sp != null && Pet.hidden) Panel(pad = 14.dp) {
+            Title("🙈 ${Pet.name} مخفي")
+            Sub("لا يظهر في أعلى التطبيق ولا فوق التطبيقات، ولا يقترح عليك شيئًا. صداقتك ونقاطك ومكافآتك محفوظة كما هي.", Modifier.padding(top = 4.dp), size = 13.sp)
+            Action("🐾 أظهر ${Pet.name} من جديد", Modifier.fillMaxWidth().padding(top = 10.dp)) { Pet.show(ctx) }
+        }
         if (tab == "friend" && sp != null) PetSceneCard { onScene ->
             val ink = if (onScene) androidx.compose.ui.graphics.Color.White else P.ink
             val soft = if (onScene) androidx.compose.ui.graphics.Color(0xDDFFFFFF) else P.muted
@@ -356,6 +361,7 @@ fun PetPage() {
         // Under the friend: its background and glow, and the log — each as a card.
         if (tab == "friend" && sp != null) Action("🖼 خلفية صديقك ووهجه، وخلفية أداته على الشاشة", Modifier.fillMaxWidth(), filled = false) { lookSheet = true }
         if (sp != null && tab == "friend") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
+        if (sp != null && tab == "friend") PetHideCard()
         if (tab == "friend" && sp != null && petHasMoves(sp)) Panel(pad = 12.dp) {
             Title("العب معه")
             Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
@@ -644,6 +650,25 @@ fun FriendshipPanel() {
                 text = { androidx.compose.material3.OutlinedTextField(text, { text = it.take(24) }, singleLine = true, placeholder = { Text(Progress.title()) }) },
                 confirmButton = { androidx.compose.material3.TextButton({ Friendship.nick = text; edit = false }) { Text("حفظ", color = P.accent) } },
                 dismissButton = { androidx.compose.material3.TextButton({ Friendship.nick = ""; edit = false }) { Text("لقب المستوى", color = P.muted) } })
+        }
+    }
+}
+
+
+/** «إخفاء صديقي»: for those who prefer the app without a friend; everything it earned stays. */
+@Composable
+fun PetHideCard() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = LocalContext.current
+    var ask by remember { mutableStateOf(false) }
+    if (Pet.hidden) return
+    if (!ask) Action("🙈 إخفاء صديقي", Modifier.fillMaxWidth(), filled = false, color = P.muted) { ask = true }
+    else Panel(pad = 14.dp) {
+        Title("إخفاء ${Pet.name}؟")
+        Sub("لن يظهر في أعلى التطبيق ولا فوق التطبيقات، ولن يتكلم أو يقترح شيئًا. صداقتك ونقاطك ومكافآتك تبقى محفوظة، وتعيده من هذه الصفحة متى شئت.", Modifier.padding(top = 4.dp), size = 13.sp)
+        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Action("إخفاؤه", Modifier.weight(1f)) { Pet.hide(ctx); ask = false }
+            Action("تراجع", Modifier.weight(1f), filled = false) { ask = false }
         }
     }
 }

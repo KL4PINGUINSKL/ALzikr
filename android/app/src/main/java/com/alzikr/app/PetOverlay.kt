@@ -102,7 +102,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
             APP_OPEN -> { appOpen = true; view?.visibility = android.view.View.GONE }
             APP_CLOSED -> { appOpen = false; if (shown != key()) { removeView(); show() } else view?.visibility = android.view.View.VISIBLE }
         }
-        if (!Pet.floating || !Settings.canDrawOverlays(this) || Pet.species == null) { stopSelf(); return START_NOT_STICKY }
+        if (!Pet.floating || !Settings.canDrawOverlays(this) || Pet.species == null || Pet.hidden) { stopSelf(); return START_NOT_STICKY }
         val n = notice()
         if (Build.VERSION.SDK_INT >= 34) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) else startForeground(ID, n)
         if (view == null && System.currentTimeMillis() >= Pet.hiddenUntil) show()
@@ -387,7 +387,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         private const val APP_OPEN = "com.alzikr.app.PET_APP_OPEN"; private const val APP_CLOSED = "com.alzikr.app.PET_APP_CLOSED"
         private var instance: WeakReference<PetOverlay>? = null
         private fun send(c: Context, a: String?) = runCatching { c.startForegroundService(Intent(c, PetOverlay::class.java).setAction(a)) }
-        fun start(c: Context) { if (Pet.floating && Settings.canDrawOverlays(c)) send(c, null) }
+        fun start(c: Context) { if (Pet.floating && !Pet.hidden && Settings.canDrawOverlays(c)) send(c, null) }
         fun stop(c: Context) { c.stopService(Intent(c, PetOverlay::class.java)) }
         fun refresh(c: Context) { instance?.get()?.let { s -> s.handler.post { s.removeView(); s.show(); s.schedule() } } }
         fun poke(c: Context) { instance?.get()?.let { s -> s.handler.post { s.speak(force = true) } } }

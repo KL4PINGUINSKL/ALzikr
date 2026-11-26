@@ -77,6 +77,12 @@ object Pet {
     var place: String
         get() = sp.getString("pet_place", "top") ?: "top"
         set(v) { sp.edit().putString("pet_place", v).apply(); Store.bump() }
+    /** Hidden everywhere (header, ground strip, over other apps, suggestions); its friendship and points are kept. */
+    val hidden: Boolean get() = place == "off"
+    /** A friend chosen and not hidden. */
+    val visible: Boolean get() = species != null && !hidden
+    fun hide(c: Context) { if (place != "off") sp.edit().putString("pet_place_before", place).apply(); place = "off"; PetOverlay.stop(c) }
+    fun show(c: Context) { place = sp.getString("pet_place_before", "top")?.takeIf { it != "off" } ?: "top"; PetOverlay.start(c) }
     /** Speaks by itself now and then while the app is open. */
     var talks: Boolean
         get() = sp.getBoolean("pet_talks", true)

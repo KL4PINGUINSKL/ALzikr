@@ -321,6 +321,7 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                     Action("إظهار التلميحات من جديد", Modifier.fillMaxWidth(), filled = false) {
                         Hints.resetAll(); android.widget.Toast.makeText(ctx, "ستظهر التلميحات في كل صفحة من جديد", android.widget.Toast.LENGTH_SHORT).show()
                     }
+                    Action("👋 صفحة الترحيب: جولة في أهم المميزات", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { Welcome.showAgain() }
                 }
             }
 
