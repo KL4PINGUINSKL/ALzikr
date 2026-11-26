@@ -197,6 +197,17 @@ object PetBackdrop {
         get() = (Store.prefs.getString("pet_card_frame", "") ?: "").takeIf { id -> id.isEmpty() || Progress.frames.any { it.id == id && it.open } } ?: ""
         set(v) { Store.prefs.edit().putString("pet_card_frame", v).apply(); Store.bump() }
 
+    /** The words' colour on the card and on the widget ("" automatic: light on a scene, the theme's otherwise). */
+    val inks = listOf("" to 0L, "white" to 0xFFFFFFFF, "cream" to 0xFFFFF3D6, "gold" to 0xFFF3D27A, "black" to 0xFF111111, "navy" to 0xFF14204A, "brown" to 0xFF4A2C12, "green" to 0xFF0F4D3A)
+    val inkNames = mapOf("" to "تلقائي", "white" to "أبيض", "cream" to "كريمي", "gold" to "ذهبي", "black" to "أسود", "navy" to "كحلي", "brown" to "بني", "green" to "أخضر")
+    var cardInk: String
+        get() = Store.prefs.getString("pet_card_ink", "") ?: ""
+        set(v) { Store.prefs.edit().putString("pet_card_ink", v).apply(); Store.bump() }
+    var widgetInk: String
+        get() = Store.prefs.getString("pet_widget_ink", "") ?: ""
+        set(v) { Store.prefs.edit().putString("pet_widget_ink", v).apply(); Store.bump() }
+    fun inkOf(id: String): Long? = inks.firstOrNull { it.first == id && id.isNotEmpty() }?.second
+
     /** The glow's colour: "" none, a name below, or "rainbow" (its colours turn slowly). */
     var glow: String
         get() = Store.prefs.getString("pet_glow", "") ?: ""
@@ -487,7 +498,10 @@ fun PetDecorContent(part: String?) {
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (part == null || part == "card") {
-            Text("🖼 خلفية بطاقة ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text("🖼 إطار البطاقة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Sub("خط رفيع حول بطاقته، أو فوانيس وأهلّة تتدلّى من حافتها.", size = 12.sp)
+            WidgetFramesGrid(card = true)
+            Text("🖼 خلفية بطاقة ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             Sub("ثمانٍ مفتوحة لك، وثمانٍ تفتحها نقاط الصداقة ❤، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤.", size = 12.sp)
             val items = listOf(PetBackdrop.Scene("", "بلا خلفية", 0)) + PetBackdrop.scenes.sortedBy { it.bond }
             items.chunked(3).forEach { row ->
@@ -510,11 +524,7 @@ fun PetDecorContent(part: String?) {
                 if (PetBackdrop.photoOpen()) pick.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
         }
-        if (part == null || part == "card") {
-            Text("🖼 إطار البطاقة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-            Sub("خط رفيع حول بطاقته، أو فوانيس وأهلّة تتدلّى من حافتها.", size = 12.sp)
-            WidgetFramesGrid(card = true)
-        }
+        if (part == null || part == "card") InkPicker(card = true)
         if (part == null || part == "widget") {
             Text("🖼 إطار الأداة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub("يحيط بالأداة، ومع الخلفية يصير حولها كبرواز.", size = 12.sp)
@@ -542,6 +552,7 @@ fun PetDecorContent(part: String?) {
                 if (PetBackdrop.photoOpen()) pickWidget.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
         }
+        if (part == null || part == "widget") InkPicker(card = false)
         if (part == null || part == "glow") {
             Text("✨ وهج حوله في أعلى التطبيق", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Wrap(gap = 8.dp) {
@@ -572,4 +583,28 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCardFrame(c: android.co
     PetBackdrop.clearFills(d); d.setBounds(0, 0, size.width.toInt(), size.height.toInt())
     val nc: android.graphics.Canvas = drawContext.canvas.nativeCanvas
     d.draw(nc)
+}
+
+
+/** «لون الخط»: the words on the card ([card]) or on the widget, to suit the chosen background. */
+@Composable
+fun InkPicker(card: Boolean) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val ctx = LocalContext.current
+    val cur = if (card) PetBackdrop.cardInk else PetBackdrop.widgetInk
+    Text("🔤 لون الخط", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+    Sub(if (card) "لكلمات بطاقته (الاسم وحاله) لتُقرأ على الخلفية التي اخترتها." else "لكلمات الأداة (الاسم وما يقوله والأزرار) لتُقرأ على خلفيتها.", size = 12.sp)
+    Wrap(gap = 8.dp) {
+        PetBackdrop.inks.forEach { (id, c) ->
+            val on = cur == id
+            androidx.compose.foundation.layout.Row(Modifier.clip(L.shape(20.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface)
+                .border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(20.dp))
+                .clickable { if (card) PetBackdrop.cardInk = id else { PetBackdrop.widgetInk = id; PetWidget.update(ctx) } }
+                .padding(horizontal = 12.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (id.isEmpty()) Text("A", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                else Box(Modifier.size(14.dp).clip(CircleShape).background(Color(c)).border(1.dp, P.line, CircleShape))
+                Text("  " + (PetBackdrop.inkNames[id] ?: id), color = P.ink, fontSize = 13.sp)
+            }
+        }
+    }
 }

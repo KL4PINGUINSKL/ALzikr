@@ -91,6 +91,7 @@ class PetWidget : AppWidgetProvider() {
                 if (frame?.light == true) { ink = 0xFF2A1E10.toInt(); gold = 0xFF7A4E00.toInt(); acc = 0xFF4A3200.toInt() }
                 else { ink = 0xFFFFFFFF.toInt(); gold = 0xFFF3D27A.toInt(); acc = 0xFFFFFFFF.toInt() }
             }
+            PetBackdrop.inkOf(PetBackdrop.widgetInk)?.toInt()?.let { k -> ink = k; acc = k; gold = (k and 0x00FFFFFF) or 0xCC000000.toInt() }
             v.setTextColor(R.id.p_name, ink); v.setTextColor(R.id.p_title, gold)
             v.setTextColor(R.id.p_hearts, acc); v.setTextColor(R.id.p_say, ink); v.setTextColor(R.id.p_extra, (ink and 0x00FFFFFF) or 0xB3000000.toInt())
             v.setTextColor(R.id.p_talk, acc); v.setTextColor(R.id.p_tasbih, acc); v.setTextColor(R.id.p_nap, acc)

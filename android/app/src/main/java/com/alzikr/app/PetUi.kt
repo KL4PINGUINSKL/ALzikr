@@ -356,8 +356,9 @@ fun PetPage() {
             Action("🐾 أظهر ${Pet.name} من جديد", Modifier.fillMaxWidth().padding(top = 10.dp)) { Pet.show(ctx) }
         }
         if (tab == "friend" && sp != null) PetSceneCard { onScene ->
-            val ink = if (onScene) androidx.compose.ui.graphics.Color.White else P.ink
-            val soft = if (onScene) androidx.compose.ui.graphics.Color(0xDDFFFFFF) else P.muted
+            val chosenInk = PetBackdrop.inkOf(PetBackdrop.cardInk)?.let { androidx.compose.ui.graphics.Color(it) }
+            val ink = chosenInk ?: if (onScene) androidx.compose.ui.graphics.Color.White else P.ink
+            val soft = chosenInk?.copy(alpha = .85f) ?: if (onScene) androidx.compose.ui.graphics.Color(0xDDFFFFFF) else P.muted
             Box(Modifier.fillMaxWidth()) { PetStage(Modifier.fillMaxWidth(), height = 110, paper = if (onScene) androidx.compose.ui.graphics.Color.Transparent else P.card) }
             Text(Pet.name, color = ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             val mood = Pet.mood()
