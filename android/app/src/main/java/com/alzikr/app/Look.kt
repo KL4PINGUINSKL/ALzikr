@@ -107,6 +107,10 @@ object Looks {
         pal(dark, bg, surface, card, line, ink, muted, accent, if (Tints.on(Color(accent)) == Color.White) 0xFFFFFFFF else 0xFF111111, gold)
 
     val all: List<Look> by lazy { listOf(
+        Look("hilal", "الهلال", "أزرق ملكي وذهبي كأيقونة التطبيق، بطاقات مستديرة وشريط سفلي",
+            pal(false, 0xFFF4F1E8, 0xFFFFFDF7, 0xFFECE7D8, 0xFFD9D2BE, 0xFF0E1E4E, 0xFF5A6488, 0xFF1A3274, 0xFFFFFFFF, 0xFFA67C1A),
+            pal(true, 0xFF070F2E, 0xFF0D1A44, 0xFF132257, 0xFF22336E, 0xFFF2F0E6, 0xFF9AA6C8, 0xFFF3D27A, 0xFF0B1433, 0xFFFFF4CF),
+            Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING),
         Look("emerald", "زمرّد", "الأخضر الهادئ مع الذهبي، بطاقات مستديرة وشريط سفلي",
             Day, Night, Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING),
         Look("mushaf", "مصحف", "ورق عتيق وحبر بني، خط النسخ، زوايا حادة وتبويبات علوية وزخرفة",

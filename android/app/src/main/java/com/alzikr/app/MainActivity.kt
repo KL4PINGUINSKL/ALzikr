@@ -92,6 +92,8 @@ class MainActivity : ComponentActivity() {
             Store.prefs.edit().putString("look", prev).putInt("theme", Store.prefs.getInt("simple_prev_theme", 0))
                 .remove("simple_prev_look").remove("simple_prev_theme").apply()
         }
+        if (!Store.prefs.contains("welcomed") && (Store.hasLocation || Pet.species != null || Pet.introSeen) && !Store.prefs.contains("look"))
+            Store.prefs.edit().putString("look", "emerald").apply()
         runCatching { PetLooks.keepOldDefaults(existing = !Store.prefs.contains("welcomed") && (Store.hasLocation || Pet.species != null || Pet.introSeen)) }
         openPlace(intent)
         AppUpdate.onFound = { Store.bump() }
