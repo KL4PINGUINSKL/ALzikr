@@ -34,6 +34,8 @@ data class Look(
     val body: FontFamily?, val head: FontFamily?,
     val nav: NavStyle, val icons: IconStyle, val prayers: PrayerLayout, val counter: CounterStyle,
     val flat: Boolean = false, val ornament: String = "",
+    /** Titles in the accent colour (gold on «الهلال»), the words under them in the theme's second colour. */
+    val accentTitles: Boolean = false,
     /** The theme for children: the kids section is the first tab, text is larger, the friend speaks to a child. */
     val kids: Boolean = false,
     /** A living background drawn behind the app (Backdrops.kt). */
@@ -109,8 +111,8 @@ object Looks {
     val all: List<Look> by lazy { listOf(
         Look("hilal", "الهلال", "أزرق ملكي وذهبي كأيقونة التطبيق، بطاقات مستديرة وشريط سفلي",
             pal(false, 0xFFF4F1E8, 0xFFFFFDF7, 0xFFECE7D8, 0xFFD9D2BE, 0xFF0E1E4E, 0xFF5A6488, 0xFF1A3274, 0xFFFFFFFF, 0xFFA67C1A),
-            pal(true, 0xFF070F2E, 0xFF0D1A44, 0xFF132257, 0xFF22336E, 0xFFF2F0E6, 0xFF9AA6C8, 0xFFF3D27A, 0xFF0B1433, 0xFFFFF4CF),
-            Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING),
+            pal(true, 0xFF000000, 0xFF060B1E, 0xFF0B1433, 0xFF1C2C62, 0xFFF6EED8, 0xFF8FA8E6, 0xFFF3D27A, 0xFF0B1433, 0xFF7FA6FF),
+            Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING, accentTitles = true),
         Look("emerald", "زمرّد", "الأخضر الهادئ مع الذهبي، بطاقات مستديرة وشريط سفلي",
             Day, Night, Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING),
         Look("mushaf", "مصحف", "ورق عتيق وحبر بني، خط النسخ، زوايا حادة وتبويبات علوية وزخرفة",

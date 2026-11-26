@@ -68,7 +68,7 @@ fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surfa
 }
 
 @Composable
-fun Title(text: String, modifier: Modifier = Modifier) = GText(text, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body, modifier = modifier)
+fun Title(text: String, modifier: Modifier = Modifier) = GText(text, color = if (L.accentTitles) P.accent else P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = L.head ?: L.body, modifier = modifier)
 
 @Composable
 fun Sub(text: String, modifier: Modifier = Modifier, size: TextUnit = 13.sp, color: Color = P.muted) = GText(text, color = color, fontSize = size, modifier = modifier)
