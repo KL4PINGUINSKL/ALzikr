@@ -2,6 +2,7 @@ package com.alzikr.app
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -38,6 +39,8 @@ object TafsirFormat {
         return letters >= 4 && marks * 10 >= letters * 6
     }
     private fun num(n: Int) = Quran.digits(n)
+    /** A manuscript siglum in a footnote: «في ت:», «في جـ، ط:», «زيادة من ت، أ.» (single letters, maybe with a tatweel). */
+    val sigla = Regex("""(?:^|[\s(])(?:في|من)\s+[\u0621-\u064A]ـ?(?:،\s*[\u0621-\u064A]ـ?)*\s*(?:[:.،]|$)""")
 
     /** [onNote] receives the footnote text of the tapped number. */
     fun build(raw: String, quran: Color, ref: Color, note: Color, onNote: (String) -> Unit): AnnotatedString = buildAnnotatedString {
@@ -78,6 +81,9 @@ fun TafsirText(raw: String, fontSize: TextUnit, lineHeight: TextUnit, modifier: 
             title = { GText("حاشية", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold) },
             text = { Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 Text(TafsirFormat.build(n, P.accent, P.gold, P.accent) {}, color = P.ink, fontSize = 15.sp, lineHeight = 26.sp, fontFamily = Fonts.naskh)
+                // «في ت: …» / «زيادة من ت، أ»: the editor's letters for the manuscript copies he compared.
+                if (TafsirFormat.sigla.containsMatchIn(n)) Text("ت، أ، جـ، ف… رموز لنسخ مخطوطة من الكتاب قارن بينها المحقق: «في ت» أي في تلك النسخة جاءت الكلمة هكذا، و«زيادة من ت» أي أُضيفت من تلك النسخة.",
+                    color = P.muted, fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 10.dp))
             } },
             confirmButton = { TextButton({ note = null }) { GText("إغلاق", color = P.accent) } })
     }
