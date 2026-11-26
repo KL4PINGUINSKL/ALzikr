@@ -100,7 +100,7 @@ fun RewardsContent() {
         if (part == "badges") Panel(pad = 14.dp) {
             Title("أوسمتي 🏅")
             val earned = Progress.earned()
-            Progress.badges.chunked(3).forEach { row ->
+            Progress.badges.sortedBy { if (earned[it.id] != null) 0 else 1 }.chunked(3).forEach { row ->
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { b ->
                         val at = earned[b.id]; val now = runCatching { b.now() }.getOrDefault(0)

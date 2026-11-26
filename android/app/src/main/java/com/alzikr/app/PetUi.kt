@@ -369,62 +369,24 @@ fun PetPage() {
         }
         // Under the friend: its background and glow, and the log — each as a card.
         if (tab == "album") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
-        if (tab == "friend" && sp != null && petHasMoves(sp)) Panel(pad = 12.dp) {
-            Title("العب معه")
-            Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
-            Box(Modifier.padding(top = 8.dp)) { PetInteractions() }
-        }
-        if (tab == "friend" && sp != null) Panel(pad = 14.dp) {
+        // ---- the friend at a glance: level, friendship, streak; the next gift (tap for the rewards)
+        if (tab == "friend" && sp != null) Panel(Modifier.clickable { tab = "rewards" }, pad = 14.dp) {
             LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
-            Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
-            // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
-            run {
-                val st = com.alzikr.app.pets.Evolution.stages(com.alzikr.app.pets.PetPacks.registry().species(sp.name))
-                val cur = com.alzikr.app.pets.Evolution.stage(com.alzikr.app.pets.PetPacks.registry().species(sp.name), Progress.level())
-                val next = st.firstOrNull { it.fromLevel > Progress.level() }
-                Sub("🌱 مرحلته: ${cur.name}" + (next?.let { " · يصير «${it.name}» في المستوى ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
-            }
-            if (Progress.showLevels) {
-                // ✨ experience: Quran, hadith, learning and the day's worship
-                val lv = Progress.level(); val x = Progress.xp
-                val from = Progress.need(lv); val to = Progress.need(lv + 1)
-                Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("✨ ${Friendship.title()} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (Progress.showLevels) {
+                    val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
+                    GlanceStat("✨", "المستوى ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f))
+                    val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
+                    GlanceStat(Friendship.heart, Progress.bondName(), if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent, Modifier.weight(1f))
                 }
-                androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
-                Sub("بقي ${Quran.digits(to - x)} ✨ للمستوى ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
-                var how by remember { mutableStateOf(false) }
-                Text(if (how) "▴ كيف أكسب النقاط؟" else "❓ كيف أكسب النقاط؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
-                if (how) Column(Modifier.fillMaxWidth().padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Progress.Kind.entries.forEach { k ->
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                            Column(Modifier.weight(1f)) {
-                                Text(k.ar, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                Sub(Progress.how(k), size = 11.sp)
-                            }
-                            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
-                                Text("+${Quran.digits(k.xp)} ✨", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                Sub("اليوم ${Quran.digits(Progress.todayXp(k))} من ${Quran.digits(k.cap)}", size = 10.sp)
-                            }
-                        }
-                    }
-                    Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، والختمة تكمّل إليه ولا تتجاوزه)",
-                        color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
-                }
-                Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
-                Action("🎁 مكافآتي وأوسمتي", Modifier.fillMaxWidth().padding(top = 10.dp)) { tab = "rewards" }
+                val st = Pet.streak()
+                GlanceStat("🔥", if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"}" else "ابدأ اليوم", null, P.ink, Modifier.weight(1f))
             }
-            val st = Pet.streak()
-            Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
-                (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
-                color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
-            Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
+            if (Progress.showLevels) Friendship.next()?.let { g ->
+                Sub("${g.icon} الجائزة التالية: ${g.name} · بقي ${Quran.digits(g.bond - Progress.bondPoints)} ❤", Modifier.padding(top = 10.dp), size = 12.sp)
+            }
+            Text("🎁 مكافآتي وأوسمتي ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
         }
-        if (tab == "friend" && sp != null && Progress.showLevels) Panel(pad = 14.dp) { FriendshipPanel() }
         if (tab == "friend" && sp != null && !Pet.kids) Panel(pad = 14.dp) { MissionsPanel() }
         if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -434,6 +396,78 @@ fun PetPage() {
                 Action("إلغاء", filled = false) { Pet.undoChallenge() }
             }
             else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
+        }
+        if (tab == "friend" && sp != null && petHasMoves(sp)) {
+            var playing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+            Panel(pad = 12.dp) {
+                Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { playing = !playing }, verticalAlignment = Alignment.CenterVertically) {
+                    Text("🎮 العب معه", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(if (playing) "▴" else "▾", color = P.muted, fontSize = 16.sp)
+                }
+                if (playing) {
+                    Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
+                    Box(Modifier.padding(top = 8.dp)) { PetInteractions() }
+                }
+            }
+        }
+        if (tab == "friend" && sp != null) {
+            var more by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+            Panel(pad = 12.dp) {
+                Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { more = !more }, verticalAlignment = Alignment.CenterVertically) {
+                    Text("📖 كيف أكبر معه وأجمع النقاط؟", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(if (more) "▴" else "▾", color = P.muted, fontSize = 16.sp)
+                }
+                if (more) Column(Modifier.padding(top = 8.dp)) {
+                    LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
+                    Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
+                    // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
+                    run {
+                        val st = com.alzikr.app.pets.Evolution.stages(com.alzikr.app.pets.PetPacks.registry().species(sp.name))
+                        val cur = com.alzikr.app.pets.Evolution.stage(com.alzikr.app.pets.PetPacks.registry().species(sp.name), Progress.level())
+                        val next = st.firstOrNull { it.fromLevel > Progress.level() }
+                        Sub("🌱 مرحلته: ${cur.name}" + (next?.let { " · يصير «${it.name}» في المستوى ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
+                    }
+                    if (Progress.showLevels) {
+                        // ✨ experience: Quran, hadith, learning and the day's worship
+                        val lv = Progress.level(); val x = Progress.xp
+                        val from = Progress.need(lv); val to = Progress.need(lv + 1)
+                        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("✨ ${Friendship.title()} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
+                            modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
+                        Sub("بقي ${Quran.digits(to - x)} ✨ للمستوى ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
+                        var how by remember { mutableStateOf(false) }
+                        Text(if (how) "▴ كيف أكسب النقاط؟" else "❓ كيف أكسب النقاط؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
+                        if (how) Column(Modifier.fillMaxWidth().padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Progress.Kind.entries.forEach { k ->
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(k.ar, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Sub(Progress.how(k), size = 11.sp)
+                                    }
+                                    Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
+                                        Text("+${Quran.digits(k.xp)} ✨", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Sub("اليوم ${Quran.digits(Progress.todayXp(k))} من ${Quran.digits(k.cap)}", size = 10.sp)
+                                    }
+                                }
+                            }
+                            Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، والختمة تكمّل إليه ولا تتجاوزه)",
+                                color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
+                        }
+                        Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
+                    }
+                    val st = Pet.streak()
+                    Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
+                        (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
+                        color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                    Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
+                    if (Progress.showLevels) Box(Modifier.padding(top = 12.dp)) { Column { FriendshipPanel() } }
+                }
+            }
         }
         if (tab == "settings" && sp != null) PetHideCard()
         if (tab == "settings" && sp != null) Panel(pad = 14.dp) {
@@ -697,5 +731,17 @@ fun PetFilterChips() {
     Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Choice("الكل", !PetFilter.onlyOpen) { PetFilter.onlyOpen = false }
         Choice("المتاحة لي فقط", PetFilter.onlyOpen) { PetFilter.onlyOpen = true }
+    }
+}
+
+
+/** One small figure at a glance: an icon, a word, and (optionally) how far to the next step. */
+@Composable
+private fun GlanceStat(icon: String, label: String, frac: Float?, color: androidx.compose.ui.graphics.Color, modifier: Modifier) {
+    Column(modifier.clip(L.shape(12.dp)).background(P.card).padding(horizontal = 8.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(icon, fontSize = 18.sp)
+        Text(label, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+        if (frac != null) androidx.compose.material3.LinearProgressIndicator(progress = { frac },
+            modifier = Modifier.fillMaxWidth().padding(top = 5.dp).height(5.dp).clip(L.shape(3.dp)), color = color, trackColor = P.line)
     }
 }

@@ -377,7 +377,7 @@ fun MissionsPanel() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     LaunchedEffect(v) { Missions.collectTasks(); Missions.checkAnswer(); Missions.checkFullDay() }
     Text("${Friendship.heart} يومي مع ${Pet.name}", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-    Sub("كلها تزيد نقاط الصداقة فقط. تتجدّد كل يوم. اليوم: ${Quran.digits(Progress.bondToday())} من ${Quran.digits(Progress.BOND_DAY)} ❤.", size = 11.sp)
+    Sub("اليوم ${Quran.digits(Progress.bondToday())} من ${Quran.digits(Progress.BOND_DAY)} ❤ · تتجدّد كل يوم", size = 11.sp)
     if (Progress.bondToday() >= Progress.BOND_DAY) Sub("بلغت حد الصداقة اليوم (${Quran.digits(Progress.BOND_DAY)} ❤): ما تنجزه الآن يُكتب لك ✓ ولا يزيد النقاط حتى الغد.", size = 11.sp, color = P.gold)
 
     Missions.now()?.let { w ->
@@ -385,7 +385,6 @@ fun MissionsPanel() {
         MissionRow(w.icon, w.text, false, "اذهب ←") { w.go() }
     }
     Text("الوظائف اليومية · +${Quran.digits(Missions.TASK_BOND)} ❤ لكل واحدة", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
-    Sub("يتحقق منها التطبيق بنفسه، ويعرف ما فاتك ليعينك عليه. وإن ألغيت الأصل (كإلغاء علامة صلاة) عادت الوظيفة وعادت نقاطها.", size = 11.sp)
     Missions.tasks().forEach { t ->
         val done = runCatching { t.done() }.getOrDefault(false)
         MissionRow(t.icon, t.text, done, if (done) got("task_${t.id}") else "اذهب ←", t.why) { if (!done) t.go() }

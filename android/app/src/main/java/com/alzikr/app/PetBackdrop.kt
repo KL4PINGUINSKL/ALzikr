@@ -447,7 +447,7 @@ fun PetDecorContent(part: String?) {
         if (part == null || part == "card") {
             Text("🖼 خلفية بطاقة ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub("ثمانٍ مفتوحة لك، وثمانٍ تفتحها نقاط الصداقة ❤، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤.", size = 12.sp)
-            val items = listOf(PetBackdrop.Scene("", "بلا خلفية", 0)) + PetBackdrop.scenes
+            val items = listOf(PetBackdrop.Scene("", "بلا خلفية", 0)) + PetBackdrop.scenes.sortedBy { it.bond }
             items.chunked(3).forEach { row ->
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { s ->
@@ -474,7 +474,7 @@ fun PetDecorContent(part: String?) {
             WidgetFramesGrid()
             Text("📱 خلفية أداة «صديقي» على الشاشة الرئيسية", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             Sub("خلفيات للأداة غير خلفيات بطاقته، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤. «بلا خلفية» يُبقي لون الثيم أو الإطار وحده.", size = 12.sp)
-            val wItems = listOf(PetBackdrop.WScene("", "بلا خلفية", 0, false)) + PetBackdrop.widgetScenes
+            val wItems = listOf(PetBackdrop.WScene("", "بلا خلفية", 0, false)) + PetBackdrop.widgetScenes.sortedBy { it.bond }
             wItems.chunked(3).forEach { row ->
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { s ->
