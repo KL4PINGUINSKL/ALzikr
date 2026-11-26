@@ -42,7 +42,7 @@ object Data {
         set(v) { if (!simple) edit { putString("look", v) } }
     /** How a choice among many is shown: false = a few and «المزيد», true = all of them in a row that scrolls sideways. */
     var pickScroll: Boolean
-        get() = sp.getBoolean("pick_scroll", false)
+        get() = sp.getBoolean("pick_scroll", true)
         set(v) = edit { putBoolean("pick_scroll", v) }
     /** «الذكر البسيط»: only the prayer and the Quran; everything else is hidden (and kept) until the full app is chosen again. */
     var simple: Boolean
