@@ -23,32 +23,25 @@ object Simple {
     /** The prayer page in the simple mode: the next prayer, today's times, the adhkar of the moment, a few tiles. */
     val parts = listOf("next", "forbid", "times", "moment", "simple", "place")
 
-    /** Three themes only in the simple app: emerald over black, emerald by day, and the mushaf's paper. */
+    /** The simple app's own three themes, kept apart from the full app's theme (neither changes the other). */
     data class Theme(val name: String, val look: String, val back: Int, val mode: Int, val bg: Long, val accent: Long)
     val themes = listOf(
-        Theme("زمرّد ليلي", "emerald", 1, 0, 0xFF000000, 0xFF3FBF8F),
-        Theme("زمرّد نهاري", "emerald", 0, 1, 0xFFF5F1E6, 0xFF1F7A5A),
-        Theme("ورق المصحف", "mushaf", 0, 1, 0xFFF3EAD3, 0xFF8A3B1C),
+        Theme("زمرّد أسود", "emerald", 1, 2, 0xFF000000, 0xFF3FBF8F),
+        Theme("أبيض وأسود", "minimal", 0, 1, 0xFFFFFFFF, 0xFF111111),
+        Theme("صحراء", "desert", 0, 1, 0xFFF2E3C6, 0xFFB5651D),
     )
-    fun themeOn(t: Theme) = Data.look == t.look && Data.lookBack(t.look) == t.back && (t.back > 0 || Data.theme == t.mode)
-    fun useTheme(t: Theme) { Data.look = t.look; Data.setLookBack(t.look, t.back); Data.theme = t.mode }
+    val current: Theme get() = themes.getOrNull(Store.prefs.getInt("simple_theme", 0)) ?: themes[0]
+    fun themeOn(t: Theme) = current == t
+    fun useTheme(t: Theme) { Store.prefs.edit().putInt("simple_theme", themes.indexOf(t)).apply(); Store.bump() }
 
     fun set(c: Context, on: Boolean) {
-        val sp = Store.prefs
-        if (on && !Data.simple) {
-            // Only the three themes here: the full app's theme is kept and comes back with it.
-            if (themes.none { themeOn(it) }) {
-                sp.edit().putString("simple_prev_look", Data.look).putInt("simple_prev_theme", Data.theme).apply()
-                useTheme(themes[0])
-            }
-        } else if (!on && Data.simple) {
-            sp.getString("simple_prev_look", null)?.let { Data.look = it; Data.theme = sp.getInt("simple_prev_theme", 0) }
-            sp.edit().remove("simple_prev_look").remove("simple_prev_theme").apply()
-        }
+        if (on == Data.simple) return
         Data.simple = on
         if (on) PetOverlay.stop(c) else PetOverlay.start(c)
+        // A fresh start in the other app: no way «back» into tabs that are not there.
         Nav.morePage = null
-        Nav.go("prayer")
+        Nav.history.clear()
+        Nav.tab = "prayer"
         Store.bump()
     }
 }

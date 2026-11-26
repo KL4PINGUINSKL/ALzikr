@@ -18,14 +18,14 @@ object Data {
     // ----------------------------------------------------------------- look
 
     /** Each theme keeps its own color: 0 its original, 1–6 the presets, 7 a free hue. */
-    fun lookColor(id: String) = sp.getInt("look_color_$id", 0)
-    fun lookHue(id: String) = sp.getFloat("look_hue_$id", 160f)
-    fun setLookColor(id: String, index: Int, hue: Float = lookHue(id)) = edit { putInt("look_color_$id", index).putFloat("look_hue_$id", hue) }
+    fun lookColor(id: String) = if (simple) 0 else sp.getInt("look_color_$id", 0)
+    fun lookHue(id: String) = if (simple) 160f else sp.getFloat("look_hue_$id", 160f)
+    fun setLookColor(id: String, index: Int, hue: Float = lookHue(id)) { if (!simple) edit { putInt("look_color_$id", index).putFloat("look_hue_$id", hue) } }
     /** Each theme's own background ([Backs], 0 = the theme's) and text color ([Inks], 0 = automatic). */
-    fun lookBack(id: String) = sp.getInt("look_back_$id", 0)
-    fun setLookBack(id: String, index: Int) = edit { putInt("look_back_$id", index) }
-    fun lookInk(id: String) = sp.getInt("look_ink_$id", 0)
-    fun setLookInk(id: String, index: Int) = edit { putInt("look_ink_$id", index) }
+    fun lookBack(id: String) = if (simple) (if (id == Simple.current.look) Simple.current.back else 0) else sp.getInt("look_back_$id", 0)
+    fun setLookBack(id: String, index: Int) { if (!simple) edit { putInt("look_back_$id", index) } }
+    fun lookInk(id: String) = if (simple) 0 else sp.getInt("look_ink_$id", 0)
+    fun setLookInk(id: String, index: Int) { if (!simple) edit { putInt("look_ink_$id", index) } }
 
     /** How the prayer times are shown: 0 the theme's way, 1 cards, 2 list, 3 one line, 4 timeline. */
     /** The «بطاقات / قائمة / سطر / خط زمني» chips over today's times: hidden until asked for. */
@@ -38,8 +38,8 @@ object Data {
 
     /** The chosen theme (see [Looks]). */
     var look: String
-        get() = sp.getString("look", "emerald") ?: "emerald"
-        set(v) = edit { putString("look", v) }
+        get() = if (simple) Simple.current.look else sp.getString("look", "emerald") ?: "emerald"
+        set(v) { if (!simple) edit { putString("look", v) } }
     /** How a choice among many is shown: false = a few and «المزيد», true = all of them in a row that scrolls sideways. */
     var pickScroll: Boolean
         get() = sp.getBoolean("pick_scroll", false)
@@ -50,8 +50,8 @@ object Data {
         set(v) = edit { putBoolean("simple_mode", v) }
     /** 0 follow the phone, 1 day, 2 night. */
     var theme: Int
-        get() = sp.getInt("theme", 0)
-        set(v) = edit { putInt("theme", v) }
+        get() = if (simple) Simple.current.mode else sp.getInt("theme", 0)
+        set(v) { if (!simple) edit { putInt("theme", v) } }
     /** Size of adhkar text: 0 normal, 1 large, 2 larger. */
     var textSize: Int
         get() = sp.getInt("text_size", 0)
