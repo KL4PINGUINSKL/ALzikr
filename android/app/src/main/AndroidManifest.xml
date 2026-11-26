@@ -23,7 +23,7 @@
         <package android:name="com.alhub.app" />
     </queries>
 
-    <application android:label="ALzikr" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher"
+    <application android:label="${appLabel}" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true" android:theme="@style/Theme.ALzikr"
         android:allowBackup="true" android:backupAgent=".AlzikrBackupAgent" android:restoreAnyVersion="true">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:windowSoftInputMode="adjustResize">
@@ -35,7 +35,7 @@
         <activity android:name=".TasbihDarkActivity" android:exported="false" android:showWhenLocked="true" android:turnScreenOn="true"
             android:excludeFromRecents="true" android:taskAffinity="com.alzikr.app.tasbih" android:launchMode="singleTask"
             android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" />
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="com.alzikr.app.files" android:exported="false" android:grantUriPermissions="true">
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
         <receiver android:name=".AlertReceiver" android:exported="false" />
