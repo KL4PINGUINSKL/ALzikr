@@ -133,13 +133,7 @@ object PetBackdrop {
         val cv = android.graphics.Canvas(out)
         val r = 22f * c.resources.displayMetrics.density
         val clip = android.graphics.Path().apply { addRoundRect(0f, 0f, w.toFloat(), h.toFloat(), r, r, android.graphics.Path.Direction.CW) }
-        // A frame chosen too: drawn first, then the scene inset inside it (the frame stays as a border).
-        val frame = Progress.frames.firstOrNull { it.id == Progress.frame }?.res
-        if (frame != null) runCatching {
-            androidx.core.content.ContextCompat.getDrawable(c, frame)?.let { d -> d.setBounds(0, 0, w, h); d.draw(cv) }
-            val inset = 9f * c.resources.displayMetrics.density
-            cv.clipPath(android.graphics.Path().apply { addRoundRect(inset, inset, w - inset, h - inset, r - inset / 2, r - inset / 2, android.graphics.Path.Direction.CW) })
-        } else cv.clipPath(clip)
+        cv.clipPath(clip)
         var light = false
         if (id == "photo") {
             val src = runCatching { BitmapFactory.decodeFile(widgetPhoto(c).path) }.getOrNull() ?: return null
@@ -156,6 +150,16 @@ object PetBackdrop {
                 androidx.compose.ui.graphics.Canvas(img), Size(w.toFloat(), h.toFloat())) { drawWidgetScene(id) }
             cv.drawBitmap(img.asAndroidBitmapCompat(), 0f, 0f, null)
         }
+        // A frame chosen too: only its rim, laid over the scene (the scene fills the whole widget under it).
+        Progress.frames.firstOrNull { it.id == Progress.frame }?.res?.let { res -> runCatching {
+            val rim = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+            val rc = android.graphics.Canvas(rim)
+            androidx.core.content.ContextCompat.getDrawable(c, res)?.let { d -> d.setBounds(0, 0, w, h); d.draw(rc) }
+            val t = 7.5f * c.resources.displayMetrics.density
+            rc.drawRoundRect(t, t, w - t, h - t, (r - t / 2).coerceAtLeast(0f), (r - t / 2).coerceAtLeast(0f),
+                android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) })
+            cv.drawBitmap(rim, 0f, 0f, null)
+        } }
         return out to light
     }
 
