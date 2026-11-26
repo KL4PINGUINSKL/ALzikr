@@ -50,7 +50,7 @@ object Data {
         set(v) = edit { putBoolean("simple_mode", v) }
     /** 0 follow the phone, 1 day, 2 night. */
     var theme: Int
-        get() = if (simple) Simple.current.mode else sp.getInt("theme", 0)
+        get() = if (simple) Simple.dayNight else sp.getInt("theme", 0)
         set(v) { if (!simple) edit { putInt("theme", v) } }
     /** Size of adhkar text: 0 normal, 1 large, 2 larger. */
     var textSize: Int

@@ -210,7 +210,7 @@ private fun Root() {
     // The home-screen widgets follow the theme too.
     val ctx = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx); MomentWidget.update(ctx); PetWidget.update(ctx) } }
-    AppTheme {
+    androidx.compose.runtime.key(Data.simple) { AppTheme {
         run {
             // Back returns to the previous page (inner pages handle back first).
             androidx.activity.compose.BackHandler(enabled = Nav.history.isNotEmpty() || Nav.tab != Nav.home) { Nav.back() }
@@ -273,7 +273,7 @@ private fun Root() {
             EyeBreak()         // «استراحة العين»: a short reminder card at the top
             ComfortOverlay()   // «نور الليل»: over everything, letting touches through
         }
-    }
+    } }
 }
 
 /** Pages opened over the current tab; back closes them and you are where you were. */

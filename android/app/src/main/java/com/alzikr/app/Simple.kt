@@ -26,12 +26,16 @@ object Simple {
     /** The simple app's own three themes, kept apart from the full app's theme (neither changes the other). */
     data class Theme(val name: String, val look: String, val back: Int, val mode: Int, val bg: Long, val accent: Long)
     val themes = listOf(
-        Theme("زمرّد أسود", "emerald", 1, 2, 0xFF000000, 0xFF3FBF8F),
+        Theme("زمرّد", "emerald", 1, 2, 0xFF000000, 0xFF3FBF8F),
         Theme("أبيض وأسود", "minimal", 0, 1, 0xFFFFFFFF, 0xFF111111),
         Theme("صحراء", "desert", 0, 1, 0xFFF2E3C6, 0xFFB5651D),
     )
     val current: Theme get() = themes.getOrNull(Store.prefs.getInt("simple_theme", 0)) ?: themes[0]
     fun themeOn(t: Theme) = current == t
+    /** 0 follows the phone, 1 day, 2 night (black for the emerald). */
+    var dayNight: Int
+        get() = Store.prefs.getInt("simple_daynight", 2)
+        set(v) { Store.prefs.edit().putInt("simple_daynight", v).apply(); Store.bump() }
     fun useTheme(t: Theme) { Store.prefs.edit().putInt("simple_theme", themes.indexOf(t)).apply(); Store.bump() }
 
     fun set(c: Context, on: Boolean) {
@@ -71,6 +75,9 @@ fun SimpleModePanel() {
             Sub("الثيم", Modifier.padding(top = 12.dp), size = 13.sp, color = P.ink)
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Simple.themes.forEach { t -> ThemeChip(t, Simple.themeOn(t), Modifier.weight(1f)) { Simple.useTheme(t) } }
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(0 to "📱 حسب الهاتف", 1 to "☀ نهاري", 2 to "🌙 ليلي").forEach { (k, l) -> Choice(l, Simple.dayNight == k) { Simple.dayNight = k } }
             }
         }
         Sub(if (Data.simple) "قسمان فقط: الصلاة (المواقيت والأذان والقبلة وأذكار الوقت) والقرآن (المصحف والتفسير والتلاوة والختمة). لا يُحذف شيء: اختر «الكامل» فيعود كل شيء كما كان."

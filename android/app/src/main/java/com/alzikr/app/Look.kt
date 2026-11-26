@@ -62,7 +62,7 @@ data class Look(
      */
     fun pal(systemDark: Boolean, mode: Int, color: Int = Data.lookColor(id), hue: Float = Data.lookHue(id),
             back: Int = Data.lookBack(id), ink: Int = Data.lookInk(id)): Pal {
-        val b = Backs.list.getOrNull(back)?.takeIf { back > 0 }
+        val b = Backs.list.getOrNull(back)?.takeIf { back > 0 }?.takeIf { !Data.simple || basePal(systemDark, mode).dark }
         var p = if (b == null) (palFor?.invoke() ?: if (sky) Sky.pal() else basePal(systemDark, mode)) else (if (b.dark) night ?: day else day ?: night)!!
         if (b != null) p = p.copy(dark = b.dark, bg = Color(b.bg), surface = Color(b.surface), card = Color(b.card), line = Color(b.line),
             ink = if (b.dark) Color(0xFFF2F2F2) else Color(0xFF151515), muted = if (b.dark) Color(0xFF9A9A9A) else Color(0xFF6A6A6A))
