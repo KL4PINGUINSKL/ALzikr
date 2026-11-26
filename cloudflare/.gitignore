@@ -2,3 +2,4 @@ node_modules/
 .wrangler/
 .upload-key
 site/data/
+.stats-key

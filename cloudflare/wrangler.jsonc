@@ -4,5 +4,6 @@
   "compatibility_date": "2026-11-01",
   "workers_dev": false,
   "routes": [{ "pattern": "alzikr.alpharmasy.com", "custom_domain": true }],
-  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "alzikr-downloads" }]
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "alzikr-downloads" }],
+  "d1_databases": [{ "binding": "STATS", "database_name": "alzikr-stats", "database_id": "19df2e2e-3d00-40f1-a26a-7ab3558f7a69" }]
 }
