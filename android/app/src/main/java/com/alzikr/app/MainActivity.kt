@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) Nav.tab = Nav.home
         intent?.getStringExtra("tab")?.let(::openTab)
         runCatching { NoteBubble.refresh(this) }
+        runCatching { PetLooks.keepOldDefaults(existing = !Store.prefs.contains("welcomed") && (Store.hasLocation || Pet.species != null || Pet.introSeen)) }
         openPlace(intent)
         AppUpdate.onFound = { Store.bump() }
         // Installed before methods followed the country: look the country up once.

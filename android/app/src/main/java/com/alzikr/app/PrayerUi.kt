@@ -213,7 +213,10 @@ fun PrayerScreen(openSettings: (String) -> Unit) {
                 Modifier.clip(L.shape(10.dp)).clickable { options = true }.padding(6.dp), size = 12.sp)
             },
         )
-        if (Data.simple) Simple.parts.forEach { parts[it]?.invoke() }
+        if (Data.simple) {
+            Simple.parts.forEach { parts[it]?.invoke() }
+            Action("✨ الانتقال إلى الذكر الكامل", Modifier.fillMaxWidth(), filled = false) { Simple.set(ctx, false) }
+        }
         else Home.order.filter { it !in Home.hidden }.forEach { parts[it]?.invoke() }
         if (!Data.simple) GText("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
     }

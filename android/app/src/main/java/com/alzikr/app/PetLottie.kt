@@ -52,6 +52,16 @@ object PetLooks {
         val all = of(s); val i = all.indexOfFirst { it.id == id }
         return if (i >= 0 && Progress.lookOpen(s, i)) all[i] else all.firstOrNull()
     }
+    /** Once, on the update to 1.5.1: a friend already living with someone keeps the look it wore. */
+    fun keepOldDefaults(existing: Boolean) {
+        val sp = Store.prefs
+        if (sp.getBoolean("featured_kept", false)) return
+        val e = sp.edit().putBoolean("featured_kept", true)
+        if (existing) FEATURED.keys.forEach { s ->
+            if (!sp.contains("pet_look_${s.name}")) PetPacks.registry().skins(s.name).firstOrNull { !it.hidden }?.let { e.putString("pet_look_${s.name}", it.id) }
+        }
+        e.apply()
+    }
     fun choose(s: Species, id: String) { Store.prefs.edit().putString("pet_look_${s.name}", id).apply(); Store.bump() }
 }
 
