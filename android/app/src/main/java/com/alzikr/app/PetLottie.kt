@@ -22,6 +22,8 @@ import com.alzikr.app.pets.Season
  */
 object PetLooks {
     /** Open from the first day, shown first, and the look a new friend of this kind starts with. */
+    /** Open for everyone from the first day. */
+    val OPEN_FROM_START = setOf("penguin-7")
     val FEATURED = mapOf(Species.CAT to "originals-mishmish", Species.PENGUIN to "originals-luulu")
     /** [zoom] enlarges a drawing that leaves empty space around the animal; [lift] moves it up (fraction of the box). */
     data class Look(val id: String, val name: String, val by: String, val zoom: Float = 1f, val lift: Float = 0f, val darkLines: Boolean = false,
@@ -33,9 +35,10 @@ object PetLooks {
         val reg = PetPacks.registry()
         val m = Species.entries.associateWith { s ->
             val list = reg.skins(s.name).map { k -> Look(k.id, k.name, k.by, k.fit.zoom, k.fit.lift, k.fit.darkLines, k.unlock.level, k.rarity, k.season, k.license, k.page, k.hidden) }
+            val list0 = list.map { if (it.id in OPEN_FROM_START) it.copy(level = 1) else it }
             val star = FEATURED[s]
-            val f = list.firstOrNull { it.id == star }
-            if (f == null) list else listOf(f.copy(level = 1, hidden = false)) + (list - f)
+            val f = list0.firstOrNull { it.id == star }
+            if (f == null) list0 else listOf(f.copy(level = 1, hidden = false)) + (list0 - f)
         }
         memo = rev to m
         return m

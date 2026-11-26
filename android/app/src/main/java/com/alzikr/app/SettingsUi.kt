@@ -62,7 +62,7 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
     Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             if (section != null) Text("→", color = P.accent, fontSize = 21.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { back() }.padding(horizontal = 10.dp, vertical = 6.dp))
-            Text(when (section) { "times" -> "الموقع والحساب"; "alerts" -> "التنبيهات والأذان"; "prayer" -> "الصلاة والتركيز"; "look" -> "راحة العين والقراءة"; "recite" -> "التلاوة"; "help" -> "المساعدة"; "about" -> "عن التطبيق"; else -> "الإعدادات" },
+            Text(when (section) { "times" -> "الموقع والحساب"; "alerts" -> "التنبيهات والأذان"; "prayer" -> "الصلاة والتركيز"; "look" -> "راحة العين والقراءة"; "recite" -> "التلاوة"; "help" -> "المساعدة"; "mode" -> "شكل التطبيق"; "about" -> "عن التطبيق"; else -> "الإعدادات" },
                 color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text("تم", color = P.accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = close).padding(horizontal = 14.dp, vertical = 8.dp))
         }
@@ -325,6 +325,8 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                     Action("👋 صفحة الترحيب: جولة في أهم المميزات", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { Welcome.showAgain() }
                 }
             }
+
+            if (section == "mode") SimpleModePanel()
 
             if (section == "about") {
                 Panel { AboutSection(ink = P.ink, muted = P.muted, accent = P.accent, card = P.card) }

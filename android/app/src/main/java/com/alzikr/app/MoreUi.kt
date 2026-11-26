@@ -166,6 +166,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         MoreGroup("الإعدادات", listOf(
             Triple("📍", "الموقع والحساب") { openSettings("times") }, Triple("🔔", "التنبيهات والأذان") { openSettings("alerts") }, Triple("🕌", "الصلاة والتركيز") { openSettings("prayer") },
             Triple("👁", "راحة العين") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("💡", "المساعدة") { openSettings("help") },
+            Triple("🕊", "الذكر البسيط") { openSettings("mode") },
         ))
         MoreGroup("التطبيق", listOf(
             Triple("🐾", "صديقي") { open("pet") }, Triple("🎨", "الثيمات") { open("themes") }, Triple("💾", "نسخ احتياطي") { open("backup") },
