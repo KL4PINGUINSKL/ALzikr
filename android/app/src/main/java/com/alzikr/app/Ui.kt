@@ -40,7 +40,8 @@ data class Pal(
     val ink: Color, val muted: Color, val accent: Color, val onAccent: Color, val gold: Color, val danger: Color,
 )
 
-val Night = Pal(true, Color(0xFF0D1613), Color(0xFF14201C), Color(0xFF1B2A25), Color(0xFF263832),
+// The emerald at night: pure black behind, cards only a breath of green above it.
+val Night = Pal(true, Color(0xFF000000), Color(0xFF0A0E0C), Color(0xFF111815), Color(0xFF1F2B26),
     Color(0xFFEDF2EE), Color(0xFF9AAEA6), Color(0xFF3FBF8F), Color(0xFF05130D), Color(0xFFD9B45A), Color(0xFFE5675F))
 val Day = Pal(false, Color(0xFFF5F1E6), Color(0xFFFFFDF7), Color(0xFFEDE7D6), Color(0xFFDDD5C1),
     Color(0xFF1C2925), Color(0xFF5D6C66), Color(0xFF1F7A5A), Color(0xFFFFFFFF), Color(0xFFA27A22), Color(0xFFC0443C))
