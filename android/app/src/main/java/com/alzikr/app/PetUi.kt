@@ -369,81 +369,9 @@ fun PetPage() {
             Text("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", color = soft, fontSize = 11.sp, modifier = Modifier.fillMaxWidth())
         }
         // Under the friend: its background and glow, and the log — each as a card.
-        if (tab == "album" || (tab == "friend" && sp != null)) Action("📜 سجل صديقي: ما فُتح ومتى، ونموّه وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
-        // ---- the friend at a glance: level, friendship, streak; the next gift (tap for the rewards)
-        if (tab == "friend" && sp != null) Panel(pad = 14.dp) {
-            LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
-            var open by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
-            val flip = { k: String -> open = if (open == k) "" else k }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (Progress.showLevels) {
-                    val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
-                    GlanceStat("✨", "النموّ ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f), open == "level") { flip("level") }
-                    val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
-                    GlanceStat(Friendship.heart, Progress.bondName(), if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent, Modifier.weight(1f), open == "bond") { flip("bond") }
-                }
-                val st = Pet.streak()
-                GlanceStat("🔥", if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"}" else "ابدأ اليوم", null, P.ink, Modifier.weight(1f), open == "level") { flip("level") }
-            }
-            if (open.isEmpty()) Sub("اضغط النموّ أو الصداقة لترى كيف تجمع نقاطهما", Modifier.padding(top = 8.dp), size = 11.sp)
-            // ✨ the level: how it grows, the stage, the streak (what used to fill this page)
-            if (open == "level") Column(Modifier.padding(top = 10.dp)) {
-                    LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
-                    Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
-                    // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
-                    run {
-                        val st = com.alzikr.app.pets.Evolution.stages(com.alzikr.app.pets.PetPacks.registry().species(sp.name))
-                        val next = st.firstOrNull { it.fromLevel > Progress.level() }
-                        Sub("🌱 يكبر شكله ويزيد نشاطه مع النموّ" + (next?.let { " · يكبر من جديد عند النموّ ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
-                    }
-                    if (Progress.showLevels) {
-                        // ✨ experience: Quran, hadith, learning and the day's worship
-                        val lv = Progress.level(); val x = Progress.xp
-                        val from = Progress.need(lv); val to = Progress.need(lv + 1)
-                        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("✨ النموّ ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                        androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
-                        Sub("بقي ${Quran.digits(to - x)} ✨ للنموّ ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
-                        var how by remember { mutableStateOf(false) }
-                        Text(if (how) "▴ كيف أكسب النقاط؟" else "❓ كيف أكسب النقاط؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
-                        if (how) Column(Modifier.fillMaxWidth().padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Progress.Kind.entries.forEach { k ->
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(k.ar, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                        Sub(Progress.how(k), size = 11.sp)
-                                    }
-                                    Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
-                                        Text("+${Quran.digits(k.xp)} ✨", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                        Sub("اليوم ${Quran.digits(Progress.todayXp(k))} من ${Quran.digits(k.cap)}", size = 10.sp)
-                                    }
-                                }
-                            }
-                            Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، والختمة تكمّل إليه ولا تتجاوزه)",
-                                color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
-                        }
-                        Sub("كل درجة نموّ يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: النموّ ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
-                    }
-                    val st = Pet.streak()
-                    Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
-                        (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
-                        color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
-                    Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
-            }
-            // ❤ the friendship: its points, the next gift, how it grows and today's points
-            if (open == "bond") Column(Modifier.padding(top = 10.dp)) { FriendshipPanel() }
-            if (Progress.showLevels) Friendship.next()?.let { g ->
-                Sub("${g.icon} الجائزة التالية: ${g.name} · بقي ${Quran.digits(g.bond - Progress.bondPoints)} ❤", Modifier.padding(top = 10.dp), size = 12.sp)
-            }
-            Text("🎁 مكافآتي وأوسمتي ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { tab = "rewards" }.padding(vertical = 4.dp))
-        }
-        if (tab == "friend" && sp != null) Panel(pad = 14.dp) { GrowthGuide() }
+        if (tab == "album") Action("📜 سجل صديقي: ما فُتح ومتى، ونموّه وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
+        // ---- only two lines here (growth and friendship); the details live in «المكافآت»
+        if (tab == "friend" && sp != null) Panel(pad = 14.dp) { ProgressLines { tab = "rewards" } }
         if (tab == "friend" && sp != null && !Pet.kids) Panel(pad = 14.dp) { MissionsPanel() }
         if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -784,4 +712,118 @@ fun GrowthGuide() {
         Sub("صديقك الآن في النموّ ${Quran.digits(lv)} · بقي ${Quran.digits(Progress.need(lv + 1) - Progress.xp)} ✨ للنموّ ${Quran.digits(lv + 1)}", Modifier.padding(top = 4.dp), size = 12.sp)
     }
     Sub("الاثنان منفصلان: القلوب لا تُحسب في النموّ، والنموّ لا يزيد القلوب. وكلها مكافآت داخل التطبيق، لا مقياس للأجر عند الله.", Modifier.padding(top = 10.dp), size = 11.sp)
+}
+
+/** The friend's details, moved from the friend tab to «المكافآت»: growth, friendship and streak, each opening its full story. */
+@Composable
+fun FriendStatsPanel() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val sp = Pet.species ?: return
+    // ---- the friend at a glance: level, friendship, streak; the next gift (tap for the rewards)
+    Panel(pad = 14.dp) {
+        var open by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+        val flip = { k: String -> open = if (open == k) "" else k }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (Progress.showLevels) {
+                val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
+                GlanceStat("✨", "النموّ ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f), open == "level") { flip("level") }
+                val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
+                GlanceStat(Friendship.heart, Progress.bondName(), if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent, Modifier.weight(1f), open == "bond") { flip("bond") }
+            }
+            val st = Pet.streak()
+            GlanceStat("🔥", if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"}" else "ابدأ اليوم", null, P.ink, Modifier.weight(1f), open == "level") { flip("level") }
+        }
+        if (open.isEmpty()) Sub("اضغط النموّ أو الصداقة لترى كيف تجمع نقاطهما", Modifier.padding(top = 8.dp), size = 11.sp)
+        // ✨ the level: how it grows, the stage, the streak (what used to fill this page)
+        if (open == "level") Column(Modifier.padding(top = 10.dp)) {
+                LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
+                Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
+                // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
+                run {
+                    val st = com.alzikr.app.pets.Evolution.stages(com.alzikr.app.pets.PetPacks.registry().species(sp.name))
+                    val next = st.firstOrNull { it.fromLevel > Progress.level() }
+                    Sub("🌱 يكبر شكله ويزيد نشاطه مع النموّ" + (next?.let { " · يكبر من جديد عند النموّ ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
+                }
+                if (Progress.showLevels) {
+                    // ✨ experience: Quran, hadith, learning and the day's worship
+                    val lv = Progress.level(); val x = Progress.xp
+                    val from = Progress.need(lv); val to = Progress.need(lv + 1)
+                    Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("✨ النموّ ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                    androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
+                    Sub("بقي ${Quran.digits(to - x)} ✨ للنموّ ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
+                    var how by remember { mutableStateOf(false) }
+                    Text(if (how) "▴ كيف أكسب النقاط؟" else "❓ كيف أكسب النقاط؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
+                    if (how) Column(Modifier.fillMaxWidth().padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Progress.Kind.entries.forEach { k ->
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(k.ar, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    Sub(Progress.how(k), size = 11.sp)
+                                }
+                                Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
+                                    Text("+${Quran.digits(k.xp)} ✨", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    Sub("اليوم ${Quran.digits(Progress.todayXp(k))} من ${Quran.digits(k.cap)}", size = 10.sp)
+                                }
+                            }
+                        }
+                        Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، والختمة تكمّل إليه ولا تتجاوزه)",
+                            color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
+                    }
+                    Sub("كل درجة نموّ يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: النموّ ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
+                }
+                val st = Pet.streak()
+                Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
+                    (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
+                    color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
+        }
+        // ❤ the friendship: its points, the next gift, how it grows and today's points
+        if (open == "bond") Column(Modifier.padding(top = 10.dp)) { FriendshipPanel() }
+        if (Progress.showLevels) Friendship.next()?.let { g ->
+            Sub("${g.icon} الجائزة التالية: ${g.name} · بقي ${Quran.digits(g.bond - Progress.bondPoints)} ❤", Modifier.padding(top = 10.dp), size = 12.sp)
+        }
+    }
+}
+
+/** The friend tab's progress: one line for growth ✨ and one for friendship ❤ — what you have, what the next needs, and today's points of the day's allowance. */
+@Composable
+fun ProgressLines(toRewards: () -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
+    if (!Progress.showLevels) {
+        Text("🎁 مكافآتي وأوسمتي ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(8.dp)).clickable { toRewards() }.padding(vertical = 4.dp))
+        return
+    }
+    val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
+    ProgressLine("✨ النموّ ${Quran.digits(lv)}", "${Quran.digits(x)} / ${Quran.digits(to)} ✨", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold,
+        "بقي ${Quran.digits(to - x)} ✨ للنموّ ${Quran.digits(lv + 1)}", "اليوم ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ المسموح بها")
+    val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange(bp); val steps = Progress.bondSteps; val i = Progress.bondStage(bp)
+    ProgressLine("${Friendship.heart} الصداقة: ${steps[i].second}", if (bt > 0) "${Quran.digits(bp)} / ${Quran.digits(bt)} ❤" else "${Quran.digits(bp)} ❤",
+        if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent,
+        if (bt > 0) "بقي ${Quran.digits(bt - bp)} ❤ لـ«${steps[i + 1].second}»" else "أعلى المراحل",
+        "اليوم ${Quran.digits(Progress.bondToday().coerceAtMost(Progress.BOND_DAY))} من ${Quran.digits(Progress.BOND_DAY)} ❤ المسموح بها", Modifier.padding(top = 14.dp))
+    Text("🎁 التفاصيل والمكافآت ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(top = 10.dp).clip(L.shape(8.dp)).clickable { toRewards() }.padding(vertical = 4.dp))
+}
+
+@Composable
+private fun ProgressLine(title: String, have: String, frac: Float, color: androidx.compose.ui.graphics.Color, next: String, today: String, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(have, color = color, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        }
+        androidx.compose.material3.LinearProgressIndicator(progress = { frac },
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = color, trackColor = P.line)
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Sub(next, Modifier.weight(1f), size = 11.sp)
+            Sub(today, size = 11.sp)
+        }
+    }
 }

@@ -57,6 +57,14 @@ fun RewardsContent() {
             Text("✨ النموّ ${Quran.digits(lv)}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             Sub("${Quran.digits(x)} ✨ · النموّ التالي عند ${Quran.digits(Progress.need(lv + 1))}", Modifier.fillMaxWidth(), size = 12.sp)
         }
+        // Moved here from the friend tab: growth, friendship and streak in detail, how they grow, and the log.
+        if (part == "me" && sp != null) FriendStatsPanel()
+        if (part == "me" && sp != null) Panel(pad = 14.dp) { GrowthGuide() }
+        if (part == "me") {
+            var journal by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            if (journal) JournalSheet { journal = false }
+            Action("📜 سجل صديقي: ما فُتح ومتى، ونموّه وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
+        }
         if (part == "me") Panel(pad = 14.dp) {
             Title("خبرة اليوم ✨")
             Progress.Kind.entries.forEach { k ->
