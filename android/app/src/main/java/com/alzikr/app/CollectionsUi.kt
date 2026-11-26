@@ -276,7 +276,13 @@ private fun CountBall(sign: String, on: Boolean, mod: Modifier, act: () -> Unit)
         .background(if (on) P.accent.copy(alpha = .16f) else P.line.copy(alpha = .3f))
         .border(1.5.dp, if (on) P.accent.copy(alpha = .8f) else P.line, androidx.compose.foundation.shape.CircleShape)
         .clickable(enabled = on) { act() }, contentAlignment = Alignment.Center) {
-        Text(sign, color = if (on) P.accent else P.muted, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        // Drawn, not typed: a font's − and + sit off the middle of the ball.
+        val ink = if (on) P.accent else P.muted
+        androidx.compose.foundation.Canvas(Modifier.size(16.dp)) {
+            val w = 2.5.dp.toPx(); val c = center
+            drawLine(ink, androidx.compose.ui.geometry.Offset(0f, c.y), androidx.compose.ui.geometry.Offset(size.width, c.y), w, androidx.compose.ui.graphics.StrokeCap.Round)
+            if (sign == "+") drawLine(ink, androidx.compose.ui.geometry.Offset(c.x, 0f), androidx.compose.ui.geometry.Offset(c.x, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+        }
     }
 }
 
