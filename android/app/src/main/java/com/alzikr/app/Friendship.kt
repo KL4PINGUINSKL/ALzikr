@@ -97,11 +97,14 @@ Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخ
         Gift("badge_garden", 7000, "🌺", Kind.BADGE, "وسام «روضة الأُنس»", "أُنس لا يذبل"),
         Gift("theme_light", 7500, "🌟", Kind.THEME, "ثيم «نور»", "أشعّة نور ذهبية تنسكب من أعلى وتدور ببطء"),
         Gift("badge_eternal", 8000, "♾", Kind.BADGE, "وسام «العهد الدائم»", "عهد لم يُنقض"),
+        Gift("frame_lanterns", 400, "🏮", Kind.FRAME, "إطار «فوانيس رمضان»", "فوانيس ذهبية تتدلّى من حافة البطاقة والأداة"),
+        Gift("frame_eid", 800, "🎉", Kind.FRAME, "إطار «فوانيس العيد»", "رايات ملوّنة وفوانيس ونجوم العيد"),
+        Gift("frame_crescents", 1200, "🌙", Kind.FRAME, "إطار «أهلّة ونجوم»", "أهلّة ونجوم ذهبية معلّقة"),
         Gift("frame_galaxy", 8500, "🖼", Kind.FRAME, "إطار «المجرّة»", "أسود وبنفسجي بنجوم صغيرة على الحافة"),
         Gift("theme_marble", 9000, "◆", Kind.THEME, "ثيم «الرخام والذهب»", "رخام وزمرد وذهب"),
         Gift("badge_pure", 10000, "🥇", Kind.BADGE, "وسام «صفاء الودّ الذهبي»", "عشرة آلاف ❤ من الصحبة"),
         Gift("badge_crown", 12500, "👑", Kind.BADGE, "تاج الصداقة", "أعلى ما تبلغه صداقة"),
-    )
+    ).sortedBy { it.bond }
     fun gift(id: String) = gifts.firstOrNull { it.id == id }
     /** Is this gift open? (Unknown ids are open, so nothing breaks.) */
     fun has(id: String) = gift(id)?.let { Progress.bondPoints >= it.bond } ?: true

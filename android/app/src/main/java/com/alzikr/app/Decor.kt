@@ -1,0 +1,181 @@
+package com.alzikr.app
+
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+
+/**
+ * Drawn decorations for the friend's card and its widget: frames that hang from the edge (Ramadan lanterns,
+ * Eid lanterns, crescents and stars) and festive scenes (the Ramadan crescent, the Eid crescent, round orange lanterns).
+ */
+object Decor {
+    /** Frames drawn here (not XML shapes): they hang from the top edge. */
+    val drawn = setOf("lanterns", "eid", "crescents")
+    fun isDrawn(id: String) = id in drawn
+    /** Festive scenes (card ids; the widget's are the same with "w_"). */
+    val scenes = setOf("ramadan_moon", "eid_moon", "orange_lanterns")
+}
+
+private fun DrawScope.dp(v: Float) = v * density
+
+/** A crescent: a disc minus a shifted disc (no need to know the colour behind it). */
+fun DrawScope.crescent(cx: Float, cy: Float, r: Float, color: Color, tilt: Float = .42f) {
+    val a = Path().apply { addOval(androidx.compose.ui.geometry.Rect(cx - r, cy - r, cx + r, cy + r)) }
+    val b = Path().apply { addOval(androidx.compose.ui.geometry.Rect(cx - r + r * tilt, cy - r - r * .12f, cx + r + r * tilt, cy + r - r * .12f)) }
+    drawPath(Path.combine(PathOperation.Difference, a, b), color)
+}
+
+/** A five-pointed star. */
+fun DrawScope.star(cx: Float, cy: Float, r: Float, color: Color) {
+    val p = Path()
+    for (k in 0 until 10) {
+        val rr = if (k % 2 == 0) r else r * .45f
+        val a = (-PI / 2 + k * PI / 5).toFloat()
+        val x = cx + cos(a) * rr; val y = cy + sin(a) * rr
+        if (k == 0) p.moveTo(x, y) else p.lineTo(x, y)
+    }
+    p.close(); drawPath(p, color)
+}
+
+/** A Ramadan fanous hanging on a string from [top] (string length [len]); [s] its scale; glowing glass. */
+fun DrawScope.fanous(x: Float, top: Float, len: Float, s: Float, metal: Color, glass: Color, glow: Float = 1f) {
+    val u = dp(s)
+    val y = top + len
+    drawLine(metal.copy(alpha = .8f), Offset(x, top), Offset(x, y), 1.2f * density)
+    drawCircle(metal, 2.2f * u, Offset(x, y + 1.5f * u), style = Stroke(1.2f * density))            // ring
+    // the cap: a small dome and a band
+    drawPath(Path().apply { moveTo(x - 6 * u, y + 7 * u); quadraticBezierTo(x, y + 1 * u, x + 6 * u, y + 7 * u); close() }, metal)
+    drawRect(metal, Offset(x - 7 * u, y + 7 * u), Size(14 * u, 2.4f * u))
+    // the glow, then the body: a hexagonal glass between two bands
+    drawCircle(Brush.radialGradient(listOf(glass.copy(alpha = .55f * glow), Color.Transparent), Offset(x, y + 18 * u), 22 * u), 22 * u, Offset(x, y + 18 * u))
+    val body = Path().apply {
+        moveTo(x - 6 * u, y + 9.4f * u); lineTo(x + 6 * u, y + 9.4f * u); lineTo(x + 8.5f * u, y + 16 * u)
+        lineTo(x + 6 * u, y + 26 * u); lineTo(x - 6 * u, y + 26 * u); lineTo(x - 8.5f * u, y + 16 * u); close()
+    }
+    drawPath(body, Brush.verticalGradient(listOf(glass, glass.copy(alpha = .75f)), y + 9 * u, y + 26 * u))
+    drawLine(metal, Offset(x, y + 9.4f * u), Offset(x, y + 26 * u), 1.1f * density)
+    drawLine(metal, Offset(x - 8.5f * u, y + 16 * u), Offset(x + 8.5f * u, y + 16 * u), 1f * density)
+    drawPath(body, metal, style = Stroke(1.3f * density))
+    drawRect(metal, Offset(x - 6.5f * u, y + 26 * u), Size(13 * u, 2.4f * u))
+    drawPath(Path().apply { moveTo(x - 4 * u, y + 28.4f * u); lineTo(x + 4 * u, y + 28.4f * u); lineTo(x, y + 33 * u); close() }, metal)
+}
+
+/** A round, ribbed orange lantern (like a little pumpkin, but a lantern of Ramadan nights). */
+fun DrawScope.roundLantern(x: Float, y: Float, s: Float, color: Color, glow: Float = 1f) {
+    val u = dp(s)
+    drawCircle(Brush.radialGradient(listOf(color.copy(alpha = .45f * glow), Color.Transparent), Offset(x, y), 30 * u), 30 * u, Offset(x, y))
+    val w = 15 * u; val h = 12 * u
+    drawOval(Brush.radialGradient(listOf(Color(0xFFFFE2A8), color, color.copy(red = color.red * .75f, green = color.green * .7f)), Offset(x - w * .2f, y - h * .3f), w * 1.3f),
+        Offset(x - w, y - h), Size(w * 2, h * 2))
+    // the ribs
+    for (k in listOf(-.55f, 0f, .55f)) {
+        val p = Path().apply { moveTo(x + w * k * .3f, y - h); quadraticBezierTo(x + w * k * 1.25f, y, x + w * k * .3f, y + h) }
+        drawPath(p, Color(0x66803800), style = Stroke(1.2f * density))
+    }
+    drawRect(Color(0xFF6B3A12), Offset(x - 4 * u, y - h - 3 * u), Size(8 * u, 3.5f * u))      // the cap
+    drawRect(Color(0xFF6B3A12), Offset(x - 3 * u, y + h - .5f * u), Size(6 * u, 2.5f * u))    // the base
+}
+
+/** The frame's band in its two colours at the very edge (as for the XML frames), then what hangs from it. */
+fun DrawScope.drawDecorFrame(id: String, t: Float, top: Color, bottom: Color, radius: Float) {
+    val w = size.width; val h = size.height
+    val band = 3f * density
+    drawRoundRect(Brush.verticalGradient(listOf(top, bottom)), Offset(band / 2, band / 2), Size(w - band, h - band), CornerRadius(radius), style = Stroke(band))
+    val sway = { k: Int -> sin((t * 2 * PI + k * 1.3).toFloat()) * 2f * density }
+    when (id) {
+        "lanterns" -> {
+            val gold = Color(0xFFE9C46A)
+            drawLine(gold.copy(alpha = .7f), Offset(radius, band), Offset(w - radius, band), 1.4f * density)
+            val n = 5
+            for (k in 0 until n) {
+                val fx = .12f + k * (.76f / (n - 1)); val len = dp(listOf(6f, 18f, 11f, 20f, 8f)[k])
+                fanous(w * fx + sway(k), band, len, listOf(.95f, 1.15f, 1f, 1.2f, .95f)[k], gold, listOf(Color(0xFFFFB347), Color(0xFFFFD27A), Color(0xFFFF8A5C), Color(0xFFFFD27A), Color(0xFFFFB347))[k])
+            }
+        }
+        "eid" -> {
+            // a garland of little flags, then colourful lanterns and stars
+            val cols = listOf(Color(0xFFFF6B9A), Color(0xFF4FD1C5), Color(0xFFFFD166), Color(0xFF9B7BFF), Color(0xFF6BCB77))
+            val g = Path(); g.moveTo(radius, band); g.quadraticBezierTo(w / 2, dp(16f), w - radius, band)
+            drawPath(g, Color(0xCCFFFFFF), style = Stroke(1.2f * density))
+            val flags = 14
+            for (k in 1 until flags) {
+                val f = k / flags.toFloat(); val x = radius + (w - 2 * radius) * f
+                val y = band + (1 - (2 * f - 1) * (2 * f - 1)) * (dp(16f) - band) * .5f * 2 * .5f
+                drawPath(Path().apply { moveTo(x - dp(4f), y); lineTo(x + dp(4f), y); lineTo(x, y + dp(8f)); close() }, cols[k % cols.size])
+            }
+            listOf(.08f, .3f, .7f, .92f).forEachIndexed { k, fx -> fanous(w * fx + sway(k), band, dp(listOf(10f, 20f, 18f, 8f)[k]), .9f, Color(0xFFF2F2F2), cols[(k * 2) % cols.size]) }
+            listOf(.19f, .5f, .81f).forEachIndexed { k, fx -> star(w * fx, dp(32f) + sway(k + 3), dp(6f), cols[(k + 2) % cols.size]) }
+        }
+        "crescents" -> {
+            val gold = Color(0xFFF3D27A)
+            listOf(.15f, .38f, .62f, .85f).forEachIndexed { k, fx ->
+                val x = w * fx + sway(k); val len = dp(listOf(12f, 22f, 16f, 10f)[k])
+                drawLine(gold.copy(alpha = .7f), Offset(x, band), Offset(x, band + len), 1.2f * density)
+                if (k % 2 == 0) crescent(x, band + len + dp(10f), dp(10.5f), gold) else star(x, band + len + dp(8f), dp(8f), gold)
+            }
+        }
+    }
+}
+
+/** The festive scenes (the card animates with [t]; the widget passes 0). */
+fun DrawScope.drawFestiveScene(id: String, t: Float) {
+    val w = size.width; val h = size.height
+    fun stars(n: Int, seed: Int) { val r = java.util.Random(seed.toLong())
+        repeat(n) { val tw = .45f + .55f * ((sin((t * 2 * PI + r.nextFloat() * 6.28).toFloat()) + 1) / 2)
+            drawCircle(Color.White.copy(alpha = tw), (r.nextFloat() * 1.6f + .6f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h * .8f)) } }
+    when (id) {
+        "ramadan_moon" -> {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF0B0A2A), Color(0xFF2A1A55), Color(0xFF4A2A6A))))
+            stars(40, 81)
+            val c = Offset(w * .72f, h * .34f); val r = h * .2f
+            drawCircle(Brush.radialGradient(listOf(Color(0x55FFE7A0), Color.Transparent), c, r * 2.6f), r * 2.6f, c)
+            crescent(c.x, c.y, r, Color(0xFFFFE08A))
+            star(c.x - r * .15f, c.y - r * .05f, r * .22f, Color(0xFFFFE08A))
+            // a mosque's outline below
+            val base = h * .86f; val mc = Color(0xFF140F30)
+            drawRect(mc, Offset(0f, base), Size(w, h - base))
+            drawCircle(mc, h * .13f, Offset(w * .3f, base))
+            drawRect(mc, Offset(w * .3f - h * .13f, base - h * .02f), Size(h * .26f, h * .1f))
+            drawRect(mc, Offset(w * .12f, base - h * .32f), Size(w * .025f, h * .32f)); drawCircle(mc, w * .02f, Offset(w * .1325f, base - h * .32f))
+            drawRect(mc, Offset(w * .48f, base - h * .26f), Size(w * .022f, h * .26f)); drawCircle(mc, w * .018f, Offset(w * .491f, base - h * .26f))
+            fanous(w * .9f + sin((t * 2 * PI).toFloat()) * 2 * density, 0f, h * .12f, .9f, Color(0xFFE9C46A), Color(0xFFFFC35C))
+        }
+        "eid_moon" -> {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF06283D), Color(0xFF0E4D64), Color(0xFF137C84))))
+            stars(30, 83)
+            val c = Offset(w * .25f, h * .32f); val r = h * .18f
+            drawCircle(Brush.radialGradient(listOf(Color(0x55FFFFFF), Color.Transparent), c, r * 2.4f), r * 2.4f, c)
+            crescent(c.x, c.y, r, Color(0xFFFFF4D6))
+            val cols = listOf(Color(0xFFFF6B9A), Color(0xFFFFD166), Color(0xFF4FD1C5), Color(0xFF9B7BFF), Color(0xFF6BCB77))
+            val rnd = java.util.Random(7)
+            repeat(26) { k ->
+                val x = rnd.nextFloat() * w; val y = ((rnd.nextFloat() + t * .4f) % 1f) * h
+                drawRect(cols[k % cols.size], Offset(x, y), Size(3.5f * density, 6f * density))
+            }
+            listOf(.55f, .75f, .92f).forEachIndexed { k, fx -> fanous(w * fx + sin((t * 2 * PI + k).toFloat()) * 2 * density, 0f, h * (.08f + k * .05f), .8f, Color(0xFFF2F2F2), cols[k]) }
+        }
+        "orange_lanterns" -> {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF2A1238), Color(0xFF6B2C3A), Color(0xFFB4583A))))
+            stars(18, 85)
+            drawCircle(Brush.radialGradient(listOf(Color(0x44FFE0A0), Color.Transparent), Offset(w * .8f, h * .25f), h * .3f), h * .3f, Offset(w * .8f, h * .25f)); crescent(w * .8f, h * .25f, h * .11f, Color(0xFFFFE0A0))
+            val wire = Path(); wire.moveTo(0f, h * .12f); wire.quadraticBezierTo(w * .5f, h * .38f, w, h * .1f)
+            drawPath(wire, Color(0x99FFD27A), style = Stroke(1.2f * density))
+            listOf(.12f to .17f, .3f to .26f, .5f to .3f, .7f to .25f, .88f to .15f).forEachIndexed { k, (fx, fy) ->
+                val x = w * fx; val y = h * fy + sin((t * 2 * PI + k).toFloat()) * 2 * density
+                drawLine(Color(0x99FFD27A), Offset(x, y - dp(8f)), Offset(x, y + dp(4f)), 1f * density)
+                roundLantern(x, y + dp(16f), listOf(.8f, 1f, 1.1f, 1f, .85f)[k], listOf(Color(0xFFFF8C1A), Color(0xFFFFA62B), Color(0xFFFF7A00), Color(0xFFFFA62B), Color(0xFFFF8C1A))[k],
+                    .8f + .2f * sin((t * 4 * PI + k).toFloat()))
+            }
+            drawPath(Path().apply { moveTo(0f, h * .88f); quadraticBezierTo(w * .5f, h * .78f, w, h * .9f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFF2A1020))
+        }
+    }
+}

@@ -246,6 +246,9 @@ object Progress {
         Frame("pearl", "اللؤلؤ", Friendship.frameGift("pearl")!!.bond, R.drawable.frame_pearl, 0xFFFAF8FF, 0xFFE6E0F2, true),
         Frame("royal", "الملكي", Friendship.frameGift("royal")!!.bond, R.drawable.frame_royal, 0xFF2A0E40, 0xFF4A1E6A, false),
         Frame("crystal", "البلّور", Friendship.frameGift("crystal")!!.bond, R.drawable.frame_crystal, 0xFFEAF9FF, 0xFFBFE8F5, true),
+        Frame("lanterns", "فوانيس رمضان", Friendship.frameGift("lanterns")!!.bond, null, 0xFF2A1A55, 0xFF4A2A6A, false),
+        Frame("eid", "فوانيس العيد", Friendship.frameGift("eid")!!.bond, null, 0xFF0E4D64, 0xFF137C84, false),
+        Frame("crescents", "أهلّة ونجوم", Friendship.frameGift("crescents")!!.bond, null, 0xFF14204A, 0xFF2A1650, false),
         Frame("galaxy", "المجرّة", Friendship.frameGift("galaxy")!!.bond, R.drawable.frame_galaxy, 0xFF05030F, 0xFF2A1650, false),
     ).sortedBy { it.bond }
     var frame: String

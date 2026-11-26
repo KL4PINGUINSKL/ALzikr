@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
@@ -69,6 +70,7 @@ object PetBackdrop {
         Scene("moon", "الهلال", 150), Scene("aurora", "الشفق", 400), Scene("rain", "المطر", 600), Scene("zellige", "الزليج", 900),
         Scene("skyclouds", "السماء والغيوم", 0), Scene("sunclouds", "شمس بين الغيوم", 0), Scene("sunsetclouds", "غيوم الغروب", 0), Scene("snowfall", "الثلج", 0),
         Scene("cotton", "غيوم القطن", 300), Scene("aboveclouds", "فوق الغيوم", 800), Scene("nightclouds", "غيوم الليل", 1500), Scene("goldclouds", "غيوم ذهبية", 2500),
+        Scene("ramadan_moon", "هلال رمضان", 0), Scene("eid_moon", "هلال العيد", 500), Scene("orange_lanterns", "فوانيس برتقالية", 1000),
         Scene("sakura", "الكرز", 1200), Scene("lanterns", "الفوانيس", 2000), Scene("meteors", "الشهب", 3000), Scene("galaxy", "المجرّة", 4000),
     )
     /** A picture from the phone (for the card or the widget) opens with friendship too. */
@@ -105,6 +107,7 @@ object PetBackdrop {
         WScene("w_pinkclouds", "غيوم وردية", 0, true), WScene("w_sunsetclouds", "غيوم الغروب", 0, false), WScene("w_cotton", "غيوم القطن", 0, true),
         WScene("w_above", "فوق الغيوم", 400, true), WScene("w_desertnight", "ليل الصحراء", 600, false), WScene("w_nightclouds", "غيوم الليل", 1000, false),
         WScene("w_dawnclouds", "غيوم الفجر", 1800, false), WScene("w_goldclouds", "غيوم ذهبية", 3500, true),
+        WScene("w_ramadan_moon", "هلال رمضان", 0, false), WScene("w_eid_moon", "هلال العيد", 700, false), WScene("w_orange_lanterns", "فوانيس برتقالية", 1400, false),
         WScene("w_rainbow", "قوس المطر", 2000, true), WScene("w_moonsea", "القمر والبحر", 4000, false),
     )
     fun open(s: WScene) = Progress.bondPoints >= s.bond
@@ -127,7 +130,10 @@ object PetBackdrop {
      * for the theme / frame. The second value: whether the words should be dark.
      */
     fun widgetBitmap(c: android.content.Context): Pair<android.graphics.Bitmap, Boolean>? {
-        val id = widgetBg; if (id.isEmpty()) return null
+        val id = widgetBg
+        val fr0 = Progress.frames.firstOrNull { it.id == Progress.frame }
+        val drawnFrame = fr0 != null && Decor.isDrawn(fr0.id)
+        if (id.isEmpty() && !drawnFrame) return null
         // The widget's real size (so nothing is stretched or cut), 900 × 450 when the launcher does not say.
         val dm = c.resources.displayMetrics
         val (w, h) = runCatching {
@@ -146,7 +152,9 @@ object PetBackdrop {
         val clip = android.graphics.Path().apply { addRoundRect(0f, 0f, w.toFloat(), h.toFloat(), r, r, android.graphics.Path.Direction.CW) }
         cv.clipPath(clip)
         var light = false
-        if (id == "photo") {
+        if (id.isEmpty() && fr0 != null) cv.drawPaint(android.graphics.Paint().apply {
+            shader = android.graphics.LinearGradient(0f, 0f, 0f, h.toFloat(), fr0.top.toInt(), fr0.bottom.toInt(), android.graphics.Shader.TileMode.CLAMP) })
+        else if (id == "photo") {
             val src = runCatching { BitmapFactory.decodeFile(widgetPhoto(c).path) }.getOrNull() ?: return null
             val scale = maxOf(w / src.width.toFloat(), h / src.height.toFloat())
             val dw = src.width * scale; val dh = src.height * scale
@@ -162,6 +170,10 @@ object PetBackdrop {
             cv.drawBitmap(img.asAndroidBitmapCompat(), 0f, 0f, null)
         }
         // A frame chosen too: a thin band in its colours at the very edge, and its own lines over the scene (no fill).
+        if (fr0 != null && drawnFrame) runCatching {
+            androidx.compose.ui.graphics.drawscope.CanvasDrawScope().draw(androidx.compose.ui.unit.Density(dm.density), androidx.compose.ui.unit.LayoutDirection.Rtl,
+                androidx.compose.ui.graphics.Canvas(cv), Size(w.toFloat(), h.toFloat())) { drawDecorFrame(fr0.id, 0f, Color(fr0.top), Color(fr0.bottom), r) }
+        }
         Progress.frames.firstOrNull { it.id == Progress.frame }?.let { fr -> fr.res?.let { res -> runCatching {
             val band = 3f * dm.density
             cv.drawRoundRect(0f, 0f, w.toFloat(), h.toFloat(), r, r, android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
@@ -173,12 +185,17 @@ object PetBackdrop {
     }
 
     /** A frame's lines without its fill (so the scene shows through). */
-    private fun clearFills(d: android.graphics.drawable.Drawable) {
+    internal fun clearFills(d: android.graphics.drawable.Drawable) {
         when (d) {
             is android.graphics.drawable.GradientDrawable -> d.setColor(android.graphics.Color.TRANSPARENT)
             is android.graphics.drawable.LayerDrawable -> (0 until d.numberOfLayers).forEach { clearFills(d.getDrawable(it)) }
         }
     }
+
+    /** The frame around the friend's card in its section ("" none); the same frames as the widget's. */
+    var cardFrame: String
+        get() = (Store.prefs.getString("pet_card_frame", "") ?: "").takeIf { id -> id.isEmpty() || Progress.frames.any { it.id == id && it.open } } ?: ""
+        set(v) { Store.prefs.edit().putString("pet_card_frame", v).apply(); Store.bump() }
 
     /** The glow's colour: "" none, a name below, or "rainbow" (its colours turn slowly). */
     var glow: String
@@ -270,6 +287,7 @@ fun DrawScope.drawWidgetScene(id: String) {
             drawCircle(Brush.radialGradient(listOf(Color(0xCCFFFFFF), Color(0x00FFFFFF)), Offset(w * .5f, h * .3f), h * .6f), h * .6f, Offset(w * .5f, h * .3f))
             listOf(Triple(.18f, .4f, 1.1f), Triple(.5f, .7f, 1.3f), Triple(.84f, .38f, 1f)).forEach { (fx, fy, k) -> cloud(w * fx, h * fy, k, Color(0xFFFFF4D6), Color(0xFFE9C46A)) }
             val r = java.util.Random(77); repeat(40) { drawCircle(Color.White.copy(alpha = .5f + r.nextFloat() * .5f), (1 + r.nextFloat() * 2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
+        "w_ramadan_moon", "w_eid_moon", "w_orange_lanterns" -> drawFestiveScene(id.removePrefix("w_"), 0f)
         "w_gold" -> { drawRect(Brush.linearGradient(listOf(Color(0xFFFFF1C4), Color(0xFFE9C46A), Color(0xFFF8DE9A)), Offset.Zero, Offset(w, h)))
             val r = java.util.Random(13); repeat(70) { drawCircle(Color.White.copy(alpha = .4f + r.nextFloat() * .5f), (1 + r.nextFloat() * 2.2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
     }
@@ -374,6 +392,7 @@ fun DrawScope.drawScene(id: String, t: Float) {
                 val x = (((fx + t * (.06f + i * .02f)) % 1.3f) - .15f) * w; cloud(x, h * fy, k, Color(0xFFFFF4D6), Color(0xFFE9C46A)) }
             val r = java.util.Random(77); repeat(40) { val tw = .4f + .6f * ((sin((t * 2 * PI + r.nextFloat() * 6.28).toFloat()) + 1) / 2)
                 drawCircle(Color.White.copy(alpha = tw), (1 + r.nextFloat() * 2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
+        "ramadan_moon", "eid_moon", "orange_lanterns" -> drawFestiveScene(id, t)
         "galaxy" -> { drawRect(Brush.radialGradient(listOf(Color(0xFF3A1E6A), Color(0xFF0A0518)), Offset(w * .5f, h * .45f), w * .7f)); stars(60, 23)
             val r = java.util.Random(5); repeat(140) { val a = r.nextFloat() * 6.28f + t * 1.2f; val d = r.nextFloat(); val x = w * .5f + cos(a + d * 4) * d * w * .45f; val y = h * .45f + sin(a + d * 4) * d * h * .35f
                 drawCircle(listOf(Color(0xAAFFB0F0), Color(0xAA9AD8FF), Color(0xAAFFFFFF))[it % 3], (1 + r.nextFloat()) * density, Offset(x, y)) } }
@@ -419,7 +438,9 @@ fun PetSceneCard(content: @Composable androidx.compose.foundation.layout.ColumnS
         if (pic != null) Image(pic, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
         else if (on) Canvas(Modifier.matchParentSize()) { drawScene(id, if (calm) 0f else t) }
         if (on) Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0x55000000), Color(0xAA000000)))))
-        Column(Modifier.fillMaxWidth().padding(12.dp)) { content(on) }
+        val fr = Progress.frames.firstOrNull { it.id == PetBackdrop.cardFrame && it.id != "plain" }
+        Column(Modifier.fillMaxWidth().padding(12.dp).padding(top = if (fr != null && Decor.isDrawn(fr.id)) 30.dp else 0.dp)) { content(on) }
+        if (fr != null) Canvas(Modifier.matchParentSize()) { drawCardFrame(ctx, fr, if (calm) 0f else t, 18.dp.toPx()) }
     }
 }
 
@@ -489,6 +510,11 @@ fun PetDecorContent(part: String?) {
                 if (PetBackdrop.photoOpen()) pick.launch("image/*") else android.widget.Toast.makeText(ctx, "تُفتح الصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }
 
         }
+        if (part == null || part == "card") {
+            Text("🖼 إطار البطاقة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+            Sub("خط رفيع حول بطاقته، أو فوانيس وأهلّة تتدلّى من حافتها.", size = 12.sp)
+            WidgetFramesGrid(card = true)
+        }
         if (part == null || part == "widget") {
             Text("🖼 إطار الأداة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub("يحيط بالأداة، ومع الخلفية يصير حولها كبرواز.", size = 12.sp)
@@ -533,3 +559,17 @@ fun PetDecorContent(part: String?) {
 }
 
 @Suppress("unused") private val keepWidth = Modifier.width(1.dp)
+
+
+/** A frame over a card: the drawn ones hang from the edge; the others are their band and lines without their fill. */
+fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCardFrame(c: android.content.Context, fr: Progress.Frame, t: Float, radius: Float) {
+    if (Decor.isDrawn(fr.id)) { drawDecorFrame(fr.id, t, Color(fr.top), Color(fr.bottom), radius); return }
+    val res = fr.res ?: return
+    val band = 3f * density
+    drawRoundRect(Brush.verticalGradient(listOf(Color(fr.top), Color(fr.bottom))), Offset(band / 2, band / 2), Size(size.width - band, size.height - band),
+        androidx.compose.ui.geometry.CornerRadius(radius), style = androidx.compose.ui.graphics.drawscope.Stroke(band))
+    val d: android.graphics.drawable.Drawable = androidx.core.content.ContextCompat.getDrawable(c, res)?.mutate() ?: return
+    PetBackdrop.clearFills(d); d.setBounds(0, 0, size.width.toInt(), size.height.toInt())
+    val nc: android.graphics.Canvas = drawContext.canvas.nativeCanvas
+    d.draw(nc)
+}

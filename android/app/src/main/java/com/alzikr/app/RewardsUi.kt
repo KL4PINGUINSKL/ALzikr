@@ -213,16 +213,22 @@ object Certificate {
 }
 
 
-/** The widget's frames, an even grid (used in «الزينة»). */
+/** The frames, an even grid: the widget's (default) or the card's ([card]). */
 @Composable
-fun WidgetFramesGrid() {
+fun WidgetFramesGrid(card: Boolean = false) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
-    TileGrid(Progress.frames, cols = 3, rows = 2, startOpen = Progress.frames.indexOfFirst { it.id == Progress.frame } >= 6, noun = "الإطارات") { f, m ->
-        val open = f.open; val on = Progress.frame == f.id
-        PictureTile(f.name, on, open, f.bond, m, onClick = {
-            if (open) { Progress.frame = f.id; PetWidget.update(ctx) }
+    val cur = if (card) PetBackdrop.cardFrame.ifEmpty { "plain" } else Progress.frame
+    TileGrid(Progress.frames, cols = 3, rows = 2, startOpen = Progress.frames.indexOfFirst { it.id == cur } >= 6, noun = "الإطارات") { f, m ->
+        val open = f.open; val on = cur == f.id
+        PictureTile(if (card && f.id == "plain") "بلا إطار" else f.name, on, open, f.bond, m, onClick = {
+            if (open) { if (card) PetBackdrop.cardFrame = if (f.id == "plain") "" else f.id else { Progress.frame = f.id; PetWidget.update(ctx) } }
             else android.widget.Toast.makeText(ctx, "يُفتح عند ${Quran.digits(f.bond)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show()
-        }) { pm -> Box(pm.padding(6.dp).clip(L.shape(10.dp)).background(framePreview(f.id))) }
+        }) { pm ->
+            if (Decor.isDrawn(f.id)) androidx.compose.foundation.Canvas(pm.padding(6.dp).clip(L.shape(10.dp))) {
+                drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color(f.top), androidx.compose.ui.graphics.Color(f.bottom))))
+                drawDecorFrame(f.id, .2f, androidx.compose.ui.graphics.Color(f.top), androidx.compose.ui.graphics.Color(f.bottom), 10.dp.toPx())
+            } else Box(pm.padding(6.dp).clip(L.shape(10.dp)).background(framePreview(f.id)))
+        }
     }
 }
