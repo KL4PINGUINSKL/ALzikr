@@ -67,6 +67,8 @@ object PetBackdrop {
         Scene("night", "سماء الليل", 0), Scene("dawn", "الفجر", 0), Scene("garden", "الحديقة", 0), Scene("sea", "البحر", 0), Scene("dunes", "الصحراء", 0),
         Scene("spring", "الربيع", 0), Scene("pinkclouds", "غيوم وردية", 0), Scene("mountains", "الجبال", 0),
         Scene("moon", "الهلال", 150), Scene("aurora", "الشفق", 400), Scene("rain", "المطر", 600), Scene("zellige", "الزليج", 900),
+        Scene("skyclouds", "السماء والغيوم", 0), Scene("sunclouds", "شمس بين الغيوم", 0), Scene("sunsetclouds", "غيوم الغروب", 0), Scene("snowfall", "الثلج", 0),
+        Scene("cotton", "غيوم القطن", 300), Scene("aboveclouds", "فوق الغيوم", 800), Scene("nightclouds", "غيوم الليل", 1500), Scene("goldclouds", "غيوم ذهبية", 2500),
         Scene("sakura", "الكرز", 1200), Scene("lanterns", "الفوانيس", 2000), Scene("meteors", "الشهب", 3000), Scene("galaxy", "المجرّة", 4000),
     )
     /** A picture from the phone (for the card or the widget) opens with friendship too. */
@@ -100,6 +102,9 @@ object PetBackdrop {
         WScene("w_lamp", "المشكاة", 250, false), WScene("w_palms", "النخيل", 700, true), WScene("w_waves", "أمواج الليل", 1500, false),
         WScene("w_stars", "المرصد", 3000, false), WScene("w_gold", "الذهب", 5000, true),
         WScene("w_lavender", "حقل البنفسج", 0, false), WScene("w_river", "النهر", 0, true),
+        WScene("w_pinkclouds", "غيوم وردية", 0, true), WScene("w_sunsetclouds", "غيوم الغروب", 0, false), WScene("w_cotton", "غيوم القطن", 0, true),
+        WScene("w_above", "فوق الغيوم", 400, true), WScene("w_desertnight", "ليل الصحراء", 600, false), WScene("w_nightclouds", "غيوم الليل", 1000, false),
+        WScene("w_dawnclouds", "غيوم الفجر", 1800, false), WScene("w_goldclouds", "غيوم ذهبية", 3500, true),
         WScene("w_rainbow", "قوس المطر", 2000, true), WScene("w_moonsea", "القمر والبحر", 4000, false),
     )
     fun open(s: WScene) = Progress.bondPoints >= s.bond
@@ -158,6 +163,18 @@ object PetBackdrop {
 
 private fun androidx.compose.ui.graphics.ImageBitmap.asAndroidBitmapCompat(): android.graphics.Bitmap = asAndroidBitmap()
 
+/** A soft, fluffy cloud centred at (x, y); [s] scales it, [shade] draws its underside a little lower. */
+fun DrawScope.cloud(x: Float, y: Float, s: Float, c: Color, shade: Color? = null) {
+    val d = density * s
+    fun puff(dy: Float, col: Color) {
+        drawCircle(col, 17 * d, Offset(x - 27 * d, y + dy)); drawCircle(col, 25 * d, Offset(x - 5 * d, y - 9 * d + dy))
+        drawCircle(col, 19 * d, Offset(x + 20 * d, y - 3 * d + dy)); drawCircle(col, 13 * d, Offset(x + 38 * d, y + 5 * d + dy))
+        drawRoundRect(col, Offset(x - 44 * d, y + dy), Size(95 * d, 18 * d), androidx.compose.ui.geometry.CornerRadius(9 * d))
+    }
+    if (shade != null) puff(5 * d, shade)
+    puff(0f, c)
+}
+
 /** The widget's own scenes (still: a widget cannot animate a drawing). */
 fun DrawScope.drawWidgetScene(id: String) {
     val w = size.width; val h = size.height
@@ -202,6 +219,30 @@ fun DrawScope.drawWidgetScene(id: String) {
         "w_moonsea" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF050B24), Color(0xFF0E2A55)))); stars(50, 51)
             drawCircle(Color(0x33FFF3C4), h * .3f, Offset(w * .22f, h * .3f)); drawCircle(Color(0xFFFFF3C4), h * .14f, Offset(w * .22f, h * .3f))
             for (k in 0..6) { val y = h * (.62f + k * .055f); drawLine(Color(0xFFFFF3C4).copy(alpha = .5f - k * .06f), Offset(w * .22f - (30 - k * 3) * density, y), Offset(w * .22f + (30 - k * 3) * density, y), 2 * density) } }
+        "w_pinkclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFFFC9D9), Color(0xFFFFE6D6), Color(0xFFE0D4FF))))
+            listOf(Triple(.18f, .3f, 1.1f), Triple(.62f, .2f, .9f), Triple(.42f, .66f, 1.3f), Triple(.88f, .58f, 1f)).forEach { (fx, fy, k) -> cloud(w * fx, h * fy, k, Color.White.copy(alpha = .92f), Color(0x55E59AB8)) } }
+        "w_sunsetclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF3A2466), Color(0xFFC0507A), Color(0xFFF59A5A), Color(0xFFFFD08A))))
+            drawCircle(Color(0xFFFFE0A0), h * .16f, Offset(w * .7f, h * .72f))
+            listOf(Triple(.2f, .35f, 1.1f), Triple(.55f, .5f, .9f), Triple(.85f, .3f, 1f), Triple(.35f, .8f, 1.3f)).forEach { (fx, fy, k) -> cloud(w * fx, h * fy, k, Color(0xFFFFB8A0), Color(0xFF9A4A7A)) } }
+        "w_cotton" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFCFE0FF), Color(0xFFF0E6FF))))
+            val cs = listOf(Color(0xFFFFD6EC), Color(0xFFD6E8FF), Color(0xFFE9DCFF), Color(0xFFFFF1D6))
+            listOf(Triple(.15f, .28f, 1f), Triple(.5f, .22f, 1.2f), Triple(.85f, .35f, .9f), Triple(.3f, .7f, 1.3f), Triple(.75f, .75f, 1.1f)).forEachIndexed { i, (fx, fy, k) -> cloud(w * fx, h * fy, k, cs[i % 4], Color(0x33A08CD0)) } }
+        "w_above" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF4A9EE8), Color(0xFFA8D8FF))))
+            drawCircle(Color(0x55FFFFFF), h * .3f, Offset(w * .8f, h * .25f)); drawCircle(Color(0xFFFFF6D0), h * .12f, Offset(w * .8f, h * .25f))
+            for (k in 0..8) cloud(w * (k / 8f), h * (.78f + (k % 2) * .06f), 1.5f, Color.White, Color(0xFFC9DDF0)) }
+        "w_desertnight" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF0A0F2C), Color(0xFF2A2350), Color(0xFF5A3E5E)))); stars(60, 61)
+            drawCircle(Color(0xFFFFF1C4), h * .1f, Offset(w * .2f, h * .22f)); drawCircle(Color(0xFF14183A), h * .085f, Offset(w * .2f + h * .045f, h * .2f))
+            drawPath(Path().apply { moveTo(0f, h * .78f); quadraticBezierTo(w * .35f, h * .6f, w * .7f, h * .8f); quadraticBezierTo(w * .9f, h * .88f, w, h * .76f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFF3A2A40)) }
+        "w_nightclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF0A1236), Color(0xFF26346E)))); stars(45, 71)
+            drawCircle(Color(0x33FFF3C4), h * .28f, Offset(w * .72f, h * .32f)); drawCircle(Color(0xFFFFF3C4), h * .13f, Offset(w * .72f, h * .32f))
+            listOf(Triple(.25f, .45f, 1.1f), Triple(.62f, .55f, .9f), Triple(.9f, .75f, 1.2f), Triple(.12f, .82f, 1f)).forEach { (fx, fy, k) -> cloud(w * fx, h * fy, k, Color(0xFF5A6AA8), Color(0xFF2E3A72)) } }
+        "w_dawnclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF2E3A7A), Color(0xFF8A6AB8), Color(0xFFF3A9A0), Color(0xFFFFE1B0))))
+            drawCircle(Brush.radialGradient(listOf(Color(0xAAFFF1C2), Color(0x00FFF1C2)), Offset(w * .5f, h), h * .6f), h * .6f, Offset(w * .5f, h))
+            listOf(Triple(.2f, .3f, 1f), Triple(.7f, .22f, 1.1f), Triple(.45f, .55f, .9f), Triple(.9f, .6f, 1f)).forEach { (fx, fy, k) -> cloud(w * fx, h * fy, k, Color(0xFFFFD2C4), Color(0xFF9C7AC0)) } }
+        "w_goldclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFFFE7A8), Color(0xFFFFF6DC))))
+            drawCircle(Brush.radialGradient(listOf(Color(0xCCFFFFFF), Color(0x00FFFFFF)), Offset(w * .5f, h * .3f), h * .6f), h * .6f, Offset(w * .5f, h * .3f))
+            listOf(Triple(.18f, .4f, 1.1f), Triple(.5f, .7f, 1.3f), Triple(.84f, .38f, 1f)).forEach { (fx, fy, k) -> cloud(w * fx, h * fy, k, Color(0xFFFFF4D6), Color(0xFFE9C46A)) }
+            val r = java.util.Random(77); repeat(40) { drawCircle(Color.White.copy(alpha = .5f + r.nextFloat() * .5f), (1 + r.nextFloat() * 2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
         "w_gold" -> { drawRect(Brush.linearGradient(listOf(Color(0xFFFFF1C4), Color(0xFFE9C46A), Color(0xFFF8DE9A)), Offset.Zero, Offset(w, h)))
             val r = java.util.Random(13); repeat(70) { drawCircle(Color.White.copy(alpha = .4f + r.nextFloat() * .5f), (1 + r.nextFloat() * 2.2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
     }
@@ -271,6 +312,41 @@ fun DrawScope.drawScene(id: String, t: Float) {
                 drawCircle(Brush.radialGradient(listOf(Color(0x88FFC765), Color(0x00FFC765)), Offset(x, y), 38 * density), 38 * density, Offset(x, y))
                 drawRoundRect(Color(0xFFFFB84D), Offset(x - 9 * density, y - 14 * density), Size(18 * density, 26 * density), androidx.compose.ui.geometry.CornerRadius(6 * density))
                 drawRoundRect(Color(0xFF8A4B10), Offset(x - 11 * density, y - 17 * density), Size(22 * density, 4 * density)) } }
+        "skyclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF5DB3F0), Color(0xFFB9E2FF), Color(0xFFE8F6FF))))
+            listOf(Triple(.1f, .25f, 1.1f), Triple(.5f, .18f, .8f), Triple(.35f, .55f, 1.3f), Triple(.8f, .45f, 1f), Triple(.65f, .8f, 1.2f)).forEachIndexed { i, (fx, fy, k) ->
+                val x = (((fx + t * (.12f + i * .03f)) % 1.3f) - .15f) * w; cloud(x, h * fy, k, Color.White, Color(0x44A6C8E6)) } }
+        "sunclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF7CC4F2), Color(0xFFD7F0FF))))
+            val c = Offset(w * .3f, h * .32f)
+            for (k in 0..11) { val a = (k * PI / 6 + t * PI / 3).toFloat(); drawLine(Color(0x66FFE38A), Offset(c.x + cos(a) * h * .2f, c.y + sin(a) * h * .2f), Offset(c.x + cos(a) * h * .34f, c.y + sin(a) * h * .34f), 4 * density) }
+            drawCircle(Color(0xFFFFE38A), h * .16f, c)
+            listOf(Triple(.4f, .42f, 1.2f), Triple(.8f, .25f, .9f), Triple(.65f, .7f, 1.3f), Triple(.12f, .78f, 1f)).forEachIndexed { i, (fx, fy, k) ->
+                val x = (((fx + t * (.1f + i * .02f)) % 1.3f) - .15f) * w; cloud(x, h * fy, k, Color.White, Color(0x44A6C8E6)) } }
+        "sunsetclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF3A2466), Color(0xFFC0507A), Color(0xFFF59A5A), Color(0xFFFFD08A))))
+            drawCircle(Brush.radialGradient(listOf(Color(0xAAFFE0A0), Color(0x00FFE0A0)), Offset(w * .7f, h * .85f), h * .5f), h * .5f, Offset(w * .7f, h * .85f))
+            drawCircle(Color(0xFFFFE0A0), h * .15f, Offset(w * .7f, h * .85f))
+            listOf(Triple(.15f, .3f, 1.1f), Triple(.55f, .45f, .9f), Triple(.85f, .22f, 1f), Triple(.35f, .7f, 1.2f)).forEachIndexed { i, (fx, fy, k) ->
+                val x = (((fx + t * (.08f + i * .02f)) % 1.3f) - .15f) * w; cloud(x, h * fy, k, Color(0xFFFFB8A0), Color(0xFF9A4A7A)) } }
+        "snowfall" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFB8D4EE), Color(0xFFEAF4FF))))
+            drawPath(Path().apply { moveTo(0f, h * .8f); quadraticBezierTo(w * .4f, h * .66f, w, h * .82f); lineTo(w, h); lineTo(0f, h); close() }, Color.White)
+            val r = java.util.Random(19); repeat(60) { val x = r.nextFloat() * w + sin((t * 2 * PI + it).toFloat()) * 6 * density; val y = ((r.nextFloat() + t) % 1f) * h
+                drawCircle(Color.White.copy(alpha = .9f), (1.5f + r.nextFloat() * 2.5f) * density, Offset(x, y)) } }
+        "cotton" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFCFE0FF), Color(0xFFF0E6FF), Color(0xFFFFE6F0))))
+            val cs = listOf(Color(0xFFFFD6EC), Color(0xFFD6E8FF), Color(0xFFE9DCFF), Color(0xFFFFF1D6), Color(0xFFD9FFF0))
+            listOf(Triple(.1f, .25f, 1f), Triple(.45f, .18f, 1.2f), Triple(.8f, .3f, .9f), Triple(.28f, .62f, 1.3f), Triple(.72f, .7f, 1.1f)).forEachIndexed { i, (fx, fy, k) ->
+                val y = h * fy + sin((t * 2 * PI + i).toFloat()) * 4 * density; val x = (((fx + t * .06f) % 1.3f) - .15f) * w; cloud(x, y, k, cs[i], Color(0x33A08CD0)) } }
+        "aboveclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF3F8FE0), Color(0xFF9FD0FF))))
+            drawCircle(Color(0x44FFFFFF), h * .32f, Offset(w * .78f, h * .25f)); drawCircle(Color(0xFFFFF6D0), h * .12f, Offset(w * .78f, h * .25f))
+            for (k in 0..9) { val x = (((k / 8f + t * .05f) % 1.25f) - .1f) * w; cloud(x, h * (.8f + (k % 2) * .07f), 1.6f, Color.White, Color(0xFFC9DDF0)) } }
+        "nightclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF0A1236), Color(0xFF26346E)))); stars(40, 71)
+            drawCircle(Color(0x33FFF3C4), h * .3f, Offset(w * .75f, h * .3f)); drawCircle(Color(0xFFFFF3C4), h * .13f, Offset(w * .75f, h * .3f))
+            listOf(Triple(.2f, .45f, 1.1f), Triple(.6f, .58f, .9f), Triple(.9f, .78f, 1.2f), Triple(.05f, .82f, 1f)).forEachIndexed { i, (fx, fy, k) ->
+                val x = (((fx + t * (.07f + i * .02f)) % 1.3f) - .15f) * w; cloud(x, h * fy, k, Color(0xFF5A6AA8), Color(0xFF2E3A72)) } }
+        "goldclouds" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFFFFE7A8), Color(0xFFFFF6DC))))
+            drawCircle(Brush.radialGradient(listOf(Color(0xCCFFFFFF), Color(0x00FFFFFF)), Offset(w * .5f, h * .3f), h * .6f), h * .6f, Offset(w * .5f, h * .3f))
+            listOf(Triple(.15f, .4f, 1.1f), Triple(.5f, .72f, 1.3f), Triple(.85f, .36f, 1f)).forEachIndexed { i, (fx, fy, k) ->
+                val x = (((fx + t * (.06f + i * .02f)) % 1.3f) - .15f) * w; cloud(x, h * fy, k, Color(0xFFFFF4D6), Color(0xFFE9C46A)) }
+            val r = java.util.Random(77); repeat(40) { val tw = .4f + .6f * ((sin((t * 2 * PI + r.nextFloat() * 6.28).toFloat()) + 1) / 2)
+                drawCircle(Color.White.copy(alpha = tw), (1 + r.nextFloat() * 2f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h)) } }
         "galaxy" -> { drawRect(Brush.radialGradient(listOf(Color(0xFF3A1E6A), Color(0xFF0A0518)), Offset(w * .5f, h * .45f), w * .7f)); stars(60, 23)
             val r = java.util.Random(5); repeat(140) { val a = r.nextFloat() * 6.28f + t * 1.2f; val d = r.nextFloat(); val x = w * .5f + cos(a + d * 4) * d * w * .45f; val y = h * .45f + sin(a + d * 4) * d * h * .35f
                 drawCircle(listOf(Color(0xAAFFB0F0), Color(0xAA9AD8FF), Color(0xAAFFFFFF))[it % 3], (1 + r.nextFloat()) * density, Offset(x, y)) } }
