@@ -56,7 +56,6 @@ object Pet {
     fun level(x: Int = xp) = Progress.level(x)
     /** Experience where a level starts. */
     fun levelStart(l: Int) = Progress.need(l)
-    fun title(l: Int = level()) = Progress.title(l)
     /** What the friend calls the user (optional; used in its morning greeting from level 4). */
     var userName: String
         get() = sp.getString("pet_user_name", "") ?: ""

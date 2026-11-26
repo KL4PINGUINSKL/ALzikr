@@ -132,7 +132,7 @@ class PetWidget : AppWidgetProvider() {
                 return
             }
             v.setTextViewText(R.id.p_name, Pet.name)
-            v.setTextViewText(R.id.p_title, if (Progress.showLevels) "${Friendship.title()} · المستوى ${Quran.digits(Pet.level())}" else "")
+            v.setTextViewText(R.id.p_title, if (Progress.showLevels) "${Friendship.title()} · النموّ ${Quran.digits(Pet.level())}" else "")
             val mood = Pet.mood()
             v.setTextViewText(R.id.p_hearts, (1..5).joinToString("") { k -> if (mood >= k * 20 - 10) Friendship.heart else "♡" })
             // A tasbih word from the widget shows once; otherwise a fitting word for now.

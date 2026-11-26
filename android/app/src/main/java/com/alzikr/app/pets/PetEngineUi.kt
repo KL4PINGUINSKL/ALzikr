@@ -81,7 +81,7 @@ fun PetPreviewPage() {
             val r = StateResolver.resolve(skin, state)
             Text(skin.name, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             Sub(if (r == null) "لا صورة" else if (r.fellBack) "«${state.ar}» غير موجودة في هذا الشكل، فيُعرض «${r.state.ar}» مع حركة «${r.motion.name.lowercase()}»" else "«${state.ar}»: حركة خاصة بهذا الشكل", size = 12.sp)
-            Sub("${r?.source?.kind?.name ?: "-"} · ${skin.rarity.ar} · المستوى ${Quran.digits(skin.unlock.level)} · حزمة ${reg.packOf(skin.id)}", size = 12.sp)
+            Sub("${r?.source?.kind?.name ?: "-"} · ${skin.rarity.ar} · النموّ ${Quran.digits(skin.unlock.level)} · حزمة ${reg.packOf(skin.id)}", size = 12.sp)
             Sub("${skin.by} · ${reg.licenses[skin.license]?.name ?: skin.license}", size = 12.sp)
         }
         Title("الحالات")

@@ -113,7 +113,7 @@ fun AutoBackupSection() {
     }
     val on = AutoBackup.folder.isNotEmpty() && AutoBackup.tree(ctx) != null
     Title("الحفظ التلقائي")
-    Sub("يحفظ Android تقدّمك (المستوى والنقاط والصداقة والصلوات والإعدادات) في نسخة Google الاحتياطية إن كانت مفعّلة في هاتفك، فيعود وحده إذا حذفت التطبيق ثم ثبّته.", size = 12.sp)
+    Sub("يحفظ Android تقدّمك (النموّ والنقاط والصداقة والصلوات والإعدادات) في نسخة Google الاحتياطية إن كانت مفعّلة في هاتفك، فيعود وحده إذا حذفت التطبيق ثم ثبّته.", size = 12.sp)
     Sub(if (on) "📁 ونسخة في مجلد «${AutoBackup.folder}» تتجدد وحدها كلما استعملت التطبيق: ${AutoBackup.lastText()}"
         else "ولزيادة الأمان اختر مجلدًا (مثل Documents) ليحفظ فيه التطبيق ملف «${AutoBackup.NAME}» ويجدّده وحده. يبقى الملف إذا حذفت التطبيق، وعند تثبيته من جديد يعرض عليك استعادته.",
         size = 12.sp, color = if (on) P.ink else P.muted)
@@ -134,7 +134,7 @@ fun RestoreOffer() {
     AlertDialog(
         onDismissRequest = { AutoBackup.offer = false },
         title = { Text("أهلًا بك في ALzikr") },
-        text = { Text("هل استعملت ALzikr من قبل؟ إن كان عندك ملف نسخة احتياطية (${AutoBackup.NAME} أو ALzikr-التاريخ.json) فاستعده ليعود مستواك وتقدّمك كما كانا.") },
+        text = { Text("هل استعملت ALzikr من قبل؟ إن كان عندك ملف نسخة احتياطية (${AutoBackup.NAME} أو ALzikr-التاريخ.json) فاستعده ليعود نموّ صديقك وتقدّمك كما كانا.") },
         confirmButton = { TextButton({ load.launch(arrayOf("application/json", "application/octet-stream", "*/*")) }) { Text("استعادة من ملف") } },
         dismissButton = { TextButton({ AutoBackup.offer = false }) { Text("بداية جديدة") } },
     )

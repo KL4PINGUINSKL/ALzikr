@@ -124,8 +124,8 @@ Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخ
     var nick: String
         get() = Store.prefs.getString("pet_nick", "") ?: ""
         set(v) { Store.prefs.edit().putString("pet_nick", v.trim().take(24)).apply(); Store.bump() }
-    /** The title under the friend's name: the one you chose (when open), or the level's title. */
-    fun title(): String = nick.takeIf { it.isNotBlank() && has("nick") } ?: Progress.title()
+    /** The title under the friend's name: the one you chose (when open), or the friendship stage. */
+    fun title(): String = nick.takeIf { it.isNotBlank() && has("nick") } ?: Progress.bondName()
 
     val heart: String get() = if (has("diamond")) "💎" else if (has("golden")) "💛" else "❤"
 

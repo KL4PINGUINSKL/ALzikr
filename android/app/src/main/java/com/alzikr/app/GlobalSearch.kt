@@ -66,7 +66,7 @@ object GlobalSearch {
         Triple("قضاء الصلوات", "قضاء فوائت", more("qada")), Triple("حاسبة الزكاة", "زكاه ذهب فضه مال", more("zakat")),
         Triple("مسابقة القرآن", "مسابقه اسئله", more("quiz")), Triple("محوّل التاريخ", "تحويل هجري ميلادي", more("convert")),
         Triple("المنبه", "منبه تنبيه استيقاظ", more("alarms")), Triple("إحصائياتي", "احصائيات", more("stats")),
-        Triple("حفظ القرآن", "حفظ مراجعه", more("hifz")), Triple("صديقي", "صديق حيوان مستوى", more("pet")),
+        Triple("حفظ القرآن", "حفظ مراجعه", more("hifz")), Triple("صديقي", "صديق حيوان مستوى نمو صداقة", more("pet")),
         Triple("صدقاتي", "صدقه", more("sadaqa")), Triple("رمضان", "صيام سحور افطار", more("ramadan")),
         Triple("محاسبة اليوم", "محاسبه", more("today")), Triple("أهدافي", "اهداف", more("goals")),
         Triple("صفة الوضوء والصلاة", "وضوء صلاه صفه", more("salah")), Triple("تعلّم التجويد", "تجويد احكام", more("tajweed")),

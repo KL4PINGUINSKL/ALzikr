@@ -53,9 +53,9 @@ object Journal {
 
     /** A level reached: the level, then each friend and look it opened. */
     fun level(l: Int) {
-        add("✨", "بلغت المستوى ${Quran.digits(l)}")
-        Species.entries.filter { Progress.speciesLevel(it) == l }.forEach { add("🐾", "صديق جديد: ${it.ar} — بالمستوى ${Quran.digits(l)}") }
-        Species.entries.forEach { s -> PetLooks.of(s).filter { it.level == l && !it.hidden }.forEach { add("🎨", "شكل جديد: ${it.name} (${s.ar}) — بالمستوى ${Quran.digits(l)}") } }
+        add("✨", "بلغت النموّ ${Quran.digits(l)}")
+        Species.entries.filter { Progress.speciesLevel(it) == l }.forEach { add("🐾", "صديق جديد: ${it.ar} — عند النموّ ${Quran.digits(l)}") }
+        Species.entries.forEach { s -> PetLooks.of(s).filter { it.level == l && !it.hidden }.forEach { add("🎨", "شكل جديد: ${it.name} (${s.ar}) — عند النموّ ${Quran.digits(l)}") } }
     }
 
     /** Friendship points went from [before] to [after]: the gifts and ranks crossed. */
@@ -70,10 +70,10 @@ object Journal {
         sp.edit().putBoolean(key() + "_before", true).apply()
         val l = Progress.level()
         Species.entries.filter { Progress.speciesOpen(it) }.sortedBy { Progress.speciesLevel(it) }.forEach {
-            add("🐾", "صديق: ${it.ar} — " + (Progress.speciesLevel(it).let { n -> if (n <= 1) "مفتوح من البداية" else "بالمستوى ${Quran.digits(n)}" }), 0L)
+            add("🐾", "صديق: ${it.ar} — " + (Progress.speciesLevel(it).let { n -> if (n <= 1) "مفتوح من البداية" else "عند النموّ ${Quran.digits(n)}" }), 0L)
         }
         Friendship.gifts.filter { Progress.bondPoints >= it.bond }.forEach { add(it.icon, "هدية صداقة: ${it.name} — عند ${Quran.digits(it.bond)} ❤", 0L) }
-        Species.entries.forEach { s -> PetLooks.of(s).filter { !it.hidden && it.level in 2..l }.forEach { add("🎨", "شكل: ${it.name} (${s.ar}) — بالمستوى ${Quran.digits(it.level)}", 0L) } }
+        Species.entries.forEach { s -> PetLooks.of(s).filter { !it.hidden && it.level in 2..l }.forEach { add("🎨", "شكل: ${it.name} (${s.ar}) — عند النموّ ${Quran.digits(it.level)}", 0L) } }
     }
 
     /** The first time: where things stand, and the badges already earned on their days. */
@@ -87,7 +87,7 @@ object Journal {
             val t = runCatching { LocalDate.parse(day).atTime(12, 0).atZone(zone).toInstant().toEpochMilli() }.getOrDefault(System.currentTimeMillis())
             add(b.icon, "وسام: ${b.name} — ${b.how}", t)
         }
-        add("📜", "بدأ السجل: المستوى ${Quran.digits(Progress.level())} · ${Quran.digits(Progress.bondPoints)} ❤ صداقة · ${Quran.digits(Species.entries.count { Progress.speciesOpen(it) })} صديقًا مفتوحًا")
+        add("📜", "بدأ السجل: النموّ ${Quran.digits(Progress.level())} · ${Quran.digits(Progress.bondPoints)} ❤ صداقة · ${Quran.digits(Species.entries.count { Progress.speciesOpen(it) })} صديقًا مفتوحًا")
     }
 }
 
@@ -103,7 +103,7 @@ fun JournalSheet(close: () -> Unit) {
             // Now: the level by experience, and the friendship.
             val l = Progress.level(); val xp = Progress.xp
             val from = Progress.need(l); val to = Progress.need(l + 1)
-            Meter("✨ المستوى ${Quran.digits(l)}", "${Quran.digits(xp)} ✨ · بقي ${Quran.digits(to - xp)} للمستوى ${Quran.digits(l + 1)}", (xp - from).toFloat() / (to - from).coerceAtLeast(1), P.gold)
+            Meter("✨ النموّ ${Quran.digits(l)}", "${Quran.digits(xp)} ✨ · بقي ${Quran.digits(to - xp)} للنموّ ${Quran.digits(l + 1)}", (xp - from).toFloat() / (to - from).coerceAtLeast(1), P.gold)
             val b = Progress.bondPoints; val (bf, bt) = Progress.bondRange(b)
             Meter("${Friendship.heart} الصداقة: ${Progress.bondName(b)}", "${Quran.digits(b)} ❤" + if (bt > 0) " · بقي ${Quran.digits(bt - b)} للمرتبة التالية" else " · أعلى المراتب",
                 if (bt > 0) (b - bf).toFloat() / (bt - bf) else 1f, androidx.compose.ui.graphics.Color(0xFFE25C83))
@@ -149,8 +149,8 @@ fun JournalSheet(close: () -> Unit) {
             // What comes next.
             Title("القادم")
             val nextFriend = Species.entries.filter { !Progress.speciesOpen(it) }.minByOrNull { Progress.speciesLevel(it) }
-            nextFriend?.let { Sub("🐾 ${it.ar} في المستوى ${Quran.digits(Progress.speciesLevel(it))}", size = 13.sp, color = P.ink) }
-            looks.filter { it.level > l }.minByOrNull { it.level }?.let { lk -> Sub("🎨 الشكل التالي «${lk.name}» في المستوى ${Quran.digits(lk.level)}", size = 13.sp, color = P.ink) }
+            nextFriend?.let { Sub("🐾 ${it.ar} عند النموّ ${Quran.digits(Progress.speciesLevel(it))}", size = 13.sp, color = P.ink) }
+            looks.filter { it.level > l }.minByOrNull { it.level }?.let { lk -> Sub("🎨 الشكل التالي «${lk.name}» عند النموّ ${Quran.digits(lk.level)}", size = 13.sp, color = P.ink) }
             Friendship.next()?.let { g -> Sub("${g.icon} ${g.name} عند ${Quran.digits(g.bond)} ❤ (بقي ${Quran.digits(g.bond - Progress.bondPoints)})", size = 13.sp, color = P.ink) }
 
             // The journal itself, newest first, by day.
@@ -159,7 +159,7 @@ fun JournalSheet(close: () -> Unit) {
             val fmtDay = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale("ar"))
             val fmtTime = DateTimeFormatter.ofPattern("h:mm a", Locale("ar"))
             val list = Journal.entries().sortedByDescending { it.t }
-            if (list.isEmpty()) Sub("يبدأ السجل من الآن: كل مستوى تبلغه وكل ما يُفتح يُكتب هنا بتاريخه.", size = 13.sp)
+            if (list.isEmpty()) Sub("يبدأ السجل من الآن: كل درجة نموّ تبلغه وكل ما يُفتح يُكتب هنا بتاريخه.", size = 13.sp)
             list.groupBy { if (it.t == 0L) null else Instant.ofEpochMilli(it.t).atZone(zone).toLocalDate() }.forEach { (day, items) ->
                 Text(day?.let { Quran.numerals(fmtDay.format(it)) } ?: "قبل بدء السجل (تاريخه غير معروف)", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
                 items.forEach { e ->
@@ -180,8 +180,8 @@ private fun OpenedList(kind: String, l: Int) {
     data class Item(val open: Boolean, val text: String, val need: String, val order: Int)
     val earned = Progress.earned()
     val items: List<Item> = when {
-        kind.contains("الأصدقاء") -> Species.entries.map { s -> val n = Progress.speciesLevel(s); Item(Progress.speciesOpen(s), s.ar, if (n <= 1) "من البداية" else "المستوى ${Quran.digits(n)}", n) }
-        kind.contains("الأشكال") -> Species.entries.flatMap { s -> PetLooks.of(s).filter { !it.hidden }.map { lk -> Item(lk.level <= l, "${lk.name} · ${s.ar}", if (lk.level <= 1) "من البداية" else "المستوى ${Quran.digits(lk.level)}", lk.level) } }
+        kind.contains("الأصدقاء") -> Species.entries.map { s -> val n = Progress.speciesLevel(s); Item(Progress.speciesOpen(s), s.ar, if (n <= 1) "من البداية" else "النموّ ${Quran.digits(n)}", n) }
+        kind.contains("الأشكال") -> Species.entries.flatMap { s -> PetLooks.of(s).filter { !it.hidden }.map { lk -> Item(lk.level <= l, "${lk.name} · ${s.ar}", if (lk.level <= 1) "من البداية" else "النموّ ${Quran.digits(lk.level)}", lk.level) } }
         kind.contains("الثيمات") -> Looks.all.map { lk -> val g = Friendship.themeGift(lk.id); Item(Friendship.themeOpen(lk.id), (lk.ornament.takeIf { it.isNotEmpty() }?.plus(" ") ?: "") + lk.name, g?.let { "${Quran.digits(it.bond)} ❤" } ?: "مفتوح للجميع", g?.bond ?: 0) }
         kind.contains("إطارات") -> Progress.frames.map { f -> Item(f.open, f.name, if (f.bond == 0) "مفتوح للجميع" else "${Quran.digits(f.bond)} ❤", f.bond) }
         kind.contains("هدايا") -> Friendship.gifts.map { g -> Item(Progress.bondPoints >= g.bond, "${g.icon} ${g.name}", "${Quran.digits(g.bond)} ❤", g.bond) }

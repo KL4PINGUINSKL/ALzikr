@@ -308,7 +308,7 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
     TileGrid(all, cols = 4, rows = (all.size + 3) / 4) { s, m ->
         val open = Progress.speciesOpen(s)
         PictureTile(s.ar, s == chosen, open, Progress.speciesLevel(s), m, onClick = {
-            if (open) pick(s) else android.widget.Toast.makeText(ctx, "يُفتح ${s.ar} في المستوى ${Progress.speciesLevel(s)}", android.widget.Toast.LENGTH_SHORT).show()
+            if (open) pick(s) else android.widget.Toast.makeText(ctx, "يُفتح ${s.ar} عند النموّ ${Progress.speciesLevel(s)}", android.widget.Toast.LENGTH_SHORT).show()
         }) { pm -> PetLottie(s, pm, playing = s == chosen, place = com.alzikr.app.pets.Place.GRID) }  // only the chosen one moves
     }
 }
@@ -330,7 +330,7 @@ fun PetPage() {
     @Suppress("UNUSED_VARIABLE") val r = resumed
     val sp = Pet.species
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("pet3", "🐾", "صفحة صديقك في أقسام: «صديقي» لحاله ولعبه وتحدّيه، و«المظهر» لاختياره وشكله واسمه، و«الزينة» لخلفيته وإطار أداته ووهجه، و«المكافآت» لمستواك وأوسمتك، و«الغرفة» و«الذكريات» و«الحقيبة»، و«الإعدادات».")
+        Hint("pet3", "🐾", "صفحة صديقك في أقسام: «صديقي» لحاله ولعبه وتحدّيه، و«المظهر» لاختياره وشكله واسمه، و«الزينة» لخلفيته وإطار أداته ووهجه، و«المكافآت» لنموّه وأوسمتك، و«الغرفة» و«الذكريات» و«الحقيبة»، و«الإعدادات».")
         // The page in tabs (organised); without a friend yet, it opens on choosing one.
         var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(PetTabs.start ?: "friend") }
         LaunchedEffect(Unit) { PetTabs.start = null }
@@ -369,7 +369,7 @@ fun PetPage() {
             Text("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", color = soft, fontSize = 11.sp, modifier = Modifier.fillMaxWidth())
         }
         // Under the friend: its background and glow, and the log — each as a card.
-        if (tab == "album" || (tab == "friend" && sp != null)) Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
+        if (tab == "album" || (tab == "friend" && sp != null)) Action("📜 سجل صديقي: ما فُتح ومتى، ونموّه وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         // ---- the friend at a glance: level, friendship, streak; the next gift (tap for the rewards)
         if (tab == "friend" && sp != null) Panel(pad = 14.dp) {
             LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
@@ -378,14 +378,14 @@ fun PetPage() {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (Progress.showLevels) {
                     val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
-                    GlanceStat("✨", "المستوى ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f), open == "level") { flip("level") }
+                    GlanceStat("✨", "النموّ ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f), open == "level") { flip("level") }
                     val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
                     GlanceStat(Friendship.heart, Progress.bondName(), if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent, Modifier.weight(1f), open == "bond") { flip("bond") }
                 }
                 val st = Pet.streak()
                 GlanceStat("🔥", if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"}" else "ابدأ اليوم", null, P.ink, Modifier.weight(1f), open == "level") { flip("level") }
             }
-            if (open.isEmpty()) Sub("اضغط المستوى أو الصداقة لترى كيف تجمع نقاطهما", Modifier.padding(top = 8.dp), size = 11.sp)
+            if (open.isEmpty()) Sub("اضغط النموّ أو الصداقة لترى كيف تجمع نقاطهما", Modifier.padding(top = 8.dp), size = 11.sp)
             // ✨ the level: how it grows, the stage, the streak (what used to fill this page)
             if (open == "level") Column(Modifier.padding(top = 10.dp)) {
                     LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
@@ -393,21 +393,20 @@ fun PetPage() {
                     // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
                     run {
                         val st = com.alzikr.app.pets.Evolution.stages(com.alzikr.app.pets.PetPacks.registry().species(sp.name))
-                        val cur = com.alzikr.app.pets.Evolution.stage(com.alzikr.app.pets.PetPacks.registry().species(sp.name), Progress.level())
                         val next = st.firstOrNull { it.fromLevel > Progress.level() }
-                        Sub("🌱 مرحلته: ${cur.name}" + (next?.let { " · يصير «${it.name}» في المستوى ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
+                        Sub("🌱 يكبر شكله ويزيد نشاطه مع النموّ" + (next?.let { " · يكبر من جديد عند النموّ ${Quran.digits(it.fromLevel)}" } ?: ""), size = 12.sp)
                     }
                     if (Progress.showLevels) {
                         // ✨ experience: Quran, hadith, learning and the day's worship
                         val lv = Progress.level(); val x = Progress.xp
                         val from = Progress.need(lv); val to = Progress.need(lv + 1)
                         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("✨ ${Friendship.title()} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text("✨ النموّ ${Quran.digits(lv)}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Text(Quran.digits(x), color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                         }
                         androidx.compose.material3.LinearProgressIndicator(progress = { ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f) },
                             modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.gold, trackColor = P.line)
-                        Sub("بقي ${Quran.digits(to - x)} ✨ للمستوى ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
+                        Sub("بقي ${Quran.digits(to - x)} ✨ للنموّ ${Quran.digits(lv + 1)}: من قراءة القرآن والأحاديث وشروحها، والحفظ والتجويد، والصلوات والأذكار.", size = 11.sp)
                         var how by remember { mutableStateOf(false) }
                         Text(if (how) "▴ كيف أكسب النقاط؟" else "❓ كيف أكسب النقاط؟", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { how = !how }.padding(vertical = 4.dp))
@@ -428,7 +427,7 @@ fun PetPage() {
                                 color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                             Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
                         }
-                        Sub("كل مستوى يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: المستوى ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
+                        Sub("كل درجة نموّ يحتاج ${Quran.digits(Progress.stepGrowth(lv + 1))} ✨ أكثر من سابقه: النموّ ${Quran.digits(lv + 1)} يحتاج ${Quran.digits(Progress.step(lv + 1))}، والذي بعده ${Quran.digits(Progress.step(lv + 2))}.", size = 11.sp)
                     }
                     val st = Pet.streak()
                     Text("🔥 ${if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"} طيبة متتالية" else "ابدأ سلسلة أيامك الطيبة اليوم"}" +
@@ -444,6 +443,7 @@ fun PetPage() {
             Text("🎁 مكافآتي وأوسمتي ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { tab = "rewards" }.padding(vertical = 4.dp))
         }
+        if (tab == "friend" && sp != null) Panel(pad = 14.dp) { GrowthGuide() }
         if (tab == "friend" && sp != null && !Pet.kids) Panel(pad = 14.dp) { MissionsPanel() }
         if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
             Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -480,13 +480,13 @@ fun PetPage() {
                 Home.shortcuts = if (inApp) Home.shortcuts - "pet" else listOf("pet") + Home.shortcuts
             }
         }
-        if (tab == "room" && sp != null) { PetRoom(); Sub("لكل صديق بيته، يتبدّل ضوؤه مع وقت يومك، وتزيد أغراضه مع المستوى (أضواء معلّقة في الخامس، وحديقة في العاشر). تُظهر الأغراض وتخفيها من «الحقيبة».", size = 12.sp) }
+        if (tab == "room" && sp != null) { PetRoom(); Sub("لكل صديق بيته، يتبدّل ضوؤه مع وقت يومك، وتزيد أغراضه مع النموّ (أضواء معلّقة في الخامس، وحديقة في العاشر). تُظهر الأغراض وتخفيها من «الحقيبة».", size = 12.sp) }
         if (tab == "album") PetAlbumPage()
         if (tab == "bag") PetBag()
         if (tab == "look") {
         Panel(pad = 12.dp) {
             Title("اختر صديقك")
-            Sub("مرتّبة بحسب المستوى الذي تُفتح فيه.", size = 11.sp)
+            Sub("مرتّبة بحسب درجة النموّ التي تُفتح فيه.", size = 11.sp)
             PetFilterChips()
             Box(Modifier.padding(top = 8.dp)) { SpeciesGrid(sp) { Pet.species = it } }
         }
@@ -504,7 +504,7 @@ fun PetPage() {
                     val open = Progress.lookOpen(sp, i)
                     PictureTile(lk.name, lk.id == cur?.id, open, Progress.lookLevel(sp, i), m, onClick = {
                         if (open) PetLooks.choose(sp, lk.id)
-                        else android.widget.Toast.makeText(ctx, "يُفتح هذا الشكل في المستوى ${Progress.lookLevel(sp, i)}", android.widget.Toast.LENGTH_SHORT).show()
+                        else android.widget.Toast.makeText(ctx, "يُفتح هذا الشكل عند النموّ ${Progress.lookLevel(sp, i)}", android.widget.Toast.LENGTH_SHORT).show()
                     }) { pm -> PetLottie(sp, pm, look = lk, playing = lk.id == cur?.id, place = com.alzikr.app.pets.Place.GRID) }  // only the chosen look moves
                 }
             }
@@ -656,7 +656,7 @@ fun FriendshipPanel() {
     }
     if (bt > 0) androidx.compose.material3.LinearProgressIndicator(progress = { ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) },
         modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.accent, trackColor = P.line)
-    Sub("نقاط منفصلة عن نقاط المستوى ✨: تكبر بوقتك مع صديقك فقط، ولها جوائزها الخاصة.", size = 11.sp)
+    Sub("نقاط منفصلة عن نقاط النموّ ✨: تكبر بوقتك مع صديقك فقط، ولها جوائزها الخاصة.", size = 11.sp)
     Friendship.next()?.let { g ->
         Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(g.icon, fontSize = 22.sp, modifier = Modifier.padding(end = 8.dp))
@@ -684,14 +684,14 @@ fun FriendshipPanel() {
     }
     if (Friendship.has("nick")) {
         var edit by remember { mutableStateOf(false) }
-        SettingRow("🏷 لقب صديقك", Friendship.nick.ifBlank { "«${Progress.title()}» (لقب المستوى)" }) { Action("تغيير", filled = false) { edit = true } }
+        SettingRow("🏷 لقب صديقك", Friendship.nick.ifBlank { "«${Progress.bondName()}» (مرحلة صداقتكما)" }) { Action("تغيير", filled = false) { edit = true } }
         if (edit) {
             var text by remember { mutableStateOf(Friendship.nick) }
             androidx.compose.material3.AlertDialog(onDismissRequest = { edit = false }, containerColor = P.surface,
                 title = { Text("لقب صديقك", color = P.ink) },
-                text = { androidx.compose.material3.OutlinedTextField(text, { text = it.take(24) }, singleLine = true, placeholder = { Text(Progress.title()) }) },
+                text = { androidx.compose.material3.OutlinedTextField(text, { text = it.take(24) }, singleLine = true, placeholder = { Text(Progress.bondName()) }) },
                 confirmButton = { androidx.compose.material3.TextButton({ Friendship.nick = text; edit = false }) { Text("حفظ", color = P.accent) } },
-                dismissButton = { androidx.compose.material3.TextButton({ Friendship.nick = ""; edit = false }) { Text("لقب المستوى", color = P.muted) } })
+                dismissButton = { androidx.compose.material3.TextButton({ Friendship.nick = ""; edit = false }) { Text("مرحلة الصداقة", color = P.muted) } })
         }
     }
 }
@@ -743,4 +743,45 @@ private fun GlanceStat(icon: String, label: String, frac: Float?, color: android
         if (frac != null) androidx.compose.material3.LinearProgressIndicator(progress = { frac },
             modifier = Modifier.fillMaxWidth().padding(top = 5.dp).height(5.dp).clip(L.shape(3.dp)), color = color, trackColor = P.line)
     }
+}
+
+/**
+ * «كيف تنمو صداقتكما؟»: the two ladders explained in one place. ❤ friendship is the only one with names (ten stages);
+ * ✨ growth is numbers only and opens friends, looks and room things, and makes the friend bigger.
+ */
+@Composable
+fun GrowthGuide() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    var open by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { open = !open }.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("🌱 كيف تنمو صداقتكما؟", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(if (open) "▴" else "▾", color = P.accent, fontSize = 16.sp)
+    }
+    val bp = Progress.bondPoints; val cur = Progress.bondStage(bp); val steps = Progress.bondSteps
+    val (_, to) = Progress.bondRange(bp)
+    Sub("أنتما الآن في «${steps[cur].second}»، المرحلة ${Quran.digits(cur + 1)} من ${Quran.digits(steps.size)}" +
+        (if (to > 0) " · بقي ${Quran.digits(to - bp)} ❤ لـ«${steps[cur + 1].second}»" else " · أعلى المراحل"), Modifier.padding(top = 4.dp), size = 12.sp)
+    if (!open) return
+    Text("${Friendship.heart} الصداقة: عشر مراحل", color = P.accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
+    Sub("تكبر بالوقت الذي تقضيه مع صديقك: زيارة صفحته، ولمسه والحديث معه، واللعب معه، والتحديات والوظائف اليومية، وسؤال اليوم و«تعلّم اليوم»، وصندوق الأسبوع. حتى ${Quran.digits(Progress.BOND_DAY)} ❤ في اليوم، والصندوق فوقها.", size = 11.sp)
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        steps.forEachIndexed { i, (need, name) ->
+            val here = i == cur; val passed = i < cur
+            Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(if (here) P.accent.copy(alpha = .14f) else androidx.compose.ui.graphics.Color.Transparent)
+                .padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(if (passed) "✓" else if (here) "●" else Quran.digits(i + 1), color = if (passed) P.gold else if (here) P.accent else P.muted, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(26.dp))
+                Text(name, color = if (here) P.ink else if (passed) P.ink.copy(alpha = .8f) else P.muted, fontSize = 14.sp, fontWeight = if (here) FontWeight.Bold else FontWeight.Normal, modifier = Modifier.weight(1f))
+                Text(if (need == 0) "البداية" else "${Quran.digits(need)} ❤", color = if (here) P.accent else P.muted, fontSize = 12.sp)
+            }
+        }
+    }
+    Sub("وفي الطريق هدايا تُفتح بالقلوب: ثيمات وإطارات لأداة صديقك وأوسمة ومزايا (تحية الصباح باسمك، رسالة الجمعة، القلوب الذهبية…). تراها كلها في «المكافآت».", Modifier.padding(top = 8.dp), size = 11.sp)
+    Text("✨ النموّ: أرقام فقط", color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 14.dp))
+    Sub("ينمو صديقك بعبادتك: الصلوات، والأذكار، والورد والختمة، وقراءة الأحاديث وشروحها، والحفظ. " +
+        "كل درجة نموّ تفتح صديقًا جديدًا أو شكلًا جديدًا أو أغراضًا لغرفته، ويكبر شكله ويزيد نشاطه مع النموّ.", size = 11.sp)
+    if (Progress.showLevels) {
+        val lv = Progress.level()
+        Sub("صديقك الآن في النموّ ${Quran.digits(lv)} · بقي ${Quran.digits(Progress.need(lv + 1) - Progress.xp)} ✨ للنموّ ${Quran.digits(lv + 1)}", Modifier.padding(top = 4.dp), size = 12.sp)
+    }
+    Sub("الاثنان منفصلان: القلوب لا تُحسب في النموّ، والنموّ لا يزيد القلوب. وكلها مكافآت داخل التطبيق، لا مقياس للأجر عند الله.", Modifier.padding(top = 10.dp), size = 11.sp)
 }

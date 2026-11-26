@@ -101,7 +101,6 @@ object Progress {
     private val needs: IntArray by lazy { IntArray(1001).also { a -> for (n in 2..1000) a[n] = a[n - 1] + step(n) } }
     fun need(n: Int): Int = if (n <= 1) 0 else if (n <= 1000) needs[n] else needs[1000] + (1001..n).sumOf { step(it) }
     fun level(x: Int = xp): Int { var n = 1; while (need(n + 1) <= x) n++; return n }
-    fun title(l: Int = level()) = when { l >= 12 -> "صديق العمر"; l >= 9 -> "رفيق الدرب"; l >= 7 -> "الخِلّ الوفيّ"; l >= 5 -> "الصاحب"; l >= 3 -> "الرفيق"; else -> "صديق جديد" }
 
     /** Shows levels, points and rewards; off for those who prefer their worship uncounted (rewards still open quietly). */
     var showLevels: Boolean
@@ -170,7 +169,8 @@ object Progress {
     }
     fun bonded(key: String) = sp.getString(pk("bond_day"), "") == today() && key in (sp.getStringSet(pk("bond_keys"), emptySet()) ?: emptySet())
     val bondPoints: Int get() = sp.getInt(pk("bond"), 0)
-    private val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ", 4000 to "وفاء", 6000 to "خُلّة صافية", 10000 to "صحبة لا تنقطع")
+    /** The ten friendship stages: (❤ needed, name). The only named ladder; growth ✨ is numbers only. */
+    val bondSteps = listOf(0 to "تعارف", 50 to "ألفة", 150 to "مودّة", 375 to "صحبة", 750 to "أخوّة", 1500 to "رفقة العمر", 2500 to "صفاء الودّ", 4000 to "وفاء", 6000 to "خُلّة صافية", 10000 to "صحبة لا تنقطع")
     fun bondName(b: Int = bondPoints) = bondSteps.last { b >= it.first }.second
     fun bondStage(b: Int = bondPoints) = bondSteps.indexOfLast { b >= it.first }
     /** (from, to) of the current friendship stage, for its bar; to = -1 at the last stage. */
@@ -180,10 +180,9 @@ object Progress {
     data class Reward(val level: Int, val icon: String, val name: String)
     fun rewards(): List<Reward> = listOf(
         Reward(1, "🐾", "القطة والبطريق والغنمة، وأشكال لكل منها"),
-        Reward(2, "🎉", "احتفال عند كل مستوى جديد، وكل مستوى حتى 68 يفتح صديقًا جديدًا، ثم شكلًا جديدًا حتى 158"),
-        Reward(12, "👑", "لقب «صديق العمر»"),
-        Reward(15, "🌊", "أصدقاء الاستوديو: الملكيون والعناصر وما قبل التاريخ والبحر والآليون والحلوى والكون، صديق جديد كل مستوى حتى 68"),
-        Reward(25, "🐉", "الأصدقاء الأسطوريون بينهم، ولهم زينة ومؤثرات تُفتح مع المستوى"),
+        Reward(2, "🎉", "احتفال عند كل درجة نموّ جديدة، وكل درجة نموّ حتى 68 يفتح صديقًا جديدًا، ثم شكلًا جديدًا حتى 158"),
+        Reward(15, "🌊", "أصدقاء الاستوديو: الملكيون والعناصر وما قبل التاريخ والبحر والآليون والحلوى والكون، صديق جديد كل درجة نموّ حتى 68"),
+        Reward(25, "🐉", "الأصدقاء الأسطوريون بينهم، ولهم زينة ومؤثرات تُفتح مع النموّ"),
     ) + speciesLevels.filter { it.value > 1 }.map { (s, l) -> Reward(l, "🐾", "صديق جديد: ${s.ar}") }.sortedBy { it.level }
     /** Animals open with the level too (the cat, the penguin and the sheep from the start): the levels are in the pack data. */
     val speciesLevels: Map<Species, Int> get() = Species.entries.associateWith { speciesLevel(it) }
@@ -269,7 +268,7 @@ object Progress {
         Badge("days100", "🎖", "مئة يوم", "مئة يوم على صداقتكما", 100) { Pet.daysTogether() },
         Badge("days365", "🌳", "سنة معًا", "سنة كاملة على صداقتكما", 365) { Pet.daysTogether() },
         Badge("challenges30", "🎯", "صاحب التحديات", "أتمّ ثلاثين تحديًا يوميًا", 30) { sp.getInt("pet_ch_count", 0) },
-        Badge("level10", "⭐", "المستوى العاشر", "بلغ صديقك المستوى 10", 10) { level() },
+        Badge("level10", "⭐", "النموّ العاشر", "بلغ صديقك النموّ 10", 10) { level() },
         // Friendship badges (time together, not worship).
         Badge("bond20", "🤝", "أول ألفة", "اجمع 50 ❤ من وقتك مع صديقك", 50) { bondPoints },
         Badge("bond150", "💞", "صحبة", "اجمع 375 ❤", 375) { bondPoints },

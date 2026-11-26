@@ -47,15 +47,15 @@ fun RewardsContent() {
     val sp = Pet.species
     var part by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("me") }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("rewards", "🎁", "النقاط والمستويات مكافآت داخل التطبيق تفرح بها مع صديقك، وليست مقياسًا للأجر ولا لصلاح أحد؛ فالأجر عند الله وحده، والعبرة بالإخلاص. وتستطيع إخفاءها من آخر هذه الصفحة.")
-        SettingRow("إظهار المستويات والنقاط", if (Progress.showLevels) null else "مخفية: تبقى المكافآت تُفتح بهدوء") { Switch(Progress.showLevels, { Progress.showLevels = it }) }
+        Hint("rewards", "🎁", "النقاط ودرجات النموّ مكافآت داخل التطبيق تفرح بها مع صديقك، وليست مقياسًا للأجر ولا لصلاح أحد؛ فالأجر عند الله وحده، والعبرة بالإخلاص. وتستطيع إخفاءها من آخر هذه الصفحة.")
+        SettingRow("إظهار النموّ والنقاط", if (Progress.showLevels) null else "مخفية: تبقى المكافآت تُفتح بهدوء") { Switch(Progress.showLevels, { Progress.showLevels = it }) }
         if (!Progress.showLevels) return@Column
         val lv = Progress.level(); val x = Progress.xp
         TabGrid(listOf(Triple("me", "✨", "تقدّمي"), Triple("badges", "🏅", "أوسمتي"), Triple("gifts", "❤", "جوائز الصداقة"), Triple("levels", "🔓", "ما يُفتح")), part, cols = 4) { part = it }
         if (part == "me") Panel(color = P.card, pad = 14.dp) {
             if (sp != null) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { PetLottie(sp, Modifier.size(110.dp)) }
-            Text("${Progress.title(lv)} · المستوى ${Quran.digits(lv)}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            Sub("${Quran.digits(x)} ✨ · المستوى التالي عند ${Quran.digits(Progress.need(lv + 1))}", Modifier.fillMaxWidth(), size = 12.sp)
+            Text("✨ النموّ ${Quran.digits(lv)}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Sub("${Quran.digits(x)} ✨ · النموّ التالي عند ${Quran.digits(Progress.need(lv + 1))}", Modifier.fillMaxWidth(), size = 12.sp)
         }
         if (part == "me") Panel(pad = 14.dp) {
             Title("خبرة اليوم ✨")
@@ -76,15 +76,15 @@ fun RewardsContent() {
                     Text(if (got) r.icon else "🔒", fontSize = 20.sp, modifier = Modifier.width(34.dp))
                     Column(Modifier.weight(1f)) {
                         Text(r.name, color = P.ink, fontSize = 14.sp)
-                        Sub(if (got) "مفتوح ✓" else "المستوى ${Quran.digits(r.level)}", size = 11.sp, color = if (got) P.accent else P.muted)
+                        Sub(if (got) "مفتوح ✓" else "النموّ ${Quran.digits(r.level)}", size = 11.sp, color = if (got) P.accent else P.muted)
                     }
                 }
             }
-            Sub("وكل مستوى من 2 إلى 125 يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
+            Sub("وكل درجة نموّ من 2 إلى 125 يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
         }
         if (part == "gifts") Panel(pad = 14.dp) {
             Title("جوائز الصداقة ${Friendship.heart}")
-            Sub("بنقاط الصداقة وحدها (${Quran.digits(Progress.bondPoints)} ❤ الآن)، منفصلة عن المستوى: إطارات، وثيمات، وأوسمة، ومزايا.", size = 12.sp)
+            Sub("بنقاط الصداقة وحدها (${Quran.digits(Progress.bondPoints)} ❤ الآن)، منفصلة عن النموّ: إطارات، وثيمات، وأوسمة، ومزايا.", size = 12.sp)
             Friendship.gifts.forEach { g ->
                 val got = Progress.bondPoints >= g.bond
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp).alpha(if (got) 1f else .55f), verticalAlignment = Alignment.CenterVertically) {
@@ -117,7 +117,7 @@ fun RewardsContent() {
         if (part == "badges" && sp != null) Panel(pad = 14.dp) {
             Title("شهادة الصداقة 📜")
             val cert = Friendship.has("certificate")
-            Sub(if (cert) "صورة فيها اسم صديقك ومستواه وأيامكما معًا، تشاركها إن شئت. لا تظهر فيها تفاصيل عبادتك." else "تُفتح بـ ${Quran.digits(Friendship.gift("certificate")!!.bond)} ❤ صداقة.", size = 12.sp)
+            Sub(if (cert) "صورة فيها اسم صديقك ونموّه وأيامكما معًا، تشاركها إن شئت. لا تظهر فيها تفاصيل عبادتك." else "تُفتح بـ ${Quran.digits(Friendship.gift("certificate")!!.bond)} ❤ صداقة.", size = 12.sp)
             if (cert) Action("مشاركة الشهادة", Modifier.fillMaxWidth().padding(top = 8.dp)) { Certificate.share(ctx) }
         }
     }
@@ -159,12 +159,12 @@ fun ProgressCelebration() {
         onDismissRequest = { if (l != null) Progress.celebrated() else Progress.badgeSeen() },
         containerColor = P.surface,
         confirmButton = { androidx.compose.material3.TextButton({ if (l != null) Progress.celebrated() else Progress.badgeSeen() }) { Text("الحمد لله", color = P.accent) } },
-        title = { Text(if (l != null) "🎉 ${Pet.name} في المستوى ${Quran.digits(l)}" else "🏅 وسام جديد", color = P.ink, fontWeight = FontWeight.Bold) },
+        title = { Text(if (l != null) "🎉 ${Pet.name} عند النموّ ${Quran.digits(l)}" else "🏅 وسام جديد", color = P.ink, fontWeight = FontWeight.Bold) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 PetLottie(sp, Modifier.size(130.dp), speed = 1.3f)
                 if (l != null) {
-                    Text("«${Progress.title(l)}» · كبرت صداقتنا!", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text("كبر ${Pet.name}! صار أقرب إليك", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     if (opened.isNotEmpty() || looks > 0) Text("فُتح لك:", color = P.ink, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
                     opened.forEach { Text("${it.icon} ${it.name}", color = P.ink, fontSize = 14.sp, textAlign = TextAlign.Center) }
                     if (looks > 0) Text("🐾 ${Quran.digits(looks)} ${if (looks == 1) "شكل جديد" else "أشكال جديدة"} لـ${sp.ar}", color = P.ink, fontSize = 14.sp)
@@ -196,7 +196,7 @@ object Certificate {
         t.color = pal.ink.toArgb(); t.textSize = 76f
         cv.drawText(Pet.name, w / 2f, 760f, t)
         t.isFakeBoldText = false; t.textSize = 46f; t.color = pal.accent.toArgb()
-        cv.drawText("«${Friendship.title()}» · المستوى ${Quran.digits(Progress.level())}", w / 2f, 850f, t)
+        cv.drawText("«${Friendship.title()}» · النموّ ${Quran.digits(Progress.level())}", w / 2f, 850f, t)
         t.color = pal.ink.toArgb(); t.textSize = 42f
         val who = Pet.userName.takeIf { it.isNotBlank() }
         cv.drawText(if (who != null) "صديق $who" else "صديقي في ALzikr", w / 2f, 950f, t)

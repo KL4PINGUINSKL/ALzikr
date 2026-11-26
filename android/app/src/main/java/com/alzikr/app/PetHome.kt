@@ -243,7 +243,7 @@ fun PetBag() {
         PetRoomItems.homeName(Pet.species)?.let { Sub("بيت صديقك: $it", size = 13.sp) }
         PetRoomItems.items().forEach { i ->
             val owned = PetRoomItems.owned(i)
-            SettingRow("${if (owned) i.icon else "🔒"} ${i.name}", if (owned) null else "يُفتح في المستوى ${Quran.digits(i.level)}") {
+            SettingRow("${if (owned) i.icon else "🔒"} ${i.name}", if (owned) null else "يُفتح عند النموّ ${Quran.digits(i.level)}") {
                 if (owned) Switch(PetRoomItems.shown(i), { PetRoomItems.toggle(i, it) })
             }
         }
@@ -299,7 +299,7 @@ private fun PetWearPanel() {
         if (com.alzikr.app.pets.PetPerf.reduceMotion || com.alzikr.app.pets.PetPerf.saving) Sub("متوقفة الآن: الحركة المخفّفة أو توفير الطاقة مفعّل.", size = 13.sp)
         fx.forEach { e ->
             val open = com.alzikr.app.pets.PetWear.open(e.level)
-            SettingRow("${if (open) "✨" else "🔒"} ${e.name}", if (open) null else "يُفتح في المستوى ${Quran.digits(e.level)}") {
+            SettingRow("${if (open) "✨" else "🔒"} ${e.name}", if (open) null else "يُفتح عند النموّ ${Quran.digits(e.level)}") {
                 if (open) Switch(com.alzikr.app.pets.PetWear.showing(sp, e.id), { com.alzikr.app.pets.PetWear.toggleEffect(sp, e.id) })
             }
         }
@@ -324,7 +324,7 @@ object PetAlbum {
         }
         com.alzikr.app.pets.PetMemory.decode(Store.prefs.getString("pet_memory", null)).forEach { e ->
             when (e.kind) {
-                "level" -> out += AlbumMoment("✨", "المستوى ${Quran.digits(e.value)}", day(e.at))
+                "level" -> out += AlbumMoment("✨", "النموّ ${Quran.digits(e.value)}", day(e.at))
                 "khatma" -> out += AlbumMoment("📗", if (e.value <= 1) "أول ختمة لنا" else "الختمة رقم ${Quran.digits(e.value)}", day(e.at))
                 "streak" -> out += AlbumMoment("🔥", "${Quran.digits(e.value)} أيام طيبة متتالية", day(e.at))
             }
@@ -365,7 +365,7 @@ fun PetAlbumPage() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
     val ms = PetAlbum.moments()
-    if (ms.isEmpty()) { Sub("تظهر هنا لحظاتكما: يوم صار صديقك، وأول ختمة، والمستويات، والأوسمة، والأيام الطيبة.", size = 13.sp); return }
+    if (ms.isEmpty()) { Sub("تظهر هنا لحظاتكما: يوم صار صديقك، وأول ختمة، ودرجات النموّ، والأوسمة، والأيام الطيبة.", size = 13.sp); return }
     Sub("لحظاتكما معًا. اضغط «مشاركة» لتشارك صورة فيها اللحظة وتاريخها فقط.", size = 12.sp)
     ms.forEach { m ->
         Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {

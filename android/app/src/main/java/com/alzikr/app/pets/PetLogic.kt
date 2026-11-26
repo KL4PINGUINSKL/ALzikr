@@ -93,7 +93,7 @@ object PetMemory {
         milestones[daysTogether]?.let { return it }
         val day = 86_400_000L
         events.lastOrNull { it.kind == "khatma" && now - it.at < day }?.let { return "مبروك ختمتك${if (it.value <= 1) " الأولى" else ""}! تقبّل الله منك" }
-        events.lastOrNull { it.kind == "level" && now - it.at < day }?.let { return "كبرت صداقتنا! صرت في المستوى ${it.value}" }
+        events.lastOrNull { it.kind == "level" && now - it.at < day }?.let { return "كبرتُ! صرت في النموّ ${it.value}" }
         events.lastOrNull { it.kind == "streak" && now - it.at < day }?.let { return "${it.value} أيام طيبة متتالية، ما شاء الله!" }
         // A pattern seen in at least six reading days: when the pages are usually read.
         if (pageHours.size >= 6) {
