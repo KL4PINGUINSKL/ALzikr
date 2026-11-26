@@ -51,11 +51,9 @@ object Welcome {
 fun WelcomePages() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     if (Welcome.seen && !Welcome.forced) return
-    // A new install starts on «الهلال» (the icon's blue and gold) at night; the emerald keeps its black for whoever picks it.
+    // A new install starts on «زمرّد» over pure black (the full and the simple app alike); a later choice is kept.
     if (!Welcome.forced) LaunchedEffect(Unit) {
         if (!Store.prefs.contains("look_back_emerald")) Store.prefs.edit().putInt("look_back_emerald", 1).apply()
-        // «الهلال» in its night colours, like the icon (a later choice is kept)
-        if (!Store.prefs.contains("theme")) Store.prefs.edit().putInt("theme", 2).apply()
         Store.bump()
     }
     val count = Welcome.pages.size + 2   // then: the full or the simple app, then the friend

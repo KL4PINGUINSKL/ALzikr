@@ -38,7 +38,7 @@ object Data {
 
     /** The chosen theme (see [Looks]). */
     var look: String
-        get() = if (simple) Simple.current.look else sp.getString("look", "hilal") ?: "hilal"
+        get() = if (simple) Simple.current.look else sp.getString("look", "emerald") ?: "emerald"
         set(v) { if (!simple) edit { putString("look", v) } }
     /** How a choice among many is shown: false = a few and «المزيد», true = all of them in a row that scrolls sideways. */
     var pickScroll: Boolean

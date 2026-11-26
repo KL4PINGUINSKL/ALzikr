@@ -65,6 +65,8 @@ data class Look(
     fun pal(systemDark: Boolean, mode: Int, color: Int = Data.lookColor(id), hue: Float = Data.lookHue(id),
             back: Int = Data.lookBack(id), ink: Int = Data.lookInk(id)): Pal {
         val b = Backs.list.getOrNull(back)?.takeIf { back > 0 }?.takeIf { !Data.simple || basePal(systemDark, mode).dark }
+            // «أسود نقي» on a theme already black at night («الهلال»): keep its own coloured cards over the black.
+            ?.takeIf { !(it.bg == 0xFF000000L && night?.bg == Color.Black && basePal(systemDark, mode).dark) }
         var p = if (b == null) (palFor?.invoke() ?: if (sky) Sky.pal() else basePal(systemDark, mode)) else (if (b.dark) night ?: day else day ?: night)!!
         if (b != null) p = p.copy(dark = b.dark, bg = Color(b.bg), surface = Color(b.surface), card = Color(b.card), line = Color(b.line),
             ink = if (b.dark) Color(0xFFF2F2F2) else Color(0xFF151515), muted = if (b.dark) Color(0xFF9A9A9A) else Color(0xFF6A6A6A))
@@ -111,7 +113,7 @@ object Looks {
     val all: List<Look> by lazy { listOf(
         Look("hilal", "الهلال", "أزرق ملكي وذهبي كأيقونة التطبيق، بطاقات مستديرة وشريط سفلي",
             pal(false, 0xFFF4F1E8, 0xFFFFFDF7, 0xFFECE7D8, 0xFFD9D2BE, 0xFF0E1E4E, 0xFF5A6488, 0xFF1A3274, 0xFFFFFFFF, 0xFFA67C1A),
-            pal(true, 0xFF000000, 0xFF060B1E, 0xFF0B1433, 0xFF1C2C62, 0xFFF6EED8, 0xFF8FA8E6, 0xFFF3D27A, 0xFF0B1433, 0xFF7FA6FF),
+            pal(true, 0xFF000000, 0xFF071338, 0xFF0C1B4D, 0xFF2A48A8, 0xFFF6EED8, 0xFF8DB0FF, 0xFFF3D27A, 0xFF0B1433, 0xFF6E9BFF),
             Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING, accentTitles = true),
         Look("emerald", "زمرّد", "الأخضر الهادئ مع الذهبي، بطاقات مستديرة وشريط سفلي",
             Day, Night, Corners.ROUND, 20.dp, null, null, NavStyle.BAR, IconStyle.FILLED, PrayerLayout.LIST, CounterStyle.RING),
