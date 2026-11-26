@@ -370,54 +370,23 @@ fun PetPage() {
         // Under the friend: its background and glow, and the log — each as a card.
         if (tab == "album") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         // ---- the friend at a glance: level, friendship, streak; the next gift (tap for the rewards)
-        if (tab == "friend" && sp != null) Panel(Modifier.clickable { tab = "rewards" }, pad = 14.dp) {
+        if (tab == "friend" && sp != null) Panel(pad = 14.dp) {
             LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
+            var open by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+            val flip = { k: String -> open = if (open == k) "" else k }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (Progress.showLevels) {
                     val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
-                    GlanceStat("✨", "المستوى ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f))
+                    GlanceStat("✨", "المستوى ${Quran.digits(lv)}", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold, Modifier.weight(1f), open == "level") { flip("level") }
                     val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange()
-                    GlanceStat(Friendship.heart, Progress.bondName(), if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent, Modifier.weight(1f))
+                    GlanceStat(Friendship.heart, Progress.bondName(), if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent, Modifier.weight(1f), open == "bond") { flip("bond") }
                 }
                 val st = Pet.streak()
-                GlanceStat("🔥", if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"}" else "ابدأ اليوم", null, P.ink, Modifier.weight(1f))
+                GlanceStat("🔥", if (st > 0) "${Quran.digits(st)} ${if (st in 3..10) "أيام" else "يوم"}" else "ابدأ اليوم", null, P.ink, Modifier.weight(1f), open == "level") { flip("level") }
             }
-            if (Progress.showLevels) Friendship.next()?.let { g ->
-                Sub("${g.icon} الجائزة التالية: ${g.name} · بقي ${Quran.digits(g.bond - Progress.bondPoints)} ❤", Modifier.padding(top = 10.dp), size = 12.sp)
-            }
-            Text("🎁 مكافآتي وأوسمتي ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
-        }
-        if (tab == "friend" && sp != null && !Pet.kids) Panel(pad = 14.dp) { MissionsPanel() }
-        if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
-            Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-            if (Pet.challengeDone) Row(verticalAlignment = Alignment.CenterVertically) {
-                Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", Modifier.weight(1f), size = 12.sp)
-                Action("إلغاء", filled = false) { Pet.undoChallenge() }
-            }
-            else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
-        }
-        if (tab == "friend" && sp != null && petHasMoves(sp)) {
-            var playing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-            Panel(pad = 12.dp) {
-                Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { playing = !playing }, verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎮 العب معه", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text(if (playing) "▴" else "▾", color = P.muted, fontSize = 16.sp)
-                }
-                if (playing) {
-                    Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
-                    Box(Modifier.padding(top = 8.dp)) { PetInteractions() }
-                }
-            }
-        }
-        if (tab == "friend" && sp != null) {
-            var more by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-            Panel(pad = 12.dp) {
-                Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { more = !more }, verticalAlignment = Alignment.CenterVertically) {
-                    Text("📖 كيف أكبر معه وأجمع النقاط؟", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text(if (more) "▴" else "▾", color = P.muted, fontSize = 16.sp)
-                }
-                if (more) Column(Modifier.padding(top = 8.dp)) {
+            if (open.isEmpty()) Sub("اضغط المستوى أو الصداقة لترى كيف تجمع نقاطهما", Modifier.padding(top = 8.dp), size = 11.sp)
+            // ✨ the level: how it grows, the stage, the streak (what used to fill this page)
+            if (open == "level") Column(Modifier.padding(top = 10.dp)) {
                     LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
                     Sub(if (Pet.daysTogether() > 0) "معًا منذ ${Quran.digits(Pet.daysTogether())} ${if (Pet.daysTogether() in 3..10) "أيام" else "يوم"}" else "صداقتكما تبدأ اليوم", size = 12.sp)
                     // Evolution: the friend grows through stages with the level (it looks a little bigger and does more by itself).
@@ -465,7 +434,35 @@ fun PetPage() {
                         (Pet.bestStreak().takeIf { it > st }?.let { " · أفضل سلسلة ${Quran.digits(it)}" } ?: ""),
                         color = P.ink, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
                     Sub("اليوم الطيب: أن تمتلئ قلوب ${Pet.name} ثلاثة على الأقل", size = 11.sp)
-                    if (Progress.showLevels) Box(Modifier.padding(top = 12.dp)) { Column { FriendshipPanel() } }
+            }
+            // ❤ the friendship: its points, the next gift, how it grows and today's points
+            if (open == "bond") Column(Modifier.padding(top = 10.dp)) { FriendshipPanel() }
+            if (Progress.showLevels) Friendship.next()?.let { g ->
+                Sub("${g.icon} الجائزة التالية: ${g.name} · بقي ${Quran.digits(g.bond - Progress.bondPoints)} ❤", Modifier.padding(top = 10.dp), size = 12.sp)
+            }
+            Text("🎁 مكافآتي وأوسمتي ‹", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { tab = "rewards" }.padding(vertical = 4.dp))
+        }
+        if (tab == "friend" && sp != null && !Pet.kids) Panel(pad = 14.dp) { MissionsPanel() }
+        if (tab == "friend" && sp != null && Pet.kids) Panel(color = if (Pet.challengeDone) P.card else P.accent.copy(alpha = .10f), pad = 14.dp) {
+            Text("🎯 تحدي اليوم", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(Pet.challenge(), color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+            if (Pet.challengeDone) Row(verticalAlignment = Alignment.CenterVertically) {
+                Sub("أتممته، تقبّل الله منك ✓ (تحدٍّ جديد غدًا)", Modifier.weight(1f), size = 12.sp)
+                Action("إلغاء", filled = false) { Pet.undoChallenge() }
+            }
+            else Action("فعلتُه ✓", Modifier.fillMaxWidth().padding(top = 8.dp)) { Pet.doChallenge() }
+        }
+        if (tab == "friend" && sp != null && petHasMoves(sp)) {
+            var playing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+            Panel(pad = 12.dp) {
+                Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).clickable { playing = !playing }, verticalAlignment = Alignment.CenterVertically) {
+                    Text("🎮 العب معه", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(if (playing) "▴" else "▾", color = P.muted, fontSize = 16.sp)
+                }
+                if (playing) {
+                    Sub("للمتعة والصداقة فقط: ليست عبادة ولا تزيد الخبرة.", size = 11.sp)
+                    Box(Modifier.padding(top = 8.dp)) { PetInteractions() }
                 }
             }
         }
@@ -737,8 +734,9 @@ fun PetFilterChips() {
 
 /** One small figure at a glance: an icon, a word, and (optionally) how far to the next step. */
 @Composable
-private fun GlanceStat(icon: String, label: String, frac: Float?, color: androidx.compose.ui.graphics.Color, modifier: Modifier) {
-    Column(modifier.clip(L.shape(12.dp)).background(P.card).padding(horizontal = 8.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+private fun GlanceStat(icon: String, label: String, frac: Float?, color: androidx.compose.ui.graphics.Color, modifier: Modifier, on: Boolean = false, onClick: () -> Unit = {}) {
+    Column(modifier.clip(L.shape(12.dp)).background(if (on) color.copy(alpha = .16f) else P.card).border(if (on) 1.5.dp else 0.dp, if (on) color else P.card, L.shape(12.dp))
+        .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(icon, fontSize = 18.sp)
         Text(label, color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
         if (frac != null) androidx.compose.material3.LinearProgressIndicator(progress = { frac },
