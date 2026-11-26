@@ -28,7 +28,7 @@ object Simple {
     val themes = listOf(
         Theme("زمرّد", "emerald", 1, 2, 0xFF000000, 0xFF3FBF8F),
         Theme("أبيض وأسود", "minimal", 0, 1, 0xFFFFFFFF, 0xFF111111),
-        Theme("صحراء", "desert", 0, 1, 0xFFF2E3C6, 0xFFB5651D),
+        Theme("صحراء", "desert", 1, 1, 0xFF000000, 0xFFE0A85E),
     )
     val current: Theme get() = themes.getOrNull(Store.prefs.getInt("simple_theme", 0)) ?: themes[0]
     fun themeOn(t: Theme) = current == t

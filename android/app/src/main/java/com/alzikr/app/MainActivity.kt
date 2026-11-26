@@ -86,6 +86,12 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) Nav.tab = Nav.home
         intent?.getStringExtra("tab")?.let(::openTab)
         runCatching { NoteBubble.refresh(this) }
+        // A test build of 1.5.1 moved the full app to the emerald when entering the simple app and kept the theme
+        // to bring back; bring it back now (the simple app has its own themes since).
+        Store.prefs.getString("simple_prev_look", null)?.let { prev ->
+            Store.prefs.edit().putString("look", prev).putInt("theme", Store.prefs.getInt("simple_prev_theme", 0))
+                .remove("simple_prev_look").remove("simple_prev_theme").apply()
+        }
         runCatching { PetLooks.keepOldDefaults(existing = !Store.prefs.contains("welcomed") && (Store.hasLocation || Pet.species != null || Pet.introSeen)) }
         openPlace(intent)
         AppUpdate.onFound = { Store.bump() }
