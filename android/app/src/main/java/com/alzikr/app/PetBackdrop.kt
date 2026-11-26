@@ -128,7 +128,18 @@ object PetBackdrop {
      */
     fun widgetBitmap(c: android.content.Context): Pair<android.graphics.Bitmap, Boolean>? {
         val id = widgetBg; if (id.isEmpty()) return null
-        val w = 900; val h = 450
+        // The widget's real size (so nothing is stretched or cut), 900 × 450 when the launcher does not say.
+        val dm = c.resources.displayMetrics
+        val (w, h) = runCatching {
+            val mgr = android.appwidget.AppWidgetManager.getInstance(c)
+            val wid = mgr.getAppWidgetIds(android.content.ComponentName(c, PetWidget::class.java)).first()
+            val o = mgr.getAppWidgetOptions(wid)
+            val ww = o.getInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) * dm.density
+            val hh = o.getInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT) * dm.density
+            if (ww < 50 || hh < 50) error("no size")
+            val k = minOf(1f, 1000f / ww)
+            (ww * k).toInt() to (hh * k).toInt()
+        }.getOrDefault(900 to 450)
         val out = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
         val cv = android.graphics.Canvas(out)
         val r = 22f * c.resources.displayMetrics.density
@@ -150,17 +161,23 @@ object PetBackdrop {
                 androidx.compose.ui.graphics.Canvas(img), Size(w.toFloat(), h.toFloat())) { drawWidgetScene(id) }
             cv.drawBitmap(img.asAndroidBitmapCompat(), 0f, 0f, null)
         }
-        // A frame chosen too: only its rim, laid over the scene (the scene fills the whole widget under it).
-        Progress.frames.firstOrNull { it.id == Progress.frame }?.res?.let { res -> runCatching {
-            val rim = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
-            val rc = android.graphics.Canvas(rim)
-            androidx.core.content.ContextCompat.getDrawable(c, res)?.let { d -> d.setBounds(0, 0, w, h); d.draw(rc) }
-            val t = 7.5f * c.resources.displayMetrics.density
-            rc.drawRoundRect(t, t, w - t, h - t, (r - t / 2).coerceAtLeast(0f), (r - t / 2).coerceAtLeast(0f),
-                android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) })
-            cv.drawBitmap(rim, 0f, 0f, null)
-        } }
+        // A frame chosen too: a thin band in its colours at the very edge, and its own lines over the scene (no fill).
+        Progress.frames.firstOrNull { it.id == Progress.frame }?.let { fr -> fr.res?.let { res -> runCatching {
+            val band = 3f * dm.density
+            cv.drawRoundRect(0f, 0f, w.toFloat(), h.toFloat(), r, r, android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                style = android.graphics.Paint.Style.STROKE; strokeWidth = band * 2
+                shader = android.graphics.LinearGradient(0f, 0f, 0f, h.toFloat(), fr.top.toInt(), fr.bottom.toInt(), android.graphics.Shader.TileMode.CLAMP) })
+            androidx.core.content.ContextCompat.getDrawable(c, res)?.mutate()?.let { d -> clearFills(d); d.setBounds(0, 0, w, h); d.draw(cv) }
+        } } }
         return out to light
+    }
+
+    /** A frame's lines without its fill (so the scene shows through). */
+    private fun clearFills(d: android.graphics.drawable.Drawable) {
+        when (d) {
+            is android.graphics.drawable.GradientDrawable -> d.setColor(android.graphics.Color.TRANSPARENT)
+            is android.graphics.drawable.LayerDrawable -> (0 until d.numberOfLayers).forEach { clearFills(d.getDrawable(it)) }
+        }
     }
 
     /** The glow's colour: "" none, a name below, or "rainbow" (its colours turn slowly). */
