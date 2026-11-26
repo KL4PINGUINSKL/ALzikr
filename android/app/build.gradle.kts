@@ -1,7 +1,7 @@
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.plugin.compose") }
 
 android { namespace = "com.alzikr.app"; compileSdk = 35
-    defaultConfig { applicationId = "com.alzikr.app"; minSdk = 26; targetSdk = 35; versionCode = 68; versionName = "1.5.1"
+    defaultConfig { applicationId = "com.alzikr.app"; minSdk = 26; targetSdk = 35; versionCode = 69; versionName = "1.5.2"
         manifestPlaceholders["appLabel"] = "ALzikr"
         if (project.hasProperty("fresh")) { applicationId = "com.alzikr.app.fresh"; manifestPlaceholders["appLabel"] = "ALzikr جديد" } }
     buildFeatures { compose = true; buildConfig = true }

@@ -218,21 +218,26 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
                         Text("البدء من جديد", color = P.accent, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp).clip(L.shape(10.dp)).clickable { Data.colReset(c.id); cur = 0 }.padding(10.dp))
                     } else {
                         val item = c.items[i]; val n = Data.colCounts(c.id)[i]; val fin = n >= item.count
-                        Column(Modifier.fillMaxWidth().heightIn(max = 520.dp).clip(L.shape(22.dp)).background(if (fin) P.surface else P.card)
+                        Box(Modifier.fillMaxWidth().heightIn(max = 520.dp).clip(L.shape(22.dp)).background(if (fin) P.surface else P.card)
                             .border(2.dp, if (fin) P.gold.copy(alpha = .6f) else P.accent.copy(alpha = .7f), L.shape(22.dp))
                             .combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
-                                onLongClick = { copy(ctx, item.text) }) { tap() }
+                                onLongClick = { copy(ctx, item.text) }) { tap() }) {
+                        Column(Modifier.fillMaxWidth()
                             .then(if (item.text.length > 380) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                            .padding(horizontal = 20.dp, vertical = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            .padding(start = 20.dp, end = 20.dp, top = 40.dp, bottom = 58.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 10.dp))
                             Text(item.text, color = if (fin) P.muted else P.ink, fontSize = (21 * Data.textScale).sp, lineHeight = (36 * Data.textScale).sp,
                                 fontFamily = Fonts.naskh, textAlign = TextAlign.Center)
                             Sub(if (item.count > 1) "يُقال ${item.count} مرات" else "يُقال مرة واحدة", Modifier.padding(top = 12.dp), size = 12.sp)
-                            // Done by mistake, or to read it again.
-                            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (fin) Choice("↺ أعد قراءته (غير منجز)", false) { Data.colSet(c.id, i, 0) }
-                                else if (n > 0) Choice("− تراجع عن عدّة", false) { Data.colSet(c.id, i, n - 1) }
-                            }
+                            // Done: read it again from zero.
+                            if (fin) Choice("↺ أعد قراءته (غير منجز)", false, Modifier.padding(top = 10.dp)) { Data.colSet(c.id, i, 0) }
+                        }
+                        // The count so far, in the top corner.
+                        Text(if (fin) "✓ ${item.count} / ${item.count}" else "$n / ${item.count}", color = if (fin) P.gold else P.accent, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).clip(L.shape(12.dp)).background((if (fin) P.gold else P.accent).copy(alpha = .14f)).padding(horizontal = 10.dp, vertical = 4.dp))
+                        // Small balls: − (one back) at the bottom right, + (one more) at the bottom left.
+                        CountBall("−", n > 0, Modifier.align(Alignment.BottomStart)) { Data.colSet(c.id, i, n - 1); Haptics.tap(ctx, false) }
+                        CountBall("+", !fin, Modifier.align(Alignment.BottomEnd)) { tap() }
                         }
                     }
                 }
@@ -261,6 +266,17 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
                 }
             }
         }
+    }
+}
+
+/** A small round + / − button in a corner of the dhikr card. */
+@Composable
+private fun CountBall(sign: String, on: Boolean, mod: Modifier, act: () -> Unit) {
+    Box(mod.padding(12.dp).size(38.dp).clip(androidx.compose.foundation.shape.CircleShape)
+        .background(if (on) P.accent.copy(alpha = .16f) else P.line.copy(alpha = .3f))
+        .border(1.5.dp, if (on) P.accent.copy(alpha = .8f) else P.line, androidx.compose.foundation.shape.CircleShape)
+        .clickable(enabled = on) { act() }, contentAlignment = Alignment.Center) {
+        Text(sign, color = if (on) P.accent else P.muted, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     }
 }
 

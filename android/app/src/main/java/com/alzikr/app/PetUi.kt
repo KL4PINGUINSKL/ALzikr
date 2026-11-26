@@ -369,7 +369,7 @@ fun PetPage() {
             Text("يفرح كلما علّمت صلاة ✓، وأتممت أذكار الصباح والمساء، ووردك، وسبّحت", color = soft, fontSize = 11.sp, modifier = Modifier.fillMaxWidth())
         }
         // Under the friend: its background and glow, and the log — each as a card.
-        if (tab == "album") Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
+        if (tab == "album" || (tab == "friend" && sp != null)) Action("📜 سجل صديقي: ما فُتح ومتى، ومستواك وصداقتك", Modifier.fillMaxWidth(), filled = false) { journal = true }
         // ---- the friend at a glance: level, friendship, streak; the next gift (tap for the rewards)
         if (tab == "friend" && sp != null) Panel(pad = 14.dp) {
             LaunchedEffect(Unit) { Pet.noteGoodDay(); Progress.bond("visit", 2) }
