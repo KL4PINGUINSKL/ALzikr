@@ -1,10 +1,4 @@
 {
- "1.4.6": {
-  "file": "ALzikr-1.4.6-Android.apk",
-  "size": 42238184,
-  "sha256": "8536eccda110f8893a1daadb2281077cac4735c12f541557e5ab1bcacb0f92bc",
-  "versionCode": 64
- },
  "1.4.7": {
   "file": "ALzikr-1.4.7-Android.apk",
   "size": 39876634,
@@ -16,5 +10,11 @@
   "size": 42305341,
   "sha256": "2d4f0d59be2c4d12624ed373f03dc2f04318233352fe19809a8541162c3245fa",
   "versionCode": 66
+ },
+ "1.5.0": {
+  "file": "ALzikr-1.5.0-Android.apk",
+  "size": 42790278,
+  "sha256": "f54fcf86607bff009ab05806555b249f0b240817756a900e4f716d2ff97fc383",
+  "versionCode": 67
  }
 }
