@@ -51,6 +51,11 @@ object Welcome {
 fun WelcomePages() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     if (Welcome.seen && !Welcome.forced) return
+    // A new install starts on «زمرّد» over pure black (the full and the simple app alike); a later choice is kept.
+    if (!Welcome.forced) LaunchedEffect(Unit) {
+        if (!Store.prefs.contains("look_back_emerald")) Store.prefs.edit().putInt("look_back_emerald", 1).apply()
+        Store.bump()
+    }
     val count = Welcome.pages.size + 2   // then: the full or the simple app, then the friend
     val modeAt = Welcome.pages.size
     val pager = rememberPagerState { count }

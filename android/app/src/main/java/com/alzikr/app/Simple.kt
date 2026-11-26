@@ -23,7 +23,28 @@ object Simple {
     /** The prayer page in the simple mode: the next prayer, today's times, the adhkar of the moment, a few tiles. */
     val parts = listOf("next", "forbid", "times", "moment", "simple", "place")
 
+    /** Three themes only in the simple app: emerald over black, emerald by day, and the mushaf's paper. */
+    data class Theme(val name: String, val look: String, val back: Int, val mode: Int, val bg: Long, val accent: Long)
+    val themes = listOf(
+        Theme("زمرّد ليلي", "emerald", 1, 0, 0xFF000000, 0xFF3FBF8F),
+        Theme("زمرّد نهاري", "emerald", 0, 1, 0xFFF5F1E6, 0xFF1F7A5A),
+        Theme("ورق المصحف", "mushaf", 0, 1, 0xFFF3EAD3, 0xFF8A3B1C),
+    )
+    fun themeOn(t: Theme) = Data.look == t.look && Data.lookBack(t.look) == t.back && (t.back > 0 || Data.theme == t.mode)
+    fun useTheme(t: Theme) { Data.look = t.look; Data.setLookBack(t.look, t.back); Data.theme = t.mode }
+
     fun set(c: Context, on: Boolean) {
+        val sp = Store.prefs
+        if (on && !Data.simple) {
+            // Only the three themes here: the full app's theme is kept and comes back with it.
+            if (themes.none { themeOn(it) }) {
+                sp.edit().putString("simple_prev_look", Data.look).putInt("simple_prev_theme", Data.theme).apply()
+                useTheme(themes[0])
+            }
+        } else if (!on && Data.simple) {
+            sp.getString("simple_prev_look", null)?.let { Data.look = it; Data.theme = sp.getInt("simple_prev_theme", 0) }
+            sp.edit().remove("simple_prev_look").remove("simple_prev_theme").apply()
+        }
         Data.simple = on
         if (on) PetOverlay.stop(c) else PetOverlay.start(c)
         Nav.morePage = null
@@ -53,6 +74,12 @@ fun SimpleModePanel() {
             ModeCard("✨", "الذكر الكامل", "كل المميزات", !Data.simple, Modifier.weight(1f)) { if (Data.simple) Simple.set(ctx, false) }
             ModeCard("🕊", "الذكر البسيط", "الصلاة والقرآن فقط", Data.simple, Modifier.weight(1f)) { if (!Data.simple) Simple.set(ctx, true) }
         }
+        if (Data.simple) {
+            Sub("الثيم", Modifier.padding(top = 12.dp), size = 13.sp, color = P.ink)
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Simple.themes.forEach { t -> ThemeChip(t, Simple.themeOn(t), Modifier.weight(1f)) { Simple.useTheme(t) } }
+            }
+        }
         Sub(if (Data.simple) "قسمان فقط: الصلاة (المواقيت والأذان والقبلة وأذكار الوقت) والقرآن (المصحف والتفسير والتلاوة والختمة). لا يُحذف شيء: اختر «الكامل» فيعود كل شيء كما كان."
             else "«البسيط» يُبقي الصلاة والقرآن فقط، بلا صديق ولا مهام ولا نقاط، لمن يحب تطبيقًا خفيفًا هادئًا. لا يُحذف شيء من بياناتك.",
             Modifier.padding(top = 8.dp), size = 12.sp)
@@ -68,5 +95,18 @@ fun ModeCard(icon: String, title: String, sub: String, on: Boolean, modifier: Mo
         Text(title, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
         Text(sub, color = P.muted, fontSize = 12.sp)
         if (on) Text("✓ المختار", color = P.accent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+@Composable
+private fun ThemeChip(t: Simple.Theme, on: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val shape = L.shape(14.dp)
+    Column(modifier.clip(shape).border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(6.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+        Box(Modifier.fillMaxWidth().height(40.dp).clip(L.shape(10.dp)).background(androidx.compose.ui.graphics.Color(t.bg)).border(1.dp, P.line, L.shape(10.dp)),
+            contentAlignment = androidx.compose.ui.Alignment.Center) {
+            Box(Modifier.size(16.dp).clip(L.shape(8.dp)).background(androidx.compose.ui.graphics.Color(t.accent)))
+        }
+        Text((if (on) "✓ " else "") + t.name, color = if (on) P.accent else P.ink, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
     }
 }
