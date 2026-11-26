@@ -260,7 +260,9 @@ object PetFrames {
                 val comp = (if (src.kind == SourceKind.DOTLOTTIE) DotLottie.json(skin.id, src.path)?.let { LottieCompositionFactory.fromJsonStringSync(it, "dl:${skin.id}").value }
                     else PetPacks.file(skin.id, src.path)?.let { f -> f.inputStream().use { LottieCompositionFactory.fromJsonInputStreamSync(it, "f:${f.path}").value } }
                         ?: LottieCompositionFactory.fromAssetSync(c, "pets/${src.path}").value) ?: return null
-                val d = LottieDrawable().apply { enableMergePathsForKitKatAndAbove(true); composition = comp; progress = src.from + at * (src.to - src.from) }
+                // Off screen there is no view to load pictures through: animations drawn from embedded pictures
+                // (a penguin made of images) came out empty in the widget. Decode them here instead.
+                val d = LottieDrawable().apply { enableMergePathsForKitKatAndAbove(true); setImageAssetDelegate { a -> embedded(skin.id, a) }; composition = comp; progress = src.from + at * (src.to - src.from) }
                 val w = comp.bounds.width().toFloat().coerceAtLeast(1f); val h = comp.bounds.height().toFloat().coerceAtLeast(1f)
                 val s = minOf(px / w, px / h) * skin.fit.zoom
                 cv.translate((px - w * s) / 2f, (px - h * s) / 2f - skin.fit.lift * px); cv.scale(s, s)
@@ -280,6 +282,20 @@ object PetFrames {
             }
         }
         return out
+    }
+    private val pics = java.util.concurrent.ConcurrentHashMap<String, Bitmap>()
+    /** A picture inside a Lottie file ("data:image/png;base64,..."), decoded once per skin. */
+    private fun embedded(skinId: String, a: com.airbnb.lottie.LottieImageAsset): Bitmap? {
+        a.bitmap?.let { return it }
+        val name = a.fileName ?: return null
+        if (!name.startsWith("data:") || name.indexOf("base64,") < 0) return null
+        val key = "$skinId/${a.id}"
+        pics[key]?.let { return it }
+        if (pics.size > 40) pics.clear()
+        return runCatching {
+            val bytes = android.util.Base64.decode(name.substringAfter("base64,"), android.util.Base64.DEFAULT)
+            android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }.getOrNull()?.also { pics[key] = it }
     }
     /** Can this skin give more than one frame (so the widget animates)? */
     fun animated(skin: Skin) = StateResolver.resolve(skin, PetState.IDLE)?.source?.kind.let { it == SourceKind.LOTTIE || it == SourceKind.DOTLOTTIE || it == SourceKind.SPRITE || it == SourceKind.FRAMES || it == SourceKind.RIG }

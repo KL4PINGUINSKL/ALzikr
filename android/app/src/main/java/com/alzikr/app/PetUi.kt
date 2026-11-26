@@ -280,7 +280,7 @@ fun Bubble(text: String, onClick: () -> Unit) {
 @Composable
 fun PetIntro() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    if (Pet.introSeen || Pet.species != null || !Welcome.seen) return
+    if (Pet.introSeen || Pet.species != null || !Welcome.seen || Data.simple) return
     val state = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val close = { Pet.introSeen = true }
     AppSheet(onDismissRequest = close) {
@@ -302,8 +302,9 @@ fun SpeciesGrid(chosen: Species?, pick: (Species) -> Unit) {
     val line = Pet.lineStyle(P.accent, P.card)
     @Suppress("UNUSED_VARIABLE") val unused = clock to line
     val ctx = LocalContext.current
-    // The same even tiles as the looks: four per row, ordered by the level they open at, all shown.
-    val all = Species.entries.sortedBy { Progress.speciesLevel(it) }
+    // The same even tiles as the looks: four per row, ordered by the level they open at (or only the open ones).
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val all = Species.entries.sortedBy { Progress.speciesLevel(it) }.filter { !PetFilter.onlyOpen || Progress.speciesOpen(it) }
     TileGrid(all, cols = 4, rows = (all.size + 3) / 4) { s, m ->
         val open = Progress.speciesOpen(s)
         PictureTile(s.ar, s == chosen, open, Progress.speciesLevel(s), m, onClick = {
@@ -447,6 +448,7 @@ fun PetPage() {
         Panel(pad = 12.dp) {
             Title("اختر صديقك")
             Sub("مرتّبة بحسب المستوى الذي تُفتح فيه.", size = 11.sp)
+            PetFilterChips()
             Box(Modifier.padding(top = 8.dp)) { SpeciesGrid(sp) { Pet.species = it } }
         }
         if (sp == null) return@Column
@@ -456,9 +458,10 @@ fun PetPage() {
             val opened = looks.indices.count { Progress.lookOpen(sp, it) }
             Title("شكل ${Pet.nameOf(sp)}")
             Sub("${Quran.digits(looks.size)} شكلًا · المفتوح لك ${Quran.digits(opened)}", size = 11.sp)
+            PetFilterChips()
             // An even grid, three per row; two rows, then «عرض كل الأشكال». Opens fully when the chosen look is further down.
             Box(Modifier.padding(top = 10.dp)) {
-                TileGrid(looks.withIndex().toList(), cols = 3, rows = 2, startOpen = looks.indexOfFirst { it.id == cur?.id } >= 6, noun = "الأشكال") { (i, lk), m ->
+                TileGrid(looks.withIndex().filter { !PetFilter.onlyOpen || Progress.lookOpen(sp, it.index) }, cols = 3, rows = 2, startOpen = looks.indexOfFirst { it.id == cur?.id } >= 6, noun = "الأشكال") { (i, lk), m ->
                     val open = Progress.lookOpen(sp, i)
                     PictureTile(lk.name, lk.id == cur?.id, open, Progress.lookLevel(sp, i), m, onClick = {
                         if (open) PetLooks.choose(sp, lk.id)
@@ -670,5 +673,22 @@ fun PetHideCard() {
             Action("إخفاؤه", Modifier.weight(1f)) { Pet.hide(ctx); ask = false }
             Action("تراجع", Modifier.weight(1f), filled = false) { ask = false }
         }
+    }
+}
+
+
+/** «الكل» or «المتاحة لي» for the friends and their looks (remembered). */
+object PetFilter {
+    var onlyOpen: Boolean
+        get() = Store.prefs.getBoolean("pet_only_open", false)
+        set(v) { Store.prefs.edit().putBoolean("pet_only_open", v).apply(); Store.bump() }
+}
+
+@Composable
+fun PetFilterChips() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Choice("الكل", !PetFilter.onlyOpen) { PetFilter.onlyOpen = false }
+        Choice("المتاحة لي فقط", PetFilter.onlyOpen) { PetFilter.onlyOpen = true }
     }
 }

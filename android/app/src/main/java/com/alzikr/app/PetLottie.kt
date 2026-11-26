@@ -21,6 +21,8 @@ import com.alzikr.app.pets.Season
  * choice and unlock stays valid. Each look's author, page and license are in the pack.
  */
 object PetLooks {
+    /** Open from the first day, shown first, and the look a new friend of this kind starts with. */
+    val FEATURED = mapOf(Species.CAT to "originals-mishmish", Species.PENGUIN to "originals-luulu")
     /** [zoom] enlarges a drawing that leaves empty space around the animal; [lift] moves it up (fraction of the box). */
     data class Look(val id: String, val name: String, val by: String, val zoom: Float = 1f, val lift: Float = 0f, val darkLines: Boolean = false,
                     val level: Int = 1, val rarity: Rarity = Rarity.COMMON, val season: Season? = null, val license: String = "", val page: String = "", val hidden: Boolean = false)
@@ -29,7 +31,12 @@ object PetLooks {
         val rev = PetPacks.revision
         memo?.takeIf { it.first == rev }?.let { return it.second }
         val reg = PetPacks.registry()
-        val m = Species.entries.associateWith { s -> reg.skins(s.name).map { k -> Look(k.id, k.name, k.by, k.fit.zoom, k.fit.lift, k.fit.darkLines, k.unlock.level, k.rarity, k.season, k.license, k.page, k.hidden) } }
+        val m = Species.entries.associateWith { s ->
+            val list = reg.skins(s.name).map { k -> Look(k.id, k.name, k.by, k.fit.zoom, k.fit.lift, k.fit.darkLines, k.unlock.level, k.rarity, k.season, k.license, k.page, k.hidden) }
+            val star = FEATURED[s]
+            val f = list.firstOrNull { it.id == star }
+            if (f == null) list else listOf(f.copy(level = 1, hidden = false)) + (list - f)
+        }
         memo = rev to m
         return m
     }

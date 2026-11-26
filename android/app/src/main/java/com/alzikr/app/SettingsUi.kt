@@ -68,6 +68,7 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (section == null) {
+                SimpleModePanel()
                 Sub("اختر قسمًا:", size = 13.sp)
                 listOf(
                     listOf(Triple("📍", "الموقع والحساب", "times"), Triple("🔔", "التنبيهات والأذان", "alerts"), Triple("🕌", "الصلاة والتركيز", "prayer")),

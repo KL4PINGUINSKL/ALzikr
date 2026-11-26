@@ -134,6 +134,7 @@ private fun framePreview(id: String): androidx.compose.ui.graphics.Brush =
 @Composable
 fun ProgressCelebration() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
+    if (Data.simple) return
     val sp = Pet.species ?: return
     val l = Progress.pendingLevelUp()
     val badge = if (l == null) Progress.newBadge() else null

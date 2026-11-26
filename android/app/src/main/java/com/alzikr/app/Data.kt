@@ -44,6 +44,10 @@ object Data {
     var pickScroll: Boolean
         get() = sp.getBoolean("pick_scroll", false)
         set(v) = edit { putBoolean("pick_scroll", v) }
+    /** «الذكر البسيط»: only the prayer and the Quran; everything else is hidden (and kept) until the full app is chosen again. */
+    var simple: Boolean
+        get() = sp.getBoolean("simple_mode", false)
+        set(v) = edit { putBoolean("simple_mode", v) }
     /** 0 follow the phone, 1 day, 2 night. */
     var theme: Int
         get() = sp.getInt("theme", 0)

@@ -109,7 +109,7 @@ fun PrayerScreen(openSettings: (String) -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         UpdateBanner()
         Hint("prayer3", "🕌", "اضغط على أي صلاة لصفحتها: ✓ صلّيتها، والمنبه، والتذكير، والأذان، وسننها وأذكارها. والموقع وطريقة الحساب في السطر الأخير أسفل الصفحة. اضغط التاريخ في الأعلى للتقويم. علّم ✓ بعد أن تصلي، و🔔 لتنبيه كل صلاة.")
-        Hint("home1", "✎", "«ذكر الوقت» يتغير وحده: الصباح والمساء والنوم، والكهف يوم الجمعة، والمواسم. ورتّب هذه الصفحة كما تحب من «✎ تخصيص هذه الصفحة» في أسفلها.")
+        if (!Data.simple) Hint("home1", "✎", "«ذكر الوقت» يتغير وحده: الصباح والمساء والنوم، والكهف يوم الجمعة، والمواسم. ورتّب هذه الصفحة كما تحب من «✎ تخصيص هذه الصفحة» في أسفلها.")
         val hijri = Data.hijri()
         if (hijri.month == 9) Panel(color = P.gold.copy(alpha = .16f), pad = 12.dp) {
             Text("رمضان ${hijri.day} · تقبّل الله صيامك", color = P.gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -206,14 +206,16 @@ fun PrayerScreen(openSettings: (String) -> Unit) {
             }
             },
             "words" to { DailyWords() },
+            "simple" to { SimpleTiles { openSettings("") } },
             "place" to {
             val qibla = PrayTimes.qibla(Store.lat, Store.lng).roundToInt()
             Sub("📍 ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }} · ${Store.method.ar}${if (Store.hanafi) " · العصر حنفي" else ""} · 🕋 $qibla°",
                 Modifier.clip(L.shape(10.dp)).clickable { options = true }.padding(6.dp), size = 12.sp)
             },
         )
-        Home.order.filter { it !in Home.hidden }.forEach { parts[it]?.invoke() }
-        GText("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
+        if (Data.simple) Simple.parts.forEach { parts[it]?.invoke() }
+        else Home.order.filter { it !in Home.hidden }.forEach { parts[it]?.invoke() }
+        if (!Data.simple) GText("✎ تخصيص هذه الصفحة", color = P.accent, fontSize = 14.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable { editing = true }.padding(8.dp))
     }
     if (options) TimesOptions({ openSettings("times") }) { options = false }
     if (editing) HomeEditor { editing = false }

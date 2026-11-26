@@ -51,7 +51,8 @@ object Welcome {
 fun WelcomePages() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     if (Welcome.seen && !Welcome.forced) return
-    val count = Welcome.pages.size + 1   // the last page: the friend
+    val count = Welcome.pages.size + 2   // then: the full or the simple app, then the friend
+    val modeAt = Welcome.pages.size
     val pager = rememberPagerState { count }
     val scope = rememberCoroutineScope()
     val again = Welcome.forced
@@ -60,11 +61,18 @@ fun WelcomePages() {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("ALzikr", color = P.accent, fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = L.head, modifier = Modifier.weight(1f))
-                if (pager.currentPage < count - 1) Text("تخطٍّ", color = P.muted, fontSize = 15.sp,
-                    modifier = Modifier.clip(L.shape(10.dp)).clickable { scope.launch { pager.animateScrollToPage(count - 1) } }.padding(10.dp))
+                if (pager.currentPage < modeAt) Text("تخطٍّ", color = P.muted, fontSize = 15.sp,
+                    modifier = Modifier.clip(L.shape(10.dp)).clickable { scope.launch { pager.animateScrollToPage(modeAt) } }.padding(10.dp))
             }
             HorizontalPager(pager, Modifier.weight(1f)) { i ->
-                if (i < Welcome.pages.size) WelcomePage(Welcome.pages[i]) else WelcomeFriend(again)
+                when {
+                    i < modeAt -> WelcomePage(Welcome.pages[i])
+                    i == modeAt -> WelcomeMode { simple ->
+                        if (simple) { Pet.introSeen = true; Welcome.done() }   // no friend in the simple app
+                        else scope.launch { pager.animateScrollToPage(modeAt + 1) }
+                    }
+                    else -> WelcomeFriend(again)
+                }
             }
             // The dots, then «التالي».
             Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.Center) {
@@ -73,7 +81,7 @@ fun WelcomePages() {
                     Box(Modifier.padding(3.dp).height(8.dp).width(w).clip(L.shape(4.dp)).background(if (k == pager.currentPage) P.accent else P.line))
                 }
             }
-            if (pager.currentPage < count - 1)
+            if (pager.currentPage < modeAt)
                 Action("التالي", Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 16.dp)) { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } }
             else Spacer(Modifier.height(16.dp))
         }
@@ -121,5 +129,21 @@ private fun WelcomeFriend(again: Boolean) {
             Action("ابدأ بدون صديق", Modifier.fillMaxWidth(), filled = false) { Pet.introSeen = true; Welcome.done() }
             Text("تجده لاحقًا في «المزيد» إن غيّرت رأيك", color = P.muted, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 10.dp))
         }
+    }
+}
+
+/** «كيف تحب التطبيق؟»: everything, or the prayer and the Quran only. */
+@Composable
+private fun WelcomeMode(pick: (Boolean) -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text("كيف تحب التطبيق؟", color = P.ink, fontSize = 26.sp, fontWeight = FontWeight.Bold, fontFamily = L.head, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(8.dp))
+        Text("تغيّره متى شئت من الإعدادات، ولا يُحذف شيء.", color = P.muted, fontSize = 15.sp, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(22.dp))
+        ModeCard("✨", "الذكر الكامل", "الصلاة والقرآن والمكتبة والأذكار ويومي وصديقك، وكل ما ذُكر", !Data.simple, Modifier.fillMaxWidth()) { Simple.set(ctx, false); pick(false) }
+        Spacer(Modifier.height(12.dp))
+        ModeCard("🕊", "الذكر البسيط", "قسمان فقط: الصلاة والقرآن. خفيف وهادئ، لمن يريد الأساس دون غيره", Data.simple, Modifier.fillMaxWidth()) { Simple.set(ctx, true); pick(true) }
     }
 }

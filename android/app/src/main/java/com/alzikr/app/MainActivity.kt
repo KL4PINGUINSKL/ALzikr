@@ -176,7 +176,8 @@ private fun typography(font: FontFamily?): Typography {
 }
 
 data class Section(val id: String, val label: String, val glyph: String)
-val sections get() = if (Looks.byId(Data.look).kids) listOf(
+val sections get() = if (Data.simple) listOf(Section("prayer", "الصلاة", "🕌"), Section("library", "القرآن", "📖"))
+else if (Looks.byId(Data.look).kids) listOf(
     Section("kids", "الأطفال", "⭐"), Section("prayer", Home.name, "🕌"), Section("adhkar", "الأذكار", "📿"),
     Section("library", "المكتبة", "📖"), Section("pet", "صديقي", "🐾"), Section("more", "المزيد", "☰"),
 ) else listOf(
@@ -217,6 +218,7 @@ private fun Root() {
                 // «سماء الوقت»: the colors follow the hour, checked each minute.
                 if (look.sky || look.palFor != null) androidx.compose.runtime.LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(60_000); Sky.tick++ } }
                 RestoreOffer()
+                if (Data.simple && Nav.tab == "more" && Nav.morePage == null) androidx.compose.runtime.LaunchedEffect(Unit) { Nav.go("prayer") }
                 // While a reading screen is open the app's header, tabs, bar and friend step aside (full screen).
                 val inPage = Nav.pages.isNotEmpty() || Reading.open > 0
                 Column(Modifier.fillMaxSize()) {
@@ -231,17 +233,17 @@ private fun Root() {
                         val scrapPlace = if (Nav.tab == "more" && Nav.moreTop == "calendar") "calendar" else Nav.tab
                         when (Nav.tab) {
                             "adhkar" -> AdhkarScreen()
-                            "library" -> LibraryScreen()
+                            "library" -> LibraryScreen(quranOnly = Data.simple)
                             "daily" -> TasksScreen()
                             "more" -> MoreScreen(openSettings = { settings = it })
                             "kids" -> KidsHome()
                             "pet" -> PetPage()   // «صديقي» as its own section (it stays in «المزيد» too)
                             else -> PrayerScreen(openSettings = { settings = it })
                         }
-                        if (!inPage || scrapPlace == "calendar") PinnedScraps(scrapPlace, Modifier.align(Alignment.TopEnd))
+                        if (!Data.simple && (!inPage || scrapPlace == "calendar")) PinnedScraps(scrapPlace, Modifier.align(Alignment.TopEnd))
                     }
                     }
-                    if (!inPage && Pet.species != null && Pet.place == "ground") Column(Modifier.fillMaxWidth()) {
+                    if (!inPage && Pet.visible && Pet.place == "ground") Column(Modifier.fillMaxWidth()) {
                         PetStage(Modifier.fillMaxWidth().padding(horizontal = 10.dp), height = 46, bubbleBelow = false)
                         Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp).clip(L.shape(1.dp)).background(P.line))
                     }
@@ -292,7 +294,7 @@ private fun Overlays() {
 @Composable
 private fun Header() {
     Row(Modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        val pet = Pet.species != null && Pet.place == "top"
+        val pet = Pet.visible && Pet.place == "top"
         // The friend gets its own fixed space (it used to get only what the date line left, a few dp on long dates).
         Column(Modifier.weight(1f)) {
             Text(if (L.ornament.isNotEmpty()) "${L.ornament} ALzikr ${L.ornament}" else "ALzikr", color = P.accent, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = L.head)
@@ -303,8 +305,12 @@ private fun Header() {
         // The settings live in «المزيد» now, so the friend takes the gear's place and is a little bigger.
         // The friend, with its glow if one is chosen («صديقي» › 🖼).
         if (pet) Box(Modifier.width(150.dp).padding(start = 4.dp)) { PetGlow(); PetStage(Modifier.fillMaxWidth(), height = 88) }
+        // The simple mode: the settings instead of the search (there is no «المزيد» there).
+        if (Data.simple) Box(Modifier.size(40.dp).clip(L.shape(12.dp)).clickable { Nav.settingsReq = "" }, contentAlignment = Alignment.Center) {
+            if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("⚙", tint = P.muted, size = 20.dp) else Icon(Icons.Filled.Settings, "الإعدادات", tint = P.muted)
+        }
         // The search over everything: one small, quiet button at the header's end.
-        Box(Modifier.size(40.dp).clip(L.shape(12.dp)).clickable { Nav.search = true }, contentAlignment = Alignment.Center) {
+        else Box(Modifier.size(40.dp).clip(L.shape(12.dp)).clickable { Nav.search = true }, contentAlignment = Alignment.Center) {
             if (L.icons == IconStyle.GLYPH || L.icons == IconStyle.NONE) Glyph("🔍", tint = P.muted, size = 20.dp) else Icon(Icons.Filled.Search, "البحث في كل التطبيق", tint = P.muted)
         }
     }

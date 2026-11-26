@@ -111,10 +111,11 @@ class PetWidget : AppWidgetProvider() {
             v.setOnClickPendingIntent(R.id.p_nap, PendingIntent.getBroadcast(c, 101, Intent(c, PetWidget::class.java).setAction(NAP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             v.setOnClickPendingIntent(R.id.p_tasbih, PendingIntent.getBroadcast(c, 100, Intent(c, PetWidget::class.java).setAction(TASBIH), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             // If the launcher refuses so many pictures, keep the friend still rather than leave the widget empty.
-            runCatching { ids.forEach { manager.updateAppWidget(it, v) } }.onFailure {
+            runCatching { ids.forEach { manager.updateAppWidget(it, v) } }.onFailure { e ->
+                android.util.Log.w("PetWidget", "full update failed, trying a still frame", e)
                 v.removeAllViews(R.id.p_img)
                 Pet.species?.let { sp -> frameBitmap(c, sp, 0f)?.let { b -> v.addView(R.id.p_img, RemoteViews(c.packageName, R.layout.widget_pet_frame).apply { setImageViewBitmap(R.id.p_frame, b) }) } }
-                runCatching { ids.forEach { manager.updateAppWidget(it, v) } }
+                runCatching { ids.forEach { manager.updateAppWidget(it, v) } }.onFailure { e -> android.util.Log.w("PetWidget", "still update failed too", e) }
             }
         }
 

@@ -67,7 +67,7 @@ internal fun copy(c: Context, text: String) {
 
 /** The Library tab: the Quran and the hadith books. Opens a reader when [Nav] asks for one. */
 @Composable
-fun LibraryScreen() {
+fun LibraryScreen(quranOnly: Boolean = false) {
     val keep = androidx.compose.runtime.saveable.rememberSaveableStateHolder()   // the list below keeps its place while a page covers it
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
@@ -105,7 +105,8 @@ fun LibraryScreen() {
                 }
             }
         }
-        if (Reading.open == 0) Box(Modifier.fillMaxWidth().clipToBounds().layout { m, c ->
+        if (quranOnly) section = 0
+        if (Reading.open == 0 && !quranOnly) Box(Modifier.fillMaxWidth().clipToBounds().layout { m, c ->
             val pl = m.measure(c.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
             headerH.intValue = pl.height
             val h = (pl.height - hidden.floatValue).toInt().coerceIn(0, pl.height)
