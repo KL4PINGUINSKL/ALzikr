@@ -253,6 +253,12 @@ object Progress {
         Frame("eid", "فوانيس العيد", Friendship.frameGift("eid")!!.bond, null, 0xFF0E4D64, 0xFF137C84, false),
         Frame("crescents", "أهلّة ونجوم", Friendship.frameGift("crescents")!!.bond, null, 0xFF14204A, 0xFF2A1650, false),
         Frame("galaxy", "المجرّة", Friendship.frameGift("galaxy")!!.bond, R.drawable.frame_galaxy, 0xFF05030F, 0xFF2A1650, false),
+        Frame("hearts", "قلوب", Friendship.frameGift("hearts")!!.bond, null, 0xFFFFE4EE, 0xFFF7B8CF, true),
+        Frame("bunting", "رايات الفرح", Friendship.frameGift("bunting")!!.bond, null, 0xFF1E3A5F, 0xFF2D5A87, false),
+        Frame("butterflies", "فراشات", Friendship.frameGift("butterflies")!!.bond, null, 0xFFE8F7EE, 0xFFBFE6CF, true),
+        Frame("sakura", "أزهار الكرز", Friendship.frameGift("sakura")!!.bond, null, 0xFFFFF0F5, 0xFFF4C6D7, true),
+        Frame("rainbow", "قوس المطر", Friendship.frameGift("rainbow")!!.bond, null, 0xFF7EC8F2, 0xFFBFE6FA, true),
+        Frame("snowflakes", "ندف الثلج", Friendship.frameGift("snowflakes")!!.bond, null, 0xFF1C3D6B, 0xFF4A78B0, false),
     ).sortedBy { it.bond }
     var frame: String
         get() = sp.getString("prog_frame", "plain")!!.takeIf { id -> frames.any { it.id == id && it.open } } ?: "plain"

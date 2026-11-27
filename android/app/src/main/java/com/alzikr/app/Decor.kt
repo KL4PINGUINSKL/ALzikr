@@ -20,7 +20,7 @@ import kotlin.math.sin
  */
 object Decor {
     /** Frames drawn here (not XML shapes): they hang from the top edge. */
-    val drawn = setOf("lanterns", "eid", "crescents")
+    val drawn = setOf("lanterns", "eid", "crescents", "hearts", "butterflies", "sakura", "rainbow", "snowflakes", "bunting")
     fun isDrawn(id: String) = id in drawn
     /** Frames that also carry their own ornaments (drawFrameExtras): planets round the galaxy, roses at the rose's corners… */
     val extras = setOf("night", "gold", "pattern", "dawn", "rose", "ocean", "desert", "lantern", "zellige", "aurora", "pearl", "royal", "crystal", "galaxy")
@@ -118,6 +118,83 @@ fun DrawScope.drawDecorFrame(id: String, t: Float, top: Color, bottom: Color, ra
             }
             listOf(.08f, .3f, .7f, .92f).forEachIndexed { k, fx -> fanous(w * fx + sway(k), band, dp(listOf(10f, 20f, 18f, 8f)[k]), .9f, Color(0xFFF2F2F2), cols[(k * 2) % cols.size]) }
             listOf(.19f, .5f, .81f).forEachIndexed { k, fx -> star(w * fx, dp(32f) + sway(k + 3), dp(6f), cols[(k + 2) % cols.size]) }
+        }
+        "hearts" -> {
+            // A string of hearts hanging at different lengths, beating softly.
+            val cols = listOf(Color(0xFFFF6B9A), Color(0xFFFFB3C8), Color(0xFFE2588C), Color(0xFFFF8FB1), Color(0xFFFFC2D6))
+            listOf(.1f, .27f, .44f, .61f, .78f, .92f).forEachIndexed { k, fx ->
+                val x = w * fx + sway(k); val len = dp(listOf(8f, 18f, 12f, 20f, 10f, 15f)[k])
+                drawLine(Color(0xAAFFFFFF), Offset(x, band), Offset(x, band + len), 1f * density)
+                val beat = 1f + .08f * sin((t * 4 * PI + k).toFloat())
+                heart(Offset(x, band + len + dp(6f)), dp(6.5f) * beat, cols[k % cols.size])
+            }
+        }
+        "butterflies" -> {
+            // Butterflies flying slowly round the frame, wings beating.
+            val cols = listOf(Color(0xFFFFB347), Color(0xFF7FD8FF), Color(0xFFE59BFF), Color(0xFFFF7A9A))
+            cols.forEachIndexed { k, c ->
+                val f = (t * .2f + k * .25f) % 1f
+                val pw = w - 2 * radius; val x = radius + pw * f; val y = if (k % 2 == 0) dp(10f) + sin((t * 2 * PI * 2 + k).toFloat()) * dp(4f) else h - dp(10f) + sin((t * 2 * PI * 2 + k).toFloat()) * dp(4f)
+                val flap = .35f + .65f * kotlin.math.abs(sin((t * 2 * PI * 6 + k).toFloat()))
+                drawOval(c, Offset(x - dp(7f) * flap, y - dp(5f)), Size(dp(7f) * flap, dp(6f)))
+                drawOval(c, Offset(x, y - dp(5f)), Size(dp(7f) * flap, dp(6f)))
+                drawOval(c.copy(alpha = .8f), Offset(x - dp(5f) * flap, y), Size(dp(5f) * flap, dp(4.5f)))
+                drawOval(c.copy(alpha = .8f), Offset(x, y), Size(dp(5f) * flap, dp(4.5f)))
+                drawLine(Color(0xFF3A2A20), Offset(x, y - dp(4f)), Offset(x, y + dp(4f)), 1.4f * density)
+            }
+        }
+        "sakura" -> {
+            // A blossoming branch along the top, and petals drifting down the sides.
+            val br = Path(); br.moveTo(radius * .6f, dp(6f)); br.quadraticBezierTo(w * .35f, dp(16f), w * .6f, dp(7f)); br.quadraticBezierTo(w * .8f, dp(2f), w - radius * .6f, dp(9f))
+            drawPath(br, Color(0xFF6B4A3A), style = Stroke(2f * density))
+            listOf(.12f, .25f, .4f, .55f, .7f, .86f).forEachIndexed { k, fx ->
+                val x = w * fx; val y = dp(listOf(8f, 12f, 13f, 9f, 5f, 8f)[k])
+                for (q in 0 until 5) { val a = (q * 72f + k * 20f) * PI.toFloat() / 180f; drawCircle(Color(0xFFFFC8DA), dp(2.6f), Offset(x + cos(a) * dp(3f), y + sin(a) * dp(3f))) }
+                drawCircle(Color(0xFFE2588C), dp(1.4f), Offset(x, y))
+            }
+            repeat(6) { k ->
+                val ph = (t + k / 6f) % 1f; val x = if (k % 2 == 0) dp(8f) + sin(ph * 9f) * dp(3f) else w - dp(8f) + sin(ph * 9f) * dp(3f)
+                drawOval(Color(0xFFFFB3C8).copy(alpha = 1f - ph * .7f), Offset(x, dp(22f) + ph * (h - dp(30f))), Size(dp(5f), dp(3f)))
+            }
+        }
+        "rainbow" -> {
+            // A small rainbow between two clouds at the top.
+            val cols = listOf(Color(0xFFFF6B6B), Color(0xFFFFB347), Color(0xFFFFE066), Color(0xFF6BCB77), Color(0xFF4FC3F7), Color(0xFF9B7BFF))
+            val cx = w / 2; val r0 = dp(22f)
+            cols.forEachIndexed { k, c -> drawArc(c, 180f, 180f, false, Offset(cx - (r0 - k * dp(2.6f)), dp(26f) - (r0 - k * dp(2.6f))), Size(2 * (r0 - k * dp(2.6f)), 2 * (r0 - k * dp(2.6f))), style = Stroke(dp(2.4f))) }
+            for (sx in listOf(cx - r0, cx + r0)) {
+                val y = dp(25f); val drift = sin((t * 2 * PI).toFloat()) * dp(1.5f)
+                drawCircle(Color.White, dp(6f), Offset(sx - dp(5f) + drift, y)); drawCircle(Color.White, dp(7.5f), Offset(sx + drift, y - dp(3f))); drawCircle(Color.White, dp(6f), Offset(sx + dp(6f) + drift, y))
+            }
+        }
+        "snowflakes" -> {
+            // Snowflakes hanging and turning, and a few falling.
+            fun flake(c: Offset, r: Float, a: Float) {
+                for (q in 0 until 6) { val ang = (a + q * 60f) * PI.toFloat() / 180f
+                    val e = Offset(c.x + cos(ang) * r, c.y + sin(ang) * r); drawLine(Color.White, c, e, 1.3f * density)
+                    val m2 = Offset(c.x + cos(ang) * r * .6f, c.y + sin(ang) * r * .6f)
+                    for (s2 in listOf(-35f, 35f)) { val b2 = (a + q * 60f + s2) * PI.toFloat() / 180f; drawLine(Color.White, m2, Offset(m2.x + cos(b2) * r * .35f, m2.y + sin(b2) * r * .35f), 1f * density) } }
+            }
+            listOf(.15f, .38f, .62f, .85f).forEachIndexed { k, fx ->
+                val x = w * fx + sway(k); val len = dp(listOf(10f, 18f, 13f, 8f)[k])
+                drawLine(Color(0xAAFFFFFF), Offset(x, band), Offset(x, band + len), 1f * density)
+                flake(Offset(x, band + len + dp(7f)), dp(6.5f), t * 120f + k * 20f)
+            }
+            repeat(8) { k -> val ph = (t + k / 8f) % 1f; drawCircle(Color.White.copy(alpha = .8f - ph * .6f), dp(1.6f), Offset(w * ((k * .13f + .05f) % 1f), dp(30f) + ph * (h - dp(36f)))) }
+        }
+        "bunting" -> {
+            // Two strings of little pennants across the top, gently swinging.
+            val cols = listOf(Color(0xFFFF6B9A), Color(0xFFFFD166), Color(0xFF4FD1C5), Color(0xFF9B7BFF), Color(0xFF6BCB77))
+            for (row in 0 until 2) {
+                val a = if (row == 0) radius * .5f else w * .5f; val b = if (row == 0) w * .5f else w - radius * .5f
+                val dip = dp(14f) + sway(row)
+                val str = Path(); str.moveTo(a, band); str.quadraticBezierTo((a + b) / 2, band + dip * 2, b, band)
+                drawPath(str, Color(0xCCFFFFFF), style = Stroke(1.1f * density))
+                for (k in 1 until 7) {
+                    val f = k / 7f; val x = a + (b - a) * f; val y = band + dip * 4 * f * (1 - f)
+                    drawPath(Path().apply { moveTo(x - dp(4.5f), y); lineTo(x + dp(4.5f), y); lineTo(x, y + dp(9f)); close() }, cols[(k + row * 2) % cols.size])
+                }
+            }
         }
         "crescents" -> {
             val gold = Color(0xFFF3D27A)
