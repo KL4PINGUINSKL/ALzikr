@@ -262,6 +262,7 @@ fun RichNoteEditor(note: Store.Note?, close: () -> Unit) {
     BackHandler(onBack = close)
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var edit by remember { mutableStateOf<EditText?>(null) }
+    var scroller by remember { mutableStateOf<android.widget.ScrollView?>(null) }
     var colors by remember { mutableStateOf(false) }
     val ink = P.ink.toArgb(); val hintColor = P.muted.toArgb()
     Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding().imePadding()) {   // the keyboard pushes the editor up, so the line being typed stays in view
@@ -292,6 +293,9 @@ fun RichNoteEditor(note: Store.Note?, close: () -> Unit) {
             B("A+") { Rich.replace(it, Rich.Size::class.java) { Rich.Size("lg") } }; B("A++") { Rich.replace(it, Rich.Size::class.java) { Rich.Size("xl") } }
             B("a−") { Rich.replace(it, Rich.Size::class.java) { Rich.Size("sm") } }; B("A") { Rich.replace(it, Rich.Size::class.java) { null } }
             B("•") { Rich.sign(it, Rich.BULLET) }; B("☐") { Rich.sign(it, Rich.BOX) }; B("❝") { Rich.sign(it, Rich.QUOTE) }
+            // Long notes: jump to the start or the end (the cursor goes there too).
+            B("⤒ البداية") { e -> scroller?.smoothScrollTo(0, 0); e.setSelection(0) }
+            B("⤓ النهاية") { e -> scroller?.let { sv -> sv.post { sv.fullScroll(android.view.View.FOCUS_DOWN) } }; e.setSelection(e.text.length) }
         }
         if (colors) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Md.colors.forEach { (k, c) -> Box(Modifier.size(30.dp).clip(CircleShape).background(c).clickable { edit?.let { e -> Rich.replace(e, Rich.Ink::class.java) { Rich.Ink(k, c.toArgb()) } }; colors = false }) }
@@ -299,17 +303,22 @@ fun RichNoteEditor(note: Store.Note?, close: () -> Unit) {
             Sub("اختر كلمات ثم لونًا، أو يلوَّن السطر", size = 11.sp)
         }
         Box(Modifier.weight(1f).fillMaxWidth().padding(12.dp).clip(L.shape(12.dp)).border(1.dp, P.line, L.shape(12.dp))) {
-            AndroidView(factory = { c ->
-                EditText(c).apply {
+            // The text sits in a real ScrollView: a fling travels far and fast through a long note
+            // (an EditText scrolling itself has no fling), and the cursor is still kept in view while typing.
+            AndroidView(factory = { c -> android.widget.ScrollView(c).apply {
+                isFillViewport = true; isVerticalScrollBarEnabled = true; isSmoothScrollingEnabled = true
+                scroller = this
+                addView(EditText(c).apply {
                     background = null; setPadding(36, 28, 36, 28); gravity = Gravity.TOP or Gravity.START
                     textDirection = android.view.View.TEXT_DIRECTION_FIRST_STRONG_RTL; textSize = 16f; setLineSpacing(0f, 1.25f)
                     setTextColor(ink); setHintTextColor(hintColor); hint = "اكتب هنا… واختر من الشريط العناوين والخط العريض والألوان والقوائم"
                     setText(Rich.load(note?.text ?: ""), android.widget.TextView.BufferType.SPANNABLE)
                     // A tap on a ☐ at a line's start ticks it.
                     setOnClickListener { if (selectionStart == selectionEnd) Rich.tickAt(this, selectionStart) }
+                    isVerticalScrollBarEnabled = false
                     edit = this
-                }
-            }, modifier = Modifier.fillMaxSize())
+                }, android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT))
+            } }, modifier = Modifier.fillMaxSize())
         }
     }
 }
