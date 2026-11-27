@@ -17,7 +17,9 @@ object Friendship {
     data class Gift(val id: String, val bond: Int, val icon: String, val kind: Kind, val name: String, val about: String)
 
     val gifts: List<Gift> = listOf(
-Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخضر القبة وبياض الحرم"),
+Gift("theme_meadow", 10, "🦋", Kind.THEME, "ثيم «المرج»", "عشب وأزهار تتمايل وفراشات تتجوّل"),
+        Gift("theme_aquarium", 18, "🐠", Kind.THEME, "ثيم «حوض الأسماك»", "أسماك ملوّنة تسبح وفقاعات تصعد"),
+        Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخضر القبة وبياض الحرم"),
         Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لبطاقة صديقك وفقاعته وأداته"),
         Gift("theme_sea", 60, "🌊", Kind.THEME, "ثيم «البحر»", "أزرق عميق وزبد أبيض"),
         Gift("theme_lantern", 75, "🏮", Kind.THEME, "ثيم «مشكاة»", "قنديل معلّق يتوهّج ويتنفّس كاللهب، وجمرات صاعدة"),

@@ -53,7 +53,10 @@ fun ThemeGallery() {
     val dark = isSystemInDarkTheme()
     var filter by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("all") }
     var shown by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(Data.look) }
-    val list = Looks.all.sortedBy { Friendship.themeGift(it.id)?.bond ?: 0 }.filter { l ->
+    // «زمرّد» (the default) first, then «فارس» and «بنوتة», then the other open themes, then the locked ones by the hearts they need.
+    val first = listOf("emerald", "faris", "girls")
+    val list = Looks.all.sortedWith(compareBy<Look>({ l -> first.indexOf(l.id).takeIf { it >= 0 } ?: (if (Friendship.themeOpen(l.id)) 10 else 20) },
+        { Friendship.themeGift(it.id)?.bond ?: 0 })).filter { l ->
         val open = Friendship.themeOpen(l.id)
         when (filter) { "open" -> open; "locked" -> !open; "living" -> l.backdrop != Backdrop.NONE; "form" -> l.reshapes(); "time" -> l.sky || l.palFor != null || l.hero != null; "scene" -> l.hero != null; else -> true }
     }
