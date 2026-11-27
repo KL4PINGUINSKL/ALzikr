@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -98,15 +99,24 @@ import java.time.LocalDate
 
 /** Reading-mode preferences shared by the mushaf and every book, plus the daily wird and the khatma. */
 object Reading {
-    enum class Paper(val label: String, val bg: Long, val ink: Long, val accent: Long, val muted: Long) {
+    enum class Paper(val label: String, private val bg0: Long, private val ink0: Long, private val accent0: Long, private val muted0: Long) {
+        /** The theme's own background and words (user, 2026-11-27: the mushaf and reading mode follow the theme by default). */
+        THEME("لون الثيم", 0xFFFFFDFA, 0xFF1B1B1B, 0xFF1F7A5A, 0xFF777777),
         WHITE("أبيض", 0xFFFFFDFA, 0xFF1B1B1B, 0xFF1F7A5A, 0xFF777777),
         CREAM("كريمي", 0xFFF5ECD5, 0xFF3A2E1C, 0xFF8A5A1E, 0xFF8C7A5C),
         GREEN("أخضر هادئ", 0xFFE6F0E8, 0xFF1D2F25, 0xFF2F6B4C, 0xFF6F8577),
         DUSK("رمادي داكن", 0xFF26292D, 0xFFE2DED4, 0xFFC9A85C, 0xFF8E8A82),
         NIGHT("ليلي", 0xFF000000, 0xFFBDB6A6, 0xFFB08A45, 0xFF6E6A62);
 
+        private fun argb(c: androidx.compose.ui.graphics.Color) = c.toArgb().toLong() and 0xFFFFFFFFL
+        val bg: Long get() = Reading.themePal?.takeIf { this == THEME }?.let { argb(it.bg) } ?: bg0
+        val ink: Long get() = Reading.themePal?.takeIf { this == THEME }?.let { argb(it.ink) } ?: ink0
+        val accent: Long get() = Reading.themePal?.takeIf { this == THEME }?.let { argb(it.accent) } ?: accent0
+        val muted: Long get() = Reading.themePal?.takeIf { this == THEME }?.let { argb(it.muted) } ?: muted0
+
         /** The same paper over a PDF page: tinted, or inverted for the dark papers. */
         fun pdfFilter(): ColorFilter? = when (this) {
+            THEME -> if (Reading.themePal?.dark == true) invert(.82f, 38f) else null
             WHITE -> null
             CREAM -> scale(.96f, .91f, .78f)
             GREEN -> scale(.90f, .96f, .91f)
@@ -120,6 +130,8 @@ object Reading {
     }
 
     private val p get() = Store.prefs
+    /** The theme's palette now (set by the app's root), for the «لون الثيم» paper outside composition. */
+    @Volatile var themePal: Pal? = null
     /**
      * Which card is being read: "quran", "story", "hadith", "sharh", "books"… Each keeps its own paper, size and spacing
      * (falling back to the shared ones it had before).
@@ -129,7 +141,7 @@ object Reading {
     var open by mutableIntStateOf(0)
     private fun k(base: String) = "${base}_$scope"
     var paper: Paper
-        get() = runCatching { Paper.valueOf(p.getString(k("read_paper"), null) ?: p.getString("read_paper", null) ?: "") }.getOrDefault(Paper.CREAM)
+        get() = runCatching { Paper.valueOf(p.getString(k("read_paper"), null) ?: p.getString("read_paper", null) ?: "") }.getOrDefault(Paper.THEME)
         set(v) { p.edit().putString(k("read_paper"), v.name).apply(); Store.bump() }
     var quranSize: Int
         get() = p.getInt("read_qsize", 26)

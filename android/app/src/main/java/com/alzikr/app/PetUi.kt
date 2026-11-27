@@ -286,10 +286,12 @@ fun Bubble(text: String, onClick: () -> Unit) {
     val drawn = Decor.isDrawn(fr.id)
     val calm = com.alzikr.app.pets.PetPerf.reduceMotion
     val t = if (calm) 0f else rememberInfiniteTransition(label = "bf").animateFloat(0f, 1f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "t").value
+    val hangs = drawn || Decor.hasExtras(fr.id)
     Box(Modifier.widthIn(max = 250.dp).clip(L.shape(16.dp)).background(P.card).clickable(onClick = onClick)) {
-        GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
-            modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = if (drawn) 24.dp else 10.dp, bottom = 10.dp))
-        androidx.compose.foundation.Canvas(Modifier.matchParentSize()) { drawCardFrame(ctx, fr, t, 16.dp.toPx()) }
+        // Drawn first and faint (user: the lines and stars crossed the words), the words on top.
+        androidx.compose.foundation.Canvas(Modifier.matchParentSize().alpha(.45f)) { drawCardFrame(ctx, fr, t, 16.dp.toPx()) }
+        GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center, fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = if (hangs) 30.dp else 12.dp, bottom = 12.dp))
     }
 }
 

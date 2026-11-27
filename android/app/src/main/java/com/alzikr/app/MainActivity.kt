@@ -217,6 +217,7 @@ private fun Root() {
     var settings by remember { mutableStateOf<String?>(null) }   // null = closed, "" = the sections list, else one section
     // The home-screen widgets follow the theme too.
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.runtime.SideEffect { Reading.themePal = pal }
     androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx); MomentWidget.update(ctx); PetWidget.update(ctx) } }
     androidx.compose.runtime.key(Data.simple) { AppTheme {
         run {
@@ -420,7 +421,7 @@ private fun Dock() {
         .padding(horizontal = 10.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         sections.forEach { s ->
             val on = Nav.tab == s.id
-            Column(Modifier.width(54.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.go(s.id) }
+            Column(Modifier.width(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.go(s.id) }
                 .padding(vertical = if (Data.navLabels) 6.dp else 13.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 when (L.icons) {
                     IconStyle.GLYPH, IconStyle.NONE -> Glyph(s.glyph, tint = if (on) P.onAccent else P.muted, size = 24.dp)
