@@ -47,7 +47,7 @@ fun TafsirCard(bookId: String, s: Int, a: Int, title: String = Tafsir.book(bookI
     LaunchedEffect(open, bookId, s) {
         if (open && !Tafsir.has(ctx, bookId, s)) { loading = true; failed = !withContext(Dispatchers.IO) { Tafsir.fetch(ctx, bookId, s) }; loading = false }
     }
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card)) {
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card.seeThrough())) {
         Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(title, color = P.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Text(if (open) "▴" else "▾", color = P.muted, fontSize = 14.sp)

@@ -329,7 +329,7 @@ fun HomeEditor(close: () -> Unit) {
             order.forEachIndexed { i, id ->
                 val part = Home.parts.first { it.id == id }
                 val on = id !in hidden
-                Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card).border(1.dp, P.line, L.shape(12.dp)).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(12.dp)).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Text(part.label, color = if (on) P.ink else P.muted, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Text("▲", color = if (i > 0) P.accent else P.line, fontSize = 16.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable(enabled = i > 0) { Home.move(id, -1) }.padding(8.dp))

@@ -406,7 +406,7 @@ fun MissionsPanel() {
 
     val q = Missions.question()
     Text("سؤال اليوم · +${Quran.digits(Missions.QUESTION_BOND)} ❤", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
-    Column(Modifier.fillMaxWidth().padding(top = 4.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = 4.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(10.dp)) {
         Text("💡 ${q.q}", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         if (Missions.answered()) {
             Text(q.a, color = P.accent, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp).clip(L.shape(8.dp)).clickable { q.open() })

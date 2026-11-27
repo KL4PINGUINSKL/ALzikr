@@ -35,7 +35,7 @@ fun MushkilList() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Hint("mushkil", "⚠", "أحاديث صحيحة قد يُشكل فهمها أو تُثار حولها الشبهات. لكل حديث تنبيه مختصر، ثم شرح موسّع بأقوال أهل العلم ومصادره.")
         SharhPlus.list.forEach { e ->
-            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable {
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable {
                 val id = e.ids.firstOrNull()
                 if (id != null) Nav.overlaySharh = id else open = e.key
             }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {

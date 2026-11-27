@@ -135,7 +135,7 @@ fun DuasPage() {
         val list = Duas.duas().filter { cat == -1 || it.cat == cat }
         if (list.isEmpty()) Sub("لا أدعية هنا بعد. اضغط «+ دعاء»، أو خذ من «أدعية من القرآن» و«أدعية من السنة» في الأذكار.", size = 12.sp)
         list.forEach { d ->
-            Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).border(1.dp, P.line, L.shape(14.dp))
+            Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(14.dp))
                 .combinedClickable(onClick = {}, onLongClick = { menu = d }).padding(14.dp)) {
                 Sub(Duas.cats.getOrElse(d.cat) { "" }, color = P.gold, size = 11.sp)
                 Text(d.text, color = P.ink, fontSize = (17 * Data.textScale).sp, lineHeight = (29 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 4.dp))

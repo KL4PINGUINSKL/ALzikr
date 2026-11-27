@@ -226,7 +226,7 @@ fun KidsHome() {
             }
         }
         if (!Looks.byId(Data.look).kids) Text("🎨 اجعل التطبيق كله للأطفال: اختر ثيم «الأطفال» من الثيمات", color = P.accent, fontSize = 14.sp,
-            modifier = Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { Data.look = "kids"; Nav.tab = "kids"; Nav.history.clear() }.padding(12.dp))
+            modifier = Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { Data.look = "kids"; Nav.tab = "kids"; Nav.history.clear() }.padding(12.dp))
     }
     }
 }
@@ -246,7 +246,7 @@ private fun LettersPage() {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(l.c, color = P.accent, fontSize = 120.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(horizontal = 30.dp))
             Text("حرف ${l.name}", color = P.ink, fontSize = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(6.dp))
-            Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(P.card).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(24.dp)).background(P.card.seeThrough()).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(l.emoji, fontSize = 56.sp)
                 Text(l.word, color = P.ink, fontSize = 34.sp, fontFamily = Fonts.naskh, modifier = Modifier.weight(1f).padding(start = 12.dp))
             }
@@ -264,7 +264,7 @@ private fun LettersPage() {
                 listOf("َ", "ِ", "ُ", "ْ").forEach { m ->
                     val s = if (l.c == "ا") "أ$m" else l.c + m
                     Text(s, color = P.ink, fontSize = 38.sp, fontFamily = Fonts.naskh, textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1f).clip(L.shape(18.dp)).background(P.card).padding(vertical = 6.dp))
+                        modifier = Modifier.weight(1f).clip(L.shape(18.dp)).background(P.card.seeThrough()).padding(vertical = 6.dp))
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -305,7 +305,7 @@ private fun HarakatPage() {
         }
         Kids.harakat.forEach { h ->
             val s = c + h.mark
-            Row(Modifier.fillMaxWidth().clip(L.shape(20.dp)).background(P.card).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(20.dp)).background(P.card.seeThrough()).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(s, color = P.accent, fontSize = 44.sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(horizontal = 12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(h.name, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -336,7 +336,7 @@ private fun LetterGame() {
     val (l, opts) = q
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("بأي حرف تبدأ هذه الكلمة؟", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Column(Modifier.clip(L.shape(30.dp)).background(P.card).padding(horizontal = 30.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.clip(L.shape(30.dp)).background(P.card.seeThrough()).padding(horizontal = 30.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(l.emoji, fontSize = 80.sp)
             Text(if (picked == null) "ـ" + l.word.drop(1) else l.word, color = P.ink, fontSize = 30.sp, fontFamily = Fonts.naskh)
         }
@@ -408,7 +408,7 @@ private fun SunMoonGame(back: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("‹ رجوع", color = P.accent, fontSize = 15.sp, modifier = Modifier.align(Alignment.Start).clip(L.shape(10.dp)).clickable(onClick = back).padding(6.dp))
         Text("هل اللام في هذه الكلمة شمسية أم قمرية؟", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Text(w, color = P.ink, fontSize = 56.sp, fontFamily = Fonts.naskh, modifier = Modifier.clip(L.shape(26.dp)).background(P.card).padding(horizontal = 26.dp))
+        Text(w, color = P.ink, fontSize = 56.sp, fontFamily = Fonts.naskh, modifier = Modifier.clip(L.shape(26.dp)).background(P.card.seeThrough()).padding(horizontal = 26.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(true to "☀️\nشمسية", false to "🌙\nقمرية").forEach { (isSun, label) ->
                 val right = isSun == sun
@@ -474,7 +474,7 @@ private fun StepsPage(steps: List<Kids.Step>, finish: String, id: String) {
                 Text("كم ركعة في كل صلاة؟", color = P.gold, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Kids.rakat.forEach { (n, r) ->
-                        Column(Modifier.weight(1f).clip(L.shape(18.dp)).background(P.card).padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(Modifier.weight(1f).clip(L.shape(18.dp)).background(P.card.seeThrough()).padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(Quran.digits(r), color = P.accent, fontSize = 30.sp, fontWeight = FontWeight.Bold)
                             Text(n, color = P.ink, fontSize = 13.sp)
                         }

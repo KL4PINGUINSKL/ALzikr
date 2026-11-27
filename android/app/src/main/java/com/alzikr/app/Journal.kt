@@ -163,7 +163,7 @@ fun JournalSheet(close: () -> Unit) {
             list.groupBy { if (it.t == 0L) null else Instant.ofEpochMilli(it.t).atZone(zone).toLocalDate() }.forEach { (day, items) ->
                 Text(day?.let { Quran.numerals(fmtDay.format(it)) } ?: "قبل بدء السجل (تاريخه غير معروف)", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
                 items.forEach { e ->
-                    Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(P.card).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(P.card.seeThrough()).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(e.icon, fontSize = 18.sp)
                         Text(e.text, color = P.ink, fontSize = 14.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
                         if (e.t != 0L) Sub(Quran.numerals(fmtTime.format(Instant.ofEpochMilli(e.t).atZone(zone))), size = 11.sp)
@@ -200,7 +200,7 @@ private fun OpenedList(kind: String, l: Int) {
 
 @Composable
 private fun Meter(title: String, sub: String, frac: Float, tint: androidx.compose.ui.graphics.Color = P.accent) {
-    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).padding(12.dp)) {
+    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).padding(12.dp)) {
         Text(title, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(8.dp).clip(L.shape(4.dp)).background(P.line)) {
             Box(Modifier.fillMaxWidth(frac.coerceIn(0f, 1f)).height(8.dp).background(tint))

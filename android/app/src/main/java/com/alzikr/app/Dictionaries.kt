@@ -72,7 +72,7 @@ fun DictionaryPage() {
         if (looked.isNotEmpty()) {
             Title("معنى «$looked» في")
             Dict.sources.forEach { s ->
-                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { open(s.url(looked)) }.padding(14.dp)) {
+                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { open(s.url(looked)) }.padding(14.dp)) {
                     GText(s.icon, fontSize = 20.sp)
                     Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                         Text(s.name, color = P.ink, fontSize = 15.sp)

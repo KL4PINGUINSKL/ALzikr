@@ -613,18 +613,19 @@ private fun DrawScope.space(p: Pal, t: Float) {
 
 /** «المرج»: grass and little flowers swaying along the bottom, and butterflies wandering above them. */
 private fun DrawScope.meadow(p: Pal, t: Float) {
+    val floor = size.height - 92f * density
     val grass = Color(0xFF6BBF59).copy(alpha = if (p.dark) .22f else .26f)
     var x = 0f; var i = 0
     while (x < size.width) {
         val hgt = 26f + rnd(i, 3) * 34f; val sway = sin(t * 1.4f + i * .7f) * 6f
-        drawLine(grass, Offset(x, size.height), Offset(x + sway, size.height - hgt), 2.2f)
+        drawLine(grass, Offset(x, floor), Offset(x + sway, floor - hgt), 2.2f)
         x += 7f + rnd(i, 2) * 6f; i++
     }
     val petals = listOf(Color(0xFFFFFFFF), Color(0xFFFFB3C8), Color(0xFFFFE066), Color(0xFFC9A6FF))
     for (k in 0 until 9) {
         val bx = size.width * (.06f + k * .11f); val hgt = 50f + rnd(k + 20, 3) * 50f; val sway = sin(t * 1.2f + k) * 7f
-        val top = Offset(bx + sway, size.height - hgt)
-        drawLine(Color(0xFF5FA05A).copy(alpha = .3f), Offset(bx, size.height), top, 2f)
+        val top = Offset(bx + sway, floor - hgt)
+        drawLine(Color(0xFF5FA05A).copy(alpha = .3f), Offset(bx, floor), top, 2f)
         for (q in 0 until 5) { val a = (q * 72f) * PI.toFloat() / 180f; drawCircle(petals[k % 4].copy(alpha = .38f), 5f, Offset(top.x + cos(a) * 6f, top.y + sin(a) * 6f)) }
         drawCircle(Color(0xFFF2B33D).copy(alpha = .45f), 3.2f, top)
     }
@@ -641,10 +642,11 @@ private fun DrawScope.meadow(p: Pal, t: Float) {
 
 /** «حوض الأسماك»: small fish swimming across, bubbles rising, seaweed swaying at the bottom. */
 private fun DrawScope.aquarium(p: Pal, t: Float) {
+    val floor = size.height - 92f * density
     for (k in 0 until 6) {
         val bx = size.width * (.08f + k * .17f)
-        val path = Path(); path.moveTo(bx, size.height); var y = size.height
-        while (y > size.height - 90f - rnd(k, 3) * 60f) { y -= 10f; path.lineTo(bx + sin(y / 22f + t * 1.5f + k) * 8f, y) }
+        val path = Path(); path.moveTo(bx, floor); var y = floor
+        while (y > floor - 90f - rnd(k, 3) * 60f) { y -= 10f; path.lineTo(bx + sin(y / 22f + t * 1.5f + k) * 8f, y) }
         drawPath(path, Color(0xFF3FA36B).copy(alpha = .26f), style = Stroke(5f))
     }
     val cols = listOf(Color(0xFFFF8A5C), Color(0xFFFFD166), Color(0xFF6FD3F0), Color(0xFFFF7AB6), Color(0xFF9BE07A))
@@ -701,6 +703,7 @@ private fun DrawScope.gems(p: Pal, t: Float) {
 
 /** «المرجان»: a coral reef along the bottom, little fish passing, bubbles and light from above. */
 private fun DrawScope.coral(p: Pal, t: Float) {
+    val floor = size.height - 92f * density
     for (k in 0 until 4) {
         val x0 = size.width * (.1f + k * .27f)
         drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = .07f), Color.Transparent), 0f, size.height * .6f), Offset(x0 + sin(t * .5f + k) * 20f, 0f), Size(26f, size.height * .6f))
@@ -713,7 +716,7 @@ private fun DrawScope.coral(p: Pal, t: Float) {
         drawLine(col, Offset(x, y), e, (2f + depth * 1.6f))
         branch(e.x, e.y, len * .72f, ang - 26f, depth - 1, col); branch(e.x, e.y, len * .68f, ang + 24f, depth - 1, col)
     }
-    for (k in 0 until 6) branch(size.width * (.07f + k * .17f), size.height + 4f, 46f + rnd(k, 3) * 30f, -8f + rnd(k, 4) * 16f, 4, cols[k % 4].copy(alpha = .32f))
+    for (k in 0 until 6) branch(size.width * (.07f + k * .17f), floor + 4f, 46f + rnd(k, 3) * 30f, -8f + rnd(k, 4) * 16f, 4, cols[k % 4].copy(alpha = .32f))
     for (k in 0 until 5) {
         val dir = if (k % 2 == 0) 1f else -1f; val ph = (t * (.035f + rnd(k + 9, 3) * .03f) + rnd(k + 9, 1)) % 1f
         val x = if (dir > 0) -30f + ph * (size.width + 60f) else size.width + 30f - ph * (size.width + 60f)
@@ -756,6 +759,7 @@ private fun DrawScope.saturn(p: Pal, t: Float) {
 
 /** «البطريق»: snow falling, icebergs, and three little penguins waddling along the ice. */
 private fun DrawScope.penguins(p: Pal, t: Float) {
+    val floor = size.height - 92f * density
     for (i in 0 until 34) {
         val ph = (t * (.05f + rnd(i, 3) * .05f) + rnd(i, 1)) % 1f
         val x = rnd(i, 2) * size.width + sin(t + i) * 10f
@@ -763,12 +767,12 @@ private fun DrawScope.penguins(p: Pal, t: Float) {
     }
     val ice = Color(0xFFDDF3FF).copy(alpha = if (p.dark) .20f else .55f)
     listOf(.12f to 70f, .55f to 110f, .88f to 60f).forEach { (fx, hh) ->
-        val x = size.width * fx; val base = size.height * .9f
+        val x = size.width * fx; val base = floor
         drawPath(Path().apply { moveTo(x - hh * .7f, base); lineTo(x - hh * .3f, base - hh); lineTo(x + hh * .1f, base - hh * .75f); lineTo(x + hh * .45f, base - hh * 1.05f); lineTo(x + hh * .75f, base); close() }, ice)
     }
-    drawRect(Color(0xFFEAF7FF).copy(alpha = if (p.dark) .16f else .6f), Offset(0f, size.height * .9f), Size(size.width, size.height * .1f))
+    drawRect(Color(0xFFEAF7FF).copy(alpha = if (p.dark) .16f else .6f), Offset(0f, floor), Size(size.width, size.height - floor))
     for (k in 0 until 3) {
-        val ph = (t * .03f + k / 3f) % 1f; val x = -30f + ph * (size.width + 60f); val y = size.height * .9f
+        val ph = (t * .03f + k / 3f) % 1f; val x = -30f + ph * (size.width + 60f); val y = floor
         val s = 16f + k * 3f; val tilt = sin(t * 2 * PI.toFloat() * 3 + k) * 8f
         rotate(tilt, Offset(x, y - s)) {
             drawOval(Color(0xFF1E2430).copy(alpha = .55f), Offset(x - s * .55f, y - s * 2.1f), Size(s * 1.1f, s * 2.1f))

@@ -120,7 +120,7 @@ fun QuranpediaCard(s: Int, a: Int) {
     val ctx = LocalContext.current
     var open by remember { mutableStateOf(false) }
     if (!open) {
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).clickable { open = true }.padding(horizontal = 14.dp, vertical = 10.dp),
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { open = true }.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically) {
             GText("📚 المزيد من الموسوعة القرآنية", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Text("إظهار ▾", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -134,7 +134,7 @@ fun QuranpediaCard(s: Int, a: Int) {
     var section by remember(s, a) { mutableStateOf<String?>(null) }
     var book by remember(s, a) { mutableStateOf<Qp.Book?>(null) }
     var riwaya by remember(s, a) { mutableStateOf<String?>(null) }
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card.seeThrough()).padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             GText("📚 الموسوعة القرآنية", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Text("إخفاء ▴", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(8.dp)).clickable { open = false }.padding(horizontal = 8.dp, vertical = 4.dp))
@@ -245,7 +245,7 @@ fun HadithInQuranpedia(hadithText: String) {
     var query by remember(hadithText) { mutableStateOf(hadithKeywords(hadithText)) }
     var asked by remember(hadithText) { mutableStateOf(query) }
     var where by remember(hadithText) { mutableStateOf("tafsir") }
-    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             GText("📚 الحديث في الموسوعة القرآنية", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             Text("إخفاء ▴", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(8.dp)).clickable { open = false }.padding(horizontal = 8.dp, vertical = 4.dp))

@@ -108,7 +108,7 @@ fun StoriesHome(openBooks: (String, String) -> Unit) {
         }
         item { Title("قصص إسلامية (كتب)", Modifier.padding(top = 14.dp)) }
         items(Stories.islamic) { (id, name, about) ->
-            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { openBooks(id, name) }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { openBooks(id, name) }.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(name, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Sub(about, size = 12.sp)
@@ -159,7 +159,7 @@ private fun StoryReader(st: QStory, back: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(if (reading) P.accent.copy(alpha = .18f) else P.bg).padding(6.dp))
                     if (withTafsir) Tafsir.get(ctx, "muyassar", a.s, a.a)?.takeIf { it.from == a.a && it.text.isNotBlank() }?.let { e ->
                         Text(e.text, color = P.muted, fontSize = (14 * Data.textScale).sp, lineHeight = (23 * Data.textScale).sp, fontFamily = Fonts.naskh,
-                            modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(P.card).padding(10.dp))
+                            modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp)).background(P.card.seeThrough()).padding(10.dp))
                     }
                 }
             }

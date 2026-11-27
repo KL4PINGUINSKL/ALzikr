@@ -715,7 +715,7 @@ private val mzBooks = listOf(
 @Composable
 private fun MadhahibBox(m: Fiqh.Mz, itemEv: List<Fiqh.Ev>, open: (Fiqh.Ev) -> Unit) {
     var shown by remember(m) { mutableStateOf(-1) }
-    Column(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Sub("أقوال المذاهب الأربعة وأدلتها", color = P.gold, size = 12.sp)
         m.sides.forEachIndexed { k, side ->
             val evs = side.use.mapNotNull { itemEv.getOrNull(it) } + side.ev

@@ -383,7 +383,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
         if (path.isEmpty() && root == null && shelf.isNotEmpty()) {
             item { Title("كتبي") }
             items(shelf, key = { "shelf" + it.id }) { b ->
-                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { readingTitle = b.title; reading = b.id }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { readingTitle = b.title; reading = b.id }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     GText("📖", fontSize = 20.sp)
                     Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                         Text(b.title, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)

@@ -344,7 +344,7 @@ internal fun ExampleRow(e: Tajweed.Ex) {
     val ctx = LocalContext.current
     val shown = remember(e) { Tajweed.shown(e) }
     val playing = Recitation.now == (e.s to e.a)
-    Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card).padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(shown, color = P.ink, fontSize = if (e.word.isBlank()) 17.sp else 22.sp, fontFamily = Fonts.quran, lineHeight = if (e.word.isBlank()) 32.sp else 38.sp)
             Sub("${Quran.surahs[e.s - 1].name} ${Quran.digits(e.a)}" + if (e.note.isNotBlank()) " · ${e.note}" else "", size = 11.sp, color = P.gold)

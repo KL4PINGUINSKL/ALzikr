@@ -385,7 +385,7 @@ class AlarmActivity : ComponentActivity() {
                                 finish()
                             }.padding(vertical = 14.dp))
                         Text("غفوة ${PrayerAlarm.snooze} دقائق", color = P.ink, fontSize = 18.sp, textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).background(P.card).border(1.dp, P.line, L.shape(40.dp)).clickable { PrayerAlarm.snoozeRinging(this@AlarmActivity); finish() }.padding(vertical = 16.dp))
+                            modifier = Modifier.fillMaxWidth().clip(L.shape(40.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(40.dp)).clickable { PrayerAlarm.snoozeRinging(this@AlarmActivity); finish() }.padding(vertical = 16.dp))
                     }
                 }
             }

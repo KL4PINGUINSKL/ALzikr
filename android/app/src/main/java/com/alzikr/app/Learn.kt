@@ -219,7 +219,7 @@ fun LearnSection() {
     val list = Learn.today()
     if (list.isEmpty()) return
     Text("تعلّم اليوم · +${Quran.digits(Learn.BOND)} ❤ للقسم كله", color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
-    Column(Modifier.fillMaxWidth().padding(top = 4.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp)) {
+    Column(Modifier.fillMaxWidth().padding(top = 4.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(10.dp)) {
         list.forEach { fct ->
             Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
                 Text("📚", fontSize = 15.sp, modifier = Modifier.padding(end = 6.dp))

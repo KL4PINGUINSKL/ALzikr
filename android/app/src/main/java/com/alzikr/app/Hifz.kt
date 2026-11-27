@@ -174,7 +174,7 @@ fun HifzPage() {
                 Title("المراجعة اليوم" + if (due.isNotEmpty()) " (${due.size})" else "")
                 if (due.isEmpty()) Sub("لا مراجعة اليوم. ✓", Modifier.padding(top = 6.dp))
                 due.forEach { c ->
-                    Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.card).clickable { reviewing = c }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).clickable { reviewing = c }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(Hifz.label(c.s, c.from, c.to), color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                             Sub("المراجعة رقم ${c.level + 1}", size = 11.sp)
@@ -237,7 +237,7 @@ private fun HifzReader(s: Int, from: Int, to: Int, review: Hifz.Chunk?, learn: B
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(ayahs) { a ->
                     val open = !test || a.a in shown
-                    Column(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card).border(1.dp, P.line, L.shape(16.dp))
+                    Column(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(16.dp))
                         .clickable { if (a.a in shown) shown.remove(a.a) else shown.add(a.a) }.padding(14.dp)) {
                         Text(if (open) a.text else a.text.split(' ').first() + " …", color = if (open) P.ink else P.muted, fontSize = 24.sp, lineHeight = 44.sp,
                             fontFamily = Fonts.quran, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())

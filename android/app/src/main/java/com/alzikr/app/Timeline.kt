@@ -207,7 +207,7 @@ fun TimelinePage() {
                     opts.forEach { o ->
                         val right = o == e.when_; val picked = answer == o
                         Text((if (answer != null && right) "✓ " else if (picked) "✗ " else "") + o, color = when { answer != null && right -> P.accent; picked -> P.danger; else -> P.ink }, fontSize = 14.sp,
-                            modifier = Modifier.fillMaxWidth().padding(top = 6.dp).clip(L.shape(10.dp)).background(P.card).clickable(enabled = answer == null) { answer = o }.padding(10.dp))
+                            modifier = Modifier.fillMaxWidth().padding(top = 6.dp).clip(L.shape(10.dp)).background(P.card.seeThrough()).clickable(enabled = answer == null) { answer = o }.padding(10.dp))
                     }
                     if (answer != null) Sub(e.text, Modifier.padding(top = 6.dp), size = 13.sp)
                 }

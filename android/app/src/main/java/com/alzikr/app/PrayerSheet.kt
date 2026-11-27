@@ -104,7 +104,7 @@ fun PrayerSheet(p: Prayer, timesOptions: () -> Unit, openSettings: () -> Unit, c
             }
 
             // Alarm, reminder, adhan.
-            Column(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card).padding(horizontal = 12.dp, vertical = 4.dp)) {
+            Column(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card.seeThrough()).padding(horizontal = 12.dp, vertical = 4.dp)) {
                 val alarm = PrayerAlarm.on(p)
                 val off = PrayerAlarm.offset(p)
                 Line("⏰", "المنبه", if (alarm) "يرنّ ${Alerts.timeText(((time + off) % 1440 + 1440) % 1440)} مثل منبه الهاتف" else "منبه حقيقي يرنّ حتى توقفه") {

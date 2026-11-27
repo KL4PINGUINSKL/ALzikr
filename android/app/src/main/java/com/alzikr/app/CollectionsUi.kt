@@ -363,7 +363,7 @@ private fun TasbihScreen() {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Hint("tasbih", "🟢", "اضغط على الدائرة لتسبّح، واختر عدد الدورة من الأعلى. يمكنك أيضًا وضع ويدجت «السبحة» على الشاشة الرئيسية.")
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(33, 99, 100, 1000).forEach { n -> Choice("$n", set == n) { Data.tasbihSet = n } } }
-        Box(Modifier.size(270.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.card)
+        Box(Modifier.size(270.dp).clip(androidx.compose.foundation.shape.CircleShape).background(P.card.seeThrough())
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                 val n = Data.tasbihTap(); TasbihWidget.update(ctx)
                 Haptics.tap(ctx, n % set == 0)

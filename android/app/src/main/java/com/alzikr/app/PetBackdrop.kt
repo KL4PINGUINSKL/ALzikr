@@ -452,7 +452,7 @@ fun PetSceneCard(content: @Composable androidx.compose.foundation.layout.ColumnS
     val stamp = Store.prefs.getLong("pet_bg_photo_at", 0)
     val pic = remember(id, stamp) { if (id == "photo") runCatching { BitmapFactory.decodeFile(PetBackdrop.photo(ctx).path)?.asImageBitmap() }.getOrNull() else null }
     val on = pic != null || (id.isNotEmpty() && id != "photo")
-    Box(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(P.card)) {
+    Box(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(P.card.seeThrough())) {
         if (pic != null) Image(pic, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
         else if (on) Canvas(Modifier.matchParentSize()) { drawScene(id, if (calm) 0f else t) }
         if (on) Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0x55000000), Color(0xAA000000)))))
@@ -517,7 +517,7 @@ fun PetDecorContent(part: String?) {
                         val open = PetBackdrop.open(s); val on = PetBackdrop.chosen == s.id
                         Column(Modifier.weight(1f).clip(L.shape(12.dp)).border(if (on) 3.dp else 1.dp, if (on) P.accent else P.line, L.shape(12.dp))
                             .clickable { if (open) PetBackdrop.chosen = s.id else android.widget.Toast.makeText(ctx, "تُفتح عند ${Quran.digits(s.bond)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }) {
-                            Box(Modifier.fillMaxWidth().aspectRatio(1.4f).background(P.card), contentAlignment = Alignment.Center) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(1.4f).background(P.card.seeThrough()), contentAlignment = Alignment.Center) {
                                 if (s.id.isNotEmpty()) Canvas(Modifier.fillMaxSize()) { drawScene(s.id, .2f) }
                                 if (!open) Box(Modifier.fillMaxSize().background(Color(0x99000000)), contentAlignment = Alignment.Center) { Text("🔒 ${Quran.digits(s.bond)} ❤", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                             }
@@ -551,7 +551,7 @@ fun PetDecorContent(part: String?) {
                         val open = PetBackdrop.open(s); val on = PetBackdrop.widgetBg == s.id
                         Column(Modifier.weight(1f).clip(L.shape(12.dp)).border(if (on) 3.dp else 1.dp, if (on) P.accent else P.line, L.shape(12.dp))
                             .clickable { if (open) { PetBackdrop.widgetBg = s.id; PetWidget.update(ctx) } else android.widget.Toast.makeText(ctx, "تُفتح عند ${Quran.digits(s.bond)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show() }) {
-                            Box(Modifier.fillMaxWidth().aspectRatio(2f).background(P.card), contentAlignment = Alignment.Center) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(2f).background(P.card.seeThrough()), contentAlignment = Alignment.Center) {
                                 if (s.id.isNotEmpty()) Canvas(Modifier.fillMaxSize()) { drawWidgetScene(s.id) } else Text("🖼", fontSize = 18.sp)
                                 if (!open) Box(Modifier.fillMaxSize().background(Color(0x99000000)), contentAlignment = Alignment.Center) { Text("🔒 ${Quran.digits(s.bond)} ❤", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
                             }

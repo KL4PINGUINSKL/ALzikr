@@ -359,9 +359,9 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
 @Composable
 private fun Stepper(value: Int, set: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card).clickable { set(value - 1) }, contentAlignment = Alignment.Center) { Text("−", color = P.ink, fontSize = 18.sp) }
+        Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card.seeThrough()).clickable { set(value - 1) }, contentAlignment = Alignment.Center) { Text("−", color = P.ink, fontSize = 18.sp) }
         Text(if (value > 0) "+$value" else "$value", color = if (value == 0) P.muted else P.accent, fontSize = 15.sp, textAlign = TextAlign.Center, modifier = Modifier.width(44.dp))
-        Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card).clickable { set(value + 1) }, contentAlignment = Alignment.Center) { Text("+", color = P.ink, fontSize = 18.sp) }
+        Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card.seeThrough()).clickable { set(value + 1) }, contentAlignment = Alignment.Center) { Text("+", color = P.ink, fontSize = 18.sp) }
     }
 }
 

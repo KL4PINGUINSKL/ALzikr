@@ -206,7 +206,7 @@ private fun QuranHome() {
             }
         } else items(surahs, key = { it.n }) { s ->
             Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.surface).clickable { MushafView.open(s.n, 1) }.padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card), contentAlignment = Alignment.Center) { Text(Quran.digits(s.n), color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                Box(Modifier.size(34.dp).clip(L.shape(10.dp)).background(P.card.seeThrough()), contentAlignment = Alignment.Center) { Text(Quran.digits(s.n), color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                 Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                     Text("سورة ${s.name}", color = P.ink, fontSize = 17.sp, fontFamily = Fonts.naskh)
                     Sub("${if (s.meccan) "مكية" else "مدنية"} · ${Quran.digits(s.count)} آية", size = 12.sp)
@@ -322,7 +322,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
                             .then(if (focused) Modifier.border(2.dp, P.accent, L.shape(10.dp)) else Modifier)
                             .clickable { if (hidden) shown += a.a else { chosen = a; focus = a.s to a.a } }.padding(horizontal = 6.dp, vertical = 4.dp))
                     if (study) Tafsir.get(ctx, Tafsir.selected, a.s, a.a)?.takeIf { it.from == a.a && it.text.isNotBlank() }?.let { e ->
-                        Column(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(L.shape(12.dp)).background(P.card).padding(12.dp)) {
+                        Column(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(12.dp)) {
                             Sub(Tafsir.book(Tafsir.selected).name + if (e.to > e.from) " · الآيات ${Quran.digits(e.from)}–${Quran.digits(e.to)}" else "", color = P.gold, size = 11.sp)
                             TafsirText(e.text, (15 * Data.textScale).sp, (26 * Data.textScale).sp)
                         }
@@ -512,12 +512,12 @@ internal fun AyahSheet(first: Quran.Ayah, inContext: (() -> Unit)? = null, close
             }
             val fold = { tafsirShown = !tafsirShown; Store.prefs.edit().putBoolean("sheet_tafsir_hidden", !tafsirShown).apply() }
             // Folded: a short bubble across the width, just its name and «إظهار».
-            if (!tafsirShown) Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).clickable(onClick = fold).padding(horizontal = 14.dp, vertical = 10.dp),
+            if (!tafsirShown) Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable(onClick = fold).padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 Text("إظهار ▾", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
-            if (tafsirShown) Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card).padding(14.dp)) {
+            if (tafsirShown) Column(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(14.dp)).background(P.card.seeThrough()).padding(14.dp)) {
                 // The name, and «إخفاء» at the bubble's top left.
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(Tafsir.book(sel).name, color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
@@ -800,7 +800,7 @@ private fun HadithCard(b: Hadith.Book, h: Hadith.Item, focused: Boolean = false,
                 if (HadithSearch.hasIndex(ctx)) tip = withContext(Dispatchers.IO) { HadithSearch.findSharh(ctx, h.text) }
             }
             val id = tip
-            if (id != null && !closed) Row(Modifier.fillMaxWidth().padding(top = 10.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (id != null && !closed) Row(Modifier.fillMaxWidth().padding(top = 10.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("🐾 ${Pet.name}: لهذا الحديث شرح في الموسوعة، أتحب أن تقرأه؟", color = P.ink, fontSize = 13.sp, modifier = Modifier.weight(1f))
                 Text("اقرأ", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(8.dp)).clickable { openSharh(id) }.padding(horizontal = 8.dp, vertical = 4.dp))
                 Text("✕", color = P.muted, fontSize = 14.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { closed = true }.padding(horizontal = 6.dp, vertical = 4.dp))
@@ -910,7 +910,7 @@ fun DailyWords() {
 /** A tap-to-search bar that opens the hadith search. */
 @Composable
 fun SearchBar(text: String, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp)).clickable(onClick = onClick)
+    Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card.seeThrough()).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp)).clickable(onClick = onClick)
         .padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         GText("🔍", fontSize = 18.sp)
         Text(text, color = P.muted, fontSize = 15.sp, modifier = Modifier.padding(start = 10.dp))
@@ -937,7 +937,7 @@ fun RangeChoice(live: Boolean = false, scroll: Boolean = true) {
 @Composable
 fun ReciterLine(modifier: Modifier = Modifier, onClick: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
-    Row(modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
+    Row(modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card.seeThrough()).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically) {
         GText("🎙", fontSize = 16.sp)
         Text("القارئ: ", color = P.muted, fontSize = 14.sp, modifier = Modifier.padding(start = 6.dp))
@@ -962,7 +962,7 @@ fun MiniPlayer() {
             Box(Modifier.size(44.dp).clip(L.shape(12.dp)).background(P.accent).clickable { if (Recitation.paused) Recitation.resume() else Recitation.pause() }, contentAlignment = Alignment.Center) {
                 Glyph(if (Recitation.paused) "▶" else "⏸", tint = P.onAccent, size = 24.dp)
             }
-            Box(Modifier.padding(start = 6.dp).size(44.dp).clip(L.shape(12.dp)).background(P.card).clickable { Recitation.stop() }, contentAlignment = Alignment.Center) {
+            Box(Modifier.padding(start = 6.dp).size(44.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).clickable { Recitation.stop() }, contentAlignment = Alignment.Center) {
                 Glyph("⏹", tint = P.ink, size = 24.dp)
             }
         }

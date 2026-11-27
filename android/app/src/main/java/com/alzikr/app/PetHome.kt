@@ -94,7 +94,7 @@ fun PetInteractions() {
     )
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         acts.forEach { (icon, label, st) ->
-            Column(Modifier.weight(1f).clip(L.shape(14.dp)).background(P.card).border(1.dp, P.line, L.shape(14.dp))
+            Column(Modifier.weight(1f).clip(L.shape(14.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(14.dp))
                 .clickable { PetActions.ask(st); Progress.bond("act_${st.id}_" + System.currentTimeMillis() / 1_800_000L) }
                 .padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(icon, fontSize = 20.sp)
@@ -368,7 +368,7 @@ fun PetAlbumPage() {
     if (ms.isEmpty()) { Sub("تظهر هنا لحظاتكما: يوم صار صديقك، وأول ختمة، ودرجات النموّ، والأوسمة، والأيام الطيبة.", size = 13.sp); return }
     Sub("لحظاتكما معًا. اضغط «مشاركة» لتشارك صورة فيها اللحظة وتاريخها فقط.", size = 12.sp)
     ms.forEach { m ->
-        Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(m.icon, fontSize = 28.sp, modifier = Modifier.width(44.dp), textAlign = TextAlign.Center)
             Column(Modifier.weight(1f)) {
                 Text(m.title, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)

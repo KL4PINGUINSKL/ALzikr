@@ -251,7 +251,7 @@ fun HadithSearchPage(initial: String? = null, back: () -> Unit) {
             if (sharh.isNotEmpty()) {
                 item { Title("في موسوعة الأحاديث المشروحة (${sharh.size})", Modifier.padding(top = 8.dp)) }
                 items(sharh, key = { "s" + it.sharhId }) { h ->
-                    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).clickable { openSharh = h.sharhId }.padding(14.dp)) {
+                    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { openSharh = h.sharhId }.padding(14.dp)) {
                         Text(h.text, color = P.ink, fontSize = 16.sp, fontFamily = Fonts.naskh, lineHeight = 26.sp)
                         Sub("💡 مع الشرح والدرجة", size = 12.sp, color = P.gold)
                     }

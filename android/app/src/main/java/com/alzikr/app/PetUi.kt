@@ -277,7 +277,7 @@ fun Bubble(text: String, onClick: () -> Unit) {
     val fr = Progress.frames.firstOrNull { it.id == PetBackdrop.bubbleFrame && it.id != "plain" }
     if (fr == null) {
         GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp))
+            modifier = Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card.seeThrough()).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp))
                 .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp))
         return
     }
@@ -287,7 +287,7 @@ fun Bubble(text: String, onClick: () -> Unit) {
     val calm = com.alzikr.app.pets.PetPerf.reduceMotion
     val t = if (calm) 0f else rememberInfiniteTransition(label = "bf").animateFloat(0f, 1f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "t").value
     val hangs = drawn || Decor.hasExtras(fr.id)
-    Box(Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card).clickable(onClick = onClick)) {
+    Box(Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card.seeThrough()).clickable(onClick = onClick)) {
         // Drawn first and faint (user: the lines and stars crossed the words), the words on top.
         androidx.compose.foundation.Canvas(Modifier.matchParentSize().alpha(.45f)) { drawCardFrame(ctx, fr, t, 16.dp.toPx()) }
         GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center, fontWeight = FontWeight.Medium,
@@ -606,7 +606,7 @@ fun FriendshipPanel() {
         modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(8.dp).clip(L.shape(4.dp)), color = P.accent, trackColor = P.line)
     Sub("نقاط منفصلة عن نقاط النموّ ✨: تكبر بوقتك مع صديقك فقط، ولها جوائزها الخاصة.", size = 11.sp)
     Friendship.next()?.let { g ->
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.card).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp).clip(L.shape(12.dp)).background(P.card.seeThrough()).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(g.icon, fontSize = 22.sp, modifier = Modifier.padding(end = 8.dp))
             Column(Modifier.weight(1f)) {
                 Text("الجائزة التالية: ${g.name}", color = P.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
