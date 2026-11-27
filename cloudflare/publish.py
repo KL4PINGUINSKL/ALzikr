@@ -33,6 +33,12 @@ def changes():
         notes = [s.encode("utf-8").decode("unicode_escape").encode("latin-1").decode("utf-8") if "\\u" in s else s
                  for s in re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(2))]
         out.append((m.group(1), [n.replace('\\"', '"') for n in notes]))
+    # The app shows short titles; the site shows the full notes when cloudflare/notes/<version>.txt exists.
+    full = os.path.join(HERE, "notes")
+    for k, (v, n) in enumerate(out):
+        f = os.path.join(full, v + ".txt")
+        if os.path.exists(f):
+            out[k] = (v, [l.strip() for l in read(f).splitlines() if l.strip()])
     return out
 
 
