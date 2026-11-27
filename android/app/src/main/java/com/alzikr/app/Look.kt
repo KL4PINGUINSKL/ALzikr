@@ -169,6 +169,24 @@ object Looks {
             pal(true, 0xFF1B1021, 0xFF25162B, 0xFF311B3A, 0xFF4D2B57, 0xFFFDE9F4, 0xFFCDA6C8, 0xFFFF8CC6, 0xFF2B0619, 0xFFC7A6F5),
             Corners.ROUND, 30.dp, Fonts.messiri, Fonts.messiri, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "♡",
             accentTitles = true, backdrop = Backdrop.BLOSSOM, panel = PanelStyle.PETAL, motif = "rose"),
+        // For boys, open from the start: blue and green, stars, planets and a little rocket.
+        Look("faris", "فارس", "أزرق السماء وأخضر الربيع، نجوم تتلألأ وكواكب تسبح وصاروخ صغير يعبر أحيانًا، وخط شنغا الواضح · للأولاد 🚀",
+            pal(false, 0xFFF0F6FF, 0xFFFFFFFF, 0xFFDDEBFF, 0xFFB9D2F2, 0xFF14284B, 0xFF5A6F92, 0xFF2F6FE0, 0xFFFFFFFF, 0xFF1FA37A),
+            pal(true, 0xFF0B1226, 0xFF121B36, 0xFF1A2548, 0xFF2C3C6C, 0xFFEAF1FF, 0xFF9FB0D6, 0xFF5FA2FF, 0xFF04102A, 0xFF4FE0A8),
+            Corners.ROUND, 20.dp, Fonts.changa, Fonts.changa, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.RING, ornament = "☾",
+            accentTitles = true, backdrop = Backdrop.SPACE),
+        // A meadow: grass and flowers swaying, butterflies wandering.
+        Look("meadow", "المرج", "عشب وأزهار تتمايل في الأسفل وفراشات ملوّنة تتجوّل، أخضر ربيعي وذهب الشمس، والصلوات حديقة تُزهر",
+            pal(false, 0xFFF4FAEF, 0xFFFFFFFF, 0xFFE4F2DA, 0xFFC9E2B8, 0xFF1F3A1E, 0xFF5E7A58, 0xFF4E9A3A, 0xFFFFFFFF, 0xFFE0A030),
+            pal(true, 0xFF0F1A10, 0xFF162418, 0xFF1E3020, 0xFF33502F, 0xFFEAF6E4, 0xFFA6C29C, 0xFF8BD06E, 0xFF0A1A06, 0xFFF2C04E),
+            Corners.ROUND, 22.dp, null, Fonts.messiri, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "❀",
+            backdrop = Backdrop.MEADOW, panel = PanelStyle.PETAL, motif = "rose"),
+        // A calm aquarium: fish, bubbles, seaweed.
+        Look("aquarium", "حوض الأسماك", "أسماك صغيرة ملوّنة تسبح بهدوء وفقاعات تصعد وأعشاب تتمايل، فيروزي ومرجاني، ولوحات كالزجاج",
+            pal(false, 0xFFEFF9FB, 0xFFFFFFFF, 0xFFD8F0F4, 0xFFB3DCE6, 0xFF0F3440, 0xFF4F7480, 0xFF1F8FA8, 0xFFFFFFFF, 0xFFF08A5D),
+            pal(true, 0xFF061A22, 0xFF0B2530, 0xFF10303D, 0xFF1E4B5C, 0xFFE4F7FB, 0xFF8FB9C4, 0xFF4FC9E0, 0xFF02161C, 0xFFFF9E7A),
+            Corners.ROUND, 20.dp, null, Fonts.changa, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.TIMELINE, CounterStyle.RING, ornament = "◇",
+            backdrop = Backdrop.AQUARIUM, panel = PanelStyle.GLASS),
         // Opened by friendship (Friendship.gifts theme_<id>).
         Look("breeze", "نسيم", "نعناعي وسماوي هادئ، خط المسيري للعناوين، شريط عائم وبطاقات للصلوات · هدية الصداقة",
             pal(false, 0xFFEEF8F5, 0xFFFFFFFF, 0xFFDDF1EC, 0xFFC2E2DA, 0xFF123A36, 0xFF5A7E78, 0xFF2A9D8F, 0xFFFFFFFF, 0xFFE0A84A),

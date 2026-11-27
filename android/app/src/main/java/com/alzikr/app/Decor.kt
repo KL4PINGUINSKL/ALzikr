@@ -20,7 +20,8 @@ import kotlin.math.sin
  */
 object Decor {
     /** Frames drawn here (not XML shapes): they hang from the top edge. */
-    val drawn = setOf("lanterns", "eid", "crescents", "hearts", "butterflies", "sakura", "rainbow", "snowflakes", "bunting")
+    val drawn = setOf("lanterns", "eid", "crescents", "hearts", "butterflies", "sakura", "rainbow", "snowflakes", "bunting",
+        "autumn", "candles", "qadr", "bees", "soap")
     fun isDrawn(id: String) = id in drawn
     /** Frames that also carry their own ornaments (drawFrameExtras): planets round the galaxy, roses at the rose's corners… */
     val extras = setOf("night", "gold", "pattern", "dawn", "rose", "ocean", "desert", "lantern", "zellige", "aurora", "pearl", "royal", "crystal", "galaxy")
@@ -194,6 +195,68 @@ fun DrawScope.drawDecorFrame(id: String, t: Float, top: Color, bottom: Color, ra
                     val f = k / 7f; val x = a + (b - a) * f; val y = band + dip * 4 * f * (1 - f)
                     drawPath(Path().apply { moveTo(x - dp(4.5f), y); lineTo(x + dp(4.5f), y); lineTo(x, y + dp(9f)); close() }, cols[(k + row * 2) % cols.size])
                 }
+            }
+        }
+        "autumn" -> {
+            // Autumn leaves drifting down and turning, a few resting on the top edge.
+            val cols = listOf(Color(0xFFE07A2E), Color(0xFFC94A2A), Color(0xFFE8B23A), Color(0xFF9C5A2A))
+            fun leaf(c: Offset, r: Float, a: Float, col: Color) = rotate(a, c) {
+                val p = Path(); p.moveTo(c.x, c.y - r); p.quadraticBezierTo(c.x + r * .9f, c.y - r * .2f, c.x, c.y + r); p.quadraticBezierTo(c.x - r * .9f, c.y - r * .2f, c.x, c.y - r); p.close()
+                drawPath(p, col); drawLine(col.copy(red = col.red * .6f, green = col.green * .6f), Offset(c.x, c.y - r * .8f), Offset(c.x, c.y + r), .9f * density)
+            }
+            listOf(.14f, .33f, .58f, .8f).forEachIndexed { k, fx -> leaf(Offset(w * fx, dp(6f)), dp(6f), 70f + k * 40f + sway(k) * 3f, cols[k % 4]) }
+            repeat(7) { k ->
+                val ph = (t + k / 7f) % 1f; val x = w * ((k * .17f + .08f) % 1f) + sin(ph * 10f + k) * dp(8f)
+                leaf(Offset(x, dp(18f) + ph * (h - dp(24f))), dp(5f), ph * 540f + k * 50f, cols[k % 4].copy(alpha = 1f - ph * .6f))
+            }
+        }
+        "candles" -> {
+            // A candle in each top corner and two more at the bottom; their flames sway and glow.
+            fun candle(x: Float, base: Float, hgt: Float, k: Int) {
+                drawRoundRect(Brush.verticalGradient(listOf(Color(0xFFFFF4DC), Color(0xFFF0D9AE)), base - hgt, base), Offset(x - dp(4f), base - hgt), Size(dp(8f), hgt), CornerRadius(dp(2f)))
+                val fl = 1f + .15f * sin((t * 2 * PI * 3 + k * 1.7).toFloat()); val tip = Offset(x + sin((t * 2 * PI * 2 + k).toFloat()) * dp(1.2f), base - hgt - dp(9f) * fl)
+                drawCircle(Brush.radialGradient(listOf(Color(0x88FFD27A), Color.Transparent), Offset(x, base - hgt - dp(4f)), dp(16f)), dp(16f), Offset(x, base - hgt - dp(4f)))
+                val f = Path(); f.moveTo(x - dp(3f), base - hgt - dp(2f)); f.quadraticBezierTo(x - dp(3f), base - hgt - dp(6f), tip.x, tip.y); f.quadraticBezierTo(x + dp(3f), base - hgt - dp(6f), x + dp(3f), base - hgt - dp(2f)); f.close()
+                drawPath(f, Brush.verticalGradient(listOf(Color(0xFFFFF3B0), Color(0xFFFF9A3C)), tip.y, base - hgt))
+            }
+            candle(dp(14f), dp(30f), dp(14f), 0); candle(w - dp(14f), dp(30f), dp(18f), 1)
+            candle(dp(14f), h - dp(6f), dp(12f), 2); candle(w - dp(14f), h - dp(6f), dp(10f), 3)
+        }
+        "qadr" -> {
+            // A still night: soft light coming down from above, and stars glowing on the band.
+            drawRect(Brush.verticalGradient(listOf(Color(0x55FFF3C4), Color.Transparent), 0f, h * .7f), Offset(w * .3f, 0f), Size(w * .4f, h * .7f))
+            repeat(5) { k -> val x = w * (.36f + k * .07f); val ph = (t + k / 5f) % 1f
+                drawLine(Color(0x55FFF3C4).copy(alpha = .4f * (1 - ph)), Offset(x, ph * h * .6f), Offset(x, ph * h * .6f + dp(10f)), 1.2f * density) }
+            val gold = Color(0xFFF3D27A)
+            crescent(w * .2f, dp(14f), dp(8f), gold)
+            listOf(.75f, .86f, .64f).forEachIndexed { k, fx -> star(w * fx, dp(10f + k * 5f), dp(3.5f + (k % 2)), gold.copy(alpha = .5f + .5f * ((sin((t * 2 * PI + k).toFloat()) + 1) / 2))) }
+        }
+        "bees" -> {
+            // Little flowers on the bottom edge and bees going round them.
+            val petals = listOf(Color(0xFFFFFFFF), Color(0xFFFFD1E0), Color(0xFFFFF0A6))
+            listOf(.12f, .3f, .5f, .7f, .88f).forEachIndexed { k, fx ->
+                val c = Offset(w * fx, h - dp(7f))
+                drawLine(Color(0xFF5FA05A), c, Offset(c.x, h), 1.4f * density)
+                for (q in 0 until 5) { val a = (q * 72f) * PI.toFloat() / 180f; drawCircle(petals[k % 3], dp(2.6f), Offset(c.x + cos(a) * dp(3f), c.y + sin(a) * dp(3f))) }
+                drawCircle(Color(0xFFF2B33D), dp(1.8f), c)
+            }
+            repeat(3) { k ->
+                val a = t * 2 * PI.toFloat() * (if (k == 1) -1 else 1) + k * 2.1f
+                val c = Offset(w * (.25f + k * .25f) + cos(a) * w * .1f, h - dp(22f) + sin(a * 2) * dp(7f))
+                val flap = .5f + .5f * kotlin.math.abs(sin(t * 2 * PI.toFloat() * 10 + k))
+                drawOval(Color(0xCCFFFFFF), Offset(c.x - dp(3f), c.y - dp(6f) * flap), Size(dp(4f), dp(5f) * flap))
+                drawOval(Color(0xFFF2B33D), Offset(c.x - dp(4.5f), c.y - dp(3f)), Size(dp(9f), dp(6f)))
+                drawLine(Color(0xFF3A2A10), Offset(c.x - dp(1f), c.y - dp(3f)), Offset(c.x - dp(1f), c.y + dp(3f)), 1.4f * density)
+                drawLine(Color(0xFF3A2A10), Offset(c.x + dp(1.8f), c.y - dp(2.8f)), Offset(c.x + dp(1.8f), c.y + dp(2.8f)), 1.4f * density)
+            }
+        }
+        "soap" -> {
+            // Soap bubbles with rainbow edges rising, swelling and popping softly.
+            repeat(9) { k ->
+                val ph = (t * 1.2f + k / 9f) % 1f; val x = w * ((k * .23f + .07f) % 1f) + sin(ph * 6f + k) * dp(6f)
+                val y = h - ph * h; val r = dp(4f + (k % 4) * 2.5f) * (.6f + ph * .5f); val a = if (ph > .9f) (1 - ph) * 10f else 1f
+                drawCircle(Brush.sweepGradient(listOf(Color(0xAAFF8AD8), Color(0xAA8AE0FF), Color(0xAAFFF08A), Color(0xAAFF8AD8)), Offset(x, y)), r, Offset(x, y), alpha = a, style = Stroke(1.4f * density))
+                drawCircle(Color.White.copy(alpha = .7f * a), r * .22f, Offset(x - r * .4f, y - r * .4f))
             }
         }
         "crescents" -> {

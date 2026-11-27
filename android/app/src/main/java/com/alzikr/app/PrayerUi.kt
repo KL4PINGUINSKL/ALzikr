@@ -32,6 +32,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.alpha
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -119,7 +121,7 @@ fun PrayerScreen(openSettings: (String) -> Unit) {
         }
         val open = { options = true }
         val parts = mapOf<String, @Composable () -> Unit>(
-            "next" to {
+            "next" to { Box {
             // The next prayer, the countdown, and how far the current time has gone (over the theme's scene, if it has one).
             val hero = L.hero
             if (hero != null) HeroNext(hero, w.next, Alerts.timeText(Store.times(java.time.Instant.ofEpochMilli(w.nextAt).atZone(ZoneId.systemDefault()).toLocalDate()).getValue(w.next)),
@@ -144,7 +146,9 @@ fun PrayerScreen(openSettings: (String) -> Unit) {
                     Sub("الوقت الحالي: ${cur.ar}" + if (Data.prayed(LocalDate.now(), cur)) " ✓ صلّيتها" else " · لم تُعلَّم بعد", Modifier.padding(top = 6.dp), size = 12.sp)
                 }
             }
-            },
+            // The frame chosen for the friend's card («صديقي ← الزينة») goes round this card too, faintly.
+            NextPrayerFrame(Modifier.matchParentSize())
+            } },
             "moment" to { MomentCard() },
             "tadabbur" to { DailyTadabburCard() },
             "forbid" to { ForbidBanner() },
@@ -478,4 +482,18 @@ private fun PrayerLine(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Uni
             Box(Modifier.fillMaxWidth(frac).height(3.dp).background(P.accent))
         }
     }
+}
+
+
+/** The friend's card frame over the next prayer's card (nothing when none is chosen). */
+@Composable
+private fun NextPrayerFrame(modifier: Modifier) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val fr = Progress.frames.firstOrNull { it.id == PetBackdrop.cardFrame && it.id != "plain" } ?: return
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val calm = com.alzikr.app.pets.PetPerf.reduceMotion
+    val rad = L.radius.value.coerceAtLeast(12f)
+    val t = if (calm) 0f else androidx.compose.animation.core.rememberInfiniteTransition(label = "nf")
+        .animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(9000, easing = androidx.compose.animation.core.LinearEasing)), label = "t").value
+    androidx.compose.foundation.Canvas(modifier.then(Modifier.alpha(.6f))) { drawCardFrame(ctx, fr, t, rad * density) }
 }

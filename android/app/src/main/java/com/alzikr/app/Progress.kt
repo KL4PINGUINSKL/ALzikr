@@ -259,6 +259,11 @@ object Progress {
         Frame("sakura", "أزهار الكرز", Friendship.frameGift("sakura")!!.bond, null, 0xFFFFF0F5, 0xFFF4C6D7, true),
         Frame("rainbow", "قوس المطر", Friendship.frameGift("rainbow")!!.bond, null, 0xFF7EC8F2, 0xFFBFE6FA, true),
         Frame("snowflakes", "ندف الثلج", Friendship.frameGift("snowflakes")!!.bond, null, 0xFF1C3D6B, 0xFF4A78B0, false),
+        Frame("autumn", "أوراق الخريف", Friendship.frameGift("autumn")!!.bond, null, 0xFFFFF1DC, 0xFFF3CFA0, true),
+        Frame("candles", "شموع", Friendship.frameGift("candles")!!.bond, null, 0xFF2A1A12, 0xFF4A2E1C, false),
+        Frame("qadr", "ليلة القدر", Friendship.frameGift("qadr")!!.bond, null, 0xFF0E1638, 0xFF23305E, false),
+        Frame("bees", "نحل وأزهار", Friendship.frameGift("bees")!!.bond, null, 0xFFF2FAE6, 0xFFD6EDB8, true),
+        Frame("soap", "فقاعات الصابون", Friendship.frameGift("soap")!!.bond, null, 0xFFEAF4FF, 0xFFCFE3FA, true),
     ).sortedBy { it.bond }
     var frame: String
         get() = sp.getString("prog_frame", "plain")!!.takeIf { id -> frames.any { it.id == id && it.open } } ?: "plain"

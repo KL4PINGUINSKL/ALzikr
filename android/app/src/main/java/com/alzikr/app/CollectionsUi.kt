@@ -2,6 +2,7 @@
 package com.alzikr.app
 
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -230,11 +231,11 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
                     (androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn()) togetherWith
                         (androidx.compose.animation.slideOutVertically { -it / 3 } + androidx.compose.animation.fadeOut())
                 }, label = "dhikr") { i ->
-                    if (i >= c.items.size) Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (i >= c.items.size) Box(Modifier.fillMaxWidth()) { Celebration(Modifier.matchParentSize().heightIn(min = 260.dp)); Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("✓", color = P.gold, fontSize = 64.sp)
                         Text("أتممت ${c.title}، تقبّل الله منك", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                         Text("البدء من جديد", color = P.accent, fontSize = 14.sp, modifier = Modifier.padding(top = 12.dp).clip(L.shape(10.dp)).clickable { Data.colReset(c.id); cur = 0 }.padding(10.dp))
-                    } else {
+                    } } else {
                         val item = c.items[i]; val n = Data.colCounts(c.id)[i]; val fin = n >= item.count
                         Box(Modifier.fillMaxWidth().heightIn(max = 520.dp).clip(L.shape(22.dp)).background(if (fin) P.surface else P.card)
                             .border(2.dp, if (fin) P.gold.copy(alpha = .6f) else P.accent.copy(alpha = .7f), L.shape(22.dp))
@@ -394,6 +395,30 @@ private fun TasbihScreen() {
                     }
                 }
             }
+        }
+    }
+}
+
+
+/** Hearts and stars bursting out and floating away for a few seconds (still when motion is reduced). */
+@Composable
+private fun Celebration(modifier: Modifier) {
+    if (com.alzikr.app.pets.PetPerf.reduceMotion) return
+    val anim = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(Unit) { anim.animateTo(1f, androidx.compose.animation.core.tween(3200, easing = androidx.compose.animation.core.LinearEasing)) }
+    val k = anim.value
+    if (k >= 1f) return
+    val cols = listOf(P.accent, P.gold, androidx.compose.ui.graphics.Color(0xFFFF8FB1), androidx.compose.ui.graphics.Color(0xFF7FD8FF), androidx.compose.ui.graphics.Color(0xFFFFD166))
+    androidx.compose.foundation.Canvas(modifier) {
+        val c = androidx.compose.ui.geometry.Offset(size.width / 2, size.height * .38f)
+        for (n in 0 until 26) {
+            val a = (n * 137.5f) * Math.PI.toFloat() / 180f
+            val speed = .45f + (n % 5) * .12f
+            val d = k * speed * size.minDimension * .75f
+            val p = androidx.compose.ui.geometry.Offset(c.x + kotlin.math.cos(a) * d, c.y + kotlin.math.sin(a) * d * .8f - k * k * 60f + k * 140f * (n % 3) / 3f)
+            val alpha = (1f - k).coerceIn(0f, 1f)
+            val r = (5f + (n % 4) * 2.5f) * density * (.6f + .4f * kotlin.math.sin(k * 6f + n))
+            if (n % 2 == 0) heart(p, r, cols[n % cols.size].copy(alpha = alpha)) else star(p.x, p.y, r, cols[n % cols.size].copy(alpha = alpha))
         }
     }
 }

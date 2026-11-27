@@ -36,7 +36,7 @@ enum class Backdrop(val moving: Boolean) {
     SNOW(true), PETALS(true), FIREFLIES(true), BUBBLES(true), DUNES(true), ROSETTE(true), SKYLINE(true),
     BUNTING(true), MESA(true), DAMASK(false), ORBS(true), INK(true), CACTI(true),
     RIWAQ(true), MANUSCRIPT(false), OASIS(true), STAINED(true), PAPER(true), OBSERVATORY(true), SEASONS(true), MARBLE(false),
-    BLOSSOM(true),
+    BLOSSOM(true), SPACE(true), MEADOW(true), AQUARIUM(true),
 }
 
 @Composable
@@ -67,6 +67,9 @@ fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
             Backdrop.FIREFLIES -> fireflies(p, t)
             Backdrop.BUBBLES -> bubbles(p, t)
             Backdrop.BLOSSOM -> blossom(p, t)
+            Backdrop.SPACE -> space(p, t)
+            Backdrop.MEADOW -> meadow(p, t)
+            Backdrop.AQUARIUM -> aquarium(p, t)
             Backdrop.DUNES -> dunes(p, t)
             Backdrop.ROSETTE -> rosette(p, t)
             Backdrop.SKYLINE -> skyline(p, t)
@@ -571,5 +574,90 @@ private fun DrawScope.blossom(p: Pal, t: Float) {
         val ph = (t * (.05f + rnd(i + 80, 3) * .05f) + rnd(i + 80, 1)) % 1f
         val x = rnd(i + 80, 2) * size.width; val y = size.height * (1.05f - ph * 1.1f); val r = 3f + rnd(i + 80, 4) * 5f
         drawCircle(Color.White.copy(alpha = .18f), r, Offset(x, y), style = Stroke(1.2f))
+    }
+}
+
+/** «فارس»: twinkling stars, two planets drifting, and a little rocket crossing now and then with its flame. */
+private fun DrawScope.space(p: Pal, t: Float) {
+    val dark = p.dark
+    val starC = if (dark) Color.White else p.accent
+    for (i in 0 until 40) {
+        val tw = .3f + .7f * ((sin(t * (1f + rnd(i, 5)) * 2f + i) + 1) / 2)
+        drawCircle(starC.copy(alpha = (if (dark) .45f else .22f) * tw), 1.2f + rnd(i, 4) * 1.6f, Offset(rnd(i, 1) * size.width, rnd(i, 2) * size.height))
+    }
+    // two planets, one with a ring
+    val p1 = Offset(size.width * (.82f + .03f * sin(t * .2f)), size.height * .22f)
+    drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC27A).copy(alpha = .32f), Color(0xFFE07A3A).copy(alpha = .22f)), Offset(p1.x - 10f, p1.y - 10f), 60f), 34f, p1)
+    drawOval(Color(0xFFFFE0A8).copy(alpha = .28f), Offset(p1.x - 62f, p1.y - 9f), Size(124f, 18f), style = Stroke(4f))
+    val p2 = Offset(size.width * (.15f + .03f * sin(t * .25f + 2f)), size.height * .7f)
+    drawCircle(Brush.radialGradient(listOf(Color(0xFF8AD0FF).copy(alpha = .30f), Color(0xFF3A6FD0).copy(alpha = .20f)), Offset(p2.x - 6f, p2.y - 6f), 40f), 22f, p2)
+    // a rocket crossing diagonally, with a flame and smoke puffs
+    val ph = (t * .08f) % 1f
+    if (ph < .55f) {
+        val f = ph / .55f; val x = -40f + f * (size.width + 80f); val y = size.height * (.85f - f * .7f)
+        rotate(-35f, Offset(x, y)) {
+            for (k in 1..4) drawCircle(Color.White.copy(alpha = .10f * (5 - k)), 5f + k * 2f, Offset(x - 22f - k * 12f, y))
+            drawPath(Path().apply { moveTo(x - 16f, y - 5f); lineTo(x - 30f + sin(t * 40f) * 3f, y); lineTo(x - 16f, y + 5f); close() }, Color(0xFFFFA040).copy(alpha = .6f))
+            drawRoundRect(Color(0xFFEFF3FF).copy(alpha = .6f), Offset(x - 16f, y - 7f), Size(28f, 14f), androidx.compose.ui.geometry.CornerRadius(7f))
+            drawPath(Path().apply { moveTo(x + 12f, y - 7f); lineTo(x + 24f, y); lineTo(x + 12f, y + 7f); close() }, Color(0xFFE0505A).copy(alpha = .6f))
+            drawCircle(Color(0xFF6FB8FF).copy(alpha = .7f), 3.5f, Offset(x + 2f, y))
+            drawPath(Path().apply { moveTo(x - 12f, y - 7f); lineTo(x - 18f, y - 13f); lineTo(x - 6f, y - 7f); close() }, Color(0xFFE0505A).copy(alpha = .6f))
+            drawPath(Path().apply { moveTo(x - 12f, y + 7f); lineTo(x - 18f, y + 13f); lineTo(x - 6f, y + 7f); close() }, Color(0xFFE0505A).copy(alpha = .6f))
+        }
+    }
+}
+
+/** «المرج»: grass and little flowers swaying along the bottom, and butterflies wandering above them. */
+private fun DrawScope.meadow(p: Pal, t: Float) {
+    val grass = Color(0xFF6BBF59).copy(alpha = if (p.dark) .22f else .26f)
+    var x = 0f; var i = 0
+    while (x < size.width) {
+        val hgt = 26f + rnd(i, 3) * 34f; val sway = sin(t * 1.4f + i * .7f) * 6f
+        drawLine(grass, Offset(x, size.height), Offset(x + sway, size.height - hgt), 2.2f)
+        x += 7f + rnd(i, 2) * 6f; i++
+    }
+    val petals = listOf(Color(0xFFFFFFFF), Color(0xFFFFB3C8), Color(0xFFFFE066), Color(0xFFC9A6FF))
+    for (k in 0 until 9) {
+        val bx = size.width * (.06f + k * .11f); val hgt = 50f + rnd(k + 20, 3) * 50f; val sway = sin(t * 1.2f + k) * 7f
+        val top = Offset(bx + sway, size.height - hgt)
+        drawLine(Color(0xFF5FA05A).copy(alpha = .3f), Offset(bx, size.height), top, 2f)
+        for (q in 0 until 5) { val a = (q * 72f) * PI.toFloat() / 180f; drawCircle(petals[k % 4].copy(alpha = .38f), 5f, Offset(top.x + cos(a) * 6f, top.y + sin(a) * 6f)) }
+        drawCircle(Color(0xFFF2B33D).copy(alpha = .45f), 3.2f, top)
+    }
+    val wings = listOf(Color(0xFFFFB347), Color(0xFF7FD8FF), Color(0xFFE59BFF), Color(0xFFFF7A9A))
+    for (k in 0 until 4) {
+        val c = Offset(size.width * (.5f + .4f * sin(t * (.09f + k * .02f) * 6f + k * 1.6f)), size.height * (.35f + .25f * sin(t * (.07f + k * .02f) * 6f * 2f + k)))
+        val flap = .35f + .65f * abs(sin(t * 18f + k))
+        val col = wings[k].copy(alpha = .45f)
+        drawOval(col, Offset(c.x - 12f * flap, c.y - 9f), Size(12f * flap, 10f)); drawOval(col, Offset(c.x, c.y - 9f), Size(12f * flap, 10f))
+        drawOval(col, Offset(c.x - 9f * flap, c.y), Size(9f * flap, 8f)); drawOval(col, Offset(c.x, c.y), Size(9f * flap, 8f))
+        drawLine(Color(0xFF3A2A20).copy(alpha = .4f), Offset(c.x, c.y - 7f), Offset(c.x, c.y + 7f), 2f)
+    }
+}
+
+/** «حوض الأسماك»: small fish swimming across, bubbles rising, seaweed swaying at the bottom. */
+private fun DrawScope.aquarium(p: Pal, t: Float) {
+    for (k in 0 until 6) {
+        val bx = size.width * (.08f + k * .17f)
+        val path = Path(); path.moveTo(bx, size.height); var y = size.height
+        while (y > size.height - 90f - rnd(k, 3) * 60f) { y -= 10f; path.lineTo(bx + sin(y / 22f + t * 1.5f + k) * 8f, y) }
+        drawPath(path, Color(0xFF3FA36B).copy(alpha = .26f), style = Stroke(5f))
+    }
+    val cols = listOf(Color(0xFFFF8A5C), Color(0xFFFFD166), Color(0xFF6FD3F0), Color(0xFFFF7AB6), Color(0xFF9BE07A))
+    for (k in 0 until 7) {
+        val dir = if (k % 2 == 0) 1f else -1f
+        val ph = (t * (.04f + rnd(k + 9, 3) * .04f) + rnd(k + 9, 1)) % 1f
+        val x = if (dir > 0) -40f + ph * (size.width + 80f) else size.width + 40f - ph * (size.width + 80f)
+        val y = size.height * (.2f + .6f * rnd(k + 9, 2)) + sin(t * 2f + k) * 8f
+        val s = 10f + rnd(k + 9, 4) * 8f; val col = cols[k % cols.size].copy(alpha = .38f)
+        val wag = sin(t * 10f + k) * s * .2f
+        drawOval(col, Offset(x - s, y - s * .55f), Size(s * 2f, s * 1.1f))
+        drawPath(Path().apply { moveTo(x - dir * s * .9f, y); lineTo(x - dir * s * 1.7f, y - s * .6f + wag); lineTo(x - dir * s * 1.7f, y + s * .6f + wag); close() }, col)
+        drawCircle(Color.White.copy(alpha = .5f), s * .16f, Offset(x + dir * s * .5f, y - s * .12f))
+    }
+    for (i in 0 until 16) {
+        val ph = (t * (.06f + rnd(i + 30, 3) * .06f) + rnd(i + 30, 1)) % 1f
+        val x = rnd(i + 30, 2) * size.width + sin(t * 1.5f + i) * 5f; val y = size.height * (1.05f - ph * 1.1f); val r = 2.5f + rnd(i + 30, 4) * 5f
+        drawCircle(Color.White.copy(alpha = .22f), r, Offset(x, y), style = Stroke(1.3f))
     }
 }
