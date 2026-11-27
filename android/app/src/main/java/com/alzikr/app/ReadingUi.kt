@@ -261,6 +261,11 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
         x.explanation.split('\n').map { it.trim() }.filter { it.isNotEmpty() }.forEach { blocks += RBlock(RKind.BODY, it) }
         if (x.hints.isNotEmpty()) { blocks += RBlock(RKind.HEAD, "من فوائد الحديث"); x.hints.forEach { blocks += RBlock(RKind.BODY, "• $it") } }
         x.words.filter { it.first.isNotBlank() }.takeIf { it.isNotEmpty() }?.let { w -> blocks += RBlock(RKind.HEAD, "معاني الكلمات"); w.forEach { (a, m) -> blocks += RBlock(RKind.BODY, "$a: $m") } }
+        SharhPlus.of(x.id)?.let { e ->
+            blocks += RBlock(RKind.HEAD, "تنبيه"); blocks += RBlock(RKind.BODY, e.note)
+            e.sections.forEach { (t, b) -> blocks += RBlock(RKind.HEAD, t); b.split('\n').map { it.trim() }.filter { it.isNotEmpty() }.forEach { blocks += RBlock(RKind.BODY, it) } }
+            blocks += RBlock(RKind.HEAD, "مصادر الشرح الموسع"); e.sources.forEach { blocks += RBlock(RKind.SMALL, "• $it") }
+        }
         if (x.reference.isNotBlank()) { blocks += RBlock(RKind.HEAD, "المراجع"); blocks += RBlock(RKind.SMALL, x.reference) }
         TextReading("شرح الحديث", "sharh:$id", blocks, 0) { readMode = false }
         return
@@ -269,7 +274,8 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
     Subpage("شرح الحديث", back) {
         val x = h
         if (x == null) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { if (failed) Sub("تعذّر التحميل، تحقق من الإنترنت.") else CircularProgressIndicator(color = P.accent) }; return@Subpage }
-        val full = "${x.text}\n[${x.attribution} · ${x.grade}]\n\nالشرح: ${x.explanation}"
+        val extra = SharhPlus.of(x.id)
+        val full = "${x.text}\n[${x.attribution} · ${x.grade}]\n\nالشرح: ${x.explanation}" + (extra?.let { "\n\n" + SharhPlus.text(it) } ?: "")
         val scroll = rememberScrollState()
         LaunchedEffect(id) { scroll.scrollTo(0) }
         Column(Modifier.fillMaxSize().sharhSwipe(nav).verticalScroll(scroll).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -279,6 +285,12 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
                 Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (x.grade.isNotBlank()) Badge("الدرجة: ${x.grade}", P.accent)
                     if (x.attribution.isNotBlank()) Badge(x.attribution, P.gold)
+                }
+            }
+            extra?.let { e ->
+                Panel(color = P.card) {
+                    GText("⚠ يحتاج إلى بيان", color = P.gold, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text(e.note, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (26 * Data.textScale).sp, fontFamily = Fonts.naskh, modifier = Modifier.padding(top = 6.dp))
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -298,9 +310,24 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
                 Title("معاني الكلمات")
                 words.forEach { (w, m) -> Text("$w: $m", color = P.ink, fontSize = 15.sp, lineHeight = 24.sp, fontFamily = Fonts.naskh) }
             }
+            extra?.let { e ->
+                Title("الشرح الموسع")
+                e.sections.forEach { (t, b) ->
+                    Text(t, color = P.accent, fontSize = (16 * Data.textScale).sp, fontWeight = FontWeight.Bold, fontFamily = Fonts.naskh)
+                    Text(b, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (27 * Data.textScale).sp, fontFamily = Fonts.naskh)
+                }
+                Title("مصادر الشرح الموسع")
+                e.sources.forEach { Sub("• $it", size = 12.sp) }
+            }
             if (x.reference.isNotBlank()) {
                 Title("المراجع")
                 Sub(x.reference, size = 12.sp)
+            }
+            Title("للاستزادة")
+            Sub("ابحث عن شرح هذا الحديث وفتاوى أهل العلم فيه:", size = 12.sp)
+            val q = remember(x.id) { SharhPlus.phrase(x.title, x.text) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SharhPlus.sites.forEach { site -> Tile("↗", site.label, Modifier.weight(1f)) { SharhPlus.open(ctx, site.url(q)) } }
             }
         }
     }
