@@ -9,6 +9,23 @@ data class Item(val text: String, val count: Int = 1, val note: String = "")
 data class Collection(val id: String, val title: String, val subtitle: String, val items: List<Item>)
 
 object Content {
+    /**
+     * The first verse number of each Quran text in the adhkar. [verses] gives every verse its end mark with
+     * its number (۝ followed by Arabic-Indic digits, which the Amiri font draws as the mushaf's verse circle).
+     */
+    private val firstAyah: Map<String, Int> by lazy {
+        mapOf(KURSI to 255, IKHLAS to 1, FALAQ to 1, NAS to 1, BAQARAH_END to 285,
+            "رب اشرح لي صدري ۝ ويسر لي أمري" to 25,                                    // طه 25-26
+            "رب اجعلني مقيم الصلاة ومن ذريتي ربنا وتقبل دعاء ۝ ربنا اغفر لي ولوالدي وللمؤمنين يوم يقوم الحساب" to 40)   // إبراهيم 40-41
+    }
+
+    /** The text with numbered verse marks if it is one of the Quran texts above; otherwise unchanged. */
+    fun verses(text: String): String {
+        val first = firstAyah[text] ?: return text
+        fun mark(n: Int) = "۝" + n.toString().map { "٠١٢٣٤٥٦٧٨٩"[it - '0'] }.joinToString("")
+        return text.split(" ۝ ").mapIndexed { i, v -> v + " " + mark(first + i) }.joinToString(" ")
+    }
+
     private const val KURSI = "الله لا إله إلا هو الحي القيوم لا تأخذه سنة ولا نوم له ما في السماوات وما في الأرض من ذا الذي يشفع عنده إلا بإذنه يعلم ما بين أيديهم وما خلفهم ولا يحيطون بشيء من علمه إلا بما شاء وسع كرسيه السماوات والأرض ولا يئوده حفظهما وهو العلي العظيم"
     private const val IKHLAS = "قل هو الله أحد ۝ الله الصمد ۝ لم يلد ولم يولد ۝ ولم يكن له كفوا أحد"
     private const val FALAQ = "قل أعوذ برب الفلق ۝ من شر ما خلق ۝ ومن شر غاسق إذا وقب ۝ ومن شر النفاثات في العقد ۝ ومن شر حاسد إذا حسد"

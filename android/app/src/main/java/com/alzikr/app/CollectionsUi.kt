@@ -244,7 +244,7 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
                             .verticalScroll(rememberScrollState())   // any dhikr that does not fit (large text) scrolls
                             .padding(start = 20.dp, end = 20.dp, top = 40.dp, bottom = 58.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 10.dp))
-                            Text(item.text, color = if (fin) P.muted else P.ink, fontSize = (21 * Data.textScale).sp, lineHeight = (36 * Data.textScale).sp,
+                            Text(Content.verses(item.text), color = if (fin) P.muted else P.ink, fontSize = (21 * Data.textScale).sp, lineHeight = (36 * Data.textScale).sp,
                                 fontFamily = Fonts.naskh, textAlign = TextAlign.Center)
                             Sub(if (item.count > 1) "يُقال ${item.count} مرات" else "يُقال مرة واحدة", Modifier.padding(top = 12.dp), size = 12.sp)
                             // Done: read it again from zero.
@@ -332,7 +332,7 @@ private fun CollectionList(c: Collection, focus: Int, pick: (Int) -> Unit) {
                             if (now) scope.launch { runCatching { list.animateScrollToItem((i + 1).coerceAtMost(c.items.size)) } }
                         }.padding(16.dp)) {
                         if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 6.dp))
-                        Text(item.text, color = if (finished) P.muted else P.ink, fontSize = (18 * Data.textScale).sp, lineHeight = (30 * Data.textScale).sp)
+                        Text(Content.verses(item.text), color = if (finished) P.muted else P.ink, fontSize = (18 * Data.textScale).sp, lineHeight = (30 * Data.textScale).sp, fontFamily = if (Content.verses(item.text) != item.text) Fonts.naskh else null)
                         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Sub(if (item.count > 1) "${item.count} مرات" else "مرة واحدة", Modifier.weight(1f), size = 12.sp)
                             Box(Modifier.clip(L.shape(10.dp)).background(if (finished) P.gold.copy(alpha = .2f) else P.accent).padding(horizontal = 14.dp, vertical = 6.dp)) {
