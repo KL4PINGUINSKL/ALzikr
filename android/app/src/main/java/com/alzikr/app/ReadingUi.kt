@@ -195,14 +195,17 @@ class SharhNav(val label: String, val prev: (() -> Unit)?, val next: (() -> Unit
 /** The previous / next buttons over an explanation; [sharhSwipe] adds the sideways swipe (right = next, as in the mushaf). */
 @Composable
 internal fun SharhNavRow(nav: SharhNav) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text("› الحديث السابق", color = if (nav.prev != null) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = nav.prev != null) { nav.prev?.invoke() }.padding(horizontal = 8.dp, vertical = 6.dp))
-        Spacer(Modifier.weight(1f))
+    // The two buttons on one line, the book and number under them: with a large font the long label used to squeeze
+    // «الحديث التالي» into one letter per line.
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("› الحديث السابق", color = if (nav.prev != null) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false,
+                modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = nav.prev != null) { nav.prev?.invoke() }.padding(horizontal = 8.dp, vertical = 6.dp))
+            Spacer(Modifier.weight(1f))
+            Text("الحديث التالي ‹", color = if (nav.next != null) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false,
+                modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = nav.next != null) { nav.next?.invoke() }.padding(horizontal = 8.dp, vertical = 6.dp))
+        }
         Sub(nav.label, size = 12.sp)
-        Spacer(Modifier.weight(1f))
-        Text("الحديث التالي ‹", color = if (nav.next != null) P.accent else P.muted.copy(alpha = .4f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clip(L.shape(10.dp)).clickable(enabled = nav.next != null) { nav.next?.invoke() }.padding(horizontal = 8.dp, vertical = 6.dp))
     }
 }
 
@@ -332,6 +335,7 @@ private fun SharhPage(id: String, nav: SharhNav? = null, back: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SharhPlus.sites.forEach { site -> Tile("↗", site.label, Modifier.weight(1f)) { SharhPlus.open(ctx, site.url(q)) } }
             }
+            HadithInQuranpedia(x.text)
         }
     }
     }

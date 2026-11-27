@@ -217,3 +217,83 @@ private fun QpText(s: Int, a: Int, tool: String, args: Map<String, Any>, empty: 
         }
     }
 }
+
+/** Distinctive words of a hadith (inside «» if quoted), for a search in the encyclopedia: no marks, no common words. */
+fun hadithKeywords(text: String): String {
+    val inner = Regex("«([^»]{8,})»").find(text)?.groupValues?.get(1) ?: text
+    val common = setOf("الله", "رسول", "صلى", "عليه", "وسلم", "قال", "قالت", "فقال", "عن", "في", "من", "على", "إلى", "الى", "ان", "إن", "أن", "ما", "لا",
+        "هو", "هي", "ذلك", "هذا", "التي", "الذي", "كان", "ثم", "او", "أو", "يا", "رضي", "عنه", "عنها", "مرفوعا", "مرفوعاً", "النبي", "وهو", "فهو", "له", "لها", "به", "بها")
+    return inner.replace(Regex("[\u064B-\u065F\u0670\u0640]"), "").replace(Regex("[^\\p{L}\\s]"), " ")
+        .split(Regex("\\s+")).filter { it.length >= 3 && it !in common }.distinct().take(5).joinToString(" ")
+}
+
+/**
+ * «📚 الحديث في الموسوعة القرآنية»: where the mufassirun cite this hadith (the verses, most books first, with a
+ * passage from each) and the pages of the Quranic-sciences library that quote it. The words searched can be changed.
+ */
+@Composable
+fun HadithInQuranpedia(hadithText: String) {
+    val ctx = LocalContext.current
+    var open by remember(hadithText) { mutableStateOf(false) }
+    if (!open) {
+        Action("📚 الحديث في الموسوعة القرآنية", Modifier.fillMaxWidth(), filled = false) { open = true }
+        return
+    }
+    var query by remember(hadithText) { mutableStateOf(hadithKeywords(hadithText)) }
+    var asked by remember(hadithText) { mutableStateOf(query) }
+    var where by remember(hadithText) { mutableStateOf("tafsir") }
+    Column(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card).padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            GText("📚 الحديث في الموسوعة القرآنية", color = P.gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Text("إخفاء ▴", color = P.accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(L.shape(8.dp)).clickable { open = false }.padding(horizontal = 8.dp, vertical = 4.dp))
+        }
+        Sub("يُبحث بكلمات الحديث المميزة، ويمكنك تعديلها:", size = 12.sp)
+        androidx.compose.material3.OutlinedTextField(query, { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { asked = query.trim() }))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Choice("عند الآيات في التفاسير", where == "tafsir") { where = "tafsir"; asked = query.trim() }
+            Choice("في كتب علوم القرآن", where == "library") { where = "library"; asked = query.trim() }
+        }
+        if (asked.isNotBlank()) QpResults(if (where == "tafsir") "search_tafsir" else "search_library",
+            if (where == "tafsir") mapOf("query" to asked, "limit" to 12, "snippets" to true) else mapOf("query" to asked, "limit" to 12))
+        Text("المصدر: الموسوعة القرآنية الشاملة ↗", color = P.muted, fontSize = 11.sp,
+            modifier = Modifier.clip(L.shape(6.dp)).clickable { Qp.open(ctx, Qp.SITE) }.padding(4.dp))
+    }
+}
+
+/** Search results: a verse heading opens that verse; a link line opens the page on the site. */
+@Composable
+private fun QpResults(tool: String, args: Map<String, Any>) {
+    val ctx = LocalContext.current
+    var text by remember(tool, args) { mutableStateOf<String?>(null) }
+    var failed by remember(tool, args) { mutableStateOf(false) }
+    LaunchedEffect(tool, args) { failed = false; text = null; text = withContext(Dispatchers.IO) { Qp.call(ctx, tool, args) }; failed = text == null }
+    val t = text
+    when {
+        t == null && !failed -> Row(verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(Modifier.size(18.dp), color = P.accent, strokeWidth = 2.dp); Sub("  جارٍ البحث…") }
+        t == null -> Sub("تعذّر البحث، تحقق من الإنترنت.")
+        else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            val verse = Regex("(\\d{1,3}):(\\d{1,3})")
+            for (raw in t.lines()) {
+                val l = raw.trim()
+                if (l.isEmpty()) continue
+                when {
+                    l.startsWith("http") -> Text("فتح الصفحة ↗", color = P.accent, fontSize = 12.sp, modifier = Modifier.clip(L.shape(6.dp)).clickable { Qp.open(ctx, l) }.padding(2.dp))
+                    l.startsWith("## ") -> {
+                        val h = l.removePrefix("## ")
+                        val m = verse.find(h)
+                        Text(h + if (m != null) "  ›" else "", color = P.accent, fontSize = (14 * Data.textScale).sp, fontWeight = FontWeight.Bold, fontFamily = Fonts.naskh,
+                            modifier = Modifier.padding(top = 6.dp).clip(L.shape(6.dp)).clickable(enabled = m != null) {
+                                m?.let { Nav.overlayQuran = it.groupValues[1].toInt() to it.groupValues[2].toInt() }
+                            })
+                    }
+                    l.startsWith("# ") -> Unit
+                    l.startsWith("﴿") -> Text(l, color = P.ink, fontSize = (15 * Data.textScale).sp, lineHeight = (26 * Data.textScale).sp, fontFamily = Fonts.quran)
+                    l.startsWith("- ") -> Text("• " + l.removePrefix("- ").replace("**", ""), color = P.ink, fontSize = (14 * Data.textScale).sp, lineHeight = (24 * Data.textScale).sp, fontFamily = Fonts.naskh)
+                    else -> Sub(l.replace("**", ""), size = 12.sp)
+                }
+            }
+        }
+    }
+}

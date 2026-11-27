@@ -86,5 +86,6 @@ fun MushkilPage(key: String) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SharhPlus.sites.forEach { site -> Tile("↗", site.label, Modifier.weight(1f)) { SharhPlus.open(ctx, site.url(q)) } }
         }
+        HadithInQuranpedia(e.hadith)
     }
 }
