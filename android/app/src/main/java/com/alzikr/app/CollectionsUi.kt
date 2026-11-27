@@ -2,6 +2,7 @@
 package com.alzikr.app
 
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 import androidx.compose.foundation.gestures.detectDragGestures
 
@@ -199,14 +200,31 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
                 }
             }
 
-            // The current one, in the middle.
-            Box(Modifier.weight(1f).fillMaxWidth().pointerInput(c.id) {
+            // The current one, in the middle. A long dhikr scrolls inside its card; only a pull past its top or
+            // its end moves to the previous / next dhikr (before, every upward drag moved on, so the end of a long
+            // one such as Ayat al-Kursi could not be reached).
+            val edgePull = remember(c.id) {
+                object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+                    var pulled = 0f
+                    override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                        if (source == androidx.compose.ui.input.nestedscroll.NestedScrollSource.UserInput) pulled += available.y
+                        return androidx.compose.ui.geometry.Offset.Zero
+                    }
+                    override suspend fun onPreFling(available: androidx.compose.ui.unit.Velocity): androidx.compose.ui.unit.Velocity {
+                        val p = pulled; pulled = 0f
+                        if (p < -swipe && cur < c.items.size) cur += 1
+                        else if (p > swipe && cur > 0) cur -= 1
+                        return androidx.compose.ui.unit.Velocity.Zero
+                    }
+                }
+            }
+            Box(Modifier.weight(1f).fillMaxWidth().nestedScroll(edgePull).pointerInput(c.id) {
                 var dx = 0f; var dy = 0f
                 detectDragGestures(onDragStart = { dx = 0f; dy = 0f }, onDragEnd = {
                     val next = if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) (if (dx > swipe) 1 else if (dx < -swipe) -1 else 0) else (if (dy < -swipe) 1 else if (dy > swipe) -1 else 0)
                     if (next == 1 && cur < c.items.size) cur += 1
                     if (next == -1 && cur > 0) cur -= 1
-                }) { change, d -> change.consume(); dx += d.x; dy += d.y }
+                }) { change, d -> if (!change.isConsumed) { change.consume(); dx += d.x; dy += d.y } }   // the card's own scroll comes first
             }, contentAlignment = Alignment.Center) {
                 androidx.compose.animation.AnimatedContent(cur, transitionSpec = {
                     (androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn()) togetherWith
@@ -223,7 +241,7 @@ private fun CollectionReader(c: Collection, startAt: Int = -1, back: () -> Unit)
                             .combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
                                 onLongClick = { copy(ctx, item.text) }) { tap() }) {
                         Column(Modifier.fillMaxWidth()
-                            .then(if (item.text.length > 380) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                            .verticalScroll(rememberScrollState())   // any dhikr that does not fit (large text) scrolls
                             .padding(start = 20.dp, end = 20.dp, top = 40.dp, bottom = 58.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             if (item.note.isNotEmpty()) Text(item.note, color = P.gold, fontSize = 12.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 10.dp))
                             Text(item.text, color = if (fin) P.muted else P.ink, fontSize = (21 * Data.textScale).sp, lineHeight = (36 * Data.textScale).sp,
