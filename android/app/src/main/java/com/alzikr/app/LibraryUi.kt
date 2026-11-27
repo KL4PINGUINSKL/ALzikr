@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -306,6 +307,7 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
                     Text(Quran.BASMALA, color = P.accent, fontSize = (size + 2).sp, fontFamily = Fonts.quran, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp))
                 }
                 itemsIndexed(list, key = { _, a -> a.a }) { i, a ->
+                    val numColor = P.accent
                     if (i > 0 && list[i - 1].page != a.page) Text("— صفحة ${Quran.digits(a.page)} · الجزء ${Quran.digits(a.juz)} —", color = P.muted, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
                     val marked = Quran.marked(a.s, a.a)
                     val reading = Recitation.now == (a.s to a.a)
@@ -314,7 +316,8 @@ private fun QuranReader(surah: Int, startAyah: Int, back: () -> Unit, mark: Bool
                     // Memorization mode: only the first word shows until you tap to check yourself.
                     @Suppress("UNUSED_VARIABLE") val mv = Mushafs.version
                     Text(if (hidden) androidx.compose.ui.text.AnnotatedString(a.text.substringBefore(' ') + " … ﴿${Quran.digits(a.a)}﴾")
-                        else androidx.compose.ui.text.buildAnnotatedString { append(Mushafs.verse(ctx, a)); append((if (a.sajda) " ۩" else "") + " ﴿${Quran.digits(a.a)}﴾") },
+                        // The verse number (and the sajda sign) in the theme's own colour.
+                        else androidx.compose.ui.text.buildAnnotatedString { append(Mushafs.verse(ctx, a)); withStyle(androidx.compose.ui.text.SpanStyle(color = numColor)) { append((if (a.sajda) " ۩" else "") + " ﴿${Quran.digits(a.a)}﴾") } },
                         color = if (hidden) P.muted else P.ink, fontSize = size.sp, lineHeight = (size * 1.9f).sp, fontFamily = Fonts.quran,
                         textAlign = if (L.id == "mushaf" || L.id == "kaaba") TextAlign.Justify else TextAlign.Start,
                         modifier = Modifier.fillMaxWidth().clip(L.shape(10.dp))
