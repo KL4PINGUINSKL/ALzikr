@@ -177,10 +177,11 @@ fun MoreScreen(openSettings: (String) -> Unit) {
             appItems.chunked(2).forEach { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { (icon, label, go) ->
-                        Row(Modifier.weight(1f).clip(L.shape(14.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(14.dp)).clickable(onClick = go)
-                            .padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            GText(icon, fontSize = 18.sp, color = P.accent)
-                            Text(label, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, modifier = Modifier.padding(start = 8.dp))
+                        Column(Modifier.weight(1f).clip(L.shape(14.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(14.dp)).clickable(onClick = go)
+                            .padding(horizontal = 8.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            GText(icon, fontSize = 20.sp, color = P.accent)
+                            Text(label, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(top = 4.dp))
                         }
                     }
                 }
