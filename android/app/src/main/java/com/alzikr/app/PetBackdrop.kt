@@ -193,6 +193,10 @@ object PetBackdrop {
     }
 
     /** The frame around the friend's card in its section ("" none); the same frames as the widget's. */
+    /** The frame around the friend's speech bubble, in the app and over other apps ("" none). */
+    var bubbleFrame: String
+        get() = (Store.prefs.getString("pet_bubble_frame", "") ?: "").takeIf { id -> id.isEmpty() || Progress.frames.any { it.id == id && it.open } } ?: ""
+        set(v) { Store.prefs.edit().putString("pet_bubble_frame", v).apply(); Store.bump() }
     var cardFrame: String
         get() = (Store.prefs.getString("pet_card_frame", "") ?: "").takeIf { id -> id.isEmpty() || Progress.frames.any { it.id == id && it.open } } ?: ""
         set(v) { Store.prefs.edit().putString("pet_card_frame", v).apply(); Store.bump() }
@@ -525,6 +529,12 @@ fun PetDecorContent(part: String?) {
 
         }
         if (part == null || part == "card") InkPicker(card = true)
+        if (part == null || part == "bubble") {
+            Text("💬 إطار الفقاعة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Sub("حول فقاعة كلامه، في التطبيق وفوق التطبيقات الأخرى: خط رفيع، أو فوانيس وأهلّة تتدلّى من أعلاها.", size = 12.sp)
+            Bubble("سبحان الله وبحمده 🌿") {}
+            WidgetFramesGrid(bubble = true)
+        }
         if (part == null || part == "widget") {
             Text("🖼 إطار الأداة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub("يحيط بالأداة، ومع الخلفية يصير حولها كبرواز.", size = 12.sp)

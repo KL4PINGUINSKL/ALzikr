@@ -162,6 +162,13 @@ object Looks {
             pal(false, 0xFFEAF6FF, 0xFFFFFFFF, 0xFFFFF2C4, 0xFFBFDFF5, 0xFF1D2B5A, 0xFF56689A, 0xFFF0603F, 0xFFFFFFFF, 0xFF1E9E63),
             pal(true, 0xFF101634, 0xFF19204A, 0xFF242C5E, 0xFF344080, 0xFFF1F4FF, 0xFFA9B4E0, 0xFFFF8A65, 0xFF2A0A00, 0xFF5EE0A0),
             Corners.ROUND, 30.dp, Fonts.changa, Fonts.changa, NavStyle.BAR, IconStyle.ROUNDED, PrayerLayout.CARDS, CounterStyle.BEADS, ornament = "⭐", kids = true),
+        // For girls, open from the start: soft pink and lavender, bubbles floating up, petal-shaped panels, the five prayers as
+        // five roses that open as you pray, a flower for the counter, rounded Messiri letters and a floating bar.
+        Look("girls", "للبنات", "وردي ولافندر ناعمان، فقاعات ملوّنة تطفو، لوحات كالبتلات، والصلوات خمس ورود تتفتّح بصلاتك، والسبحة زهرة، وخط المسيري المستدير · خاص بالبنات 🎀",
+            pal(false, 0xFFFFF4F9, 0xFFFFFFFF, 0xFFFDE6F1, 0xFFF4C9DE, 0xFF5B2449, 0xFF9C6C8C, 0xFFE2589C, 0xFFFFFFFF, 0xFF9B72D8),
+            pal(true, 0xFF1B1021, 0xFF25162B, 0xFF311B3A, 0xFF4D2B57, 0xFFFDE9F4, 0xFFCDA6C8, 0xFFFF8CC6, 0xFF2B0619, 0xFFC7A6F5),
+            Corners.ROUND, 30.dp, Fonts.messiri, Fonts.messiri, NavStyle.DOCK, IconStyle.ROUNDED, PrayerLayout.GARDEN, CounterStyle.FLOWER, ornament = "♡",
+            accentTitles = true, backdrop = Backdrop.BUBBLES, panel = PanelStyle.PETAL, motif = "rose"),
         // Opened by friendship (Friendship.gifts theme_<id>).
         Look("breeze", "نسيم", "نعناعي وسماوي هادئ، خط المسيري للعناوين، شريط عائم وبطاقات للصلوات · هدية الصداقة",
             pal(false, 0xFFEEF8F5, 0xFFFFFFFF, 0xFFDDF1EC, 0xFFC2E2DA, 0xFF123A36, 0xFF5A7E78, 0xFF2A9D8F, 0xFFFFFFFF, 0xFFE0A84A),

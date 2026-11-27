@@ -101,6 +101,10 @@ object Progress {
     private val needs: IntArray by lazy { IntArray(1001).also { a -> for (n in 2..1000) a[n] = a[n - 1] + step(n) } }
     fun need(n: Int): Int = if (n <= 1) 0 else if (n <= 1000) needs[n] else needs[1000] + (1001..n).sumOf { step(it) }
     fun level(x: Int = xp): Int { var n = 1; while (need(n + 1) <= x) n++; return n }
+    /** Growth has no top; every friend and look opens by level 100 (levels.json, user 2026-11-27). */
+    const val LAST_UNLOCK = 100
+    /** «بقي … للنموّ التالي». */
+    fun toNext(lv: Int, x: Int): String = "بقي ${Quran.digits(need(lv + 1) - x)} ✨ للنموّ ${Quran.digits(lv + 1)}"
 
     /** Shows levels, points and rewards; off for those who prefer their worship uncounted (rewards still open quietly). */
     var showLevels: Boolean

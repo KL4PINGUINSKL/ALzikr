@@ -16,6 +16,7 @@ from pathlib import Path
 PETS = Path(__file__).resolve().parents[2] / 'android' / 'app' / 'src' / 'main' / 'assets' / 'pets'
 DENSE = 68                     # one friend a level up to here (all of them)
 GAPS = [2, 3]                  # then a friend every 2 or 3 levels
+MAX = 100                      # every friend and look opens by this level (growth goes on; user, 2026-11-27)
 files = ('pack.json', 'originals/pack.json', 'legendary/pack.json', 'studio/pack.json')
 packs = [json.loads((PETS / p).read_text(encoding='utf-8')) for p in files]
 old = json.loads((PETS / 'levels.json').read_text(encoding='utf-8'))
@@ -53,17 +54,38 @@ for rank, s in enumerate(order):
         moving = True; peak = max(peak, c)
         (legend if k['pack'] == 'legendary' else normal).append((peak, rank, i, k['id'], s))
 normal.sort(); legend.sort(key=lambda x: (species[x[4]]['level'], x[0], x[1], x[2]))
-slots = [l for l in range(DENSE + 1, last_friend) if l not in friend_levels]
-nxt = last_friend
-def slot():
-    global nxt
-    if slots: return slots.pop(0)
-    nxt += 1; return nxt
-lastof = {}
-for _, _, _, kid, s in normal + legend:
-    l = slot()
-    l = max(l, species[s]['level'], lastof.get(s, 0))
+# 2026-11-27 (user): growth ends at level MAX = 100, so the looks that move are spread evenly over 2..MAX in their
+# order (never before their friend, never before the friend's earlier look); several can open at one level.
+moved = normal + legend
+movedset = {kid for _, _, _, kid, _ in moved}
+lastof = {}   # a moved look never opens before the friend's looks that stay where they are
+for s in order:
+    kept = [new[k['id']] for k in species[s]['skins'] if k['id'] in new and k['id'] not in movedset]
+    if kept: lastof[s] = max(kept)
+# Each level after the last friend gets one look; the rest are spread evenly over 2..MAX.
+top = [l for l in range(last_friend + 1, MAX + 1)]
+rest = len(moved) - len(top)
+targets = sorted(top + [2 + round(i * (MAX - 2) / max(1, rest - 1)) for i in range(max(0, rest))])
+for i, (_, _, _, kid, s) in enumerate(moved):
+    target = targets[i]
+    l = max(target, species[s]['level'], lastof.get(s, 0))
+    assert l <= MAX, (kid, l)
     new[kid] = l; lastof[s] = l
+# Fill any level left empty by those limits: bring down the nearest later look that may open there.
+def has(l): return any(v == l for v in new.values()) or any(species[x]['level'] == l for x in order)
+for m in range(2, MAX + 1):
+    if has(m): continue
+    for _, _, _, kid, s in moved:
+        if new[kid] <= m or species[s]['level'] > m: continue
+        mine = [new.get(k['id'], cur(k)) for k in species[s]['skins'] if not k.get('hidden')]
+        ids = [k['id'] for k in species[s]['skins'] if not k.get('hidden')]
+        j = ids.index(kid)
+        if j > 0 and mine[j - 1] > m: continue
+        if sum(1 for v in new.values() if v == new[kid]) < 2: continue   # do not empty another level
+        old_l = new[kid]; new[kid] = m
+        after = [new.get(k['id'], cur(k)) for k in species[s]['skins'] if not k.get('hidden')]
+        if after != sorted(after): new[kid] = old_l; continue   # it would open before an earlier look of its friend
+        break
 last_look = max(new.values())
 
 # Checks: every level up to the last opens something; each friend's looks open in order and never before it.

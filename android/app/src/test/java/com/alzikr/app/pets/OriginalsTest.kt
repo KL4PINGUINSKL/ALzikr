@@ -39,15 +39,16 @@ class OriginalsTest {
         (3..120).forEach { n -> assertEquals(75, Progress.step(n) - Progress.step(n - 1)) }
         assertEquals(24_300, Progress.need(25)); assertEquals(95_550, Progress.need(50)); assertEquals(378_675, Progress.need(100))
         assertEquals(49, Progress.level(95_549)); assertEquals(50, Progress.level(95_550))
-        // Every level up to 158 opens a friend or a look, and each friend's looks open in order; the legendary friends' extra
-        // looks are the last ones.
+        // Every friend and look opens by level 100 (user, 2026-11-27; growth itself goes on), every level up to 100 opens
+        // something, and each friend's looks open in order.
         val opened = Species.entries.flatMap { s -> listOf(Progress.speciesLevel(s)) + PetLooks.of(s).filter { !it.hidden }.map { it.level } }.toSet()
-        (2..158).forEach { l -> assertTrue("level $l opens nothing", l in opened) }
+        (2..100).forEach { l -> assertTrue("level $l opens nothing", l in opened) }
+        assertTrue("something opens after 100", opened.max() <= 100)
         Species.entries.forEach { s -> PetLooks.of(s).filter { !it.hidden }.map { it.level }.let { assertEquals("${s.name} in order", it.sorted(), it) } }
         val legend = listOf(Species.CELESTIAL_DRAGON, Species.WINGED_UNICORN, Species.GRIFFIN, Species.PHOENIX, Species.COSMIC_DRAGON)
         val legendExtra = legend.flatMap { s -> PetLooks.of(s).filter { it.level > Progress.speciesLevel(s) }.map { it.level } }
         val others = (Species.entries - legend.toSet()).flatMap { s -> PetLooks.of(s).map { it.level } }
-        assertTrue(legendExtra.isNotEmpty() && legendExtra.min() > others.max()); assertEquals(158, legendExtra.max())
+        assertTrue(legendExtra.isNotEmpty()); assertEquals(100, legendExtra.max())
     }
 
     @Test fun filesAreValid() {

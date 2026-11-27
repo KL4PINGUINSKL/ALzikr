@@ -55,7 +55,7 @@ fun RewardsContent() {
         if (part == "me") Panel(color = P.card, pad = 14.dp) {
             if (sp != null) Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { PetLottie(sp, Modifier.size(110.dp)) }
             Text("✨ النموّ ${Quran.digits(lv)}", color = P.ink, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-            Sub("${Quran.digits(x)} ✨ · النموّ التالي عند ${Quran.digits(Progress.need(lv + 1))}", Modifier.fillMaxWidth(), size = 12.sp)
+            Sub("${Quran.digits(x)} ✨ · " + "النموّ التالي عند ${Quran.digits(Progress.need(lv + 1))}", Modifier.fillMaxWidth(), size = 12.sp)
         }
         // Moved here from the friend tab: growth, friendship and streak in detail, how they grow, and the log.
         if (part == "me" && sp != null) FriendStatsPanel()
@@ -88,12 +88,20 @@ fun RewardsContent() {
                     }
                 }
             }
-            Sub("وكل درجة نموّ من 2 إلى 125 يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
+            Sub("وكل درجة نموّ من 2 إلى 100 يفتح صديقًا أو شكلًا جديدًا. وصديقك الذي اخترته من قبل وشكله باقيان لك.", Modifier.padding(top = 8.dp), size = 11.sp)
         }
         if (part == "gifts") Panel(pad = 14.dp) {
             Title("جوائز الصداقة ${Friendship.heart}")
-            Sub("بنقاط الصداقة وحدها (${Quran.digits(Progress.bondPoints)} ❤ الآن)، منفصلة عن النموّ: إطارات، وثيمات، وأوسمة، ومزايا.", size = 12.sp)
-            Friendship.gifts.forEach { g ->
+            Sub("بنقاط الصداقة وحدها (${Quran.digits(Progress.bondPoints)} ❤ الآن)، منفصلة عن النموّ.", size = 12.sp)
+            // In three kinds (user, 2026-11-27), so each list is short and clear.
+            var kind by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("themes") }
+            fun kindOf(id: String) = if (id.startsWith("theme_")) "themes" else if (id.startsWith("frame_")) "frames" else "more"
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("themes" to "🎨 الثيمات", "frames" to "🖼 الإطارات", "more" to "🏅 أوسمة ومزايا").forEach { (k, l) ->
+                    Choice("$l (${Quran.digits(Friendship.gifts.count { kindOf(it.id) == k })})", kind == k) { kind = k }
+                }
+            }
+            Friendship.gifts.filter { kindOf(it.id) == kind }.forEach { g ->
                 val got = Progress.bondPoints >= g.bond
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp).alpha(if (got) 1f else .55f), verticalAlignment = Alignment.CenterVertically) {
                     Text(if (got) g.icon else "🔒", fontSize = 20.sp, modifier = Modifier.width(34.dp))
@@ -104,7 +112,7 @@ fun RewardsContent() {
                 }
             }
         }
-        if (part == "gifts") Sub("🖼 إطارات الأداة وخلفياتها تختارها من «صديقي» › «الزينة».", size = 12.sp)
+        if (part == "gifts") Sub("🖼 الإطارات تختارها للبطاقة والفقاعة والأداة من «صديقي» › «الزينة»، والثيمات من «الثيمات».", size = 12.sp)
         if (part == "badges") Panel(pad = 14.dp) {
             Title("أوسمتي 🏅")
             val earned = Progress.earned()
@@ -223,14 +231,14 @@ object Certificate {
 
 /** The frames, an even grid: the widget's (default) or the card's ([card]). */
 @Composable
-fun WidgetFramesGrid(card: Boolean = false) {
+fun WidgetFramesGrid(card: Boolean = false, bubble: Boolean = false) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
-    val cur = if (card) PetBackdrop.cardFrame.ifEmpty { "plain" } else Progress.frame
+    val cur = if (bubble) PetBackdrop.bubbleFrame.ifEmpty { "plain" } else if (card) PetBackdrop.cardFrame.ifEmpty { "plain" } else Progress.frame
     TileGrid(Progress.frames, cols = 3, rows = 2, startOpen = Progress.frames.indexOfFirst { it.id == cur } >= 6, noun = "الإطارات") { f, m ->
         val open = f.open; val on = cur == f.id
-        PictureTile(if (card && f.id == "plain") "بلا إطار" else f.name, on, open, f.bond, m, onClick = {
-            if (open) { if (card) PetBackdrop.cardFrame = if (f.id == "plain") "" else f.id else { Progress.frame = f.id; PetWidget.update(ctx) } }
+        PictureTile(if ((card || bubble) && f.id == "plain") "بلا إطار" else f.name, on, open, f.bond, m, onClick = {
+            if (open) { if (bubble) PetBackdrop.bubbleFrame = if (f.id == "plain") "" else f.id else if (card) PetBackdrop.cardFrame = if (f.id == "plain") "" else f.id else { Progress.frame = f.id; PetWidget.update(ctx) } }
             else android.widget.Toast.makeText(ctx, "يُفتح عند ${Quran.digits(f.bond)} ❤ (معك ${Quran.digits(Progress.bondPoints)})", android.widget.Toast.LENGTH_SHORT).show()
         }) { pm ->
             if (Decor.isDrawn(f.id)) androidx.compose.foundation.Canvas(pm.padding(6.dp).clip(L.shape(10.dp))) {

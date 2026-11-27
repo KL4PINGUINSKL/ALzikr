@@ -18,12 +18,11 @@ object Friendship {
 
     val gifts: List<Gift> = listOf(
 Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخضر القبة وبياض الحرم"),
-        Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لأداة صديقك على الشاشة الرئيسية"),
+        Gift("frame_night", 50, "🖼", Kind.FRAME, "إطار «الليل المرصّع بالنجوم»", "لبطاقة صديقك وفقاعته وأداته"),
         Gift("theme_sea", 60, "🌊", Kind.THEME, "ثيم «البحر»", "أزرق عميق وزبد أبيض"),
         Gift("theme_lantern", 75, "🏮", Kind.THEME, "ثيم «مشكاة»", "قنديل معلّق يتوهّج ويتنفّس كاللهب، وجمرات صاعدة"),
         Gift("theme_fajr", 90, "🌅", Kind.THEME, "ثيم «الفجر»", "ألوان الشروق الهادئة"),
         Gift("greet", 100, "🌅", Kind.PERK, "تحية الصباح باسمك", "يحيّيك صديقك صباحًا باسمك ويذكّرك بأذكار الصباح"),
-        Gift("theme_rose", 110, "🌸", Kind.THEME, "ثيم «ورد»", "وردي وعنابي بسبحة خرز"),
         Gift("frame_rose", 125, "🖼", Kind.FRAME, "إطار «الورد»", "وردي فاتح بإطار مزدوج"),
         Gift("theme_breeze", 150, "🎨", Kind.THEME, "ثيم «نسيم»", "نعناعي وسماوي هادئ"),
         Gift("theme_kaaba", 175, "🕋", Kind.THEME, "ثيم «الكعبة»", "سواد الكسوة وذهب الحزام"),
@@ -118,7 +117,9 @@ Gift("theme_madinah", 25, "🕌", Kind.THEME, "ثيم «المدينة»", "أخ
 
     /** The widget frame's gift. */
     fun frameGift(frameId: String): Gift? = gift("frame_$frameId")
-    fun frameOpen(frameId: String) = frameGift(frameId)?.let { Progress.bondPoints >= it.bond } ?: true
+    /** TEMPORARY, for trying the frames before publishing (user, 2026-11-27): every frame open. Must be false in a published version. */
+    const val TRY_ALL_FRAMES = true
+    fun frameOpen(frameId: String) = TRY_ALL_FRAMES || (frameGift(frameId)?.let { Progress.bondPoints >= it.bond } ?: true)
 
     // ---- the nickname
     var nick: String

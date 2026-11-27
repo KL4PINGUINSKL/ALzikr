@@ -11,6 +11,9 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -270,9 +273,24 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
 /** The speech bubble: small, soft, closes by itself; a tap goes where it points. */
 @Composable
 fun Bubble(text: String, onClick: () -> Unit) {
-    GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
-        modifier = Modifier.widthIn(max = 240.dp).clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp))
-            .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp))
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val fr = Progress.frames.firstOrNull { it.id == PetBackdrop.bubbleFrame && it.id != "plain" }
+    if (fr == null) {
+        GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 240.dp).clip(L.shape(16.dp)).background(P.card).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp))
+                .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp))
+        return
+    }
+    // A frame chosen in «الزينة ← الفقاعة»: drawn around the bubble (lanterns and crescents hang from its top edge).
+    val ctx = LocalContext.current
+    val drawn = Decor.isDrawn(fr.id)
+    val calm = com.alzikr.app.pets.PetPerf.reduceMotion
+    val t = if (calm) 0f else rememberInfiniteTransition(label = "bf").animateFloat(0f, 1f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "t").value
+    Box(Modifier.widthIn(max = 250.dp).clip(L.shape(16.dp)).background(P.card).clickable(onClick = onClick)) {
+        GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
+            modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = if (drawn) 24.dp else 10.dp, bottom = 10.dp))
+        androidx.compose.foundation.Canvas(Modifier.matchParentSize()) { drawCardFrame(ctx, fr, t, 16.dp.toPx()) }
+    }
 }
 
 /** One-time welcome: meet the new friend and choose one (or later). */
@@ -340,7 +358,7 @@ fun PetPage() {
         if (tab == "decor" && sp != null) {
             var part by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("card") }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("card" to "بطاقته", "widget" to "أداة الشاشة", "glow" to "الوهج").forEach { (k, l) -> Choice(l, part == k) { part = k } }
+                listOf("card" to "بطاقته", "bubble" to "الفقاعة", "widget" to "أداة الشاشة", "glow" to "الوهج").forEach { (k, l) -> Choice(l, part == k) { part = k } }
             }
             Panel(pad = 14.dp) { PetDecorContent(part) }
         }
@@ -709,7 +727,7 @@ fun GrowthGuide() {
         "كل درجة نموّ تفتح صديقًا جديدًا أو شكلًا جديدًا أو أغراضًا لغرفته، ويكبر شكله ويزيد نشاطه مع النموّ.", size = 11.sp)
     if (Progress.showLevels) {
         val lv = Progress.level()
-        Sub("صديقك الآن في النموّ ${Quran.digits(lv)} · بقي ${Quran.digits(Progress.need(lv + 1) - Progress.xp)} ✨ للنموّ ${Quran.digits(lv + 1)}", Modifier.padding(top = 4.dp), size = 12.sp)
+        Sub("صديقك الآن في النموّ ${Quran.digits(lv)} · " + Progress.toNext(lv, Progress.xp), Modifier.padding(top = 4.dp), size = 12.sp)
     }
     Sub("الاثنان منفصلان: القلوب لا تُحسب في النموّ، والنموّ لا يزيد القلوب. وكلها مكافآت داخل التطبيق، لا مقياس للأجر عند الله.", Modifier.padding(top = 10.dp), size = 11.sp)
 }
@@ -802,7 +820,7 @@ fun ProgressLines(toRewards: () -> Unit) {
     }
     val lv = Progress.level(); val x = Progress.xp; val from = Progress.need(lv); val to = Progress.need(lv + 1)
     ProgressLine("✨ النموّ ${Quran.digits(lv)}", "${Quran.digits(x)} / ${Quran.digits(to)} ✨", ((x - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold,
-        "بقي ${Quran.digits(to - x)} ✨ للنموّ ${Quran.digits(lv + 1)}", "اليوم ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ المسموح بها")
+        Progress.toNext(lv, x), "اليوم ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ المسموح بها")
     val bp = Progress.bondPoints; val (bf, bt) = Progress.bondRange(bp); val steps = Progress.bondSteps; val i = Progress.bondStage(bp)
     ProgressLine("${Friendship.heart} الصداقة: ${steps[i].second}", if (bt > 0) "${Quran.digits(bp)} / ${Quran.digits(bt)} ❤" else "${Quran.digits(bp)} ❤",
         if (bt > 0) ((bp - bf).toFloat() / (bt - bf)).coerceIn(0f, 1f) else 1f, P.accent,

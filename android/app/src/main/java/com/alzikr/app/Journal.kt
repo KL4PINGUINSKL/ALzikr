@@ -103,7 +103,7 @@ fun JournalSheet(close: () -> Unit) {
             // Now: the level by experience, and the friendship.
             val l = Progress.level(); val xp = Progress.xp
             val from = Progress.need(l); val to = Progress.need(l + 1)
-            Meter("✨ النموّ ${Quran.digits(l)}", "${Quran.digits(xp)} ✨ · بقي ${Quran.digits(to - xp)} للنموّ ${Quran.digits(l + 1)}", (xp - from).toFloat() / (to - from).coerceAtLeast(1), P.gold)
+            Meter("✨ النموّ ${Quran.digits(l)}", "${Quran.digits(xp)} ✨ · " + Progress.toNext(l, xp), ((xp - from).toFloat() / (to - from).coerceAtLeast(1)).coerceIn(0f, 1f), P.gold)
             val b = Progress.bondPoints; val (bf, bt) = Progress.bondRange(b)
             Meter("${Friendship.heart} الصداقة: ${Progress.bondName(b)}", "${Quran.digits(b)} ❤" + if (bt > 0) " · بقي ${Quran.digits(bt - b)} للمرتبة التالية" else " · أعلى المراتب",
                 if (bt > 0) (b - bf).toFloat() / (bt - bf) else 1f, androidx.compose.ui.graphics.Color(0xFFE25C83))
