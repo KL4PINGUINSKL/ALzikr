@@ -416,7 +416,7 @@ fun PinnedScraps(place: String, modifier: Modifier = Modifier) {
         }
     }
     open?.let { id -> NoteSheet(id, edit = { editing = Store.notes().firstOrNull { it.id == id } }) { open = null } }
-    editing?.let { e -> androidx.compose.ui.window.Dialog({ editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) { RichNoteEditor(e) { editing = null } } }
+    editing?.let { e -> androidx.compose.ui.window.Dialog({ editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) { RichNoteEditor(e) { editing = null } } }
 }
 
 /** Scraps folded to their pins (tap the pin), until the app starts again. */

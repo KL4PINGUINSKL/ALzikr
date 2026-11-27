@@ -45,7 +45,7 @@ import java.util.Locale
 @Composable
 fun TasksScreen() {
     Column(Modifier.fillMaxSize()) {
-        Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+        if (!noteEditorOpen) Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
             // «اليوم» first (it ties the others together), then the day's parts in the order a day goes.
             TabGrid(listOf(Triple(Daily.TODAY, "☀", "اليوم"), Triple(Daily.TASKS, "✅", "المهام"), Triple(Daily.HABITS, "🔁", "العادات"), Triple(Daily.KHATMA, "📖", "الختمة"),
                 Triple(Daily.FOCUS, "🎯", "التركيز"), Triple(Daily.NOTES, "📝", "ملاحظات")).map { (i, ic, t) -> Triple(i.toString(), ic, t) },
@@ -63,6 +63,9 @@ fun TasksScreen() {
     }
 }
 
+/** True while the note editor fills the screen (the «يومي» tabs hide). */
+private var noteEditorOpen by androidx.compose.runtime.mutableStateOf(false)
+
 @Composable
 private fun NotesList() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -73,9 +76,14 @@ private fun NotesList() {
     val all = Store.notes()
     val notes = if (find.isBlank()) all else { val m = HadithSearch.matcher(find); all.filter { m(Md.plain(it.text)) } }
     val fmt = remember { SimpleDateFormat("d MMM · h:mm a", Locale("ar")) }
-    // The editor covers the whole screen (header and tabs too), so with the keyboard open the text keeps the room.
-    if (adding || editing != null) androidx.compose.ui.window.Dialog({ adding = false; editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        RichNoteEditor(editing) { adding = false; editing = null }
+    // The editor covers the whole screen as a page of the app: the header, the bars and the «يومي» tabs step aside
+    // (Nav.pages), so with the keyboard open the text keeps the room. Not a Dialog: a Dialog window gets no insets,
+    // and its bottom slid under the navigation bar.
+    if (adding || editing != null) {
+        val token = remember { Any() }
+        androidx.compose.runtime.DisposableEffect(token) { Nav.pages += token; noteEditorOpen = true; onDispose { Nav.pages.remove(token); noteEditorOpen = false } }
+        RichNoteEditor(editing, inline = true) { adding = false; editing = null }
+        return
     }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Hint("notes2", "📝", "اكتب ملاحظاتك بعناوين وخط عريض وألوان وقوائم مهام من الشريط فوق الكتابة. اضغط ملاحظة لتفتحها: تؤشّر مربعاتها، وتعلّقها كقصاصة في أي صفحة، أو على الشاشة الرئيسية، أو فقاعة فوق التطبيقات.") }

@@ -21,6 +21,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -258,14 +263,16 @@ object Rich {
 
 /** The note editor: the text as it will look, a toolbar of styles, and «حفظ». */
 @Composable
-fun RichNoteEditor(note: Store.Note?, close: () -> Unit) {
+fun RichNoteEditor(note: Store.Note?, inline: Boolean = false, close: () -> Unit) {
     BackHandler(onBack = close)
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var edit by remember { mutableStateOf<EditText?>(null) }
     var scroller by remember { mutableStateOf<android.widget.ScrollView?>(null) }
     var colors by remember { mutableStateOf(false) }
     val ink = P.ink.toArgb(); val hintColor = P.muted.toArgb()
-    Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding().imePadding()) {   // the keyboard pushes the editor up, so the line being typed stays in view
+    val bars = if (inline) Modifier.windowInsetsPadding(WindowInsets.ime.exclude(WindowInsets.navigationBars))
+        else Modifier.statusBarsPadding().navigationBarsPadding().imePadding()
+    Column(Modifier.fillMaxSize().background(P.bg).then(bars)) {   // the keyboard pushes the editor up, so the line being typed stays in view
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("→", color = P.accent, fontSize = 22.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = close).padding(horizontal = 10.dp, vertical = 6.dp))
             Text(if (note == null) "ملاحظة جديدة" else "تعديل الملاحظة", color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
