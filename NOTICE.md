@@ -17,3 +17,11 @@ Material Symbols Rounded by Google (https://github.com/google/material-design-ic
 ## Companion animations
 
 The companion pets are free animations from LottieFiles (https://lottiefiles.com), used under the Lottie Simple License. The source page and creator of each file are listed in `design/pet-candidates/chosen.tsv` and `gallery.json` (cow, elephant and giraffe: `design/pet-candidates2/report.json`; the later looks: `design/pet-candidates3/report.json`; bear and panda: `design/pet-candidates4/report.json`). Playback: lottie-android (Airbnb), Apache License 2.0.
+
+## الموسوعة القرآنية الشاملة (quranpedia.app)
+
+The verse sheet's «المزيد من الموسوعة القرآنية» reads the encyclopedia at the moment it is asked for, through its open
+MCP endpoint (https://mcp.quranpedia.workers.dev, no key or account; the site invites apps to read its data). Nothing
+from it is bundled in the APK. Book texts belong to their authors, publishers and editors, as the site states; the
+computed data (similar verses, riwaya differences) is used with the source named and linked, as the site asks; the
+word-by-word i'rab is from The Quranic Treebank (MIT). Every answer is shown with a link to its page on quranpedia.app.

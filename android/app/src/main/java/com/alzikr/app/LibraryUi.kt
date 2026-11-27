@@ -545,6 +545,8 @@ internal fun AyahSheet(first: Quran.Ayah, inContext: (() -> Unit)? = null, close
             if (sel != "tadabbur") TafsirCard("tadabbur", a.s, a.a, "🌱 وقفات للتدبّر والعمل", startOpen = openT)
             if (!compare) Action("📚 قارن التفاسير", Modifier.fillMaxWidth().padding(top = 8.dp), filled = false) { compare = true }
             else compareSet.filter { it != sel }.forEach { TafsirCard(it, a.s, a.a) }
+            // Reasons of revelation, hadiths, i'rab, qira'at, similar verses, riwayat and dozens of tafsirs: folded, for whoever wants more.
+            QuranpediaCard(a.s, a.a)
 
             // The verse's other actions, after its tafsir.
             Text("خيارات الآية", color = P.muted, fontSize = 13.sp, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
