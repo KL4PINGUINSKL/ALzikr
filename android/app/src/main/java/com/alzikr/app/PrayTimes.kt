@@ -13,8 +13,11 @@ import kotlin.math.sin
 import kotlin.math.tan
 
 /** The five prayers plus sunrise (shown, never alerted as a prayer). */
-enum class Prayer(val ar: String) { FAJR("الفجر"), SUNRISE("الشروق"), DHUHR("الظهر"), ASR("العصر"), MAGHRIB("المغرب"), ISHA("العشاء");
+enum class Prayer(val base: String) { FAJR("الفجر"), SUNRISE("الشروق"), DHUHR("الظهر"), ASR("العصر"), MAGHRIB("المغرب"), ISHA("العشاء");
     val alertable get() = this != SUNRISE
+    /** Today's name: on Friday the midday prayer is «الجمعة». */
+    val ar: String get() = on(java.time.LocalDate.now())
+    fun on(d: java.time.LocalDate): String = if (this == DHUHR && d.dayOfWeek == java.time.DayOfWeek.FRIDAY) "الجمعة" else base
 }
 
 /**

@@ -96,6 +96,8 @@ fun SharhHome() {
     LaunchedEffect(Unit) { load(false) }
     var searching by rememberSaveable { mutableStateOf(false) }
     if (searching) { HadithSearchPage { searching = false }; return }
+    var mushkil by rememberSaveable { mutableStateOf(false) }
+    if (mushkil) { Subpage("أحاديث يُشكل فهمها", { mushkil = false }) { MushkilList() }; return }
     openHadith?.let { id ->
         // Next / previous walk the topic's list it was opened from.
         val i = openList.indexOf(id)
@@ -108,6 +110,7 @@ fun SharhHome() {
     val all = cats
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { SearchBar("ابحث عن حديث وشرحه…") { searching = true } }
+        item { Action("⚠ أحاديث يُشكل فهمها: شرح موسّع", Modifier.fillMaxWidth(), filled = false) { mushkil = true } }
         item { Hint("sharh", "💡", "أحاديث مشروحة من «موسوعة الأحاديث النبوية»: اختر موضوعًا، ثم حديثًا لترى شرحه وفوائده ودرجته.") }
         if (parent != null) item { Choice("‹ رجوع إلى المواضيع", false) { parent = null } }
         when {

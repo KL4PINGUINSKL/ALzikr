@@ -342,6 +342,7 @@ fun NoteSheet(id: Long, edit: () -> Unit, close: () -> Unit) {
             Wrap(gap = 6.dp) {
                 Choice("✎ تعديل", false) { close(); edit() }
                 Choice(if (n.pinned) "📌 مثبّتة أعلى الملاحظات" else "📌 أعلى الملاحظات", n.pinned) { Store.togglePin(n.id) }
+                Choice("⧉ نسخ", false) { copyNote(n.text) }
                 Choice("↗ مشاركة", false) { ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, Md.plain(n.text)), "مشاركة")) }
                 Choice("🗑 حذف", false) { del = true }
             }
@@ -415,10 +416,18 @@ fun PinnedScraps(place: String, modifier: Modifier = Modifier) {
         }
     }
     open?.let { id -> NoteSheet(id, edit = { editing = Store.notes().firstOrNull { it.id == id } }) { open = null } }
-    editing?.let { e -> androidx.compose.ui.window.Dialog({ editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) { RichNoteEditor(e) { editing = null } } }
+    editing?.let { e -> androidx.compose.ui.window.Dialog({ editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) { RichNoteEditor(e) { editing = null } } }
 }
 
 /** Scraps folded to their pins (tap the pin), until the app starts again. */
 object Pins { val folded = androidx.compose.runtime.mutableStateListOf<Long>() }
 
 @Suppress("unused") private fun Context.keep() = Unit
+
+/** Copies a note's text (without its marks) in one tap. */
+fun copyNote(source: String) {
+    val c = Store.appContext ?: return
+    val cm = c.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+    cm.setPrimaryClip(android.content.ClipData.newPlainText("ملاحظة", Md.plain(source)))
+    android.widget.Toast.makeText(c, "نُسخت الملاحظة", android.widget.Toast.LENGTH_SHORT).show()
+}

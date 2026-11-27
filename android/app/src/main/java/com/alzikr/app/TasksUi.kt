@@ -86,6 +86,7 @@ private fun NotesList() {
                 val tags = listOfNotNull("📌 أعلى".takeIf { n.pinned }, ("📍 " + placeName(n.place)).takeIf { n.place.isNotEmpty() }, "📋 الشاشة الرئيسية".takeIf { n.widget }, "🫧 فقاعة".takeIf { n.bubble })
                 Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(fmt.format(Date(n.at)) + if (tags.isNotEmpty()) " · " + tags.joinToString(" · ") else "", color = androidx.compose.ui.graphics.Color(0x992A2A2A), fontSize = 11.sp, modifier = Modifier.weight(1f))
+                    Text("⧉ نسخ", color = androidx.compose.ui.graphics.Color(0xCC2A2A2A), fontSize = 12.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { copyNote(n.text) }.padding(6.dp))
                     Text("✅ مهمة", color = androidx.compose.ui.graphics.Color(0xCC2A2A2A), fontSize = 12.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
                         Store.addTask(Md.title(n.text), null); android.widget.Toast.makeText(ctxOf(), "أُضيفت إلى المهام", android.widget.Toast.LENGTH_SHORT).show() }.padding(6.dp))
                 }

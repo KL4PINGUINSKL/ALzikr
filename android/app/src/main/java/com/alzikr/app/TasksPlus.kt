@@ -192,7 +192,7 @@ fun TaskListPlus() {
                 val understood = listOfNotNull(parsed.due?.let { dueLabel(it) }, parsed.after?.let { "بعد ${it.ar}" }, parsed.minute?.let { "⏰ " + Alerts.timeText(it) }, Rules.label(parsed.rule).takeIf { it.isNotEmpty() }?.let { "🔁 $it" })
                 if (text.isNotBlank() && understood.isNotEmpty()) Text("فهمت: " + understood.joinToString(" · "), color = P.accent, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
                 Wrap(Modifier.padding(top = 8.dp), gap = 6.dp) {
-                    Prayer.entries.filter { it.alertable }.forEach { p -> Choice("بعد ${p.ar}", after == p.name) { after = if (after == p.name) null else p.name } }
+                    Prayer.entries.filter { it.alertable }.forEach { p -> Choice("بعد ${p.base}", after == p.name) { after = if (after == p.name) null else p.name } }
                 }
                 Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                     Choice(if (remindAt > 0) "⏰ " + TaskReminders.label(remindAt) else "⏰ وقت…", remindAt > 0) { pickReminder2(ctx, remindAt) { remindAt = it } }

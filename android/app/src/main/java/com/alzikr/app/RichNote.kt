@@ -20,6 +20,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -263,14 +264,18 @@ fun RichNoteEditor(note: Store.Note?, close: () -> Unit) {
     var edit by remember { mutableStateOf<EditText?>(null) }
     var colors by remember { mutableStateOf(false) }
     val ink = P.ink.toArgb(); val hintColor = P.muted.toArgb()
-    Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(P.bg).statusBarsPadding().navigationBarsPadding().imePadding()) {   // the keyboard pushes the editor up, so the line being typed stays in view
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("→", color = P.accent, fontSize = 22.sp, modifier = Modifier.clip(L.shape(10.dp)).clickable(onClick = close).padding(horizontal = 10.dp, vertical = 6.dp))
             Text(if (note == null) "ملاحظة جديدة" else "تعديل الملاحظة", color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Text("حفظ", color = P.onAccent, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(L.shape(10.dp)).background(P.accent).clickable {
                 val e = edit
                 val text = e?.let { Rich.save(it.text) }.orEmpty()
-                if (text.isNotBlank()) Store.saveNote(note?.id, text) else android.widget.Toast.makeText(ctx, "الملاحظة فارغة", android.widget.Toast.LENGTH_SHORT).show()
+                when {
+                    text.isNotBlank() -> Store.saveNote(note?.id, text)
+                    note != null -> { Store.deleteNote(note.id); android.widget.Toast.makeText(ctx, "حُذفت الملاحظة لأنها صارت فارغة", android.widget.Toast.LENGTH_SHORT).show() }   // emptied and saved: it goes, it does not come back
+                    else -> android.widget.Toast.makeText(ctx, "الملاحظة فارغة", android.widget.Toast.LENGTH_SHORT).show()
+                }
                 close()
             }.padding(horizontal = 14.dp, vertical = 8.dp))
         }

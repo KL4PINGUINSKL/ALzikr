@@ -155,7 +155,7 @@ fun DuasPage() {
             Sub("بين الأذان والإقامة (الترمذي وأبو داود): لصلاة", Modifier.padding(top = 8.dp))
             Wrap(Modifier.padding(top = 6.dp), gap = 6.dp) {
                 Choice("لا", Duas.remindAfterAdhan == null) { Duas.remindAfterAdhan = null; re() }
-                Prayer.entries.filter { it.alertable }.forEach { p -> Choice(p.ar, Duas.remindAfterAdhan == p) { Duas.remindAfterAdhan = p; re() } }
+                Prayer.entries.filter { it.alertable }.forEach { p -> Choice(p.base, Duas.remindAfterAdhan == p) { Duas.remindAfterAdhan = p; re() } }
             }
         }
     }
