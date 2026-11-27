@@ -164,6 +164,28 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         } else groups.forEach { g ->
             MoreFold(g, openGroup == g.title) { openGroup = if (openGroup == g.title) null else g.title }
         }
+        // The app itself: four rectangles of their own, two to a row, after the groups.
+        if (find.isBlank()) {
+            val ctxApp = LocalContext.current
+            val act = ctxApp as? android.app.Activity
+            val appItems = listOf(
+                Triple("ℹ", "عن التطبيق") { openSettings("about") },
+                Triple("🌐", "زيارة الصفحة") { runCatching { ctxApp.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("$APP_SITE/download.html"))) }; Unit },
+                Triple("⬆", "البحث عن تحديث") { act?.let { AppUpdate.checkNow(it) }; Unit },
+                Triple("↗", "مشاركة التطبيق") { act?.let { shareApp(it) }; Unit },
+            )
+            appItems.chunked(2).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { (icon, label, go) ->
+                        Row(Modifier.weight(1f).clip(L.shape(14.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(14.dp)).clickable(onClick = go)
+                            .padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            GText(icon, fontSize = 18.sp, color = P.accent)
+                            Text(label, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+            }
+        }
     }
     }
 }
@@ -195,10 +217,7 @@ private fun moreGroups(open: (String) -> Unit, openSettings: (String) -> Unit): 
         MoreGroupDef("⚙", "الإعدادات", listOf(
             Triple("📍", "الموقع والحساب") { openSettings("times") }, Triple("🔔", "التنبيهات والأذان") { openSettings("alerts") }, Triple("🕌", "الصلاة والتركيز") { openSettings("prayer") },
             Triple("👁", "راحة العين") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("☰", "أسماء الأقسام") { open("navnames") },
-            Triple("🕊", "الذكر البسيط") { openSettings("mode") }, Triple("💾", "نسخ احتياطي") { open("backup") }, Triple("💡", "المساعدة") { openSettings("help") },
-            Triple("ℹ", "عن التطبيق") { openSettings("about") }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
-            Triple("↗", "مشاركة التطبيق") { activity?.let { shareApp(it) } }, Triple("🌐", "صفحة التحميل") {
-                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("$APP_SITE/download.html"))) } })),
+            Triple("🕊", "الذكر البسيط") { openSettings("mode") }, Triple("💾", "نسخ احتياطي") { open("backup") }, Triple("💡", "المساعدة") { openSettings("help") })),
     )
 }
 
