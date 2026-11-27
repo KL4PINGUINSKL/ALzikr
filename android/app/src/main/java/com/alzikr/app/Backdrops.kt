@@ -36,6 +36,7 @@ enum class Backdrop(val moving: Boolean) {
     SNOW(true), PETALS(true), FIREFLIES(true), BUBBLES(true), DUNES(true), ROSETTE(true), SKYLINE(true),
     BUNTING(true), MESA(true), DAMASK(false), ORBS(true), INK(true), CACTI(true),
     RIWAQ(true), MANUSCRIPT(false), OASIS(true), STAINED(true), PAPER(true), OBSERVATORY(true), SEASONS(true), MARBLE(false),
+    BLOSSOM(true),
 }
 
 @Composable
@@ -65,6 +66,7 @@ fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
             Backdrop.PETALS -> petals(p, t)
             Backdrop.FIREFLIES -> fireflies(p, t)
             Backdrop.BUBBLES -> bubbles(p, t)
+            Backdrop.BLOSSOM -> blossom(p, t)
             Backdrop.DUNES -> dunes(p, t)
             Backdrop.ROSETTE -> rosette(p, t)
             Backdrop.SKYLINE -> skyline(p, t)
@@ -519,5 +521,55 @@ object Sky {
         Phase.AFTERNOON -> pal(false, 0xFFFBF4E8, 0xFFFFFFFF, 0xFFF5E6CC, 0xFFE9D3AE, 0xFF3D2A12, 0xFF85694A, 0xFFB86A16, 0xFF2F8F7A)
         Phase.SUNSET -> pal(false, 0xFFFDEDE4, 0xFFFFFFFF, 0xFFF9DACB, 0xFFF0C3AE, 0xFF43201A, 0xFF8E5F52, 0xFFD0502C, 0xFFB57A1E)
         Phase.DUSK -> pal(true, 0xFF19132A, 0xFF211A37, 0xFF2B2246, 0xFF3F3363, 0xFFF0E8FA, 0xFFADA0C8, 0xFFC59BFF, 0xFFF0B860)
+    }
+}
+
+/** A small heart centred on [c], [r] its half-width. */
+fun DrawScope.heart(c: Offset, r: Float, color: Color) {
+    val p = Path()
+    p.moveTo(c.x, c.y + r * .9f)
+    p.cubicTo(c.x - r * 1.5f, c.y - r * .1f, c.x - r * .55f, c.y - r * 1.25f, c.x, c.y - r * .45f)
+    p.cubicTo(c.x + r * .55f, c.y - r * 1.25f, c.x + r * 1.5f, c.y - r * .1f, c.x, c.y + r * .9f)
+    p.close(); drawPath(p, color)
+}
+
+/** A little rose seen from above: five petals around a curled heart, two leaves. */
+fun DrawScope.rose(c: Offset, r: Float, petal: Color, inner: Color, leaf: Color) {
+    drawOval(leaf, Offset(c.x - r * 1.9f, c.y + r * .1f), Size(r * 1.3f, r * .6f))
+    drawOval(leaf, Offset(c.x + r * .6f, c.y + r * .2f), Size(r * 1.3f, r * .6f))
+    for (k in 0 until 5) {
+        val a = (k * 72f - 90f) * PI.toFloat() / 180f
+        drawCircle(petal, r * .58f, Offset(c.x + cos(a) * r * .55f, c.y + sin(a) * r * .55f))
+    }
+    drawCircle(inner, r * .45f, c)
+    drawArc(petal.copy(alpha = .9f), 30f, 250f, false, Offset(c.x - r * .3f, c.y - r * .3f), Size(r * .6f, r * .6f), style = Stroke(r * .12f))
+}
+
+/** «بنوتة»: soft hearts and little roses drifting up and swaying, a few bubbles, a pink glow. */
+private fun DrawScope.blossom(p: Pal, t: Float) {
+    drawCircle(Brush.radialGradient(listOf(p.accent.copy(alpha = .10f), Color.Transparent), Offset(size.width * .8f, size.height * .12f), size.width * .7f),
+        size.width * .7f, Offset(size.width * .8f, size.height * .12f))
+    val hearts = listOf(p.accent, p.gold, Color(0xFFFF9EC7))
+    for (i in 0 until 16) {
+        val ph = (t * (.03f + rnd(i, 3) * .03f) + rnd(i, 1)) % 1f
+        val x = rnd(i, 2) * size.width + sin(t * .7f + i * 1.7f) * 14f
+        val y = size.height * (1.06f - ph * 1.12f)
+        val fade = (1 - abs(ph - .5f) * 2).coerceIn(0f, 1f)
+        val r = 5f + rnd(i, 4) * 9f
+        rotate(sin(t * .9f + i) * 16f, Offset(x, y)) { heart(Offset(x, y), r, hearts[i % 3].copy(alpha = .20f * (.4f + .6f * fade))) }
+    }
+    for (i in 0 until 7) {
+        val ph = (t * (.02f + rnd(i + 40, 3) * .02f) + rnd(i + 40, 1)) % 1f
+        val x = rnd(i + 40, 2) * size.width + sin(t * .5f + i) * 10f
+        val y = size.height * (1.06f - ph * 1.12f)
+        val r = 9f + rnd(i + 40, 4) * 7f
+        rotate(t * 12f * (if (i % 2 == 0) 1 else -1) + i * 50f, Offset(x, y)) {
+            rose(Offset(x, y), r, Color(0xFFF59AC0).copy(alpha = .26f), Color(0xFFE2588C).copy(alpha = .30f), Color(0xFF8BC79A).copy(alpha = .22f))
+        }
+    }
+    for (i in 0 until 10) {
+        val ph = (t * (.05f + rnd(i + 80, 3) * .05f) + rnd(i + 80, 1)) % 1f
+        val x = rnd(i + 80, 2) * size.width; val y = size.height * (1.05f - ph * 1.1f); val r = 3f + rnd(i + 80, 4) * 5f
+        drawCircle(Color.White.copy(alpha = .18f), r, Offset(x, y), style = Stroke(1.2f))
     }
 }

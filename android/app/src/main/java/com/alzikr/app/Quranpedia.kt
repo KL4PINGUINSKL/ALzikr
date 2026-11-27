@@ -51,7 +51,10 @@ object Qp {
 
     /** One tool call; the text it returns, or null when offline. Cached per tool and arguments. Blocking. */
     fun call(c: Context, tool: String, args: Map<String, Any>): String? {
-        val key = (tool + "_" + args.entries.sortedBy { it.key }.joinToString("_") { "${it.key}-${it.value}" }).replace(Regex("[^A-Za-z0-9_\\-]"), "")
+        val full = tool + "_" + args.entries.sortedBy { it.key }.joinToString("_") { "${it.key}-${it.value}" }
+        // A hash of the whole request (Arabic words included): before, the Arabic was dropped from the name, so every
+        // search shared one cached answer.
+        val key = tool + "_" + java.security.MessageDigest.getInstance("SHA-1").digest(full.toByteArray()).joinToString("") { "%02x".format(it) }
         val f = File(dir(c), "$key.txt")
         if (f.exists() && System.currentTimeMillis() - f.lastModified() < KEEP_MS) return f.readText()
         val text = runCatching {
@@ -197,7 +200,7 @@ private fun QpText(s: Int, a: Int, tool: String, args: Map<String, Any>, empty: 
                 if (l.startsWith("# ")) continue   // the title repeats what the sheet already shows
                 if (tool != "riwaya" && l.startsWith("﴿")) continue   // so does the verse itself (a riwaya's verse IS the answer)
                 val kind = if (l.startsWith("## ")) 1 else if (l.startsWith("ملاحظة") || l.startsWith("الرقم العام")) 2 else 0
-                val clean = l.removePrefix("## ").removePrefix("- ").replace("**", "")
+                val clean = l.removePrefix("## ").removePrefix("- ").replace("**", "").replace(Regex("\\s*\\[[A-Za-z0-9\\-]+\\]"), "")
                     .let { if (it.startsWith("|")) it.trim('|').split('|').map { c -> c.trim() }.filter { c -> c.isNotEmpty() }.joinToString(" · ") else it }
                 if (total > max) { lines += 2 to "… (البقية في الموسوعة)"; break }
                 total += clean.length
@@ -251,7 +254,7 @@ fun HadithInQuranpedia(hadithText: String) {
         androidx.compose.material3.OutlinedTextField(query, { query = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { asked = query.trim() }))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Wrap(gap = 6.dp) {
             Choice("عند الآيات في التفاسير", where == "tafsir") { where = "tafsir"; asked = query.trim() }
             Choice("في كتب علوم القرآن", where == "library") { where = "library"; asked = query.trim() }
         }
@@ -275,7 +278,9 @@ private fun QpResults(tool: String, args: Map<String, Any>) {
         t == null -> Sub("تعذّر البحث، تحقق من الإنترنت.")
         else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             val verse = Regex("(\\d{1,3}):(\\d{1,3})")
-            for (raw in t.lines()) {
+            val slug = Regex("\\s*\\[[A-Za-z0-9\\-]+\\]")
+            for (raw0 in t.lines()) {
+                val raw = raw0.replace(slug, "")
                 val l = raw.trim()
                 if (l.isEmpty()) continue
                 when {

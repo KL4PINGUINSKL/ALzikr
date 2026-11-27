@@ -132,7 +132,7 @@ object PetBackdrop {
     fun widgetBitmap(c: android.content.Context): Pair<android.graphics.Bitmap, Boolean>? {
         val id = widgetBg
         val fr0 = Progress.frames.firstOrNull { it.id == Progress.frame }
-        val drawnFrame = fr0 != null && Decor.isDrawn(fr0.id)
+        val drawnFrame = fr0 != null && (Decor.isDrawn(fr0.id) || Decor.hasExtras(fr0.id))
         if (id.isEmpty() && !drawnFrame) return null
         // The widget's real size (so nothing is stretched or cut), 900 × 450 when the launcher does not say.
         val dm = c.resources.displayMetrics
@@ -152,6 +152,7 @@ object PetBackdrop {
         val clip = android.graphics.Path().apply { addRoundRect(0f, 0f, w.toFloat(), h.toFloat(), r, r, android.graphics.Path.Direction.CW) }
         cv.clipPath(clip)
         var light = false
+        if (id.isEmpty() && fr0 != null) light = fr0.light   // a light frame keeps dark words
         if (id.isEmpty() && fr0 != null) cv.drawPaint(android.graphics.Paint().apply {
             shader = android.graphics.LinearGradient(0f, 0f, 0f, h.toFloat(), fr0.top.toInt(), fr0.bottom.toInt(), android.graphics.Shader.TileMode.CLAMP) })
         else if (id == "photo") {
@@ -172,7 +173,7 @@ object PetBackdrop {
         // A frame chosen too: a thin band in its colours at the very edge, and its own lines over the scene (no fill).
         if (fr0 != null && drawnFrame) runCatching {
             androidx.compose.ui.graphics.drawscope.CanvasDrawScope().draw(androidx.compose.ui.unit.Density(dm.density), androidx.compose.ui.unit.LayoutDirection.Rtl,
-                androidx.compose.ui.graphics.Canvas(cv), Size(w.toFloat(), h.toFloat())) { drawDecorFrame(fr0.id, 0f, Color(fr0.top), Color(fr0.bottom), r) }
+                androidx.compose.ui.graphics.Canvas(cv), Size(w.toFloat(), h.toFloat())) { if (Decor.isDrawn(fr0.id)) drawDecorFrame(fr0.id, 0f, Color(fr0.top), Color(fr0.bottom), r) }
         }
         Progress.frames.firstOrNull { it.id == Progress.frame }?.let { fr -> fr.res?.let { res -> runCatching {
             val band = 3f * dm.density
@@ -180,6 +181,8 @@ object PetBackdrop {
                 style = android.graphics.Paint.Style.STROKE; strokeWidth = band * 2
                 shader = android.graphics.LinearGradient(0f, 0f, 0f, h.toFloat(), fr.top.toInt(), fr.bottom.toInt(), android.graphics.Shader.TileMode.CLAMP) })
             androidx.core.content.ContextCompat.getDrawable(c, res)?.mutate()?.let { d -> clearFills(d); d.setBounds(0, 0, w, h); d.draw(cv) }
+            androidx.compose.ui.graphics.drawscope.CanvasDrawScope().draw(androidx.compose.ui.unit.Density(dm.density), androidx.compose.ui.unit.LayoutDirection.Rtl,
+                androidx.compose.ui.graphics.Canvas(cv), Size(w.toFloat(), h.toFloat())) { drawFrameExtras(fr.id, .15f, r) }
         } } }
         return out to light
     }
@@ -593,6 +596,7 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCardFrame(c: android.co
     PetBackdrop.clearFills(d); d.setBounds(0, 0, size.width.toInt(), size.height.toInt())
     val nc: android.graphics.Canvas = drawContext.canvas.nativeCanvas
     d.draw(nc)
+    drawFrameExtras(fr.id, t, radius)
 }
 
 

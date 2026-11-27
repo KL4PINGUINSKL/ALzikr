@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -21,6 +22,9 @@ object Decor {
     /** Frames drawn here (not XML shapes): they hang from the top edge. */
     val drawn = setOf("lanterns", "eid", "crescents")
     fun isDrawn(id: String) = id in drawn
+    /** Frames that also carry their own ornaments (drawFrameExtras): planets round the galaxy, roses at the rose's corners… */
+    val extras = setOf("night", "gold", "pattern", "dawn", "rose", "ocean", "desert", "lantern", "zellige", "aurora", "pearl", "royal", "crystal", "galaxy")
+    fun hasExtras(id: String) = id in extras
     /** Festive scenes (card ids; the widget's are the same with "w_"). */
     val scenes = setOf("ramadan_moon", "eid_moon", "orange_lanterns")
 }
@@ -176,6 +180,148 @@ fun DrawScope.drawFestiveScene(id: String, t: Float) {
                     .8f + .2f * sin((t * 4 * PI + k).toFloat()))
             }
             drawPath(Path().apply { moveTo(0f, h * .88f); quadraticBezierTo(w * .5f, h * .78f, w, h * .9f); lineTo(w, h); lineTo(0f, h); close() }, Color(0xFF2A1020))
+        }
+    }
+}
+
+
+/** An eight-pointed star (two squares), the girih's star. */
+fun DrawScope.star8(cx: Float, cy: Float, r: Float, color: Color, stroke: Float = 0f) {
+    for (a in listOf(0f, 45f)) {
+        val p = Path()
+        for (k in 0 until 4) {
+            val ang = ((a + k * 90f + 45f) * PI / 180).toFloat()
+            val x = cx + cos(ang) * r; val y = cy + sin(ang) * r
+            if (k == 0) p.moveTo(x, y) else p.lineTo(x, y)
+        }
+        p.close()
+        if (stroke > 0f) drawPath(p, color, style = Stroke(stroke)) else drawPath(p, color)
+    }
+}
+
+/** A cut gem: a diamond with a lighter top facet. */
+private fun DrawScope.gem(cx: Float, cy: Float, r: Float, color: Color) {
+    val p = Path().apply { moveTo(cx, cy - r); lineTo(cx + r * .8f, cy); lineTo(cx, cy + r); lineTo(cx - r * .8f, cy); close() }
+    drawPath(p, color)
+    drawPath(Path().apply { moveTo(cx, cy - r); lineTo(cx + r * .8f, cy); lineTo(cx - r * .8f, cy); close() }, Color.White.copy(alpha = .35f))
+    drawPath(p, Color.White.copy(alpha = .6f), style = Stroke(.8f * density))
+}
+
+/**
+ * Each frame's own ornaments over its band (user, 2026-11-27: «اجعل الإطارات أكثر تميزًا، مثلًا للمجرّة كواكب»):
+ * planets travelling round the galaxy, roses at the rose's corners, a sun rising on the dawn, pearls hanging… [t] 0..1 moves them.
+ */
+fun DrawScope.drawFrameExtras(id: String, t: Float, radius: Float) {
+    if (!Decor.hasExtras(id)) return
+    val w = size.width; val h = size.height; val u = density
+    val tau = (2 * PI).toFloat()
+    val inset = 3f * u
+    fun along(f0: Float): Offset {          // a point on the band, clockwise from the top left (0..1)
+        val pw = w - 2 * inset; val ph = h - 2 * inset
+        val d = (((f0 % 1f) + 1f) % 1f) * 2 * (pw + ph)
+        return when {
+            d < pw -> Offset(inset + d, inset)
+            d < pw + ph -> Offset(inset + pw, inset + d - pw)
+            d < 2 * pw + ph -> Offset(inset + pw - (d - pw - ph), inset + ph)
+            else -> Offset(inset, inset + ph - (d - 2 * pw - ph))
+        }
+    }
+    val m = 12f * u
+    val corners = listOf(Offset(m, m), Offset(w - m, m), Offset(w - m, h - m), Offset(m, h - m))
+    fun twinkle(k: Int) = .45f + .55f * ((sin(t * tau + k * 1.7f) + 1) / 2)
+    fun hang(x: Float, len: Float, color: Color) = drawLine(color, Offset(x, inset), Offset(x, inset + len), 1f * u)
+    when (id) {
+        "galaxy" -> {
+            // Four planets travel round the frame; a ringed planet and a star hang from the top.
+            listOf(0xFFFFB86B, 0xFF7FD8FF, 0xFFE59BFF, 0xFFFF7A7A).forEachIndexed { k, c ->
+                val p = along(t * .25f + k * .25f); val r = (3f + (k % 2) * 1.4f) * u
+                drawCircle(Brush.radialGradient(listOf(Color.White, Color(c)), Offset(p.x - r * .4f, p.y - r * .4f), r * 1.6f), r, p)
+            }
+            repeat(14) { k -> drawCircle(Color.White.copy(alpha = twinkle(k)), 1.2f * u, along(k / 14f + .03f)) }
+            val x = w * .8f; val len = 14f * u; hang(x, len, Color(0x99C8B8FF))
+            val c = Offset(x + sin(t * tau) * 2f * u, inset + len + 8f * u)
+            drawOval(Color(0x88F3D9A0), Offset(c.x - 13f * u, c.y - 2.5f * u), Size(26f * u, 5f * u), style = Stroke(1.4f * u))
+            drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE9B8), Color(0xFFD98F3E)), Offset(c.x - 2f * u, c.y - 2f * u), 9f * u), 7f * u, c)
+            drawArc(Color(0xDDF3D9A0), 200f, 140f, false, Offset(c.x - 13f * u, c.y - 2.5f * u), Size(26f * u, 5f * u), style = Stroke(1.4f * u))
+            val x2 = w * .2f; hang(x2, 8f * u, Color(0x99C8B8FF)); star(x2, inset + 14f * u, 5f * u, Color(0xFFFFF1B8))
+        }
+        "night" -> {
+            val gold = Color(0xFFF3D27A)
+            hang(w * .18f, 10f * u, gold.copy(alpha = .6f)); crescent(w * .18f, inset + 20f * u, 8f * u, gold)
+            listOf(.42f to 16f, .62f to 8f, .84f to 13f).forEachIndexed { k, (fx, l) ->
+                hang(w * fx, l * u, gold.copy(alpha = .5f)); star(w * fx, inset + (l + 6f) * u, 4.5f * u, gold.copy(alpha = twinkle(k)))
+            }
+        }
+        "gold" -> {
+            val g = Color(0xFFC9962E)
+            corners.forEach { c -> gem(c.x, c.y, 5f * u, Color(0xFFE9C46A)); listOf(-1f, 1f).forEach { s -> drawCircle(g, 1.6f * u, Offset(c.x + s * 8f * u, c.y)); drawCircle(g, 1.6f * u, Offset(c.x, c.y + s * 8f * u)) } }
+            val sw = Path(); sw.moveTo(w * .3f, inset); sw.quadraticBezierTo(w * .5f, inset + 14f * u, w * .7f, inset)
+            drawPath(sw, g, style = Stroke(1.2f * u)); repeat(9) { k -> val f = k / 8f; drawCircle(Color(0xFFF6E3A6), 1.8f * u, Offset(w * (.3f + .4f * f), inset + 14f * u * 4 * f * (1 - f) * .5f * 2)) }
+        }
+        "pattern", "zellige" -> {
+            val c1 = if (id == "zellige") Color(0xFF9CC4FF) else Color(0xFFE9C46A); val c2 = if (id == "zellige") Color.White else Color(0xFF8FD3B0)
+            corners.forEachIndexed { k, c -> rotate(t * 30f * (if (k % 2 == 0) 1 else -1), c) { star8(c.x, c.y, 8f * u, c1); drawCircle(c2, 2.4f * u, c) } }
+            star8(w / 2, inset + 1f * u, 6f * u, c1.copy(alpha = .9f), 1.2f * u)
+        }
+        "dawn" -> {
+            val c = Offset(w / 2, inset)
+            drawCircle(Brush.radialGradient(listOf(Color(0xAAFFD08A), Color.Transparent), c, 34f * u), 34f * u, c)
+            repeat(9) { k ->
+                val a = (PI.toFloat() * (k + 1) / 10f); val r0 = 13f * u; val r1 = (19f + 4f * sin(t * tau + k)) * u
+                drawLine(Color(0xCCFFD08A), Offset(c.x - cos(a) * r0, c.y + sin(a) * r0), Offset(c.x - cos(a) * r1, c.y + sin(a) * r1), 1.4f * u)
+            }
+            drawArc(Color(0xFFFFB067), 0f, 180f, true, Offset(c.x - 10f * u, c.y - 10f * u), Size(20f * u, 20f * u))
+        }
+        "rose" -> {
+            corners.forEachIndexed { k, c -> rotate(k * 40f + sin(t * tau + k) * 6f, c) { rose(c, 7f * u, Color(0xFFF07FA6), Color(0xFFC2185B), Color(0xFF6FAF7F)) } }
+            listOf(.35f, .5f, .65f).forEachIndexed { k, fx -> heart(Offset(w * fx, inset + 2f * u + sin(t * tau + k) * 1.5f * u), 3.4f * u, Color(0xFFE2588C).copy(alpha = .85f)) }
+        }
+        "ocean" -> {
+            repeat(10) { k ->
+                val ph = (t + k / 10f) % 1f; val side = if (k % 2 == 0) inset + 6f * u else w - inset - 6f * u
+                val y = h - ph * h; val r = (2f + (k % 3)) * u
+                drawCircle(Color.White.copy(alpha = .55f * (1 - ph)), r, Offset(side + sin(ph * 12f) * 2f * u, y), style = Stroke(1f * u))
+            }
+            val c = corners[3]; star(c.x + 2f * u, c.y - 2f * u, 7f * u, Color(0xFFFF9E80))
+        }
+        "desert" -> {
+            val c = corners[3]
+            drawLine(Color(0xFF8A5A2B), Offset(c.x, c.y + 4f * u), Offset(c.x + 3f * u, c.y - 12f * u), 2f * u)
+            repeat(5) { k -> val a = (-160f + k * 35f) * PI.toFloat() / 180f
+                drawLine(Color(0xFF4E8A3A), Offset(c.x + 3f * u, c.y - 12f * u), Offset(c.x + 3f * u + cos(a) * 9f * u, c.y - 12f * u + sin(a) * 6f * u), 2f * u) }
+            crescent(w - m - 2f * u, m + 2f * u, 7f * u, Color(0xFFC98A3A)); star(w - m - 14f * u, m + 4f * u, 3f * u, Color(0xFFC98A3A))
+        }
+        "lantern" -> {
+            fanous(w * .82f + sin(t * tau) * 2f * u, inset, 10f * u, 1f, Color(0xFFE9C46A), Color(0xFFFFB347))
+            fanous(w * .18f - sin(t * tau) * 2f * u, inset, 4f * u, .8f, Color(0xFFE9C46A), Color(0xFFFFD27A))
+        }
+        "aurora" -> {
+            val p = Path(); p.moveTo(inset, inset + 6f * u)
+            var x = inset; while (x <= w - inset) { p.lineTo(x, inset + 6f * u + sin(x / (24f * u) + t * tau) * 4f * u); x += 4f * u }
+            drawPath(p, Brush.horizontalGradient(listOf(Color(0xAA4FF0B0), Color(0xAA6A8CFF), Color(0xAAC47CFF))), style = Stroke(3f * u))
+            repeat(8) { k -> drawCircle(Color.White.copy(alpha = twinkle(k) * .8f), 1.1f * u, along(.55f + k * .05f)) }
+        }
+        "pearl" -> {
+            val sw = { a: Float, b: Float, dip: Float ->
+                repeat(11) { k -> val f = k / 10f; val x = w * (a + (b - a) * f); val y = inset + dip * u * 4 * f * (1 - f)
+                    drawCircle(Brush.radialGradient(listOf(Color.White, Color(0xFFE6E0F2)), Offset(x - u, y - u), 3f * u), 2.4f * u, Offset(x, y)) } }
+            sw(.12f, .5f, 12f); sw(.5f, .88f, 12f)
+            val drop = Offset(w * .5f, inset + 10f * u + sin(t * tau) * 1.5f * u)
+            hang(w * .5f, 6f * u, Color(0xFFD9D2EA)); drawOval(Brush.radialGradient(listOf(Color.White, Color(0xFFE0D6F0)), drop, 6f * u), Offset(drop.x - 4f * u, drop.y), Size(8f * u, 10f * u))
+        }
+        "royal" -> {
+            val c = Offset(w / 2, inset + 2f * u); val gold = Color(0xFFE9C46A)
+            val crown = Path().apply {
+                moveTo(c.x - 12f * u, c.y + 9f * u); lineTo(c.x - 12f * u, c.y - 2f * u); lineTo(c.x - 6f * u, c.y + 3f * u); lineTo(c.x, c.y - 6f * u)
+                lineTo(c.x + 6f * u, c.y + 3f * u); lineTo(c.x + 12f * u, c.y - 2f * u); lineTo(c.x + 12f * u, c.y + 9f * u); close()
+            }
+            drawPath(crown, gold); drawCircle(Color(0xFFE0115F), 1.8f * u, Offset(c.x, c.y + 4f * u))
+            corners.forEachIndexed { k, cc -> gem(cc.x, cc.y, 4.5f * u, listOf(Color(0xFFE0115F), Color(0xFF2E7DFF), Color(0xFF2EBE6A), Color(0xFFE0115F))[k]) }
+        }
+        "crystal" -> {
+            corners.forEachIndexed { k, c -> gem(c.x, c.y, 6f * u, Color(0xFF9EE3F5)); val s = twinkle(k)
+                drawLine(Color.White.copy(alpha = s), Offset(c.x + 6f * u, c.y - 9f * u), Offset(c.x + 6f * u, c.y - 3f * u), 1f * u)
+                drawLine(Color.White.copy(alpha = s), Offset(c.x + 3f * u, c.y - 6f * u), Offset(c.x + 9f * u, c.y - 6f * u), 1f * u) }
         }
     }
 }

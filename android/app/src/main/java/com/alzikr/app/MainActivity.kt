@@ -368,7 +368,7 @@ private fun BottomBar() {
                 Column(Modifier.weight(1f).clip(L.shape(12.dp)).clickable { Nav.go(s.id) }.padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.clip(L.shape(10.dp)).background(if (on) P.accent.copy(alpha = .16f) else P.surface).padding(horizontal = 10.dp, vertical = 4.dp)) { SectionIcon(s, on) }
                     Spacer(Modifier.height(2.dp))
-                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
+                    if (Data.navLabels) Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1)
                 }
             }
         }
@@ -403,7 +403,7 @@ private fun TopTabs() {
                 val on = Nav.tab == s.id
                 Column(Modifier.weight(1f).clickable { Nav.go(s.id) }.padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     SectionIcon(s, on, 18)
-                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
+                    if (Data.navLabels) Text(s.label, color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                     Spacer(Modifier.height(4.dp))
                     Box(Modifier.width(36.dp).height(2.dp).background(if (on) P.accent else P.bg))
                 }
@@ -420,11 +420,13 @@ private fun Dock() {
         .padding(horizontal = 10.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         sections.forEach { s ->
             val on = Nav.tab == s.id
-            Box(Modifier.size(50.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.go(s.id) }, contentAlignment = Alignment.Center) {
+            Column(Modifier.width(54.dp).clip(L.shape(20.dp)).background(if (on) P.accent else P.card).clickable { Nav.go(s.id) }
+                .padding(vertical = if (Data.navLabels) 6.dp else 13.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 when (L.icons) {
                     IconStyle.GLYPH, IconStyle.NONE -> Glyph(s.glyph, tint = if (on) P.onAccent else P.muted, size = 24.dp)
                     else -> Icon(AppIcons.of(s.id, L.icons), s.label, tint = if (on) P.onAccent else P.muted, modifier = Modifier.size(24.dp))
                 }
+                if (Data.navLabels) Text(s.label, color = if (on) P.onAccent else P.muted, fontSize = 9.sp, maxLines = 1, softWrap = false)
             }
         }
     }

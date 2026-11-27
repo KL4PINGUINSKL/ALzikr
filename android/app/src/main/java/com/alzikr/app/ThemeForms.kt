@@ -175,7 +175,7 @@ fun LanternTabs() {
                     Box(Modifier.size(38.dp, 44.dp).drawBehind { lantern(this, if (on) gold else line, on, 1f) }, contentAlignment = Alignment.Center) {
                         Glyph(s.glyph, tint = if (on) P.onAccent else P.muted, size = 16.dp)
                     }
-                    Text(s.label, color = if (on) gold else P.muted, fontSize = 10.sp, maxLines = 1, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
+                    if (Data.navLabels) Text(s.label, color = if (on) gold else P.muted, fontSize = 10.sp, maxLines = 1, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
                 }
             }
         }
@@ -209,7 +209,7 @@ fun SideRail() {
             Column(Modifier.width(56.dp).clip(RoundedCornerShape(18.dp)).background(if (on) P.accent else Color.Transparent).clickable { Nav.go(s.id) }.padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 SectionIcon(s, on, 22, tint = if (on) P.onAccent else P.muted)
-                Text(s.label, color = if (on) P.onAccent else P.muted, fontSize = 10.sp, maxLines = 1)
+                if (Data.navLabels) Text(s.label, color = if (on) P.onAccent else P.muted, fontSize = 10.sp, maxLines = 1)
             }
         }
         Spacer(Modifier.weight(1f))
@@ -235,7 +235,7 @@ fun ArcNav() {
                         .border(1.dp, if (on) P.gold else line, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
                         SectionIcon(s, on, 20, tint = if (on) P.onAccent else P.muted)
                     }
-                    Text(s.label, color = if (on) P.accent else P.muted, fontSize = 10.sp, maxLines = 1)
+                    if (Data.navLabels) Text(s.label, color = if (on) P.accent else P.muted, fontSize = 10.sp, maxLines = 1)
                 }
             }
         }

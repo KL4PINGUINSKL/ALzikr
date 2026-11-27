@@ -11,6 +11,10 @@ import java.time.LocalDate
  * look and reminder settings.
  */
 object Data {
+    /** The sections' names under their icons in the navigation (user, 2026-11-27: show or hide them in Settings). */
+    var navLabels: Boolean
+        get() = Store.prefs.getBoolean("nav_labels", true)
+        set(v) { Store.prefs.edit().putBoolean("nav_labels", v).apply(); Store.bump() }
     private val sp get() = Store.prefs
     private fun edit(block: android.content.SharedPreferences.Editor.() -> Unit) { sp.edit().apply(block).apply(); Store.bump() }
     private fun today() = LocalDate.now().toString()

@@ -80,7 +80,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
         keep.SaveableStateProvider(levelKey(stack.size, p)) {
-        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "timeline" -> "التسلسل التاريخي"; "history" -> "سجلاتي"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; "dict" -> "القواميس العربية"; "mushkil" -> "أحاديث يُشكل فهمها"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "timeline" -> "التسلسل التاريخي"; "history" -> "سجلاتي"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; "navnames" -> "أسماء الأقسام"; "dict" -> "القواميس العربية"; "mushkil" -> "أحاديث يُشكل فهمها"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -115,6 +115,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
                 "kids" -> KidsPage()
                 "world" -> WorldClockPage()
                 "dict" -> DictionaryPage()
+                "navnames" -> NavNamesPage()
                 "mushkil" -> MushkilList()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> if (p.startsWith("fiqh:")) FiqhPage(p.removePrefix("fiqh:")) { open(it) } else if (p.startsWith("season:")) {
@@ -130,7 +131,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
     val h = Data.hijri()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         UpdateBanner()
-        Hint("more4", "☰", "ست مجموعات: عباداتي، وتعلّم، والتقويم والمواسم، وأدوات، والإعدادات، والتطبيق (وفيه صديقك والثيمات وعن التطبيق). وأسماء الشهور من بطاقة التاريخ.")
+        Hint("more5", "☰", "كل مجموعة بطاقة تذكر ما فيها؛ اضغطها لتنفتح. أو اكتب في البحث اسم ما تريد. والإعدادات كلها في بطاقة «⚙ الإعدادات» في الأسفل.")
         Panel(Modifier.clickable { open("months") }, color = P.card) {
             Sub("اليوم")
             Text("${h.day} ${h.monthName} ${h.year} هـ", color = P.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
@@ -147,38 +148,98 @@ fun MoreScreen(openSettings: (String) -> Unit) {
             }
             Text("›", color = androidx.compose.ui.graphics.Color(0xFF1D2B5A), fontSize = 22.sp)
         }
-        // Five groups, three to a row, every row full.
-        MoreGroup("عباداتي", listOf(
-            Triple("⏰", "المنبه") { open("alarms") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📊", "إحصائياتي") { open("stats") },
-            Triple("🏁", "أهدافي") { open("goals") }, Triple("📝", "محاسبة اليوم") { open("today") }, Triple("💰", "صدقاتي") { open("sadaqa") },
-        ))
-        MoreGroup("تعلّم", listOf(
-            Triple("🎙", "تعلّم التجويد") { open("tajweed") }, Triple("🧠", "حفظ القرآن") { open("hifz") }, Triple("💧", "صفة الوضوء والصلاة") { open("salah") },
-            Triple("⚖", "الأحكام الفقهية") { open("fiqh") }, Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("⏳", "التسلسل التاريخي") { open("timeline") }, Triple("🎯", "مسابقة القرآن") { open("quiz") },
-            Triple("📖", "القواميس العربية") { open("dict") }, Triple("⚠", "أحاديث يُشكل فهمها") { open("mushkil") },
-        ))
-        MoreGroup("التقويم والمواسم", listOf(
-            Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "رمضان") { open("ramadan") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
-        ))
-        MoreGroup("أدوات", listOf(
-            Triple("🧭", "القبلة") { open("qibla") }, Triple("📅", "مواقيت الشهر") { open("month") }, Triple("💰", "حاسبة الزكاة") { open("zakat") },
-            Triple("🔁", "محوّل التاريخ") { open("convert") }, Triple("🌍", "الساعة العالمية") { open("world") }, Triple("🔍", "البحث الشامل") { Nav.search = true }, Triple("🕘", "سجلاتي") { open("history") },
-        ))
-        val ctx = LocalContext.current
-        // The settings sections, one tap away (there is no gear in the top bar any more).
-        MoreGroup("الإعدادات", listOf(
-            Triple("📍", "الموقع والحساب") { openSettings("times") }, Triple("🔔", "التنبيهات والأذان") { openSettings("alerts") }, Triple("🕌", "الصلاة والتركيز") { openSettings("prayer") },
-            Triple("👁", "راحة العين") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("💡", "المساعدة") { openSettings("help") },
-            Triple("🕊", "الذكر البسيط") { openSettings("mode") },
-        ))
-        MoreGroup("التطبيق", listOf(
-            Triple("🐾", "صديقي") { open("pet") }, Triple("🎨", "الثيمات") { open("themes") }, Triple("💾", "نسخ احتياطي") { open("backup") },
-            Triple("ℹ", "عن التطبيق") { openSettings("about") }, Triple("🌐", "صفحة التحميل") {
-                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("$APP_SITE/download.html"))) }
-            }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
-            Triple("↗", "مشاركة التطبيق") { activity?.let { shareApp(it) } },
-        ))
+        // The pages in folded groups (user, 2026-11-27: dozens of tiles hid pages such as «الأحكام الفقهية»). Each card
+        // names everything in it, a tap opens its tiles, and the search finds any page by its name.
+        val groups = moreGroups(open = { open(it) }, openSettings = openSettings)
+        var find by rememberSaveable { mutableStateOf("") }
+        var openGroup by rememberSaveable { mutableStateOf<String?>(null) }
+        androidx.compose.material3.OutlinedTextField(find, { find = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("ابحث: الفقه، القبلة، الزكاة…", maxLines = 1) },
+            leadingIcon = { GText("🔍", fontSize = 16.sp) })
+        if (find.isNotBlank()) {
+            val words = find.trim().split(Regex("\\s+"))
+            val hits = groups.flatMap { g -> g.items.map { it to g.title } }.filter { (it, g) -> words.all { w -> it.second.contains(w) || g.contains(w) } }
+            if (hits.isEmpty()) Sub("لا صفحة بهذا الاسم. جرّب «البحث الشامل» من أعلى الشاشة للبحث في المحتوى.", Modifier.padding(8.dp))
+            else MoreTiles(hits.map { it.first })
+        } else groups.forEach { g ->
+            MoreFold(g, openGroup == g.title) { openGroup = if (openGroup == g.title) null else g.title }
+        }
     }
+    }
+}
+
+class MoreGroupDef(val icon: String, val title: String, val items: List<Triple<String, String, () -> Unit>>)
+
+/** Every page of «المزيد», grouped; the last group is the app's settings. */
+@Composable
+private fun moreGroups(open: (String) -> Unit, openSettings: (String) -> Unit): List<MoreGroupDef> {
+    val ctx = LocalContext.current
+    val activity = ctx as? android.app.Activity
+    return listOf(
+        MoreGroupDef("🕌", "عباداتي", listOf(
+            Triple("⏰", "المنبه") { open("alarms") }, Triple("🕌", "قضاء الصلوات") { open("qada") }, Triple("📝", "محاسبة اليوم") { open("today") },
+            Triple("🏁", "أهدافي") { open("goals") }, Triple("💰", "صدقاتي") { open("sadaqa") }, Triple("📊", "إحصائياتي") { open("stats") })),
+        MoreGroupDef("📖", "القرآن وتعلّمه", listOf(
+            Triple("🎙", "تعلّم التجويد") { open("tajweed") }, Triple("🧠", "حفظ القرآن") { open("hifz") }, Triple("🎯", "مسابقة القرآن") { open("quiz") })),
+        MoreGroupDef("⚖", "العلم الشرعي", listOf(
+            Triple("⚖", "الأحكام الفقهية") { open("fiqh") }, Triple("💧", "صفة الوضوء والصلاة") { open("salah") }, Triple("⚠", "أحاديث يُشكل فهمها") { open("mushkil") },
+            Triple("✨", "الأسماء الحسنى") { open("names") }, Triple("⏳", "التسلسل التاريخي") { open("timeline") }, Triple("📖", "القواميس العربية") { open("dict") })),
+        MoreGroupDef("📆", "التقويم والمواسم", listOf(
+            Triple("📆", "التقويم") { open("calendar") }, Triple("🌙", "رمضان") { open("ramadan") }, Triple("🌙", "مواسم الطاعات") { open("seasons") },
+            Triple("📅", "مواقيت الشهر") { open("month") }, Triple("🔁", "محوّل التاريخ") { open("convert") })),
+        MoreGroupDef("🧭", "أدوات", listOf(
+            Triple("🧭", "القبلة") { open("qibla") }, Triple("💰", "حاسبة الزكاة") { open("zakat") }, Triple("🌍", "الساعة العالمية") { open("world") },
+            Triple("🔍", "البحث الشامل") { Nav.search = true }, Triple("🕘", "سجلاتي") { open("history") })),
+        MoreGroupDef("🐾", "صديقي والثيمات", listOf(
+            Triple("🐾", "صديقي") { open("pet") }, Triple("🎨", "الثيمات") { open("themes") })),
+        MoreGroupDef("⚙", "الإعدادات", listOf(
+            Triple("📍", "الموقع والحساب") { openSettings("times") }, Triple("🔔", "التنبيهات والأذان") { openSettings("alerts") }, Triple("🕌", "الصلاة والتركيز") { openSettings("prayer") },
+            Triple("👁", "راحة العين") { openSettings("look") }, Triple("🎙", "التلاوة") { openSettings("recite") }, Triple("☰", "أسماء الأقسام") { open("navnames") },
+            Triple("🕊", "الذكر البسيط") { openSettings("mode") }, Triple("💾", "نسخ احتياطي") { open("backup") }, Triple("💡", "المساعدة") { openSettings("help") },
+            Triple("ℹ", "عن التطبيق") { openSettings("about") }, Triple("⬆", "تحديث التطبيق") { activity?.let { AppUpdate.checkNow(it) } },
+            Triple("↗", "مشاركة التطبيق") { activity?.let { shareApp(it) } }, Triple("🌐", "صفحة التحميل") {
+                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("$APP_SITE/download.html"))) } })),
+    )
+}
+
+/** One folded group: its icon, title and every name in it; a tap opens its tiles. */
+@Composable
+private fun MoreFold(g: MoreGroupDef, opened: Boolean, toggle: () -> Unit) {
+    Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(if (opened) P.surface else P.card).border(1.dp, if (opened) P.accent.copy(alpha = .5f) else P.line, L.shape(18.dp))) {
+        Row(Modifier.fillMaxWidth().clickable(onClick = toggle).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            GText(g.icon, fontSize = 24.sp)
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                Text(g.title, color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                if (!opened) Text(g.items.joinToString(" · ") { it.second }, color = P.muted, fontSize = 12.sp, lineHeight = 17.sp)
+            }
+            Text(if (opened) "▴" else "▾", color = P.accent, fontSize = 16.sp)
+        }
+        if (opened) Box(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) { MoreTiles(g.items) }
+    }
+}
+
+/** Tiles, three to a row, every row full. */
+@Composable
+private fun MoreTiles(items: List<Triple<String, String, () -> Unit>>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { (icon, label, go) -> Tile(icon, label, Modifier.weight(1f), onClick = go) }
+                repeat(3 - row.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+/** «أسماء الأقسام»: the sections' names under their icons, shown or hidden. */
+@Composable
+private fun NavNamesPage() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SettingRow("إظهار أسماء الأقسام", if (Data.navLabels) "الاسم تحت كل أيقونة في شريط الأقسام" else "الأيقونات وحدها، أهدأ وأصغر") {
+            androidx.compose.material3.Switch(Data.navLabels, { Data.navLabels = it })
+        }
+        Sub("يسري على كل أشكال الشريط: السفلي، والعلوي، والعائم، والفوانيس، والجانبي، والقوس. أما شريط «الكلمات» فهو أسماء فقط.", size = 12.sp)
     }
 }
 
