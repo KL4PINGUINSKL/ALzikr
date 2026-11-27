@@ -73,7 +73,10 @@ private fun NotesList() {
     val all = Store.notes()
     val notes = if (find.isBlank()) all else { val m = HadithSearch.matcher(find); all.filter { m(Md.plain(it.text)) } }
     val fmt = remember { SimpleDateFormat("d MMM · h:mm a", Locale("ar")) }
-    if (adding || editing != null) { RichNoteEditor(editing) { adding = false; editing = null }; return }
+    // The editor covers the whole screen (header and tabs too), so with the keyboard open the text keeps the room.
+    if (adding || editing != null) androidx.compose.ui.window.Dialog({ adding = false; editing = null }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        RichNoteEditor(editing) { adding = false; editing = null }
+    }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Hint("notes2", "📝", "اكتب ملاحظاتك بعناوين وخط عريض وألوان وقوائم مهام من الشريط فوق الكتابة. اضغط ملاحظة لتفتحها: تؤشّر مربعاتها، وتعلّقها كقصاصة في أي صفحة، أو على الشاشة الرئيسية، أو فقاعة فوق التطبيقات.") }
         item { Action("+ ملاحظة جديدة", Modifier.fillMaxWidth(), filled = false) { adding = true } }

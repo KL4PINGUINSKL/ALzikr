@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -128,7 +130,13 @@ fun TabGrid(tabs: List<Triple<String, String, String>>, current: String, cols: I
                     Column(Modifier.weight(1f).fillMaxHeight().clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape)
                         .clickable { pick(k) }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         GText(icon, fontSize = 18.sp)
-                        GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 2,
+                        if (' ' !in label.trim()) {
+                            // One word never breaks between its letters («ملاحظا/ت»): it shrinks until it fits on one line.
+                            var size by androidx.compose.runtime.remember(label) { androidx.compose.runtime.mutableStateOf(13f) }
+                            androidx.compose.material3.Text(label, color = if (on) P.onAccent else P.ink, fontSize = size.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 1, softWrap = false,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(horizontal = 2.dp),
+                                onTextLayout = { r -> if (r.didOverflowWidth && size > 8f) size -= 0.5f })
+                        } else GText(label, color = if (on) P.onAccent else P.ink, fontSize = 13.sp, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal, maxLines = 2,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(horizontal = 2.dp))
                     }
                 }
