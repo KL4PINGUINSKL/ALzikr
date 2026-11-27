@@ -39,6 +39,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -220,8 +222,22 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
                 Panel {
                     Title("🪟 شفافية البطاقات")
                     Sub("في الثيمات ذات الخلفية الحية: كم تظهر الحياة من خلف البطاقات. ثيمات الزجاج لها زجاجها، والثيمات الساكنة تبقى مصمتة.", size = 12.sp)
-                    Wrap(gap = 6.dp) {
-                        listOf(0 to "مصمتة", 1 to "شفافة قليلًا", 2 to "شفافة أكثر").forEach { (k, l) -> Choice(l, Data.cardSee == k) { Data.cardSee = k } }
+                    // A slider, with a card over the theme's own living background to see the result at once.
+                    var op by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(Data.cardOpacity) }
+                    Box(Modifier.fillMaxWidth().height(96.dp).clip(L.shape(16.dp))) {
+                        val bd = L.backdrop; val pal = P
+                        Box(Modifier.matchParentSize().background(pal.bg).drawBehind { drawBackdrop(bd, pal, 4f) })
+                        Column(Modifier.align(Alignment.Center).fillMaxWidth(.8f).clip(L.shape(14.dp)).background(P.card.copy(alpha = if (L.backdrop == Backdrop.NONE || L.panel == PanelStyle.GLASS) 1f else op))
+                            .border(1.dp, P.line, L.shape(14.dp)).padding(12.dp)) {
+                            Text("بطاقة للمعاينة", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Sub(if (L.backdrop == Backdrop.NONE) "هذا الثيم بلا خلفية حية، فبطاقاته مصمتة" else "${Quran.digits((op * 100).toInt())}٪ مصمتة", size = 12.sp)
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("شفافة", color = P.muted, fontSize = 12.sp)
+                        androidx.compose.material3.Slider(op, { op = it }, Modifier.weight(1f).padding(horizontal = 8.dp), valueRange = .4f..1f,
+                            onValueChangeFinished = { Data.cardOpacity = op })
+                        Text("مصمتة", color = P.muted, fontSize = 12.sp)
                     }
                     Title("🌙 نور الليل")
                     Sub("ضوء دافئ كضوء القنديل يغطي التطبيق من العشاء حتى الفجر حسب مواقيت مدينتك، فتريح عينيك في قراءة القرآن والأذكار ليلًا.", Modifier.padding(bottom = 8.dp), size = 12.sp)

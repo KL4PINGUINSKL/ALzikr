@@ -12,10 +12,10 @@ import java.time.LocalDate
  */
 object Data {
     /** The sections' names under their icons in the navigation (user, 2026-11-27: show or hide them in Settings). */
-    /** Cards over a living background: 0 solid, 1 a little see-through (default), 2 more (user, 2026-11-27). */
-    var cardSee: Int
-        get() = Store.prefs.getInt("card_see", 1)
-        set(v) { Store.prefs.edit().putInt("card_see", v).apply(); Store.bump() }
+    /** How solid the cards are over a living background, 0.4 (much see-through) to 1 (solid); a slider (user, 2026-11-27). */
+    var cardOpacity: Float
+        get() = Store.prefs.getFloat("card_opacity", .88f)
+        set(v) { Store.prefs.edit().putFloat("card_opacity", v.coerceIn(.4f, 1f)).apply(); Store.bump() }
     var navLabels: Boolean
         get() = Store.prefs.getBoolean("nav_labels", true)
         set(v) { Store.prefs.edit().putBoolean("nav_labels", v).apply(); Store.bump() }

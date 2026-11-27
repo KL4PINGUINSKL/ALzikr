@@ -59,7 +59,7 @@ val P: Pal @Composable get() = LocalPal.current
 fun cardAlpha(): Float {
     val l = L
     if (l.backdrop == Backdrop.NONE || l.panel == PanelStyle.GLASS) return 1f
-    return when (Data.cardSee) { 0 -> 1f; 2 -> .72f; else -> .88f }
+    return Data.cardOpacity
 }
 @Composable
 fun Color.seeThrough(): Color = copy(alpha = alpha * cardAlpha())

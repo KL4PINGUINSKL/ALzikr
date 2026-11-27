@@ -36,7 +36,7 @@ enum class Backdrop(val moving: Boolean) {
     SNOW(true), PETALS(true), FIREFLIES(true), BUBBLES(true), DUNES(true), ROSETTE(true), SKYLINE(true),
     BUNTING(true), MESA(true), DAMASK(false), ORBS(true), INK(true), CACTI(true),
     RIWAQ(true), MANUSCRIPT(false), OASIS(true), STAINED(true), PAPER(true), OBSERVATORY(true), SEASONS(true), MARBLE(false),
-    BLOSSOM(true), SPACE(true), MEADOW(true), AQUARIUM(true),
+    BLOSSOM(true), SPACE(true), MEADOW(true), AQUARIUM(true), GEMS(true), CORAL(true), SATURN(true), PENGUINS(true),
 }
 
 @Composable
@@ -70,6 +70,10 @@ fun DrawScope.drawBackdrop(b: Backdrop, p: Pal, t: Float) {
             Backdrop.SPACE -> space(p, t)
             Backdrop.MEADOW -> meadow(p, t)
             Backdrop.AQUARIUM -> aquarium(p, t)
+            Backdrop.GEMS -> gems(p, t)
+            Backdrop.CORAL -> coral(p, t)
+            Backdrop.SATURN -> saturn(p, t)
+            Backdrop.PENGUINS -> penguins(p, t)
             Backdrop.DUNES -> dunes(p, t)
             Backdrop.ROSETTE -> rosette(p, t)
             Backdrop.SKYLINE -> skyline(p, t)
@@ -659,5 +663,120 @@ private fun DrawScope.aquarium(p: Pal, t: Float) {
         val ph = (t * (.06f + rnd(i + 30, 3) * .06f) + rnd(i + 30, 1)) % 1f
         val x = rnd(i + 30, 2) * size.width + sin(t * 1.5f + i) * 5f; val y = size.height * (1.05f - ph * 1.1f); val r = 2.5f + rnd(i + 30, 4) * 5f
         drawCircle(Color.White.copy(alpha = .22f), r, Offset(x, y), style = Stroke(1.3f))
+    }
+}
+
+/** A cut emerald seen from the front: an octagon with a table and facets, a glint that comes and goes. */
+private fun DrawScope.emeraldGem(c: Offset, r: Float, a: Float, glint: Float) {
+    val w2 = r * .8f; val h2 = r
+    val outer = Path().apply {
+        moveTo(c.x - w2 * .6f, c.y - h2); lineTo(c.x + w2 * .6f, c.y - h2); lineTo(c.x + w2, c.y - h2 * .6f); lineTo(c.x + w2, c.y + h2 * .6f)
+        lineTo(c.x + w2 * .6f, c.y + h2); lineTo(c.x - w2 * .6f, c.y + h2); lineTo(c.x - w2, c.y + h2 * .6f); lineTo(c.x - w2, c.y - h2 * .6f); close()
+    }
+    drawPath(outer, Brush.linearGradient(listOf(Color(0xFF5FE3A1).copy(alpha = a), Color(0xFF0E7A4A).copy(alpha = a), Color(0xFF0A5A36).copy(alpha = a)), Offset(c.x - w2, c.y - h2), Offset(c.x + w2, c.y + h2)))
+    val tw = w2 * .55f; val th = h2 * .6f
+    drawRect(Color(0xFF8FF0C0).copy(alpha = a * .55f), Offset(c.x - tw / 2, c.y - th / 2), Size(tw, th))
+    drawPath(outer, Color.White.copy(alpha = a * .5f), style = Stroke(1f))
+    if (glint > 0f) {
+        val g = Offset(c.x - w2 * .3f, c.y - h2 * .45f)
+        drawLine(Color.White.copy(alpha = glint), Offset(g.x - r * .5f, g.y), Offset(g.x + r * .5f, g.y), 1.4f)
+        drawLine(Color.White.copy(alpha = glint), Offset(g.x, g.y - r * .5f), Offset(g.x, g.y + r * .5f), 1.4f)
+    }
+}
+
+/** «زبرجد»: emerald's own colours, with cut emeralds drifting slowly and catching the light now and then. */
+private fun DrawScope.gems(p: Pal, t: Float) {
+    for (i in 0 until 11) {
+        val ph = (t * (.012f + rnd(i, 3) * .015f) + rnd(i, 1)) % 1f
+        val x = rnd(i, 2) * size.width + sin(t * .4f + i) * 16f; val y = size.height * (1.08f - ph * 1.16f)
+        val r = 9f + rnd(i, 4) * 14f
+        val glint = (sin(t * (1.1f + rnd(i, 5)) + i * 2.3f)).let { if (it > .85f) (it - .85f) / .15f else 0f }
+        rotate(sin(t * .3f + i) * 18f, Offset(x, y)) { emeraldGem(Offset(x, y), r, if (p.dark) .30f else .24f, glint * .9f) }
+    }
+    for (i in 0 until 18) {
+        val tw = (sin(t * 2f + i * 1.9f) + 1) / 2
+        drawCircle(p.gold.copy(alpha = .18f * tw), 1.6f, Offset(rnd(i + 50, 1) * size.width, rnd(i + 50, 2) * size.height))
+    }
+}
+
+/** «المرجان»: a coral reef along the bottom, little fish passing, bubbles and light from above. */
+private fun DrawScope.coral(p: Pal, t: Float) {
+    for (k in 0 until 4) {
+        val x0 = size.width * (.1f + k * .27f)
+        drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = .07f), Color.Transparent), 0f, size.height * .6f), Offset(x0 + sin(t * .5f + k) * 20f, 0f), Size(26f, size.height * .6f))
+    }
+    val cols = listOf(Color(0xFFFF7A6B), Color(0xFFFF9EC2), Color(0xFFFFB46B), Color(0xFFC77DFF))
+    fun branch(x: Float, y: Float, len: Float, ang: Float, depth: Int, col: Color) {
+        if (depth == 0 || len < 6f) return
+        val a = (ang + sin(t * 1.2f + x * .01f) * 4f) * PI.toFloat() / 180f
+        val e = Offset(x + sin(a) * len, y - cos(a) * len)
+        drawLine(col, Offset(x, y), e, (2f + depth * 1.6f))
+        branch(e.x, e.y, len * .72f, ang - 26f, depth - 1, col); branch(e.x, e.y, len * .68f, ang + 24f, depth - 1, col)
+    }
+    for (k in 0 until 6) branch(size.width * (.07f + k * .17f), size.height + 4f, 46f + rnd(k, 3) * 30f, -8f + rnd(k, 4) * 16f, 4, cols[k % 4].copy(alpha = .32f))
+    for (k in 0 until 5) {
+        val dir = if (k % 2 == 0) 1f else -1f; val ph = (t * (.035f + rnd(k + 9, 3) * .03f) + rnd(k + 9, 1)) % 1f
+        val x = if (dir > 0) -30f + ph * (size.width + 60f) else size.width + 30f - ph * (size.width + 60f)
+        val y = size.height * (.25f + .45f * rnd(k + 9, 2)) + sin(t * 2f + k) * 6f; val s = 8f + rnd(k + 9, 4) * 6f
+        val col = listOf(Color(0xFFFFD166), Color(0xFF4FC3F7), Color(0xFFFF8A5C))[k % 3].copy(alpha = .38f)
+        drawOval(col, Offset(x - s, y - s * .5f), Size(s * 2f, s))
+        drawPath(Path().apply { moveTo(x - dir * s * .9f, y); lineTo(x - dir * s * 1.6f, y - s * .55f); lineTo(x - dir * s * 1.6f, y + s * .55f); close() }, col)
+    }
+    for (i in 0 until 12) {
+        val ph = (t * (.06f + rnd(i + 30, 3) * .05f) + rnd(i + 30, 1)) % 1f
+        drawCircle(Color.White.copy(alpha = .2f), 2.5f + rnd(i + 30, 4) * 4f, Offset(rnd(i + 30, 2) * size.width, size.height * (1.05f - ph * 1.1f)), style = Stroke(1.2f))
+    }
+}
+
+/** «زحل»: the ringed planet turning slowly over a field of stars, two moons going round it. */
+private fun DrawScope.saturn(p: Pal, t: Float) {
+    for (i in 0 until 50) {
+        val tw = .3f + .7f * ((sin(t * (1f + rnd(i, 5)) * 1.6f + i) + 1) / 2)
+        drawCircle(Color.White.copy(alpha = (if (p.dark) .5f else .25f) * tw), .9f + rnd(i, 4) * 1.4f, Offset(rnd(i, 1) * size.width, rnd(i, 2) * size.height))
+    }
+    val c = Offset(size.width * .72f, size.height * .2f); val r = size.width * .14f
+    val ring = { front: Boolean ->
+        rotate(-18f + sin(t * .15f) * 3f, c) {
+            for (k in 0 until 4) {
+                val rw = r * (2.0f + k * .22f); val rh = rw * .28f
+                drawArc(Color(0xFFF3D9A0).copy(alpha = .30f - k * .05f), if (front) 0f else 180f, 180f, false, Offset(c.x - rw, c.y - rh), Size(rw * 2, rh * 2), style = Stroke(5f - k))
+            }
+        }
+    }
+    ring(false)
+    drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE6B0).copy(alpha = .55f), Color(0xFFD9A15A).copy(alpha = .45f), Color(0xFF8A5A2A).copy(alpha = .40f)), Offset(c.x - r * .35f, c.y - r * .35f), r * 1.4f), r, c)
+    for (b in 0 until 3) drawArc(Color(0xFFB07840).copy(alpha = .18f), 200f, 140f, false, Offset(c.x - r, c.y - r * (.6f - b * .35f)), Size(r * 2, r * 1.2f), style = Stroke(3f))
+    ring(true)
+    for (m in 0 until 2) {
+        val a = t * (if (m == 0) .6f else -.4f) * 2 * PI.toFloat() + m * 2f
+        val mo = Offset(c.x + cos(a) * r * (2.6f + m * .5f), c.y + sin(a) * r * (.8f + m * .2f))
+        drawCircle(Color(0xFFE6E0F2).copy(alpha = .45f), 4f + m * 2f, mo)
+    }
+}
+
+/** «البطريق»: snow falling, icebergs, and three little penguins waddling along the ice. */
+private fun DrawScope.penguins(p: Pal, t: Float) {
+    for (i in 0 until 34) {
+        val ph = (t * (.05f + rnd(i, 3) * .05f) + rnd(i, 1)) % 1f
+        val x = rnd(i, 2) * size.width + sin(t + i) * 10f
+        drawCircle(Color.White.copy(alpha = if (p.dark) .45f else .7f), 1.6f + rnd(i, 4) * 2.2f, Offset(x, ph * size.height))
+    }
+    val ice = Color(0xFFDDF3FF).copy(alpha = if (p.dark) .20f else .55f)
+    listOf(.12f to 70f, .55f to 110f, .88f to 60f).forEach { (fx, hh) ->
+        val x = size.width * fx; val base = size.height * .9f
+        drawPath(Path().apply { moveTo(x - hh * .7f, base); lineTo(x - hh * .3f, base - hh); lineTo(x + hh * .1f, base - hh * .75f); lineTo(x + hh * .45f, base - hh * 1.05f); lineTo(x + hh * .75f, base); close() }, ice)
+    }
+    drawRect(Color(0xFFEAF7FF).copy(alpha = if (p.dark) .16f else .6f), Offset(0f, size.height * .9f), Size(size.width, size.height * .1f))
+    for (k in 0 until 3) {
+        val ph = (t * .03f + k / 3f) % 1f; val x = -30f + ph * (size.width + 60f); val y = size.height * .9f
+        val s = 16f + k * 3f; val tilt = sin(t * 2 * PI.toFloat() * 3 + k) * 8f
+        rotate(tilt, Offset(x, y - s)) {
+            drawOval(Color(0xFF1E2430).copy(alpha = .55f), Offset(x - s * .55f, y - s * 2.1f), Size(s * 1.1f, s * 2.1f))
+            drawOval(Color.White.copy(alpha = .75f), Offset(x - s * .35f, y - s * 1.6f), Size(s * .7f, s * 1.5f))
+            drawCircle(Color.White, s * .09f, Offset(x + s * .12f, y - s * 1.75f)); drawCircle(Color.Black, s * .05f, Offset(x + s * .14f, y - s * 1.75f))
+            drawPath(Path().apply { moveTo(x + s * .25f, y - s * 1.62f); lineTo(x + s * .5f, y - s * 1.55f); lineTo(x + s * .25f, y - s * 1.48f); close() }, Color(0xFFFFA040).copy(alpha = .85f))
+            drawOval(Color(0xFFFFA040).copy(alpha = .8f), Offset(x - s * .35f, y - s * .12f), Size(s * .3f, s * .16f))
+            drawOval(Color(0xFFFFA040).copy(alpha = .8f), Offset(x + s * .05f, y - s * .12f), Size(s * .3f, s * .16f))
+        }
     }
 }
