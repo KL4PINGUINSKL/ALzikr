@@ -205,7 +205,7 @@ private fun moreGroups(open: (String) -> Unit, openSettings: (String) -> Unit): 
 /** One folded group: its icon, title and every name in it; a tap opens its tiles. */
 @Composable
 private fun MoreFold(g: MoreGroupDef, opened: Boolean, toggle: () -> Unit) {
-    Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background(if (opened) P.surface else P.card).border(1.dp, if (opened) P.accent.copy(alpha = .5f) else P.line, L.shape(18.dp))) {
+    Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background((if (opened) P.surface else P.card).seeThrough()).border(1.dp, if (opened) P.accent.copy(alpha = .5f) else P.line, L.shape(18.dp))) {
         Row(Modifier.fillMaxWidth().clickable(onClick = toggle).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             GText(g.icon, fontSize = 24.sp)
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {

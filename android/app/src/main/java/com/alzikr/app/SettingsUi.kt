@@ -218,6 +218,11 @@ fun SettingsSheet(start: String? = null, close: () -> Unit) {
 
             if (section == "look") {
                 Panel {
+                    Title("🪟 شفافية البطاقات")
+                    Sub("في الثيمات ذات الخلفية الحية: كم تظهر الحياة من خلف البطاقات. ثيمات الزجاج لها زجاجها، والثيمات الساكنة تبقى مصمتة.", size = 12.sp)
+                    Wrap(gap = 6.dp) {
+                        listOf(0 to "مصمتة", 1 to "شفافة قليلًا", 2 to "شفافة أكثر").forEach { (k, l) -> Choice(l, Data.cardSee == k) { Data.cardSee = k } }
+                    }
                     Title("🌙 نور الليل")
                     Sub("ضوء دافئ كضوء القنديل يغطي التطبيق من العشاء حتى الفجر حسب مواقيت مدينتك، فتريح عينيك في قراءة القرآن والأذكار ليلًا.", Modifier.padding(bottom = 8.dp), size = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

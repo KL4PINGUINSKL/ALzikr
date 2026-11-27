@@ -88,12 +88,14 @@ fun FancyPanel(modifier: Modifier, pad: Dp, color: Color, content: @Composable C
     val gold = P.gold; val line = P.line; val accent = P.accent; val dark = P.dark
     val top = when (style) { PanelStyle.ARCH -> 20.dp; PanelStyle.SCROLL -> 12.dp; else -> 0.dp }
     val bottom = if (style == PanelStyle.SCROLL) 12.dp else 0.dp
+    val k = cardAlpha()
+    fun Color.see() = copy(alpha = alpha * k)
     val back: Brush = when (style) {
         PanelStyle.GLASS -> Brush.verticalGradient(listOf(Color.White.copy(alpha = if (dark) .10f else .55f), color.copy(alpha = if (dark) .45f else .55f)))
-        PanelStyle.PETAL -> Brush.linearGradient(listOf(color, Tints.mix(color, accent, .08f)))
-        PanelStyle.PEBBLE -> Brush.radialGradient(listOf(Tints.mix(color, Color.White, if (dark) .03f else .25f), color))
-        PanelStyle.MARBLE -> Brush.linearGradient(listOf(Tints.mix(color, Color.White, if (dark) .04f else .5f), color, Tints.mix(color, Color.Gray, .06f)))
-        else -> Brush.verticalGradient(listOf(color, color))
+        PanelStyle.PETAL -> Brush.linearGradient(listOf(color.see(), Tints.mix(color, accent, .08f).see()))
+        PanelStyle.PEBBLE -> Brush.radialGradient(listOf(Tints.mix(color, Color.White, if (dark) .03f else .25f).see(), color.see()))
+        PanelStyle.MARBLE -> Brush.linearGradient(listOf(Tints.mix(color, Color.White, if (dark) .04f else .5f).see(), color.see(), Tints.mix(color, Color.Gray, .06f).see()))
+        else -> Brush.verticalGradient(listOf(color.see(), color.see()))
     }
     val edge = when (style) { PanelStyle.FRAMED, PanelStyle.MARBLE -> gold.copy(alpha = .8f); PanelStyle.LEATHER -> Color(0xFF7A4A24)
         PanelStyle.PAPER -> line.copy(alpha = .5f); PanelStyle.GLASS -> Color.White.copy(alpha = if (dark) .22f else .7f)

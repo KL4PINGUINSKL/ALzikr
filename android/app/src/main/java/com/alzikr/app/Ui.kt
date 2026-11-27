@@ -51,6 +51,19 @@ val Day = Pal(false, Color(0xFFF5F1E6), Color(0xFFFFFDF7), Color(0xFFEDE7D6), Co
 val LocalPal = staticCompositionLocalOf { Night }
 val P: Pal @Composable get() = LocalPal.current
 
+/**
+ * One rule for every card (user, 2026-11-27): over a living background, cards let it show through as chosen in
+ * «راحة العين ← شفافية البطاقات»; without one, or in the glass themes (their own glass), they stay as they are.
+ */
+@Composable
+fun cardAlpha(): Float {
+    val l = L
+    if (l.backdrop == Backdrop.NONE || l.panel == PanelStyle.GLASS) return 1f
+    return when (Data.cardSee) { 0 -> 1f; 2 -> .72f; else -> .88f }
+}
+@Composable
+fun Color.seeThrough(): Color = copy(alpha = alpha * cardAlpha())
+
 /** A rounded panel. */
 @Composable
 fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surface, content: @Composable ColumnScope.() -> Unit) {
@@ -67,7 +80,7 @@ fun Panel(modifier: Modifier = Modifier, pad: Dp = 16.dp, color: Color = P.surfa
     val shape = look.shape()
     // The shape is drawn, not used as a clip: a clip with a cut or arched outline is also a touch boundary, and far down a
     // tall panel (the theme list) Android's test against that outline fails, so taps there were lost.
-    Column(modifier.fillMaxWidth().background(color, shape).border(1.dp, P.line, shape).padding(pad), content = content)
+    Column(modifier.fillMaxWidth().background(color.seeThrough(), shape).border(1.dp, P.line, shape).padding(pad), content = content)
 }
 
 @Composable
@@ -285,7 +298,9 @@ fun Hint(id: String, icon: String, text: String, modifier: Modifier = Modifier) 
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     if (Hints.seen(id)) return
     val shape = L.shape(16.dp)
-    Row(modifier.fillMaxWidth().clip(shape).background(P.accent.copy(alpha = .10f)).border(1.dp, P.accent.copy(alpha = .45f), shape).padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
+    // Over a living background a hint is a card like the others (a card tinted with the accent), not a see-through wash.
+    val hintBack = if (L.backdrop != Backdrop.NONE && L.panel != PanelStyle.GLASS) Tints.mix(P.card, P.accent, .12f).seeThrough() else P.accent.copy(alpha = .10f)
+    Row(modifier.fillMaxWidth().clip(shape).background(hintBack).border(1.dp, P.accent.copy(alpha = .45f), shape).padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Glyph(icon, tint = P.accent, size = 24.dp)
         GText(text, color = P.ink, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
@@ -311,7 +326,7 @@ fun UpdateBanner() {
 fun Tile(icon: String, label: String, modifier: Modifier = Modifier, on: Boolean = false, onClick: () -> Unit) {
     val shape = L.shape(16.dp)
     // Two lines, centered: a one-line label used to wrap and show only its first word.
-    Column(modifier.heightIn(min = 84.dp).clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 4.dp),
+    Column(modifier.heightIn(min = 84.dp).clip(shape).background(if (on) P.accent else P.card.seeThrough()).border(1.dp, if (on) P.accent else P.line, shape).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
         Glyph(icon, tint = if (on) P.onAccent else P.accent, size = 26.dp)
         androidx.compose.foundation.layout.Spacer(Modifier.height(4.dp))
