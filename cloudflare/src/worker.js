@@ -168,7 +168,7 @@ async function reports(req, env, url) {
   if (!allowed(req, env)) return askPass();
   const q = url.searchParams;
   const kind = ["bug", "idea", "other"].includes(q.get("kind")) ? q.get("kind") : "";
-  const status = q.get("status") && (q.get("status") === "all" || STATUSES[q.get("status")]) ? q.get("status") : "open";
+  const status = q.get("status") && (q.get("status") === "all" || STATUSES[q.get("status")]) ? q.get("status") : "all";
   const sort = q.get("sort") === "old" ? "ASC" : "DESC";
   const where = [], args = [];
   if (kind) { where.push("kind = ?"); args.push(kind); }
@@ -185,13 +185,13 @@ async function reports(req, env, url) {
   const link = (k, st, so, text, on) => `<a class="chip${on ? " on" : ""}" href="/reports?${new URLSearchParams({ ...(k ? { kind: k } : {}), status: st, sort: so === "ASC" ? "old" : "new" })}">${text}</a>`;
   const n = (x) => ` <small>${x || 0}</small>`;
   const kinds = [["", "الكل" + n(counts.all)], ["bug", "🐞 المشكلات" + n(counts.bug)], ["idea", "💡 الميزات" + n(counts.idea)], ["other", "💬 أخرى" + n(counts.other)]]
-    .map(([k, t]) => link(k, status, sort, t, k === kind)).join("");
-  const stats = [["open", "المفتوحة" + n(counts.s_open)], ...Object.entries(STATUSES).map(([k, t]) => [k, t + n(counts["s_" + k])]), ["all", "الكل"]]
+    .map(([k, t]) => link(k, k ? status : "all", sort, t, k === kind && (k || status === "all"))).join("");
+  const stats = [["all", "كل الحالات" + n(counts.all)], ["open", "المفتوحة" + n(counts.s_open)], ...Object.entries(STATUSES).map(([k, t]) => [k, t + n(counts["s_" + k])])]
     .map(([k, t]) => link(kind, k, sort, t, k === status)).join("");
   const sorts = link(kind, status, "DESC", "الأحدث أولًا", sort === "DESC") + link(kind, status, "ASC", "الأقدم أولًا", sort === "ASC");
   const cards = list.length ? list.map((r) => {
     const st = r.status || "new";
-    return `<div class="card st-${st}" id="m${r.id}"><div class="top"><b>${label[r.kind] || esc(r.kind)} <span class="badge">${STATUSES[st]}</span></b><span class="muted">#${r.id} · ${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)} · ${esc(r.version)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div>
+    return `<div class="card st-${st}" id="m${r.id}"><div class="top"><b>${label[r.kind] || esc(r.kind)} <span class="badge">${STATUSES[st]}</span></b><span class="muted"><span class="ver">ALzikr ${esc(r.version || "؟")}</span> #${r.id} · ${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div>
 <p>${esc(r.text).replace(/\n/g, "<br>")}</p>${r.contact ? `<div class="muted">للرد: ${esc(r.contact)}</div>` : ""}
 <div class="acts">${Object.entries(STATUSES).map(([k, t]) => `<button class="${k === st ? "on" : ""}" onclick="setSt(${r.id},'${k}')">${t}</button>`).join("")}</div>
 <textarea placeholder="ملاحظتك (لك وحدك): ما فعلته، أو لماذا رُفضت…" onchange="setNote(${r.id},this.value)">${esc(r.note)}</textarea></div>`;
@@ -204,7 +204,7 @@ h1{font-size:21px;margin:0 0 8px}.row{display:flex;flex-wrap:wrap;gap:6px;margin
 .chip{padding:4px 11px;border:1px solid var(--line);border-radius:20px;color:var(--ink);text-decoration:none;font-size:13px}.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}.chip small{opacity:.7}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;border-inline-start:5px solid var(--line)}
 .st-new{border-inline-start-color:var(--gold)}.st-working{border-inline-start-color:#5ba8ff}.st-later{border-inline-start-color:#b07cff}.st-done{border-inline-start-color:var(--acc);opacity:.8}.st-rejected{border-inline-start-color:#e5675f;opacity:.7}
-.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.badge{font-weight:400;font-size:12px;color:var(--muted)}
+.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.ver{display:inline-block;font-weight:700;font-size:13px;color:var(--bg);background:var(--gold);border-radius:8px;padding:0 8px;margin-inline-end:6px}.badge{font-weight:400;font-size:12px;color:var(--muted)}
 .muted{color:var(--muted);font-size:13px}p{margin:8px 0 4px;overflow-wrap:anywhere}
 .acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}button{font:inherit;font-size:12px;padding:3px 9px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 textarea{width:100%;box-sizing:border-box;margin-top:8px;min-height:38px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font:inherit;font-size:13px}</style></head><body><main>

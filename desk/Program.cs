@@ -58,12 +58,14 @@ sealed class MainForm : Form
     const string Site = "https://alzikr.alpharmasy.com";
     readonly WebView2 web = new() { Dock = DockStyle.Fill };
     readonly ToolStripButton stats = new("📊 التنزيلات"), reports = new("💬 الرسائل");
+    // The version users have now (from the site's latest.json), plainly in the bar.
+    readonly ToolStripLabel version = new("ALzikr …") { Alignment = ToolStripItemAlignment.Right, Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.FromArgb(0xA8, 0x81, 0x2C) };
     string? key = Key.Load();
     int tries;
 
     public MainForm()
     {
-        Text = "ALzikr — التنزيلات والرسائل";
+        Text = $"ALzikr Desk {Application.ProductVersion.Split('+')[0]} — التنزيلات والرسائل";
         RightToLeft = RightToLeft.Yes; RightToLeftLayout = true;
         Font = new Font("Segoe UI", 10);
         Size = new Size(900, 820); StartPosition = FormStartPosition.CenterScreen;
@@ -74,10 +76,10 @@ sealed class MainForm : Form
         var site = new ToolStripButton("🌐 صفحة التحميل") { Alignment = ToolStripItemAlignment.Right };
         stats.Click += (_, _) => Go("/stats");
         reports.Click += (_, _) => Go("/reports");
-        refresh.Click += (_, _) => web.Reload();
+        refresh.Click += (_, _) => { web.Reload(); _ = ShowVersion(); };
         pass.Click += (_, _) => { key = Key.Ask(this, "كلمة سر صفحتي التنزيلات والرسائل (STATS_KEY):") ?? key; web.Reload(); };
         site.Click += (_, _) => Go("/download.html");
-        bar.Items.AddRange(new ToolStripItem[] { stats, reports, new ToolStripSeparator(), refresh, pass, site });
+        bar.Items.AddRange(new ToolStripItem[] { stats, reports, new ToolStripSeparator(), refresh, pass, site, version });
         Controls.Add(web); Controls.Add(bar);
         Shown += async (_, _) => await Start();
     }
@@ -98,6 +100,22 @@ sealed class MainForm : Form
         };
         core.NavigationCompleted += (_, _) => tries = 0;
         Go("/reports");
+        _ = ShowVersion();
+    }
+
+    async Task ShowVersion()
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("ALzikrDesk");
+            var j = System.Text.Json.JsonDocument.Parse(await http.GetStringAsync(Site + "/latest.json")).RootElement;
+            var v = j.GetProperty("version").GetString();
+            var date = j.TryGetProperty("releaseDate", out var d) ? d.GetString() : null;
+            version.Text = $"📦 ALzikr {v}";
+            version.ToolTipText = $"آخر نسخة منشورة للمستخدمين" + (date != null ? $" · {date}" : "");
+        }
+        catch { version.Text = "📦 ALzikr ؟"; version.ToolTipText = "تعذّر الوصول إلى الموقع"; }
     }
 
     void Go(string path)
