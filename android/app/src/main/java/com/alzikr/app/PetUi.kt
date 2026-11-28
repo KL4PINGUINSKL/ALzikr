@@ -541,6 +541,7 @@ fun PetPage() {
             SettingRow("يتجوّل على حافة الشاشة", "يمشي قليلًا صعودًا ونزولًا كل نصف دقيقة تقريبًا ثم يستريح") { Switch(Pet.wander, { Pet.wander = it }) }
             SettingRow("ضغطتان = تسبيحة", "تُحسب مع سبحتك: 33 سبحان الله، 33 الحمد لله، 34 الله أكبر") { Switch(Pet.floatTasbih, { Pet.floatTasbih = it }) }
             SettingRow("ينبّهك قبل الصلاة", "كلمة قبل كل صلاة بعشر دقائق") { Switch(Pet.prayerNudge, { Pet.prayerNudge = it }) }
+            SettingRow("«لا تنسَ صلاتك»", "بعد الأذان بنصف ساعة إن لم تعلّم الصلاة صُلّيت؛ تضغط الفقاعة فتعلّمها") { Switch(Pet.prayerAfter, { Pet.prayerAfter = it }) }
             SettingRow("ساعات الهدوء", if (Pet.quietFrom < 0) "متوقفة" else "لا فقاعات من ${Alerts.timeText(Pet.quietFrom)} إلى ${Alerts.timeText(Pet.quietTo)}") {
                 Switch(Pet.quietFrom >= 0, { Pet.quietFrom = if (it) 23 * 60 else -1 })
             }

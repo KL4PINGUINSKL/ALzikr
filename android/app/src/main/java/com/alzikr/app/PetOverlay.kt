@@ -164,7 +164,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
             repeat(2) { hop.animateTo(1f, androidx.compose.animation.core.tween(150)); hop.animateTo(0f, androidx.compose.animation.core.tween(190)) }
         }
         Row(Modifier.onSizeChanged { fit(it.width) }, verticalAlignment = Alignment.CenterVertically) {
-            if (right && b != null) Box(Modifier.padding(end = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
+            if (right && b != null) Box(Modifier.padding(end = 4.dp)) { Bubble(b.first) { tapBubble(b.second) } }
             Box(Modifier.size(sz().dp).alpha((if (asleep) Pet.floatAlpha * .75f else Pet.floatAlpha) * (if (mini) .7f else 1f))) {
                 val look = PetLooks.chosen(species)
                 androidx.compose.runtime.key(species, look?.id) {
@@ -182,7 +182,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
                         modifier = Modifier.align(Alignment.BottomCenter).background(P.accent, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).padding(horizontal = 6.dp))
                 }
             }
-            if (!right && b != null) Box(Modifier.padding(start = 4.dp)) { Bubble(b.first) { openApp(b.second) } }
+            if (!right && b != null) Box(Modifier.padding(start = 4.dp)) { Bubble(b.first) { tapBubble(b.second) } }
         }
     }
 
@@ -312,7 +312,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private val hideCount = Runnable { count.value = null }
 
     /** Every half minute: a word before the prayer (once for each prayer). */
-    private val minute = object : Runnable { override fun run() { nudge(); due(); joy(); handler.postDelayed(this, 30_000L) } }
+    private val minute = object : Runnable { override fun run() { nudge(); afterAdhan(); due(); joy(); handler.postDelayed(this, 30_000L) } }
     /** From level 6: when the day's hearts are full it hops and hearts fly, at most once an hour. */
     private var joyAt = 0L
     private fun joy() {
@@ -320,6 +320,38 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         if (System.currentTimeMillis() - joyAt < 3_600_000L || Pet.mood() < 80) return
         if (!getSystemService(PowerManager::class.java).isInteractive) return
         joyAt = System.currentTimeMillis(); hearts.value++
+    }
+    /**
+     * Half an hour after the adhan, while that prayer's time lasts, if it is not ticked in the prayer log: «لا تنسَ
+     * صلاتك», once per prayer (user, 2026-11-28). A tap on the bubble ticks it. Missed with the screen off or the app
+     * open, it comes at the next chance within the prayer's time.
+     */
+    private fun afterAdhan() {
+        if (!Pet.prayerAfter || quiet || !Store.hasLocation || view == null || appOpen || Pet.kids || bubble.value != null) return
+        val today = java.time.LocalDate.now()
+        val t = runCatching { Store.times(today) }.getOrNull() ?: return
+        val m = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+        val ends = mapOf(Prayer.FAJR to Prayer.SUNRISE, Prayer.DHUHR to Prayer.ASR, Prayer.ASR to Prayer.MAGHRIB, Prayer.MAGHRIB to Prayer.ISHA)
+        val p = listOf(Prayer.FAJR, Prayer.DHUHR, Prayer.ASR, Prayer.MAGHRIB, Prayer.ISHA).firstOrNull { p ->
+            val start = t[p] ?: return@firstOrNull false
+            val end = ends[p]?.let { t[it] } ?: (24 * 60)
+            m in (start + 30) until end
+        } ?: return
+        val key = "$today|${p.name}"
+        if (Data.prayed(today, p) || Store.prefs.getString("pet_after_said", "") == key) return
+        val audio = getSystemService(AudioManager::class.java)
+        if (audio.mode != AudioManager.MODE_NORMAL || !getSystemService(PowerManager::class.java).isInteractive || Pet.quietNow()) return
+        Store.prefs.edit().putString("pet_after_said", key).apply()
+        bubble.value = "لم تعلّم صلاة ${p.ar} بعد، لا تنسَ صلاتك 🕌\nاضغط هنا إن صلّيتها" to "pray:${p.name}"
+        handler.removeCallbacks(clear); handler.postDelayed(clear, 20_000L)
+    }
+    /** A tap on the bubble: «pray:X» ticks that prayer; otherwise it opens the app (at the verse, if any). */
+    private fun tapBubble(s: String?) {
+        if (s?.startsWith("pray:") != true) { openApp(s); return }
+        runCatching { Data.setPrayed(java.time.LocalDate.now(), Prayer.valueOf(s.removePrefix("pray:")), true) }
+        hearts.value++
+        bubble.value = "تقبّل الله منك 🤲" to null
+        handler.removeCallbacks(clear); handler.postDelayed(clear, 3_000L)
     }
     private fun nudge() {
         if (!Pet.prayerNudge || quiet || !Store.hasLocation || view == null || appOpen || Pet.kids) return

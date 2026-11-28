@@ -137,6 +137,10 @@ object Pet {
     var prayerNudge: Boolean
         get() = sp.getBoolean("pet_pnudge", true)
         set(v) { sp.edit().putBoolean("pet_pnudge", v).apply(); Store.bump() }
+    /** Over other apps: half an hour after the adhan, if that prayer is not ticked yet, «لا تنسَ صلاتك» (once per prayer). */
+    var prayerAfter: Boolean
+        get() = sp.getBoolean("pet_pafter", true)
+        set(v) { sp.edit().putBoolean("pet_pafter", v).apply(); Store.bump() }
     /** The tasbih phrase for count [n]: 33 subhan Allah, 33 al-hamdu lillah, 34 Allahu akbar, then again. */
     fun tasbihWord(n: Int) = ((n - 1) % 100).let { if (it < 33) "سبحان الله" else if (it < 66) "الحمد لله" else "الله أكبر" }
     /** Quiet hours: no bubbles between these minutes (e.g. 23:00–05:00); -1 = none. */
