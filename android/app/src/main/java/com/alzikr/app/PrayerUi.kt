@@ -259,6 +259,10 @@ private fun TimesOptions(openSettings: () -> Unit, close: () -> Unit) {
                 Tile("🗓", "مواقيت الشهر", Modifier.weight(1f)) { close(); Nav.morePage = "month"; Nav.go("more") }
                 Tile("🧭", "القبلة", Modifier.weight(1f)) { close(); Nav.morePage = "qibla"; Nav.go("more") }
             }
+            if (PetBackdrop.cardFrame.isNotEmpty()) Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).clickable { PetBackdrop.prayerFrame = !PetBackdrop.prayerFrame }, verticalAlignment = Alignment.CenterVertically) {
+                Text("🖼 إطار بطاقة «الصلاة القادمة»", color = P.ink, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                androidx.compose.material3.Switch(PetBackdrop.prayerFrame, { PetBackdrop.prayerFrame = it })
+            }
             Sub("الموقع: ${Store.place.ifBlank { "%.3f، %.3f".format(Store.lat, Store.lng) }}", Modifier.padding(top = 6.dp))
             LocationSetup(compact = true)
             Sub("طريقة الحساب", Modifier.padding(top = 6.dp))
@@ -489,6 +493,7 @@ private fun PrayerLine(w: Window, times: Map<Prayer, Int>, open: (Prayer) -> Uni
 @Composable
 private fun NextPrayerFrame(modifier: Modifier) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
+    if (!PetBackdrop.prayerFrame) return
     val fr = Progress.frames.firstOrNull { it.id == PetBackdrop.cardFrame && it.id != "plain" } ?: return
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val calm = com.alzikr.app.pets.PetPerf.reduceMotion

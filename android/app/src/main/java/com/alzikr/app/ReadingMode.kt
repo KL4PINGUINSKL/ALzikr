@@ -597,7 +597,7 @@ private fun AyahRun(run: List<Quran.Ayah>, toggle: () -> Unit, long: (Quran.Ayah
 }
 
 /**
- * Today's wird alone: only its mushaf pages, on black, turned like a mushaf. A page counts once you turn past it
+ * Today's wird alone: only its mushaf pages, on the chosen paper (the theme's by default, as «ختمتك»; user 2026-11-28), turned like a mushaf. A page counts once you turn past it
  * (the last one after ten seconds), and a last page says the wird is done.
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -606,8 +606,8 @@ fun WirdReader(back: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { withContext(Dispatchers.IO) { Quran.load(ctx) } }
     androidx.activity.compose.BackHandler { back() }
-    val black = Reading.Paper.NIGHT
-    if (!Quran.ready) { Box(Modifier.fillMaxSize().background(Color.Black)); return }
+    val black = Reading.paper
+    if (!Quran.ready) { Box(Modifier.fillMaxSize().background(Color(black.bg))); return }
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val starts = remember { pageStarts() }
     // Fixed when opened, so the pages do not move while reading.
@@ -625,7 +625,7 @@ fun WirdReader(back: () -> Unit) {
         onDispose { view?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
     }
     val muted = Color(black.muted); val acc = Color(black.accent)
-    Column(Modifier.fillMaxSize().background(Color.Black).windowInsetsPadding(WindowInsets.systemBars)) {
+    Column(Modifier.fillMaxSize().background(Color(black.bg)).windowInsetsPadding(WindowInsets.systemBars)) {
         val (from, to) = plan ?: (0 to -1)
         val count = (to - from + 1).coerceAtLeast(0)
         // After the «done» page the mushaf goes on (to+1 … 604) for whoever wants to read more than the wird.
@@ -671,7 +671,7 @@ fun WirdReader(back: () -> Unit) {
                 Text("أتممت ورد اليوم، تقبّل الله منك", color = Color(black.ink), fontSize = 21.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Text("قرأت من الصفحة ${Quran.digits(from)} إلى ${Quran.digits(to)} · ختمتك ${Quran.digits(Data.khatmaPage * 100 / Data.PAGES)}٪", color = muted, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
                 if (extra > 0) Text("تريد المزيد؟ اسحب لتتابع القراءة من الصفحة ${Quran.digits(to + 1)}، وتُحسب لختمتك", color = acc, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 14.dp))
-                Text("رجوع", color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                Text("رجوع", color = Color(black.bg), fontSize = 17.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 24.dp).fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(acc).clickable { back() }.padding(vertical = 14.dp))
             }
         }

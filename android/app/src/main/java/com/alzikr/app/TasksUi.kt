@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,11 +46,13 @@ import java.util.Locale
 @Composable
 fun TasksScreen() {
     Column(Modifier.fillMaxSize()) {
-        if (!noteEditorOpen) Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-            // «اليوم» first (it ties the others together), then the day's parts in the order a day goes.
-            TabGrid(listOf(Triple(Daily.TODAY, "☀", "اليوم"), Triple(Daily.TASKS, "✅", "المهام"), Triple(Daily.HABITS, "🔁", "العادات"), Triple(Daily.KHATMA, "📖", "الختمة"),
+        if (!noteEditorOpen) Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // The khatma on its own band (user, 2026-11-28: it was lost among things that have nothing to do with it),
+            // then the day's own parts: «اليوم» first (it ties them together), then the order a day goes.
+            KhatmaBand(Nav.daily == Daily.KHATMA) { Nav.daily = Daily.KHATMA }
+            TabGrid(listOf(Triple(Daily.TODAY, "☀", "اليوم"), Triple(Daily.TASKS, "✅", "المهام"), Triple(Daily.HABITS, "🔁", "العادات"),
                 Triple(Daily.FOCUS, "🎯", "التركيز"), Triple(Daily.NOTES, "📝", "ملاحظات")).map { (i, ic, t) -> Triple(i.toString(), ic, t) },
-                Nav.daily.toString(), cols = 6) { Nav.daily = it.toInt() }
+                Nav.daily.toString(), cols = 5) { Nav.daily = it.toInt() }
         }
         androidx.compose.runtime.LaunchedEffect(Nav.daily) { when (Nav.daily) { Daily.TASKS -> "tasks"; Daily.FOCUS -> "focus"; Daily.KHATMA -> "khatma"; else -> null }?.let(Usage::hit) }
         when (Nav.daily) {
@@ -59,6 +62,28 @@ fun TasksScreen() {
             3 -> KhatmaPage()
             4 -> NotesList()
             else -> TaskListPlus()
+        }
+    }
+}
+
+/** «ختمتي»: where the khatma is and today's wird, one tap away, apart from the day's tasks and habits. */
+@Composable
+private fun KhatmaBand(on: Boolean, open: () -> Unit) {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val page = Data.khatmaPage; val wird = Data.wirdToday(); val read = Data.pagesToday()
+    val done = page >= Data.PAGES
+    val shape = L.shape(14.dp)
+    Column(Modifier.fillMaxWidth().clip(shape).background(if (on) P.accent else P.card.seeThrough()).border(1.dp, if (on) P.accent else P.gold.copy(alpha = .55f), shape)
+        .clickable(onClick = open).padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Glyph("📖", tint = if (on) P.onAccent else P.gold, size = 22.dp)
+            Text("  ختمتي", color = if (on) P.onAccent else P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text(if (done) "  · ختمت القرآن 🌙" else "  · ورد اليوم ${Quran.digits(read.coerceAtMost(wird))} / ${Quran.digits(wird)} ص" + if (read >= wird) " ✓" else "",
+                color = if (on) P.onAccent else P.muted, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+            Text("${Quran.digits(page * 100 / Data.PAGES)}٪", color = if (on) P.onAccent else P.gold, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
+        Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background((if (on) P.onAccent else P.line).copy(alpha = if (on) .35f else 1f))) {
+            Box(Modifier.fillMaxWidth(page.toFloat() / Data.PAGES).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (on) P.onAccent else P.accent))
         }
     }
 }

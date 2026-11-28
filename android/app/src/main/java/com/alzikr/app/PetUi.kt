@@ -275,7 +275,8 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
 fun Bubble(text: String, onClick: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val fr = Progress.frames.firstOrNull { it.id == PetBackdrop.bubbleFrame && it.id != "plain" }
-    if (fr == null) {
+    val themed = PetBackdrop.bubbleBg == ThemeArt.SCENE
+    if (fr == null && !themed) {
         GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center,
             modifier = Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card.seeThrough()).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp))
                 .clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp))
@@ -283,13 +284,14 @@ fun Bubble(text: String, onClick: () -> Unit) {
     }
     // A frame chosen in «الزينة ← الفقاعة»: drawn around the bubble (lanterns and crescents hang from its top edge).
     val ctx = LocalContext.current
-    val drawn = Decor.isDrawn(fr.id)
     val calm = com.alzikr.app.pets.PetPerf.reduceMotion
     val t = if (calm) 0f else rememberInfiniteTransition(label = "bf").animateFloat(0f, 1f, infiniteRepeatable(tween(9000, easing = LinearEasing)), label = "t").value
-    val hangs = drawn || Decor.hasExtras(fr.id)
-    Box(Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card.seeThrough()).clickable(onClick = onClick)) {
+    val hangs = fr != null && (Decor.isDrawn(fr.id) || Decor.hasExtras(fr.id))
+    Box(Modifier.widthIn(max = 215.dp).clip(L.shape(16.dp)).background(P.card.seeThrough()).then(if (fr == null) Modifier.border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp)) else Modifier).clickable(onClick = onClick)) {
+        // The theme's background, faint behind the words (user, 2026-11-28).
+        if (themed) androidx.compose.foundation.Canvas(Modifier.matchParentSize().alpha(.38f)) { drawThemeScene(t) }
         // Drawn first and faint (user: the lines and stars crossed the words), the words on top.
-        androidx.compose.foundation.Canvas(Modifier.matchParentSize().alpha(.45f)) { drawCardFrame(ctx, fr, t, 16.dp.toPx()) }
+        if (fr != null) androidx.compose.foundation.Canvas(Modifier.matchParentSize().alpha(.45f)) { drawCardFrame(ctx, fr, t, 16.dp.toPx()) }
         GText(text, color = P.ink, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center, fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = if (hangs) 28.dp else 10.dp, bottom = 10.dp))
     }
@@ -791,7 +793,7 @@ fun FriendStatsPanel() {
                                 }
                             }
                         }
-                        Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، والختمة تكمّل إليه ولا تتجاوزه)",
+                        Text("مجموع اليوم: ${Quran.digits(Progress.todayTotal())} من ${Quran.digits(Progress.DAY_MAX)} ✨ (الحد اليومي لكل شيء معًا، ونقاط الختمة زيادة عليه)",
                             color = P.ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Sub("كل شيء يُحسب مرة في اليوم، ولكل نوع حدّ يومي. هذه مكافآت داخل التطبيق فقط، لا مقياس للأجر عند الله.", size = 11.sp)
                     }

@@ -65,6 +65,7 @@ import kotlin.math.sin
 object PetBackdrop {
     data class Scene(val id: String, val name: String, val bond: Int)
     val scenes = listOf(
+        Scene(ThemeArt.SCENE, "على ذوق الثيم", 0),
         Scene("night", "سماء الليل", 0), Scene("dawn", "الفجر", 0), Scene("garden", "الحديقة", 0), Scene("sea", "البحر", 0), Scene("dunes", "الصحراء", 0),
         Scene("spring", "الربيع", 0), Scene("pinkclouds", "غيوم وردية", 0), Scene("mountains", "الجبال", 0),
         Scene("moon", "الهلال", 150), Scene("aurora", "الشفق", 400), Scene("rain", "المطر", 600), Scene("zellige", "الزليج", 900),
@@ -98,7 +99,8 @@ object PetBackdrop {
     // ---------------------------------------------------------------- the home-screen widget's own backgrounds
     /** Scenes for the «صديقي» widget (not the card's): [light] = a light scene, so the widget's words turn dark on it. */
     data class WScene(val id: String, val name: String, val bond: Int, val light: Boolean)
-    val widgetScenes = listOf(
+    val widgetScenes get() = listOf(
+        WScene(ThemeArt.WSCENE, "على ذوق الثيم", 0, !ThemeArt.pal().dark),
         WScene("w_sunset", "الغروب", 0, false), WScene("w_forest", "الغابة", 0, false), WScene("w_snow", "الثلج", 0, true),
         WScene("w_clouds", "السماء الصافية", 0, true), WScene("w_calm", "الليل الهادئ", 0, false),
         WScene("w_lamp", "المشكاة", 250, false), WScene("w_palms", "النخيل", 700, true), WScene("w_waves", "أمواج الليل", 1500, false),
@@ -200,6 +202,14 @@ object PetBackdrop {
     var bubbleFrame: String
         get() = (Store.prefs.getString("pet_bubble_frame", "") ?: "").takeIf { id -> id.isEmpty() || Progress.frames.any { it.id == id && it.open } } ?: ""
         set(v) { Store.prefs.edit().putString("pet_bubble_frame", v).apply(); Store.bump() }
+    /** The bubble's background: "" the card's colour, or [ThemeArt.SCENE] (the theme's background, faint). */
+    var bubbleBg: String
+        get() = Store.prefs.getString("pet_bubble_bg", "") ?: ""
+        set(v) { Store.prefs.edit().putString("pet_bubble_bg", v).apply(); Store.bump() }
+    /** Whether the card's frame also goes round «الصلاة القادمة» (user, 2026-11-28: let me turn it off). */
+    var prayerFrame: Boolean
+        get() = Store.prefs.getBoolean("pet_prayer_frame", true)
+        set(v) { Store.prefs.edit().putBoolean("pet_prayer_frame", v).apply(); Store.bump() }
     var cardFrame: String
         get() = (Store.prefs.getString("pet_card_frame", "") ?: "").takeIf { id -> id.isEmpty() || Progress.frames.any { it.id == id && it.open } } ?: ""
         set(v) { Store.prefs.edit().putString("pet_card_frame", v).apply(); Store.bump() }
@@ -242,6 +252,7 @@ fun DrawScope.drawWidgetScene(id: String) {
     val w = size.width; val h = size.height
     fun stars(n: Int, seed: Int) { val r = java.util.Random(seed.toLong()); repeat(n) { drawCircle(Color.White.copy(alpha = .35f + r.nextFloat() * .6f), (r.nextFloat() * 1.8f + .6f) * density, Offset(r.nextFloat() * w, r.nextFloat() * h * .8f)) } }
     when (id) {
+        ThemeArt.WSCENE -> drawThemeScene(0f)
         "w_sunset" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF2B1B4F), Color(0xFF8E3B6B), Color(0xFFE9744A), Color(0xFFF6B05A))))
             drawCircle(Color(0xFFFFD58A), h * .2f, Offset(w * .28f, h * .78f))
             drawRect(Brush.verticalGradient(listOf(Color(0x00000000), Color(0x66200A2A)), 0f, h), Offset(0f, h * .55f), Size(w, h * .45f)) }
@@ -318,6 +329,7 @@ fun DrawScope.drawScene(id: String, t: Float) {
         repeat(n) { val x = r.nextFloat() * w; val y = r.nextFloat() * h * .75f; val tw = .45f + .55f * ((sin((t * 2 * PI + r.nextFloat() * 6.28).toFloat()) + 1) / 2)
             drawCircle(color.copy(alpha = tw), (r.nextFloat() * 1.6f + .6f) * density, Offset(x, y)) } }
     when (id) {
+        ThemeArt.SCENE -> drawThemeScene(t)
         "night" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF0B1638), Color(0xFF1E2F6B), Color(0xFF3B3F8F)))); stars(38, 7)
             drawCircle(Color(0x33FFFFFF), h * .9f, Offset(w * .5f, h * 1.55f)) }
         "dawn" -> { drawRect(Brush.verticalGradient(listOf(Color(0xFF3B2A5C), Color(0xFFB4567A), Color(0xFFF2A25C), Color(0xFFFFD79A))))
@@ -508,6 +520,11 @@ fun PetDecorContent(part: String?) {
             Text("🖼 إطار البطاقة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Sub("خط رفيع حول بطاقته، أو فوانيس وأهلّة تتدلّى من حافتها.", size = 12.sp)
             WidgetFramesGrid(card = true)
+            if (PetBackdrop.cardFrame.isNotEmpty()) androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).clickable { PetBackdrop.prayerFrame = !PetBackdrop.prayerFrame }
+                .padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("🕌 حول بطاقة «الصلاة القادمة» أيضًا", color = P.ink, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                androidx.compose.material3.Switch(PetBackdrop.prayerFrame, { PetBackdrop.prayerFrame = it })
+            }
             Text("🖼 خلفية بطاقة ${Pet.name.ifBlank { "صديقك" }}", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
             Sub("ثمانٍ مفتوحة لك، وثمانٍ تفتحها نقاط الصداقة ❤، وصورة من هاتفك عند ${Quran.digits(PetBackdrop.PHOTO_BOND)} ❤.", size = 12.sp)
             val items = listOf(PetBackdrop.Scene("", "بلا خلفية", 0)) + PetBackdrop.scenes.sortedBy { it.bond }
@@ -537,6 +554,11 @@ fun PetDecorContent(part: String?) {
             Sub("حول فقاعة كلامه، في التطبيق وفوق التطبيقات الأخرى: خط رفيع، أو فوانيس وأهلّة تتدلّى من أعلاها.", size = 12.sp)
             Bubble("سبحان الله وبحمده 🌿") {}
             WidgetFramesGrid(bubble = true)
+            Text("🎨 خلفية الفقاعة", color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+            Wrap(gap = 8.dp) {
+                Choice("بلون البطاقة", PetBackdrop.bubbleBg.isEmpty()) { PetBackdrop.bubbleBg = "" }
+                Choice("على ذوق الثيم", PetBackdrop.bubbleBg == ThemeArt.SCENE) { PetBackdrop.bubbleBg = ThemeArt.SCENE }
+            }
         }
         if (part == null || part == "widget") {
             Text("🖼 إطار الأداة", color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)

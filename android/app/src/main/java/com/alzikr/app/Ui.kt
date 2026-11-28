@@ -142,7 +142,7 @@ fun TabGrid(tabs: List<Triple<String, String, String>>, current: String, cols: I
                     val on = k == current; val shape = L.shape(12.dp)
                     Column(Modifier.weight(1f).fillMaxHeight().clip(shape).background(if (on) P.accent else P.card).border(1.dp, if (on) P.accent else P.line, shape)
                         .clickable { pick(k) }.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        GText(icon, fontSize = 18.sp)
+                        Glyph(icon, tint = if (on) P.onAccent else P.accent, size = 20.dp)
                         if (' ' !in label.trim()) {
                             // One word never breaks between its letters («ملاحظا/ت»): it shrinks until it fits on one line.
                             var size by androidx.compose.runtime.remember(label) { androidx.compose.runtime.mutableStateOf(13f) }

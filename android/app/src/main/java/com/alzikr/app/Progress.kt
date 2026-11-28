@@ -25,14 +25,15 @@ object Progress {
     /** All experience of one day together never passes this; a finished khatma fills what is left of it (up to 200). */
     const val DAY_MAX = 300
     /** Experience earned today, all kinds together (at most [DAY_MAX]). */
-    fun todayTotal(): Int = Kind.entries.sumOf { todayXp(it) }
+    /** Today's points under the daily cap (the khatma's 200 come on top of it; user, 2026-11-28). */
+    fun todayTotal(): Int = Kind.entries.filter { it != Kind.KHATMA }.sumOf { todayXp(it) }
 
     /** How each kind is earned, in plain words (shown under «كيف أكسب النقاط؟»). */
     fun how(k: Kind): String = when (k) {
         Kind.PAGE -> "كل صفحة قرآن تقرؤها، من وردك أو خارجه: تبقى عليها 20 ثانية في المصحف، أو تقلّبها في وضع القراءة أو في «اقرأ وردك»"
         Kind.LISTEN -> "كل آية تسمعها حتى آخرها بصوت أي قارئ"
         Kind.WIRD -> "إتمام ورد اليوم من ختمتك (يُحسب عند آخر صفحة منه، أينما قرأته بالترتيب)"
-        Kind.KHATMA -> "ختم القرآن كاملًا (يكمّل نقاط يومك حتى 300 ولا يتجاوزها)"
+        Kind.KHATMA -> "ختم القرآن كاملًا (200 نقطة زيادة على الحد اليومي 300)"
         Kind.HADITH -> "كل حديث تقرؤه 15 ثانية"
         Kind.SHARH -> "كل شرح حديث تبقى عليه دقيقة"
         Kind.STUDY -> "كل درس تجويد تتمّه، وكل مقطع تحفظه أو تراجعه"
@@ -49,8 +50,9 @@ object Progress {
         seen.put(id, 1)
         val got = day.optJSONObject("xp") ?: JSONObject()
         val before = got.optInt(kind.name)
-        val dayTotal = Kind.entries.sumOf { got.optInt(it.name) }
-        val add = minOf(kind.xp, kind.cap - before, DAY_MAX - dayTotal).coerceAtLeast(0)
+        val dayTotal = Kind.entries.filter { it != Kind.KHATMA }.sumOf { got.optInt(it.name) }
+        // Finishing the Quran gives its 200 on top of the daily cap.
+        val add = (if (kind == Kind.KHATMA) minOf(kind.xp, kind.cap - before) else minOf(kind.xp, kind.cap - before, DAY_MAX - dayTotal)).coerceAtLeast(0)
         got.put(kind.name, before + add)
         val amt = day.optJSONObject("amt") ?: JSONObject(); amt.put(id, add)
         day.put("seen", seen).put("xp", got).put("amt", amt)
@@ -236,6 +238,7 @@ object Progress {
     }
     val frames: List<Frame> get() = listOf(
         Frame("plain", "بلون الثيم", 0, null, 0, 0, false),
+        ThemeArt.frame(),
         Frame("night", "الليل المرصّع بالنجوم", Friendship.frameGift("night")!!.bond, R.drawable.frame_night, 0xFF14204A, 0xFF3A2466, false),
         Frame("gold", "الذهبي", Friendship.frameGift("gold")!!.bond, R.drawable.frame_gold, 0xFFF6E3A6, 0xFFD4A846, true),
         Frame("pattern", "الزخرفة", Friendship.frameGift("pattern")!!.bond, R.drawable.frame_pattern, 0xFF0F4D3A, 0xFF1F7A5A, false),

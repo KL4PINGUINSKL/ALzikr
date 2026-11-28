@@ -132,7 +132,7 @@ fun KhatmaPage() {
     val end = Data.khatmaEnd()
     fun start() { if (Data.khatmaStarted.isEmpty()) Data.khatmaStarted = LocalDate.now().toString() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Hint("khatma2", "📗", "وردك هو نصيبك اليومي من ختمتك: عدد الصفحات التي تقرؤها اليوم لتختم في الموعد الذي تختاره. اضغط «اقرأ وردك» (أو «وردي» في الصفحة الرئيسية) فتظهر صفحات وردك فقط من المصحف على خلفية سوداء، وتُحسب كل صفحة تقلبها. أو سجّل ما قرأته من مصحف ورقي بالأزرار.")
+        Hint("khatma2", "📗", "وردك هو نصيبك اليومي من ختمتك: عدد الصفحات التي تقرؤها اليوم لتختم في الموعد الذي تختاره. اضغط «اقرأ وردك» (أو «وردي» في الصفحة الرئيسية) فتظهر صفحات وردك فقط من المصحف بلون الورق الذي اخترته (لون الثيم أولًا)، وتُحسب كل صفحة تقلبها. أو سجّل ما قرأته من مصحف ورقي بالأزرار.")
 
         // Today's wird.
         if (page < Data.PAGES) Panel(color = P.accent.copy(alpha = .12f), pad = 14.dp) {

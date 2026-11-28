@@ -384,7 +384,7 @@ fun BooksHome(root: String? = null, rootTitle: String = "") {
             item { Title("كتبي") }
             items(shelf, key = { "shelf" + it.id }) { b ->
                 Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(P.card.seeThrough()).clickable { readingTitle = b.title; reading = b.id }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    GText("📖", fontSize = 20.sp)
+                    Glyph("📖", tint = P.accent, size = 22.dp)
                     Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                         Text(b.title, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Sub((if (Books.lastPage(b.id) > 0) "وصلت إلى الصفحة ${Books.lastPage(b.id) + 1} · " else "") + b.authors, size = 11.sp)

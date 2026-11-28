@@ -915,7 +915,7 @@ fun DailyWords() {
 fun SearchBar(text: String, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clip(L.shape(16.dp)).background(P.card.seeThrough()).border(1.dp, P.accent.copy(alpha = .5f), L.shape(16.dp)).clickable(onClick = onClick)
         .padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-        GText("🔍", fontSize = 18.sp)
+        Glyph("🔍", tint = P.accent, size = 20.dp)
         Text(text, color = P.muted, fontSize = 15.sp, modifier = Modifier.padding(start = 10.dp))
     }
 }
@@ -942,7 +942,7 @@ fun ReciterLine(modifier: Modifier = Modifier, onClick: () -> Unit) {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     Row(modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.card.seeThrough()).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        GText("🎙", fontSize = 16.sp)
+        Glyph("🎙", tint = P.accent, size = 18.dp)
         Text("القارئ: ", color = P.muted, fontSize = 14.sp, modifier = Modifier.padding(start = 6.dp))
         Text(Recitation.reciterName(), color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         Text("تغيير ▾", color = P.accent, fontSize = 13.sp)

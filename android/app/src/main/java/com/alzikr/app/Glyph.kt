@@ -8,6 +8,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -81,7 +83,24 @@ object Glyphs {
 fun Glyph(g: String, tint: Color = LocalContentColor.current, size: Dp = 22.dp, modifier: Modifier = Modifier) {
     val res = Glyphs.of(g)
     if (res != null) Icon(painterResource(res), null, tint = tint, modifier = modifier.size(size))
-    else Text(g, color = tint, fontSize = (size.value * .9f).sp, modifier = modifier)
+    // An emoji with no drawn icon takes the tint too, keeping its light and shade (user, 2026-11-28: the emoji in the
+    // cards in «المكتبة» and «يومي» in the theme's colour); letters and signs are only coloured.
+    else Text(g, color = tint, fontSize = (size.value * .9f).sp, modifier = if (g.any { Character.isSurrogate(it) }) modifier.emojiTint(tint) else modifier)
+}
+
+/** Draws the content (a colour emoji) in shades of [tint]: its brightness kept, its own colours dropped. */
+fun Modifier.emojiTint(tint: Color): Modifier = this.drawWithContent {
+    val m = androidx.compose.ui.graphics.ColorMatrix(floatArrayOf(
+        tint.red * .3f * .8f, tint.red * .59f * .8f, tint.red * .11f * .8f, 0f, tint.red * .45f * 255f,
+        tint.green * .3f * .8f, tint.green * .59f * .8f, tint.green * .11f * .8f, 0f, tint.green * .45f * 255f,
+        tint.blue * .3f * .8f, tint.blue * .59f * .8f, tint.blue * .11f * .8f, 0f, tint.blue * .45f * 255f,
+        0f, 0f, 0f, 1f, 0f))
+    val paint = androidx.compose.ui.graphics.Paint().apply { colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(m) }
+    drawIntoCanvas { c ->
+        c.saveLayer(androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height), paint)
+        drawContent()
+        c.restore()
+    }
 }
 
 /** Text whose emoji are drawn as real icons inline, sized and colored like the text. */

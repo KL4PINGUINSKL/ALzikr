@@ -136,7 +136,7 @@ Gift("theme_meadow", 10, "🦋", Kind.THEME, "ثيم «المرج»", "عشب و
     fun frameGift(frameId: String): Gift? = gift("frame_$frameId")
     /** TEMPORARY, for trying the frames before publishing (user, 2026-11-27): every frame open. Must be false in a published version. */
     const val TRY_ALL_FRAMES = false
-    fun frameOpen(frameId: String) = TRY_ALL_FRAMES || (frameGift(frameId)?.let { Progress.bondPoints >= it.bond } ?: true)
+    fun frameOpen(frameId: String) = TRY_ALL_FRAMES || frameId == ThemeArt.FRAME || (frameGift(frameId)?.let { Progress.bondPoints >= it.bond } ?: true)
 
     // ---- the nickname
     var nick: String

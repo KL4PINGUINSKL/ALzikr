@@ -98,7 +98,7 @@ object Rich {
             val g = m.groupValues; val s = sb.length
             when {
                 g[1].isNotEmpty() -> { inline(sb, g[1]); sb.setSpan(StyleSpan(Typeface.BOLD), s, sb.length, FLAG) }
-                g[2].isNotEmpty() -> { inline(sb, g[2]); sb.setSpan(UnderlineSpan(), s, sb.length, FLAG) }
+                g[2].isNotEmpty() -> { inline(sb, g[2]); sb.setSpan(Under(), s, sb.length, FLAG) }
                 g[3].isNotEmpty() -> { inline(sb, g[3]); sb.setSpan(StrikethroughSpan(), s, sb.length, FLAG) }
                 g[4].isNotEmpty() -> { inline(sb, g[4]); sb.setSpan(Mark(0x66F2C94C), s, sb.length, FLAG) }
                 g[5].isNotEmpty() -> { inline(sb, g[5]); sb.setSpan(StyleSpan(Typeface.ITALIC), s, sb.length, FLAG) }
@@ -145,7 +145,7 @@ object Rich {
             fun <T> has(c: Class<T>, ok: (T) -> Boolean = { true }) = t.getSpans(k, k + 1, c).any { t.getSpanStart(it) <= k && t.getSpanEnd(it) > k && ok(it) }
             return St(!heading && has(StyleSpan::class.java) { it.style == Typeface.BOLD || it.style == Typeface.BOLD_ITALIC },
                 has(StyleSpan::class.java) { it.style == Typeface.ITALIC || it.style == Typeface.BOLD_ITALIC },
-                has(UnderlineSpan::class.java) { it !is android.text.style.SuggestionSpan }, has(StrikethroughSpan::class.java), has(Mark::class.java),
+                has(Under::class.java), has(StrikethroughSpan::class.java), has(Mark::class.java),
                 t.getSpans(k, k + 1, Ink::class.java).lastOrNull { t.getSpanStart(it) <= k && t.getSpanEnd(it) > k }?.key,
                 t.getSpans(k, k + 1, Size::class.java).lastOrNull { t.getSpanStart(it) <= k && t.getSpanEnd(it) > k }?.key)
         }
@@ -200,7 +200,7 @@ object Rich {
         val ss = t.getSpanStart(s); val se = t.getSpanEnd(s); t.removeSpan(s)
         fun copy(): Any? = when (s) {
             is Ink -> Ink(s.key, s.foregroundColor); is Size -> Size(s.key); is Mark -> Mark(s.backgroundColor); is StyleSpan -> StyleSpan(s.style)
-            is UnderlineSpan -> UnderlineSpan(); is StrikethroughSpan -> StrikethroughSpan(); else -> null
+            is Under -> Under(); is StrikethroughSpan -> StrikethroughSpan(); else -> null
         }
         if (ss < a) copy()?.let { t.setSpan(it, ss, a, FLAG) }
         if (se > b) copy()?.let { t.setSpan(it, b, se, FLAG) }
@@ -293,7 +293,7 @@ fun RichNoteEditor(note: Store.Note?, inline: Boolean = false, close: () -> Unit
             B("عنوان ١", true) { Rich.heading(it, 1) }; B("عنوان ٢", true) { Rich.heading(it, 2) }; B("عنوان ٣") { Rich.heading(it, 3) }
             B("B", true) { Rich.toggle(it, StyleSpan::class.java, { s -> s.style == Typeface.BOLD }) { StyleSpan(Typeface.BOLD) } }
             B("I") { Rich.toggle(it, StyleSpan::class.java, { s -> s.style == Typeface.ITALIC }) { StyleSpan(Typeface.ITALIC) } }
-            B("U") { Rich.toggle(it, UnderlineSpan::class.java, { true }) { UnderlineSpan() } }
+            B("U") { Rich.toggle(it, Under::class.java, { true }) { Under() } }
             B("S̶") { Rich.toggle(it, StrikethroughSpan::class.java, { true }) { StrikethroughSpan() } }
             B("🖍") { Rich.toggle(it, Rich.Mark::class.java, { true }) { Rich.Mark(0x66F2C94C) } }
             B("🎨 لون") { colors = !colors }
@@ -329,3 +329,9 @@ fun RichNoteEditor(note: Store.Note?, inline: Boolean = false, close: () -> Unit
         }
     }
 }
+
+/**
+ * The note's own underline. The keyboard underlines the word being typed with a plain UnderlineSpan; that one must
+ * not be saved as «__…__» (user, 2026-11-28: the notes' words were getting a line under them by themselves).
+ */
+class Under : UnderlineSpan()

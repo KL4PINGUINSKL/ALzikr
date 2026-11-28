@@ -113,7 +113,7 @@ fun StoriesHome(openBooks: (String, String) -> Unit) {
                     Text(name, color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Sub(about, size = 12.sp)
                 }
-                GText("📚", fontSize = 18.sp)
+                Glyph("📚", tint = P.accent, size = 20.dp)
             }
         }
     }

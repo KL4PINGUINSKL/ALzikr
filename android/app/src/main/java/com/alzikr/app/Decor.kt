@@ -21,7 +21,7 @@ import kotlin.math.sin
 object Decor {
     /** Frames drawn here (not XML shapes): they hang from the top edge. */
     val drawn = setOf("lanterns", "eid", "crescents", "hearts", "butterflies", "sakura", "rainbow", "snowflakes", "bunting",
-        "autumn", "candles", "qadr", "bees", "soap")
+        "autumn", "candles", "qadr", "bees", "soap", ThemeArt.FRAME)
     fun isDrawn(id: String) = id in drawn
     /** Frames that also carry their own ornaments (drawFrameExtras): planets round the galaxy, roses at the rose's corners… */
     val extras = setOf("night", "gold", "pattern", "dawn", "rose", "ocean", "desert", "lantern", "zellige", "aurora", "pearl", "royal", "crystal", "galaxy")
@@ -92,6 +92,7 @@ fun DrawScope.roundLantern(x: Float, y: Float, s: Float, color: Color, glow: Flo
 
 /** The frame's band in its two colours at the very edge (as for the XML frames), then what hangs from it. */
 fun DrawScope.drawDecorFrame(id: String, t: Float, top: Color, bottom: Color, radius: Float) {
+    if (id == ThemeArt.FRAME) { drawThemeFrame(t, radius); return }
     val w = size.width; val h = size.height
     val band = 3f * density
     drawRoundRect(Brush.verticalGradient(listOf(top, bottom)), Offset(band / 2, band / 2), Size(w - band, h - band), CornerRadius(radius), style = Stroke(band))

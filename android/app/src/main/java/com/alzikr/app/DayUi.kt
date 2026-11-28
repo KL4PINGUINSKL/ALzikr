@@ -62,7 +62,7 @@ fun DayOverview() {
                     Sub("يومك", color = P.gold, size = 12.sp)
                     Text(if (parts.isEmpty()) "ابدأ يومك بمهمة أو عادة" else "أنجزت ${Quran.digits(pct)}٪ من يومك", color = P.ink, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                GText(if (pct >= 100) "🌟" else if (pct >= 50) "🌤" else "🌱", fontSize = 30.sp)
+                Glyph(if (pct >= 100) "🌟" else if (pct >= 50) "🌤" else "🌱", tint = P.gold, size = 32.dp)
             }
             Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).clip(L.shape(4.dp)).background(P.line)) {
                 Box(Modifier.fillMaxWidth(pct / 100f).height(8.dp).clip(L.shape(4.dp)).background(P.accent))
@@ -99,7 +99,7 @@ fun DayOverview() {
                 Row(Modifier.fillMaxWidth().clip(L.shape(14.dp)).background(if (s.done) P.accent.copy(alpha = .08f) else P.surface).border(1.dp, if (!s.done && s.minute <= now) P.gold.copy(alpha = .6f) else P.line, L.shape(14.dp))
                     .clickable(onClick = s.open).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(Alerts.timeText(s.minute), color = if (!s.done && s.minute <= now) P.gold else P.muted, fontSize = 12.sp, modifier = Modifier.width(70.dp))
-                    GText(s.icon, fontSize = 16.sp)
+                    Glyph(s.icon, tint = P.accent, size = 18.dp)
                     Text(s.text, color = if (s.done) P.muted else P.ink, fontSize = 15.sp, textDecoration = if (s.done) TextDecoration.LineThrough else null,
                         modifier = Modifier.weight(1f).padding(horizontal = 8.dp), maxLines = 2)
                     s.tick?.let { tick ->
@@ -121,7 +121,7 @@ fun DayOverview() {
                 Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.surface).clickable { Store.toggleTask(t.id) }.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(22.dp).clip(L.shape(6.dp)).border(2.dp, P.muted, L.shape(6.dp)))
                     Text(t.text + if (t.repeat) "  🔁" else "", color = P.ink, fontSize = 15.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
-                    Text("🎯", fontSize = 15.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { focusOn(t) }.padding(6.dp))
+                    Glyph("🎯", tint = P.accent, size = 17.dp, modifier = Modifier.clip(L.shape(8.dp)).clickable { focusOn(t) }.padding(6.dp))
                 }
             }
         }
@@ -141,7 +141,7 @@ fun focusOn(t: Store.Task) { Store.focusTask = t.id; Store.focusTitle = t.text; 
 @Composable
 private fun Stat(icon: String, label: String, value: String, modifier: Modifier, open: () -> Unit) {
     Column(modifier.clip(L.shape(16.dp)).background(P.surface).border(1.dp, P.line, L.shape(16.dp)).clickable(onClick = open).padding(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) { GText(icon, fontSize = 16.sp); Sub("  $label", size = 13.sp) }
+        Row(verticalAlignment = Alignment.CenterVertically) { Glyph(icon, tint = P.accent, size = 18.dp); Sub("  $label", size = 13.sp) }
         Text(value, color = P.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
     }
 }
