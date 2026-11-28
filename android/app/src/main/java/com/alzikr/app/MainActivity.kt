@@ -218,6 +218,11 @@ private fun Root() {
     // The home-screen widgets follow the theme too.
     val ctx = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.runtime.SideEffect { Reading.themePal = pal }
+    // «ثيم الليل والنهار»: at Fajr and Maghrib the theme changes by itself (checked each half minute).
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        var last = Data.look
+        while (true) { kotlinx.coroutines.delay(30_000); val now = Data.look; if (now != last) { last = now; Store.bump() } }
+    }
     androidx.compose.runtime.LaunchedEffect(pal) { runCatching { PrayerWidget.updateAll(ctx); TasbihWidget.update(ctx); MomentWidget.update(ctx); PetWidget.update(ctx) } }
     androidx.compose.runtime.key(Data.simple) { AppTheme {
         run {

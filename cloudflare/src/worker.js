@@ -6,6 +6,8 @@ export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (url.pathname === "/stats") return stats(req, env);
+    if (url.pathname === "/feedback") return feedback(req, env);
+    if (url.pathname === "/reports") return reports(req, env);
     let key = decodeURIComponent(url.pathname.slice(1));
     if (url.pathname.startsWith("/_upload/")) return upload(req, env, url);
     if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
@@ -113,4 +115,46 @@ async function upload(req, env, url) {
   if (op === "done") { const o = await m.complete(await req.json()); return Response.json({ etag: o.etag, size: o.size }); }
   if (op === "abort") { await m.abort(); return Response.json({ ok: true }); }
   return new Response("Bad op", { status: 400 });
+}
+
+// ---- /feedback (POST from the app: a problem or a feature request) and /reports (private list, STATS_KEY password)
+async function feedback(req, env) {
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  try {
+    const b = await req.json();
+    const text = String(b.text || "").trim().slice(0, 4000);
+    if (!text) return Response.json({ ok: false }, { status: 400 });
+    const kind = ["bug", "idea", "other"].includes(b.kind) ? b.kind : "other";
+    const country = (req.cf && req.cf.country) || "??";
+    const ip = req.headers.get("cf-connecting-ip") || "";
+    const day = new Date().toISOString().slice(0, 10);
+    const who = ip ? Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + day)))).slice(0, 8).map((x) => x.toString(16).padStart(2, "0")).join("") : "";
+    // At most 20 a day from one place (no flooding); the address itself is never kept.
+    const n = await env.STATS.prepare("SELECT COUNT(*) AS n FROM feedback WHERE day = ? AND who = ?").bind(day, who).first("n");
+    if (n >= 20) return Response.json({ ok: false, reason: "limit" }, { status: 429 });
+    await env.STATS.prepare("INSERT INTO feedback (at, day, kind, text, contact, version, device, android, country, who) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(new Date().toISOString(), day, kind, text, String(b.contact || "").slice(0, 200), String(b.version || "").slice(0, 20),
+        String(b.device || "").slice(0, 80), String(b.android || "").slice(0, 10), country, who).run();
+    return Response.json({ ok: true });
+  } catch (e) { return Response.json({ ok: false }, { status: 500 }); }
+}
+
+async function reports(req, env) {
+  const auth = req.headers.get("authorization") || "";
+  let pass = "";
+  try { pass = atob(auth.replace(/^Basic\s+/i, "")).split(":").slice(1).join(":"); } catch (e) {}
+  if (!env.STATS_KEY || pass !== env.STATS_KEY)
+    return new Response("كلمة السر مطلوبة", { status: 401, headers: { "www-authenticate": 'Basic realm="ALzikr reports", charset="UTF-8"', "content-type": "text/plain; charset=utf-8" } });
+  const list = (await env.STATS.prepare("SELECT * FROM feedback ORDER BY at DESC LIMIT 300").all()).results;
+  const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const label = { bug: "🐞 مشكلة", idea: "💡 اقتراح", other: "💬 أخرى" };
+  const cards = list.length ? list.map((r) => `<div class="card"><div class="top"><b>${label[r.kind] || esc(r.kind)}</b><span class="muted">${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)} · ${esc(r.version)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div><p>${esc(r.text).replace(/\n/g, "<br>")}</p>${r.contact ? `<div class="muted">للرد: ${esc(r.contact)}</div>` : ""}</div>`).join("") : `<div class="card muted">لا رسائل بعد</div>`;
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>رسائل ALzikr</title><style>
+:root{--bg:#0f1512;--card:#17201b;--ink:#e9efe9;--muted:#93a39a;--acc:#3fbf8f;--line:#26332c}
+@media (prefers-color-scheme: light){:root{--bg:#f6f4ee;--card:#fff;--ink:#1d2a23;--muted:#6b7a71;--acc:#1f7a5a;--line:#e4e0d4}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,"Segoe UI",Tahoma,sans-serif}main{max-width:760px;margin:auto;padding:20px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+.muted{color:var(--muted);font-size:13px}p{margin:8px 0 4px;white-space:normal;overflow-wrap:anywhere}h1{font-size:22px;margin:0}</style></head><body><main>
+<h1>رسائل المستخدمين (${list.length})</h1>${cards}</main></body></html>`;
+  return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
 }

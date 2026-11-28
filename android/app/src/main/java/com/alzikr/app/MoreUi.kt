@@ -80,7 +80,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
     Nav.morePage?.let { if (stack.isEmpty() && Nav.history.lastOrNull() != null) fromOutside = true; open(it); Nav.morePage = null }
     stack.lastOrNull()?.let { p ->
         keep.SaveableStateProvider(levelKey(stack.size, p)) {
-        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "timeline" -> "التسلسل التاريخي"; "history" -> "سجلاتي"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; "navnames" -> "أسماء الأقسام"; "dict" -> "القواميس العربية"; "mushkil" -> "أحاديث يُشكل فهمها"; else -> "نسخ احتياطي" }, back = { close() }) {
+        Subpage(title = if (p.startsWith("fiqh:")) (Fiqh.byId(p.removePrefix("fiqh:"))?.title ?: "الفقه") else if (p.startsWith("season:")) (Seasons.byId(p.removePrefix("season:"))?.title ?: "مواسم الطاعات") else when (p) { "qibla" -> "القبلة"; "timeline" -> "التسلسل التاريخي"; "history" -> "سجلاتي"; "month" -> "مواقيت الشهر"; "calendar" -> "التقويم والمناسبات"; "months" -> "أسماء الشهور ومعانيها"; "seasons" -> "مواسم الطاعات"; "names" -> "أسماء الله الحسنى"; "qada" -> "قضاء الصلوات"; "themes" -> "الثيمات"; "zakat" -> "حاسبة الزكاة"; "quiz" -> "مسابقة القرآن"; "hsearch" -> "البحث عن حديث"; "convert" -> "محوّل التاريخ"; "alarms" -> "منبه الصلوات"; "stats" -> "إحصائياتي"; "hifz" -> "حفظ القرآن"; "pet" -> "صديقي"; "rewards" -> "مكافآتي وأوسمتي"; "pettest" -> "كل الأشكال"; "petpreview" -> "معاينة الأصدقاء"; "petpacks" -> "حزم الأصدقاء"; "petcredits" -> "الشكر والرخص"; "sadaqa" -> "صدقاتي"; "ramadan" -> "رمضان"; "today" -> "محاسبة اليوم"; "goals" -> "أهدافي الأسبوعية"; "salah" -> "صفة الوضوء والصلاة"; "tajweed" -> "تعلّم التجويد"; "fiqh" -> "الأحكام الفقهية"; "kidszone" -> "قسم الأطفال"; "kids" -> "تعلّم مع ${Pet.name}"; "world" -> "الساعة العالمية"; "navnames" -> "أسماء الأقسام"; "feedback" -> "إبلاغ عن مشكلة أو اقتراح"; "dict" -> "القواميس العربية"; "mushkil" -> "أحاديث يُشكل فهمها"; else -> "نسخ احتياطي" }, back = { close() }) {
             when (p) {
                 "qibla" -> QiblaCompass()
                 "month" -> MonthTable()
@@ -116,6 +116,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
                 "world" -> WorldClockPage()
                 "dict" -> DictionaryPage()
                 "navnames" -> NavNamesPage()
+                "feedback" -> FeedbackPage()
                 "mushkil" -> MushkilList()
                 "themes" -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { ModeChoice(); ColorChoice(); ThemeGallery() }
                 else -> if (p.startsWith("fiqh:")) FiqhPage(p.removePrefix("fiqh:")) { open(it) } else if (p.startsWith("season:")) {
@@ -173,6 +174,8 @@ fun MoreScreen(openSettings: (String) -> Unit) {
                 Triple("🌐", "زيارة الصفحة") { runCatching { ctxApp.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("$APP_SITE/download.html"))) }; Unit },
                 Triple("⬆", "البحث عن تحديث") { act?.let { AppUpdate.checkNow(it) }; Unit },
                 Triple("↗", "مشاركة التطبيق") { act?.let { shareApp(it) }; Unit },
+                Triple("💬", "إبلاغ عن مشكلة") { Feedback.startKind = "bug"; open("feedback") },
+                Triple("💡", "اقتراح ميزة") { Feedback.startKind = "idea"; open("feedback") },
             )
             appItems.chunked(2).forEach { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

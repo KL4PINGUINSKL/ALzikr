@@ -46,8 +46,29 @@ object Data {
 
     /** The chosen theme (see [Looks]). */
     var look: String
-        get() = if (simple) Simple.current.look else sp.getString("look", "emerald") ?: "emerald"
-        set(v) { if (!simple) edit { putString("look", v) } }
+        get() = if (simple) Simple.current.look else if (dayNight) (if (isNight()) lookNight else lookDay) else sp.getString("look", "emerald") ?: "emerald"
+        set(v) { if (!simple) { if (dayNight) { if (isNight()) lookNight = v else lookDay = v } else edit { putString("look", v) } } }
+
+    /** «ثيم الليل والنهار» (2026-11-28): one theme from Fajr to Maghrib, another from Maghrib to Fajr, switched by itself. */
+    var dayNight: Boolean
+        get() = sp.getBoolean("look_dn", false)
+        set(v) {
+            val cur = sp.getString("look", "emerald") ?: "emerald"
+            edit { putBoolean("look_dn", v); if (v && !sp.contains("look_day")) { putString("look_day", cur); putString("look_night", cur) } }
+        }
+    var lookDay: String
+        get() = sp.getString("look_day", null) ?: sp.getString("look", "emerald") ?: "emerald"
+        set(v) { edit { putString("look_day", v) } }
+    var lookNight: String
+        get() = sp.getString("look_night", null) ?: sp.getString("look", "emerald") ?: "emerald"
+        set(v) { edit { putString("look_night", v) } }
+    /** Between Maghrib and Fajr (by the prayer times here); 6 pm – 5 am when the times are not known. */
+    fun isNight(): Boolean {
+        val now = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
+        val t = runCatching { Store.times() }.getOrNull()
+        val fajr = t?.get(Prayer.FAJR) ?: (5 * 60); val maghrib = t?.get(Prayer.MAGHRIB) ?: (18 * 60)
+        return now < fajr || now >= maghrib
+    }
     /** How a choice among many is shown: false = a few and «المزيد», true = all of them in a row that scrolls sideways. */
     var pickScroll: Boolean
         get() = sp.getBoolean("pick_scroll", true)

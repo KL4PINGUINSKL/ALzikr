@@ -163,11 +163,14 @@ fun DuasPage() {
     adding?.let { d ->
         var text by remember(d.id) { mutableStateOf(d.text) }
         var c by remember(d.id) { mutableStateOf(d.cat) }
-        AlertDialog(onDismissRequest = { adding = null }, containerColor = P.surface,
+        var quoting by remember(d.id) { mutableStateOf(false) }
+        if (quoting) QuotePicker(duas = true, close = { quoting = false }) { t, _ -> text = t; quoting = false }
+        else AlertDialog(onDismissRequest = { adding = null }, containerColor = P.surface,
             title = { Text(if (d.id == 0L) "دعاء جديد" else "تعديل الدعاء", color = P.ink) },
             text = {
                 Column {
                     OutlinedTextField(text, { text = it }, minLines = 3, modifier = Modifier.fillMaxWidth(), placeholder = { Text("اللهم…") })
+                    QuoteButtons(duas = true, { text = it }) { quoting = true }
                     PickOne(Duas.cats.mapIndexed { i, n -> i.toString() to n }, c.toString(), "التصنيف", modifier = Modifier.padding(top = 8.dp)) { c = it.toInt() }
                 }
             },

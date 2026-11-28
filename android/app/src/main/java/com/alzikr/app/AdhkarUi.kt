@@ -133,11 +133,14 @@ fun WirdList() {
 private fun ZikrDialog(z: Store.Zikr?, close: () -> Unit) {
     var text by remember { mutableStateOf(z?.text ?: "") }
     var target by remember { mutableStateOf(z?.target?.toString() ?: "33") }
+    var quoting by remember { mutableStateOf(false) }
+    if (quoting) { QuotePicker(duas = false, close = { quoting = false }) { t, n -> text = t; target = n.toString(); quoting = false }; return }
     AlertDialog(onDismissRequest = close, containerColor = P.surface,
         title = { Text(if (z == null) "ذكر أو ورد جديد" else "تعديل الذكر", color = P.ink) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(text, { text = it }, label = { Text("نص الذكر") }, minLines = 2)
+                QuoteButtons(duas = false, { text = it }) { quoting = true }
                 OutlinedTextField(target, { target = it.filter(Char::isDigit).take(5) }, label = { Text("العدد اليومي (0 = تسبيح حر)") }, singleLine = true)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(0, 3, 7, 10, 33, 100).forEach { n -> Choice(if (n == 0) "حر" else "$n", target == "$n") { target = "$n" } } }
             }
