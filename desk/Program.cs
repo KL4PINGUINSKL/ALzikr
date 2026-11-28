@@ -21,10 +21,18 @@ static class Key
 {
     static readonly string Dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ALzikrDesk");
     static readonly string File_ = Path.Combine(Dir, "key.bin");
+    /** The key kept for this Windows user, else the one the site's scripts keep (D:\ALzikr\cloudflare\.stats-key). */
     public static string? Load()
     {
-        try { return File.Exists(File_) ? Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(File_), null, DataProtectionScope.CurrentUser)) : null; }
-        catch { return null; }
+        try { if (File.Exists(File_)) return Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(File_), null, DataProtectionScope.CurrentUser)); }
+        catch { }
+        try
+        {
+            const string repo = @"D:\ALzikr\cloudflare\.stats-key";
+            if (File.Exists(repo)) { var k = File.ReadAllText(repo).Trim(); if (k.Length > 0) { Save(k); return k; } }
+        }
+        catch { }
+        return null;
     }
     public static void Save(string k)
     {
