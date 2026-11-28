@@ -155,7 +155,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
         var openGroup by rememberSaveable { mutableStateOf<String?>(null) }
         androidx.compose.material3.OutlinedTextField(find, { find = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
             placeholder = { Text("ابحث: الفقه، القبلة، الزكاة…", maxLines = 1) },
-            leadingIcon = { GText("🔍", fontSize = 16.sp) })
+            leadingIcon = { Glyph("🔍", tint = P.accent, size = 18.dp) })
         if (find.isNotBlank()) {
             val words = find.trim().split(Regex("\\s+"))
             val hits = groups.flatMap { g -> g.items.map { it to g.title } }.filter { (it, g) -> words.all { w -> it.second.contains(w) || g.contains(w) } }
@@ -179,7 +179,7 @@ fun MoreScreen(openSettings: (String) -> Unit) {
                     row.forEach { (icon, label, go) ->
                         Column(Modifier.weight(1f).clip(L.shape(14.dp)).background(P.card.seeThrough()).border(1.dp, P.line, L.shape(14.dp)).clickable(onClick = go)
                             .padding(horizontal = 8.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            GText(icon, fontSize = 20.sp, color = P.accent)
+                            Glyph(icon, tint = P.accent, size = 22.dp)
                             Text(label, color = P.ink, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                 modifier = Modifier.padding(top = 4.dp))
                         }
@@ -227,7 +227,7 @@ private fun moreGroups(open: (String) -> Unit, openSettings: (String) -> Unit): 
 private fun MoreFold(g: MoreGroupDef, opened: Boolean, toggle: () -> Unit) {
     Column(Modifier.fillMaxWidth().clip(L.shape(18.dp)).background((if (opened) P.surface else P.card).seeThrough()).border(1.dp, if (opened) P.accent.copy(alpha = .5f) else P.line, L.shape(18.dp))) {
         Row(Modifier.fillMaxWidth().clickable(onClick = toggle).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            GText(g.icon, fontSize = 24.sp)
+            Glyph(g.icon, tint = P.accent, size = 26.dp)
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(g.title, color = P.ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 if (!opened) Text(g.items.joinToString(" · ") { it.second }, color = P.muted, fontSize = 12.sp, lineHeight = 17.sp)
