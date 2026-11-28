@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,7 +36,6 @@ import kotlinx.coroutines.withContext
  * and duas, or a verse of the Quran — instead of typing it. [pick] gets the text and its usual count (1 for a verse).
  * [duas] true: the duas first (Quran duas, Sunnah duas); false: the adhkar first (morning, evening, after prayer…).
  */
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun QuotePicker(duas: Boolean, close: () -> Unit, pick: (String, Int) -> Unit) {
     val ctx = LocalContext.current
@@ -48,8 +47,10 @@ fun QuotePicker(duas: Boolean, close: () -> Unit, pick: (String, Int) -> Unit) {
     val cols = remember(duas) { Content.collections.sortedBy { c -> first.indexOf(c.id).let { if (it < 0) 99 else it } } }
     AppSheet(onDismissRequest = close) {
         // Above the keyboard (user, 2026-11-28: the search field hid behind it); the list gives up the room.
-        val ime = androidx.compose.foundation.layout.WindowInsets.isImeVisible
-        Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp).padding(bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // One fixed height whatever the tab or the results (user, 2026-11-28: it jumped between the tabs, and with the
+        // keyboard it rose to the top of the screen): the keyboard takes its room from the list, not from the screen.
+        val h = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * .68f).dp
+        Column(Modifier.fillMaxWidth().height(h).imePadding().padding(horizontal = 16.dp).padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Title(if (duas) "📋 اقتبس دعاءً" else "📋 اقتبس وردًا")
             Sub("اختر نصًّا فيُنسخ إلى ${if (duas) "دعائك" else "وردك"}، وتعدّله قبل الحفظ إن شئت.", size = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -59,7 +60,7 @@ fun QuotePicker(duas: Boolean, close: () -> Unit, pick: (String, Int) -> Unit) {
             OutlinedTextField(find, { find = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(if (tab == 0) "ابحث في المأثور…" else "ابحث بكلمة من الآية… (مثل: ربنا آتنا)") })
             val m = remember(find) { HadithSearch.matcher(find) }
-            LazyColumn(Modifier.fillMaxWidth().heightIn(max = if (ime) 240.dp else 460.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            LazyColumn(Modifier.fillMaxWidth().weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (tab == 0) {
                     val col = cols.firstOrNull { it.id == open }
                     when {

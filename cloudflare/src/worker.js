@@ -7,7 +7,8 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === "/stats") return stats(req, env);
     if (url.pathname === "/feedback") return feedback(req, env);
-    if (url.pathname === "/reports") return reports(req, env);
+    if (url.pathname === "/reports") return reports(req, env, url);
+    if (url.pathname === "/reports/set") return reportSet(req, env);
     let key = decodeURIComponent(url.pathname.slice(1));
     if (url.pathname.startsWith("/_upload/")) return upload(req, env, url);
     if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
@@ -139,22 +140,81 @@ async function feedback(req, env) {
   } catch (e) { return Response.json({ ok: false }, { status: 500 }); }
 }
 
-async function reports(req, env) {
+function allowed(req, env) {
   const auth = req.headers.get("authorization") || "";
   let pass = "";
   try { pass = atob(auth.replace(/^Basic\s+/i, "")).split(":").slice(1).join(":"); } catch (e) {}
-  if (!env.STATS_KEY || pass !== env.STATS_KEY)
-    return new Response("كلمة السر مطلوبة", { status: 401, headers: { "www-authenticate": 'Basic realm="ALzikr reports", charset="UTF-8"', "content-type": "text/plain; charset=utf-8" } });
-  const list = (await env.STATS.prepare("SELECT * FROM feedback ORDER BY at DESC LIMIT 300").all()).results;
+  return !!env.STATS_KEY && pass === env.STATS_KEY;
+}
+const askPass = () => new Response("كلمة السر مطلوبة", { status: 401, headers: { "www-authenticate": 'Basic realm="ALzikr reports", charset="UTF-8"', "content-type": "text/plain; charset=utf-8" } });
+const STATUSES = { new: "🆕 جديدة", working: "🔧 قيد العمل", later: "⏳ مؤجلة", done: "✅ حُلّت", rejected: "✖ مرفوضة" };
+
+// POST /reports/set {id, status?, note?}: sort out one message (private).
+async function reportSet(req, env) {
+  if (!allowed(req, env)) return askPass();
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  const b = await req.json();
+  const id = Number(b.id);
+  if (b.status !== undefined) {
+    if (!STATUSES[b.status]) return Response.json({ ok: false }, { status: 400 });
+    await env.STATS.prepare("UPDATE feedback SET status = ?, changed = ? WHERE id = ?").bind(b.status, new Date().toISOString(), id).run();
+  }
+  if (b.note !== undefined) await env.STATS.prepare("UPDATE feedback SET note = ? WHERE id = ?").bind(String(b.note).slice(0, 2000), id).run();
+  return Response.json({ ok: true });
+}
+
+// GET /reports?kind=bug|idea|other&status=open|all|new|working|later|done|rejected&sort=new|old
+async function reports(req, env, url) {
+  if (!allowed(req, env)) return askPass();
+  const q = url.searchParams;
+  const kind = ["bug", "idea", "other"].includes(q.get("kind")) ? q.get("kind") : "";
+  const status = q.get("status") && (q.get("status") === "all" || STATUSES[q.get("status")]) ? q.get("status") : "open";
+  const sort = q.get("sort") === "old" ? "ASC" : "DESC";
+  const where = [], args = [];
+  if (kind) { where.push("kind = ?"); args.push(kind); }
+  if (status === "open") where.push("COALESCE(status,'new') IN ('new','working','later')");
+  else if (status !== "all") { where.push("COALESCE(status,'new') = ?"); args.push(status); }
+  const list = (await env.STATS.prepare(`SELECT * FROM feedback ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY at ${sort} LIMIT 500`).bind(...args).all()).results;
+  const counts = {};
+  for (const r of (await env.STATS.prepare("SELECT kind, COALESCE(status,'new') AS st, COUNT(*) AS n FROM feedback GROUP BY kind, st").all()).results) {
+    counts[r.kind] = (counts[r.kind] || 0) + r.n; counts["s_" + r.st] = (counts["s_" + r.st] || 0) + r.n; counts.all = (counts.all || 0) + r.n;
+  }
+  counts.s_open = (counts.s_new || 0) + (counts.s_working || 0) + (counts.s_later || 0);
   const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const label = { bug: "🐞 مشكلة", idea: "💡 اقتراح", other: "💬 أخرى" };
-  const cards = list.length ? list.map((r) => `<div class="card"><div class="top"><b>${label[r.kind] || esc(r.kind)}</b><span class="muted">${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)} · ${esc(r.version)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div><p>${esc(r.text).replace(/\n/g, "<br>")}</p>${r.contact ? `<div class="muted">للرد: ${esc(r.contact)}</div>` : ""}</div>`).join("") : `<div class="card muted">لا رسائل بعد</div>`;
+  const link = (k, st, so, text, on) => `<a class="chip${on ? " on" : ""}" href="/reports?${new URLSearchParams({ ...(k ? { kind: k } : {}), status: st, sort: so === "ASC" ? "old" : "new" })}">${text}</a>`;
+  const n = (x) => ` <small>${x || 0}</small>`;
+  const kinds = [["", "الكل" + n(counts.all)], ["bug", "🐞 المشكلات" + n(counts.bug)], ["idea", "💡 الميزات" + n(counts.idea)], ["other", "💬 أخرى" + n(counts.other)]]
+    .map(([k, t]) => link(k, status, sort, t, k === kind)).join("");
+  const stats = [["open", "المفتوحة" + n(counts.s_open)], ...Object.entries(STATUSES).map(([k, t]) => [k, t + n(counts["s_" + k])]), ["all", "الكل"]]
+    .map(([k, t]) => link(kind, k, sort, t, k === status)).join("");
+  const sorts = link(kind, status, "DESC", "الأحدث أولًا", sort === "DESC") + link(kind, status, "ASC", "الأقدم أولًا", sort === "ASC");
+  const cards = list.length ? list.map((r) => {
+    const st = r.status || "new";
+    return `<div class="card st-${st}" id="m${r.id}"><div class="top"><b>${label[r.kind] || esc(r.kind)} <span class="badge">${STATUSES[st]}</span></b><span class="muted">#${r.id} · ${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)} · ${esc(r.version)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div>
+<p>${esc(r.text).replace(/\n/g, "<br>")}</p>${r.contact ? `<div class="muted">للرد: ${esc(r.contact)}</div>` : ""}
+<div class="acts">${Object.entries(STATUSES).map(([k, t]) => `<button class="${k === st ? "on" : ""}" onclick="setSt(${r.id},'${k}')">${t}</button>`).join("")}</div>
+<textarea placeholder="ملاحظتك (لك وحدك): ما فعلته، أو لماذا رُفضت…" onchange="setNote(${r.id},this.value)">${esc(r.note)}</textarea></div>`;
+  }).join("") : `<div class="card muted">لا رسائل هنا</div>`;
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>رسائل ALzikr</title><style>
-:root{--bg:#0f1512;--card:#17201b;--ink:#e9efe9;--muted:#93a39a;--acc:#3fbf8f;--line:#26332c}
-@media (prefers-color-scheme: light){:root{--bg:#f6f4ee;--card:#fff;--ink:#1d2a23;--muted:#6b7a71;--acc:#1f7a5a;--line:#e4e0d4}}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,"Segoe UI",Tahoma,sans-serif}main{max-width:760px;margin:auto;padding:20px 16px 40px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
-.muted{color:var(--muted);font-size:13px}p{margin:8px 0 4px;white-space:normal;overflow-wrap:anywhere}h1{font-size:22px;margin:0}</style></head><body><main>
-<h1>رسائل المستخدمين (${list.length})</h1>${cards}</main></body></html>`;
+:root{--bg:#0f1512;--card:#17201b;--ink:#e9efe9;--muted:#93a39a;--acc:#3fbf8f;--gold:#d9b25f;--line:#26332c}
+@media (prefers-color-scheme: light){:root{--bg:#f6f4ee;--card:#fff;--ink:#1d2a23;--muted:#6b7a71;--acc:#1f7a5a;--gold:#a8812c;--line:#e4e0d4}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,"Segoe UI",Tahoma,sans-serif}main{max-width:800px;margin:auto;padding:18px 16px 40px}
+h1{font-size:21px;margin:0 0 8px}.row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{padding:4px 11px;border:1px solid var(--line);border-radius:20px;color:var(--ink);text-decoration:none;font-size:13px}.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}.chip small{opacity:.7}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;border-inline-start:5px solid var(--line)}
+.st-new{border-inline-start-color:var(--gold)}.st-working{border-inline-start-color:#5ba8ff}.st-later{border-inline-start-color:#b07cff}.st-done{border-inline-start-color:var(--acc);opacity:.8}.st-rejected{border-inline-start-color:#e5675f;opacity:.7}
+.top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.badge{font-weight:400;font-size:12px;color:var(--muted)}
+.muted{color:var(--muted);font-size:13px}p{margin:8px 0 4px;overflow-wrap:anywhere}
+.acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}button{font:inherit;font-size:12px;padding:3px 9px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+textarea{width:100%;box-sizing:border-box;margin-top:8px;min-height:38px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font:inherit;font-size:13px}</style></head><body><main>
+<h1>رسائل المستخدمين</h1>
+<div class="row">${kinds}</div><div class="row">${stats}</div><div class="row">${sorts}</div>
+${cards}
+<script>
+async function post(b){const r=await fetch('/reports/set',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});return r.ok}
+async function setSt(id,s){if(await post({id,status:s}))location.reload()}
+async function setNote(id,v){await post({id,note:v})}
+</script></main></body></html>`;
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
 }

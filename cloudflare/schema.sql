@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS downloads (
 -- Problems and feature requests sent from the app (POST /feedback); "who" is a daily hash, not the address.
 CREATE TABLE IF NOT EXISTS feedback (
   id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, day TEXT NOT NULL, kind TEXT NOT NULL, text TEXT NOT NULL,
-  contact TEXT, version TEXT, device TEXT, android TEXT, country TEXT, who TEXT
+  contact TEXT, version TEXT, device TEXT, android TEXT, country TEXT, who TEXT,
+  status TEXT DEFAULT 'new', note TEXT, changed TEXT
 );
 CREATE INDEX IF NOT EXISTS feedback_day ON feedback (day, who);
