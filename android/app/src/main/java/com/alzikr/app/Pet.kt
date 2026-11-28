@@ -278,6 +278,36 @@ object Pet {
         "قل: سبحان الله، ثلاث مرات", "أطِع والديك، فهذا يحبه الله", "قل: السلام عليكم لمن تلقاه",
     )
 
+    /**
+     * What the friend says when tapped (user, 2026-11-28: nothing by itself while the app is open; on a tap a short
+     * verse that is a dua, a short hadith, a reported dua, or a dhikr, in turn). A verse opens in the mushaf.
+     */
+    fun tapSay(c: Context, n: Int): Say {
+        if (kids) return say(n)
+        val k = n + (System.currentTimeMillis() / 1000L % 7).toInt()
+        return when (n % 4) {
+            0 -> runCatching {
+                Quran.load(c.applicationContext)
+                val duas = quranDuas
+                val a = duas[k % duas.size]
+                Say("﴿${a.text}﴾\n— ${Quran.surahs[a.s - 1].name} ${Quran.digits(a.a)}") { Nav.openQuran(a.s, a.a) }
+            }.getOrNull() ?: Say(dhikr[k % dhikr.size])
+            1 -> Say(hadiths[k % hadiths.size])
+            2 -> shortDuas.takeIf { it.isNotEmpty() }?.let { Say(it[k % it.size]) } ?: Say(dhikr[k % dhikr.size])
+            else -> Say(shortAdhkar.takeIf { it.isNotEmpty() }?.let { it[k % it.size] } ?: dhikr[k % dhikr.size])
+        }
+    }
+    /** Short verses that are a dua («ربنا…» / «رب…»), once the Quran is loaded. */
+    private val quranDuas: List<Quran.Ayah> by lazy {
+        Quran.ayahs.filter { a -> val p = Quran.normalize(a.plain); (p.startsWith("ربنا") || p.startsWith("رب ")) && a.plain.length <= 150 }.ifEmpty { error("not loaded") }
+    }
+    private val shortDuas: List<String> by lazy {
+        Content.collections.filter { it.id in setOf("sunnah_duas", "distress", "travel", "events", "food", "occasions") }.flatMap { it.items }.map { it.text }.filter { it.length <= 150 }.distinct()
+    }
+    private val shortAdhkar: List<String> by lazy {
+        (Content.collections.filter { it.id in setOf("morning", "evening", "prayer", "sleep", "wake") }.flatMap { it.items }.map { it.text }.filter { it.length <= 110 } + dhikr.filter { it != "لا تنسَ ذكر الله" }).distinct()
+    }
+
     /** Something fitting for now, the most useful first, otherwise a gentle reminder. */
     fun say(n: Int = 0): Say {
         if (n % 4 == 1) memoryLine()?.let { return Say(it) }

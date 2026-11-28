@@ -204,16 +204,12 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
         }
     }
     LaunchedEffect(Unit) { while (true) { sim.asleep = Pet.asleep(); delay(30_000) } }
+    val ctxPet = androidx.compose.ui.platform.LocalContext.current
     fun speak() {
-        said = Pet.say(n++)
+        said = Pet.tapSay(ctxPet, n++)
         when (n % 3) { 0 -> sim.jump(); 1 -> sim.flapT = .7f; else -> { sim.faceTo = -sim.faceTo; sim.timer = 1f } }
     }
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(Random.nextLong(150_000, 300_000))
-            if (Pet.talks && !Pet.asleep() && !PetQuiet.active) speak()
-        }
-    }
+    // No words by itself while the app is open (user, 2026-11-28: it showed adhkar while I read Quran); only on a tap.
     // The interactions menu: the four states (كلّمني = calm + a word, العب معي = happy, تمشَّ = walk, نم = sleep).
     val req = PetActions.request
     LaunchedEffect(req) {
@@ -229,8 +225,8 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
         act = com.alzikr.app.pets.PetState.IDLE
     }
     val cheer = Pet.cheerNow()
-    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); act = com.alzikr.app.pets.PetState.HAPPY; sim.jump(); delay(650); sim.jump(.7f) } }
-    LaunchedEffect(said) { if (said != null) { delay(7000); said = null } }
+    LaunchedEffect(cheer) { if (cheer != null) { act = com.alzikr.app.pets.PetState.HAPPY; sim.jump(); delay(650); sim.jump(.7f) } }
+    LaunchedEffect(said) { val s = said ?: return@LaunchedEffect; delay((6000L + s.text.length * 60L).coerceAtMost(14_000L)); said = null }
 
     BoxWithConstraints(modifier.height(height.dp)) {
         val box = height.dp
