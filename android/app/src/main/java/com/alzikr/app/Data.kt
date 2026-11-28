@@ -54,7 +54,8 @@ object Data {
         get() = sp.getBoolean("look_dn", false)
         set(v) {
             val cur = sp.getString("look", "emerald") ?: "emerald"
-            edit { putBoolean("look_dn", v); if (v && !sp.contains("look_day")) { putString("look_day", cur); putString("look_night", cur) } }
+            // On: the theme in use now stays for the day; the night keeps the one chosen before (or the same at first).
+            edit { putBoolean("look_dn", v); if (v) { putString("look_day", cur); if (!sp.contains("look_night")) putString("look_night", cur) } else putString("look", if (isNight()) lookNight else lookDay) }
         }
     var lookDay: String
         get() = sp.getString("look_day", null) ?: sp.getString("look", "emerald") ?: "emerald"

@@ -61,12 +61,12 @@ fun ThemeGallery() {
         when (filter) { "open" -> open; "locked" -> !open; "living" -> l.backdrop != Backdrop.NONE; "form" -> l.reshapes(); "time" -> l.sky || l.palFor != null || l.hero != null; "scene" -> l.hero != null; else -> true }
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        DayNightPanel()
+        Sub("الثيمات هنا بألوانها الأصلية. لتغيير ألوان ثيمك أو جعله يتبدّل بين الليل والنهار: «تخصيص الثيم».", size = 12.sp)
         val focus = Looks.byId(shown)
-        ThemeCard(focus, dark) { applyLook(focus.id) }
+        ThemeCard(focus, dark, original = true) { Data.look = focus.id }
         val open = Friendship.themeOpen(focus.id)
         if (!open) Sub("🔒 يُفتح بـ ${Quran.digits(Friendship.themeGift(focus.id)!!.bond)} ❤ صداقة · معك الآن ${Quran.digits(Progress.bondPoints)} ❤", size = 12.sp, color = P.gold)
-        else if (Data.look != focus.id || dnSlot != null) Action("استعمل «${focus.name}»" + slotName(), Modifier.fillMaxWidth()) { applyLook(focus.id) }
+        else if (Data.look != focus.id) Action("استعمل «${focus.name}»", Modifier.fillMaxWidth()) { Data.look = focus.id }
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             filters.forEach { (id, name) -> Choice(name, filter == id) { filter = id } }
         }
@@ -75,7 +75,7 @@ fun ThemeGallery() {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { look -> ThemeTile(look, dark, Modifier.weight(1f), shown == look.id) {
                     shown = look.id
-                    if (Friendship.themeOpen(look.id)) applyLook(look.id)
+                    if (Friendship.themeOpen(look.id)) Data.look = look.id
                 } }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
             }
@@ -86,7 +86,7 @@ fun ThemeGallery() {
 /** A small tile: the theme's background, its name in its font, its colors, and ✓ or 🔒. */
 @Composable
 private fun ThemeTile(look: Look, dark: Boolean, modifier: Modifier, focused: Boolean, onTap: () -> Unit) {
-    val pal = look.pal(dark, Data.theme)
+    val pal = look.pal(dark, Data.theme, 0, 160f, 0, 0)   // the theme as it was made (its colours are changed in «تخصيص الثيم»)
     val chosen = Data.look == look.id; val open = Friendship.themeOpen(look.id)
     val shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
     Column(modifier.height(104.dp).clip(shape).background(pal.bg).drawBehind { drawBackdrop(look.backdrop, pal, 4f) }
@@ -108,8 +108,8 @@ private fun ThemeTile(look: Look, dark: Boolean, modifier: Modifier, focused: Bo
 
 /** One theme in full: drawn in its own colors, corners and fonts, with a miniature of a panel, a button and the counter. */
 @Composable
-private fun ThemeCard(look: Look, dark: Boolean, onPick: () -> Unit) {
-    val pal = look.pal(dark, Data.theme)
+private fun ThemeCard(look: Look, dark: Boolean, original: Boolean = false, onPick: () -> Unit) {
+    val pal = if (original) look.pal(dark, Data.theme, 0, 160f, 0, 0) else look.pal(dark, Data.theme)
     val chosen = Data.look == look.id
     val open = Friendship.themeOpen(look.id)
     CompositionLocalProvider(LocalPal provides pal, LocalLook provides look) {
@@ -229,7 +229,35 @@ fun ColorChoice() {
 }
 
 
-/** «ثيم الليل والنهار»: on, the theme you tap goes to the part of the day you are in now; both are shown here. */
+/**
+ * «تخصيص الثيم» (user, 2026-11-28): the theme in use as it will look, then its colours (buttons, background, text),
+ * day / night, and «ثيم الليل والنهار». «الثيمات» keeps the themes as they were made.
+ */
+@Composable
+fun ThemeCustomPage() {
+    @Suppress("UNUSED_VARIABLE") val v = Store.version
+    val dark = isSystemInDarkTheme()
+    val look = Looks.byId(Data.look)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Sub("هكذا يبدو ثيمك «${look.name}» بعد التخصيص:", size = 13.sp)
+        ThemeCard(look, dark) {}
+        Panel(pad = 12.dp) {
+            Text("☀🌙 النهاري والليلي", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Box(Modifier.padding(top = 6.dp)) { ModeChoice() }
+        }
+        Panel(pad = 12.dp) {
+            Text("🎨 الألوان", color = P.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp))
+            ColorChoice()
+            if (Data.lookColor(look.id) != 0 || Data.lookBack(look.id) != 0 || Data.lookInk(look.id) != 0)
+                Action("↺ أرجع ألوان «${look.name}» الأصلية", Modifier.fillMaxWidth().padding(top = 10.dp), filled = false) {
+                    Data.setLookColor(look.id, 0); Data.setLookBack(look.id, 0); Data.setLookInk(look.id, 0)
+                }
+        }
+        DayNightPanel()
+    }
+}
+
+/** «ثيم الليل والنهار»: a theme from Fajr to Maghrib and another from Maghrib to Fajr, each chosen here. */
 @Composable
 private fun DayNightPanel() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
@@ -242,26 +270,15 @@ private fun DayNightPanel() {
             androidx.compose.material3.Switch(Data.dayNight, { Data.dayNight = it })
         }
         if (Data.dayNight) {
-            val night = dnSlot ?: Data.isNight()
             val now = Data.isNight()
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(false to "☀ النهار", true to "🌙 الليل").forEach { (n, label) ->
-                    val on = n == night
-                    Column(Modifier.weight(1f).clip(L.shape(12.dp)).border(if (on) 2.dp else 1.dp, if (on) P.accent else P.line, L.shape(12.dp)).clickable { dnSlot = n }.padding(10.dp)) {
-                        Text(label + if (n == now) " · الآن" else "", color = if (on) P.accent else P.muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        Text(Looks.byId(if (n) Data.lookNight else Data.lookDay).name, color = P.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                    }
+            val open = Looks.all.filter { Friendship.themeOpen(it.id) }.map { it.id to it.name }
+            listOf(false to "☀ النهار", true to "🌙 الليل").forEach { (n, label) ->
+                Text(label + if (n == now) " (الآن)" else "", color = if (n == now) P.accent else P.muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
+                PickOne(open, if (n) Data.lookNight else Data.lookDay, if (n) "ثيم الليل" else "ثيم النهار", shown = 3, modifier = Modifier.padding(top = 4.dp)) {
+                    if (n) Data.lookNight = it else Data.lookDay = it
                 }
             }
-            Sub("اضغط «النهار» أو «الليل» ثم اختر له ثيمًا مما تحت. المختار الآن: ${if (night) "الليل" else "النهار"}.", Modifier.padding(top = 6.dp), size = 11.sp)
+            Sub("التخصيص (الألوان) يخص كل ثيم وحده، فخصّص كلًّا منهما في وقته.", Modifier.padding(top = 8.dp), size = 11.sp)
         }
     }
-}
-
-/** Which part of the day the gallery is choosing for (null: the one we are in). */
-private var dnSlot by androidx.compose.runtime.mutableStateOf<Boolean?>(null)
-private fun slotName() = if (!Data.dayNight) "" else if (dnSlot ?: Data.isNight()) " لليل" else " للنهار"
-private fun applyLook(id: String) {
-    val slot = dnSlot
-    if (Data.dayNight && slot != null) { if (slot) Data.lookNight = id else Data.lookDay = id } else Data.look = id
 }

@@ -286,7 +286,8 @@ object Pet {
         if (kids) return say(n)
         val k = n + (System.currentTimeMillis() / 1000L % 7).toInt()
         return when (n % 4) {
-            0 -> runCatching {
+            0 -> if (k % 2 == 0) Content.collections.first { it.id == "quran_duas" }.items.let { l -> val d = l[k / 2 % l.size]; Say("﴿${d.text}﴾" + if (d.note.isNotEmpty()) "\n— ${d.note}" else "") }
+            else runCatching {
                 Quran.load(c.applicationContext)
                 val duas = quranDuas
                 val a = duas[k % duas.size]
