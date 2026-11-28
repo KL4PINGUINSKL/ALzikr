@@ -44,9 +44,11 @@ object Daily {
 fun DayOverview() {
     @Suppress("UNUSED_VARIABLE") val v = Store.version
     val ctx = LocalContext.current
-    val tasks = Store.tasks().filter { it.on(LocalDate.now()) }
+    val all = Store.tasks()
+    val tasks = all.filter { it.forDay(LocalDate.now()) }
     val open = tasks.filter { !it.done }
-    val doneToday = tasks.count { it.done && Instant.ofEpochMilli(it.doneAt).atZone(ZoneId.systemDefault()).toLocalDate() == LocalDate.now() }
+    val doneToday = tasks.count { it.done }
+    val late = all.filter { it.late(LocalDate.now()) }
     val habits = Data.habits()
     val wird = Data.wirdToday(); val read = Data.pagesToday()
     val (_, focusMin) = Store.focusToday()
@@ -125,10 +127,30 @@ fun DayOverview() {
                 }
             }
         }
-        val habitsLeft = habits.filter { !it.doneToday }
-        if (habitsLeft.isNotEmpty()) {
-            Title("عادات اليوم")
-            Wrap(gap = 6.dp) { habitsLeft.forEach { h -> Choice("◻ ${h.name}" + if (h.streak > 1) " · ${Quran.digits(h.streak)}🔥" else "", false) { Data.toggleHabit(h.id) } } }
+        // All of today's habits, ticked or not, so the count above matches what is shown (a tap toggles).
+        if (habits.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Title("عادات اليوم", Modifier.weight(1f))
+                Sub("${Quran.digits(habits.count { it.doneToday })} / ${Quran.digits(habits.size)}", size = 13.sp)
+            }
+            Wrap(gap = 6.dp) { habits.forEach { h -> Choice((if (h.doneToday) "✓ " else "◻ ") + h.name + if (h.streak > 1) " · ${Quran.digits(h.streak)}🔥" else "", h.doneToday) { Data.toggleHabit(h.id) } } }
+        }
+        // Open tasks of earlier days: apart, with their day, not counted in today's share.
+        if (late.isNotEmpty()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Title("من أيام سابقة", Modifier.weight(1f))
+                Text("كلها لليوم", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
+                    late.forEach { t -> Store.update(t.id) { it.copy(due = LocalDate.now().toString()) } } }.padding(6.dp))
+            }
+            late.take(6).forEach { t ->
+                Row(Modifier.fillMaxWidth().clip(L.shape(12.dp)).background(P.surface).clickable { Store.toggleTask(t.id) }.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(22.dp).clip(L.shape(6.dp)).border(2.dp, P.muted, L.shape(6.dp)))
+                    Text(t.text, color = P.ink, fontSize = 15.sp, modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
+                    Sub(runCatching { dueLabel(LocalDate.parse(t.due)) }.getOrDefault(""), size = 12.sp)
+                    Text("لليوم", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Store.update(t.id) { it.copy(due = LocalDate.now().toString()) } }.padding(6.dp))
+                }
+            }
+            if (late.size > 6) Text("و${Quran.digits(late.size - 6)} أخرى في «المهام» ›", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable { Nav.daily = Daily.TASKS }.padding(6.dp))
         }
         EveningReview()
         if (parts.isEmpty() && slots.isEmpty()) Sub("أضف مهمة من «المهام»، أو عادة من «العادات»، أو اضبط خطة ختمتك من «الختمة»؛ وستجتمع كلها هنا.", size = 13.sp)

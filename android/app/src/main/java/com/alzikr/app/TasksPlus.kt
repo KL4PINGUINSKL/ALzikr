@@ -164,7 +164,8 @@ fun TaskListPlus() {
     val today = LocalDate.now()
     val parsed = remember(text) { QuickParse.parse(text) }
     val all = Store.tasks().filter { filter.isEmpty() || it.cat == filter }
-    val now = all.filter { !it.done && it.on(today) }
+    val late = all.filter { it.late(today) }
+    val now = all.filter { !it.done && it.on(today) && !it.late(today) }
     val later = all.filter { !it.done && !it.on(today) }
     val done = all.filter { it.done }
 
@@ -228,6 +229,16 @@ fun TaskListPlus() {
         item { Title("اليوم (${Quran.digits(now.size)})", Modifier.padding(top = 4.dp)) }
         if (now.isEmpty()) item { Sub("لا مهام لليوم. أضف مهمة أو روتينًا.", Modifier.padding(8.dp)) }
         items(now, key = { "n" + it.id }) { TaskCard(it) { ruleFor = it.id } }
+        if (late.isNotEmpty()) {
+            item {
+                Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Title("من أيام سابقة (${Quran.digits(late.size)})", Modifier.weight(1f))
+                    Text("كلها لليوم", color = P.accent, fontSize = 13.sp, modifier = Modifier.clip(L.shape(8.dp)).clickable {
+                        late.forEach { t -> Store.update(t.id) { it.copy(due = today.toString()) } } }.padding(6.dp))
+                }
+            }
+            items(late, key = { "p" + it.id }) { TaskCard(it) { ruleFor = it.id } }
+        }
         if (later.isNotEmpty()) {
             item { Title("قادمة (${Quran.digits(later.size)})", Modifier.padding(top = 8.dp)) }
             items(later, key = { "l" + it.id }) { TaskCard(it) { ruleFor = it.id } }
@@ -370,7 +381,7 @@ fun EveningReview() {
     val today = LocalDate.now()
     val maghrib = if (Store.hasLocation) runCatching { Store.times(today).getValue(Prayer.MAGHRIB) }.getOrDefault(18 * 60) else 18 * 60
     val now = java.time.LocalTime.now().let { it.hour * 60 + it.minute }
-    val tasks = Store.tasks().filter { it.on(today) }
+    val tasks = Store.tasks().filter { it.forDay(today) }
     val left = tasks.filter { !it.done && it.rule.isEmpty() }
     val evening = now >= maghrib
     Panel(color = Color(0xFF1A3274).copy(alpha = .10f), pad = 14.dp) {

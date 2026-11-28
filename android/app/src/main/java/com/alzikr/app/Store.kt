@@ -190,6 +190,20 @@ object Store {
             rule == "white" -> runCatching { Data.hijri(date).day in 13..15 }.getOrDefault(false)
             else -> due.isEmpty() || due <= date.toString()
         }
+        /** Ticked on [date]. */
+        fun doneOn(date: LocalDate): Boolean = done && doneAt > 0 && java.time.Instant.ofEpochMilli(doneAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == date
+        /** A one-off task left open from an earlier day (shown apart as «من أيام سابقة», not counted in [date]'s share). */
+        fun late(date: LocalDate): Boolean = !repeat && !done && due.isNotEmpty() && due < date.toString()
+        /**
+         * [date]'s own tasks, the ones its «أنجزت … من …» counts (user, 2026-11-28: tasks of past days showed with
+         * today's and the counts mixed them up): repeating tasks for that day, one-off tasks due that day, open tasks
+         * with no day, and anything ticked that day. Done tasks of earlier days and late ones are not in it.
+         */
+        fun forDay(date: LocalDate): Boolean = when {
+            repeat -> on(date)
+            done -> doneOn(date)
+            else -> due.isEmpty() || due == date.toString()
+        }
     }
 
     fun tasks(): List<Task> {

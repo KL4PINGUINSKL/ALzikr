@@ -63,7 +63,7 @@ class DayWidget : AppWidgetProvider() {
             val v = RemoteViews(c.packageName, R.layout.widget_day)
             ThemeColors.background(v, R.id.d_root, pal.surface)
             val today = LocalDate.now()
-            val tasks = Store.tasks().filter { it.on(today) }
+            val tasks = Store.tasks().filter { it.forDay(today) }
             val open = tasks.filter { !it.done }
             val habits = Data.habits()
             v.setTextViewText(R.id.d_title, "☀ يومي · أنجزت ${tasks.size - open.size} من ${tasks.size}")

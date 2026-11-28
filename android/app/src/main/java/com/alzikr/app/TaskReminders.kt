@@ -101,7 +101,7 @@ object TaskReminders {
         scheduleReview(c)
         if (!Alerts.canPost(c)) return
         val today = LocalDate.now()
-        val tasks = Store.tasks().filter { it.on(today) }
+        val tasks = Store.tasks().filter { it.forDay(today) }
         val left = tasks.count { !it.done }
         val nm = c.getSystemService(NotificationManager::class.java)
         if (nm.getNotificationChannel(CH) == null) nm.createNotificationChannel(NotificationChannel(CH, "تذكير المهام", NotificationManager.IMPORTANCE_HIGH))
