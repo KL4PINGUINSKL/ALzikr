@@ -285,14 +285,15 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         fit(petPx)
     }
 
-    private fun speak(force: Boolean) {
-        if (view == null || appOpen) return
+    private fun speak(force: Boolean): Boolean {
+        if (view == null || appOpen) return false
         val audio = getSystemService(AudioManager::class.java)
         val screenOn = getSystemService(PowerManager::class.java).isInteractive
-        if (!force && (quiet || audio.mode != AudioManager.MODE_NORMAL || !screenOn || Pet.quietNow())) return
+        if (!force && (quiet || audio.mode != AudioManager.MODE_NORMAL || !screenOn || Pet.quietNow())) return false
         bubble.value = Pet.floatText(this, n++)
         handler.removeCallbacks(clear)
         handler.postDelayed(clear, if ((bubble.value?.first?.length ?: 0) > 80) 12_000L else 8_000L)
+        return true
     }
     private val clear = Runnable { bubble.value = null }
 
@@ -311,7 +312,7 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private val hideCount = Runnable { count.value = null }
 
     /** Every half minute: a word before the prayer (once for each prayer). */
-    private val minute = object : Runnable { override fun run() { nudge(); joy(); handler.postDelayed(this, 30_000L) } }
+    private val minute = object : Runnable { override fun run() { nudge(); due(); joy(); handler.postDelayed(this, 30_000L) } }
     /** From level 6: when the day's hearts are full it hops and hearts fly, at most once an hour. */
     private var joyAt = 0L
     private fun joy() {
@@ -360,8 +361,20 @@ class PetOverlay : Service(), LifecycleOwner, SavedStateRegistryOwner {
         }
     }
     private fun stopStroll() { walk?.cancel(); walk = null; walking.value = false }
-    private val tick = object : Runnable { override fun run() { speak(force = false); handler.postDelayed(this, Pet.every * 60_000L) } }
-    private fun schedule() { handler.removeCallbacks(tick); handler.postDelayed(tick, Pet.every * 60_000L) }
+    /**
+     * The reminder is due once [Pet.every] minutes (wall clock, kept across restarts) have passed since the last bubble.
+     * Checked every half minute, so a reminder missed while ALzikr was open or the screen was off comes as soon as it
+     * can (user, 2026-11-28: the friend over the apps had stopped reminding; a one-shot timer skipped a whole period
+     * whenever it fell while the app was open, and every restart or settings change started it again from zero).
+     */
+    private fun due() {
+        val last = Store.prefs.getLong("pet_said_at", 0L)
+        val now = System.currentTimeMillis()
+        if (last == 0L || last > now) { Store.prefs.edit().putLong("pet_said_at", now).apply(); return }
+        if (now - last < Pet.every * 60_000L || bubble.value != null) return
+        if (speak(force = false)) Store.prefs.edit().putLong("pet_said_at", now).apply()
+    }
+    private fun schedule() {}
 
     private fun openApp(verse: String?) {
         bubble.value = null
