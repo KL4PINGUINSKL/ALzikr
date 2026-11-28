@@ -191,9 +191,9 @@ async function reports(req, env, url) {
   const sorts = link(kind, status, "DESC", "الأحدث أولًا", sort === "DESC") + link(kind, status, "ASC", "الأقدم أولًا", sort === "ASC");
   const cards = list.length ? list.map((r) => {
     const st = r.status || "new";
-    return `<div class="card st-${st}" id="m${r.id}"><div class="top"><b>${label[r.kind] || esc(r.kind)} <span class="badge">${STATUSES[st]}</span></b><span class="muted"><span class="ver">ALzikr ${esc(r.version || "؟")}</span> #${r.id} · ${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div>
-<p>${esc(r.text).replace(/\n/g, "<br>")}</p>${r.contact ? `<div class="muted">للرد: ${esc(r.contact)}</div>` : ""}
-<div class="acts">${Object.entries(STATUSES).map(([k, t]) => `<button class="${k === st ? "on" : ""}" onclick="setSt(${r.id},'${k}')">${t}</button>`).join("")}</div>
+    return `<div class="card st-${st}" id="m${r.id}"><div class="top"><b>${label[r.kind] || esc(r.kind)} <span class="pill p-${st}">${STATUSES[st]}</span></b><span class="muted"><span class="ver">ALzikr ${esc(r.version || "؟")}</span> #${r.id} · ${esc(r.at.slice(0, 16).replace("T", " "))} · ${esc(r.country)}${r.device ? " · " + esc(r.device) + " (Android " + esc(r.android) + ")" : ""}</span></div>
+<div class="msg">${esc(r.text).replace(/\n/g, "<br>")}</div>${r.contact ? `<div class="muted">للرد: ${esc(r.contact)}</div>` : ""}
+<div class="acts">${Object.entries(STATUSES).map(([k, t]) => `<button class="${k === st ? "on p-" + k : ""}" onclick="setSt(${r.id},'${k}')">${t}</button>`).join("")}</div>
 <textarea placeholder="ملاحظتك (لك وحدك): ما فعلته، أو لماذا رُفضت…" onchange="setNote(${r.id},this.value)">${esc(r.note)}</textarea></div>`;
   }).join("") : `<div class="card muted">لا رسائل هنا</div>`;
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>رسائل ALzikr</title><style>
@@ -203,10 +203,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 system-ui,"Seg
 h1{font-size:21px;margin:0 0 8px}.row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .chip{padding:4px 11px;border:1px solid var(--line);border-radius:20px;color:var(--ink);text-decoration:none;font-size:13px}.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}.chip small{opacity:.7}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;border-inline-start:5px solid var(--line)}
-.st-new{border-inline-start-color:var(--gold)}.st-working{border-inline-start-color:#5ba8ff}.st-later{border-inline-start-color:#b07cff}.st-done{border-inline-start-color:var(--acc);opacity:.8}.st-rejected{border-inline-start-color:#e5675f;opacity:.7}
+.st-new{border-inline-start-color:#3b82f6}.st-working{border-inline-start-color:#eab308}.st-later{border-inline-start-color:#a78bfa}.st-done{border-inline-start-color:#22c55e}.st-rejected{border-inline-start-color:#ef4444}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:12px;padding:1px 10px;margin-inline-start:6px}
+.p-new{background:#3b82f6;color:#fff;border-color:#3b82f6!important}.p-working{background:#eab308;color:#1a1400;border-color:#eab308!important}.p-later{background:#a78bfa;color:#fff;border-color:#a78bfa!important}
+.p-done{background:#22c55e;color:#04210f;border-color:#22c55e!important}.p-rejected{background:#ef4444;color:#fff;border-color:#ef4444!important}
+.msg{margin:10px 0 6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);overflow-wrap:anywhere;font-size:15.5px}
 .top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.ver{display:inline-block;font-weight:700;font-size:13px;color:var(--bg);background:var(--gold);border-radius:8px;padding:0 8px;margin-inline-end:6px}.badge{font-weight:400;font-size:12px;color:var(--muted)}
 .muted{color:var(--muted);font-size:13px}p{margin:8px 0 4px;overflow-wrap:anywhere}
-.acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}button{font:inherit;font-size:12px;padding:3px 9px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}button{font:inherit;font-size:12px;padding:3px 9px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}button.on{font-weight:700}
 textarea{width:100%;box-sizing:border-box;margin-top:8px;min-height:38px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font:inherit;font-size:13px}</style></head><body><main>
 <h1>رسائل المستخدمين</h1>
 <div class="row">${kinds}</div><div class="row">${stats}</div><div class="row">${sorts}</div>
