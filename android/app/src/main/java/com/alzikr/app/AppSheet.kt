@@ -1,5 +1,8 @@
 package com.alzikr.app
 
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
@@ -57,8 +60,10 @@ fun AppSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.() -
     val nav = with(density) { navPx.toDp() }; val top = with(density) { topPx.toDp() }
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         val shown = remember { MutableTransitionState(false) }.apply { targetState = true }
-        BoxWithConstraints(Modifier.fillMaxSize().padding(top = top).clickable(remember { MutableInteractionSource() }, null) { onDismissRequest() }, contentAlignment = Alignment.BottomCenter) {
+        // The whole sheet rises above the keyboard (user, 2026-11-28: the quote picker's search field hid behind it).
+        BoxWithConstraints(Modifier.fillMaxSize().padding(top = top).imePadding().clickable(remember { MutableInteractionSource() }, null) { onDismissRequest() }, contentAlignment = Alignment.BottomCenter) {
             val maxH = maxHeight * .94f
+            val imeUp = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density) > 0
             // Closing by pulling down, anywhere on the sheet, but only a real pull: it must start with the content already
             // at its top (a swipe that was scrolling the text does not count), the sheet follows the finger, and on
             // release it closes only past ~160 dp; otherwise it springs back. The top bar can be dragged the same way.
@@ -95,7 +100,7 @@ fun AppSheet(onDismissRequest: () -> Unit, content: @Composable ColumnScope.() -
                 Column(Modifier.fillMaxWidth().heightIn(max = maxH).graphicsLayer { translationY = drag }.nestedScroll(pull)
                     .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)).background(P.surface)
                     // Taps inside the sheet stay inside it.
-                    .clickable(remember { MutableInteractionSource() }, null) {}.padding(bottom = nav + 14.dp)) {
+                    .clickable(remember { MutableInteractionSource() }, null) {}.padding(bottom = if (imeUp) 8.dp else nav + 14.dp)) {
                     Box(Modifier.fillMaxWidth().height(30.dp).pointerInput(Unit) {
                         detectVerticalDragGestures(onDragEnd = { if (drag > closeAt) onDismissRequest() else scope.launch { androidx.compose.animation.core.animate(drag, 0f) { v, _ -> drag = v } } },
                             onDragCancel = { scope.launch { androidx.compose.animation.core.animate(drag, 0f) { v, _ -> drag = v } } }) { ch, dy ->

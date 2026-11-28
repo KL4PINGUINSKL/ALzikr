@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,11 +45,12 @@ fun QuotePicker(duas: Boolean, close: () -> Unit, pick: (String, Int) -> Unit) {
     val first = if (duas) listOf("quran_duas", "sunnah_duas", "distress") else listOf("morning", "evening", "prayer", "sleep")
     val cols = remember(duas) { Content.collections.sortedBy { c -> first.indexOf(c.id).let { if (it < 0) 99 else it } } }
     AppSheet(onDismissRequest = close) {
-        // Above the keyboard (user, 2026-11-28: the search field hid behind it); the list gives up the room.
+        // Above the keyboard: AppSheet lifts the whole sheet over it (user, 2026-11-28), and height(h) is held within
+        // the room left above the keyboard, so the list gives up the space.
         // One fixed height whatever the tab or the results (user, 2026-11-28: it jumped between the tabs, and with the
         // keyboard it rose to the top of the screen): the keyboard takes its room from the list, not from the screen.
         val h = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * .68f).dp
-        Column(Modifier.fillMaxWidth().height(h).imePadding().padding(horizontal = 16.dp).padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth().height(h).padding(horizontal = 16.dp).padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Title(if (duas) "📋 اقتبس دعاءً" else "📋 اقتبس وردًا")
             Sub("اختر نصًّا فيُنسخ إلى ${if (duas) "دعائك" else "وردك"}، وتعدّله قبل الحفظ إن شئت.", size = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
