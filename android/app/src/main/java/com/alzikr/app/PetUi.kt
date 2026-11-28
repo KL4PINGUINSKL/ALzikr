@@ -225,7 +225,8 @@ fun PetStage(modifier: Modifier, height: Int = 52, bubbleBelow: Boolean = true, 
         act = com.alzikr.app.pets.PetState.IDLE
     }
     val cheer = Pet.cheerNow()
-    LaunchedEffect(cheer) { if (cheer != null) { act = com.alzikr.app.pets.PetState.HAPPY; sim.jump(); delay(650); sim.jump(.7f) } }
+    // On an achievement: the cheer bubble and the hops (user, 2026-11-28: keep the word when something is done; only the timed talk stays off).
+    LaunchedEffect(cheer) { if (cheer != null) { said = Pet.Say(cheer); act = com.alzikr.app.pets.PetState.HAPPY; sim.jump(); delay(650); sim.jump(.7f) } }
     LaunchedEffect(said) { val s = said ?: return@LaunchedEffect; delay((6000L + s.text.length * 60L).coerceAtMost(14_000L)); said = null }
 
     BoxWithConstraints(modifier.height(height.dp)) {
